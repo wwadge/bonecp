@@ -1,0 +1,539 @@
+package com.jolbox.bonecp;
+
+
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.classextension.EasyMock.reset;
+import static org.easymock.classextension.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import static org.easymock.classextension.EasyMock.makeThreadSafe;
+
+import junit.framework.Assert;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertFalse;
+
+import org.apache.log4j.Logger;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.jolbox.bonecp.BoneCP;
+import com.jolbox.bonecp.CallableStatementHandle;
+import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.ConnectionPartition;
+import com.jolbox.bonecp.IStatementCache;
+import com.jolbox.bonecp.PreparedStatementHandle;
+import com.jolbox.bonecp.StatementHandle;
+
+/**
+ * Mock unit testing for Connection Handle class.
+ * @author wwadge
+ *
+ */
+public class TestConnectionHandle {
+	/** Test class handle. */
+	private static ConnectionHandle testClass;
+	/** Mock handle. */
+	private static Connection mockConnection;
+	/** Mock handle. */
+	private static IStatementCache mockPreparedStatementCache;
+	/** Mock handle. */
+	private static IStatementCache mockCallableStatementCache;
+	/** Mock handle. */
+	private static BoneCP mockPool;
+	/** Mock handle. */
+	private static Logger mockLogger;
+	
+
+	/** Mock setup.
+	 * @throws Exception
+	 */
+	@BeforeClass
+	public static void setUp() throws Exception {
+		mockConnection = createNiceMock(ConnectionHandle.class);
+		mockPreparedStatementCache = createNiceMock(IStatementCache.class);
+		mockCallableStatementCache = createNiceMock(IStatementCache.class);
+
+		mockLogger = createNiceMock(Logger.class);
+		makeThreadSafe(mockLogger, true);
+		mockPool = createNiceMock(BoneCP.class);
+		testClass = new ConnectionHandle(mockConnection, mockPreparedStatementCache, mockCallableStatementCache, mockPool);
+		Field field = testClass.getClass().getDeclaredField("logger");
+		field.setAccessible(true);
+		field.set(null, mockLogger);
+	}
+	
+	/** Reset everything.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Before
+	public void before() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		reset(mockConnection, mockPreparedStatementCache, mockPool);
+		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+		field.setAccessible(true);
+		field.set(testClass, false);
+		
+	}
+	
+	/** Test bounce of inner connection.
+	 * @throws IllegalArgumentException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	@Test
+	public void testStandardMethods() throws IllegalArgumentException, SecurityException,  IllegalAccessException, InvocationTargetException{
+		Set<String> skipTests = new HashSet<String>();
+		skipTests.add("close");
+		skipTests.add("getConnection");
+		skipTests.add("markPossiblyBroken");
+		skipTests.add("trackStatement");
+		skipTests.add("checkClosed");
+		skipTests.add("internalClose");
+		skipTests.add("prepareCall");
+		skipTests.add("prepareStatement");
+		skipTests.add("setClientInfo");
+		skipTests.add("getConnectionLastUsed");
+		skipTests.add("setConnectionLastUsed");
+		skipTests.add("getConnectionLastReset");	
+		skipTests.add("setConnectionLastReset");
+		skipTests.add("isPossiblyBroken");	
+		skipTests.add("getOriginatingPartition");
+		skipTests.add("setOriginatingPartition");
+		skipTests.add("renewConnection");
+		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
+
+		CommonTestUtils.testStatementBounceMethod(testClass, skipTests, mockConnection);
+	}
+	
+	/** Test marking of possibly broken status.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testMarkPossiblyBroken() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		Field field = testClass.getClass().getDeclaredField("possiblyBroken");
+		field.setAccessible(true);
+		field.set(testClass, false);
+		testClass.markPossiblyBroken(null);
+		Assert.assertTrue(field.getBoolean(testClass));
+		
+		// Test that a db fatal error will lead to the pool being instructed to terminate all connections (+ log)
+		mockPool.terminateAllConnections();
+		mockLogger.error(anyObject());
+		replay(mockPool);
+		testClass.markPossiblyBroken(new SQLException("test", "08001"));
+		verify(mockPool);
+		
+		
+	}
+	 
+	/** Closing a connection handle should release that connection back in the pool and mark it as closed.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SQLException
+	 */
+	@Test 
+	public void testClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException{
+		 
+		testClass.renewConnection();
+		mockPool.releaseConnection((Connection)anyObject());
+		expectLastCall().once().andThrow(new SQLException()).once();
+		replay(mockPool);
+		
+		testClass.close();
+
+		
+		// logically mark the connection as closed
+		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+	
+		field.setAccessible(true);
+		Assert.assertTrue(field.getBoolean(testClass));
+	
+		
+		testClass.renewConnection();
+		try{
+			testClass.close(); // 2nd time should throw an exception
+			fail("Should have thrown an exception");
+		} catch (Throwable t){
+			// do nothing.
+		}
+		verify(mockPool);
+	}
+
+	/** Closing a connection handle should release that connection back in the pool and mark it as closed.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test 
+	public void testInternalClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException{
+		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
+		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
+		Field field = testClass.getClass().getDeclaredField("statementHandles");
+		
+		field.setAccessible(true);
+		field.set(testClass, mockStatementHandles); 
+		
+		expect(mockStatementHandles.poll()).andReturn(mockStatement).once().andReturn(null).once();
+		mockStatement.internalClose();
+		expectLastCall().once();
+		mockConnection.close();
+		expectLastCall().once().andThrow(new SQLException()).once();
+		replay(mockStatement, mockConnection, mockStatementHandles);
+		testClass.internalClose();
+		try{
+			testClass.internalClose(); //2nd time should throw exception
+			fail("Should have thrown an exception");
+		} catch (Throwable t){
+			// do nothing.
+		}
+		
+		verify(mockStatement, mockConnection, mockStatementHandles);
+	}
+
+	
+	/** Test for check closed routine.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 */
+	@Test 
+	public void testCheckClosed() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
+		 
+		testClass.renewConnection();
+		
+		// call the method (should not throw an exception)
+		Method method = testClass.getClass().getDeclaredMethod("checkClosed");
+		method.setAccessible(true);
+		method.invoke(testClass);
+		
+		// logically mark the connection as closed
+		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+	
+		field.setAccessible(true);
+		field.set(testClass, true);
+		try{
+			method.invoke(testClass);
+			fail("Should have thrown an exception");
+		} catch (Throwable t){
+			// do nothing.
+		}
+	}
+	
+	/** Test renewal of connection.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testRenewConnection() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+		field.setAccessible(true);
+		field.set(testClass, true);
+		
+		testClass.renewConnection();
+		assertFalse(field.getBoolean(testClass));
+		
+		
+	}
+	/** Tests various getter/setters.
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 */
+	@Test
+	public void testSettersGetters() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		ConnectionPartition mockPartition = createNiceMock(ConnectionPartition.class);
+		testClass.setOriginatingPartition(mockPartition);
+		assertEquals(mockPartition, testClass.getOriginatingPartition());
+	
+		testClass.setConnectionLastReset(123);
+		assertEquals(testClass.getConnectionLastReset(), 123);
+		
+		testClass.setConnectionLastUsed(456);
+		assertEquals(testClass.getConnectionLastUsed(), 456);
+
+		Field field = testClass.getClass().getDeclaredField("possiblyBroken");
+		field.setAccessible(true);
+		field.setBoolean(testClass, true);
+		assertTrue(testClass.isPossiblyBroken());
+	}
+
+	/** Prepare statement tests.
+	 * @throws SecurityException
+	 * @throws IllegalArgumentException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 */
+	@Test
+	public void testPrepareStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+		prepareStatementTest(String.class);
+		prepareStatementTest(String.class, int.class);
+		prepareStatementTest(String.class, int[].class);
+		prepareStatementTest(String.class, String[].class);
+		prepareStatementTest(String.class, int.class, int.class);
+		prepareStatementTest(String.class, int.class, int.class, int.class);
+	}
+	
+	/** Callable statement tests.
+	 * @throws SecurityException
+	 * @throws IllegalArgumentException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 */
+	@Test
+	public void testCallableStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+		callableStatementTest(String.class);
+		callableStatementTest(String.class, int.class, int.class);
+		callableStatementTest(String.class, int.class, int.class, int.class);
+	}
+	
+	
+	/** Test routine.
+	 * @param args
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 */
+	@SuppressWarnings("unchecked")
+	private void prepareStatementTest(Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+		Object[] params = new Object[args.length];
+		for (int i=0; i < args.length; i++){
+			params[i] = CommonTestUtils.instanceMap.get(args[i]);
+		}
+		
+		Method prepStatementMethod = testClass.getClass().getMethod("prepareStatement", args);
+		
+		PreparedStatementHandle mockStatement = createNiceMock(PreparedStatementHandle.class);
+		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
+		Field field = testClass.getClass().getDeclaredField("statementHandles");
+		field.setAccessible(true);
+		field.set(testClass, mockStatementHandles);
+		
+		testClass.renewConnection(); // logically open the connection
+		
+		// fetching a statement that is found in cache. Statement should be returned and marked as being (logically) open
+		expect(mockPreparedStatementCache.get((String)anyObject())).andReturn(mockStatement).once();
+		
+		mockStatement.setLogicallyOpen();
+		expectLastCall();
+		replay(mockStatement, mockPreparedStatementCache);
+		prepStatementMethod.invoke(testClass, params);
+		verify(mockStatement, mockPreparedStatementCache);
+		
+		reset(mockStatement, mockPreparedStatementCache);
+		
+		
+		// test for a cache miss
+		expect(mockPreparedStatementCache.get((String)anyObject())).andReturn(null).once();
+		// we should be creating the preparedStatement because it's not in the cache
+		expect(prepStatementMethod.invoke(mockConnection, params)).andReturn(mockStatement);
+		// we should be tracking this statement
+		expect(mockStatementHandles.add(mockStatement)).andReturn(true);
+		
+		replay(mockStatement, mockPreparedStatementCache, mockConnection);
+		prepStatementMethod.invoke(testClass, params);
+		verify(mockStatement, mockPreparedStatementCache, mockConnection);
+		
+
+		// test for cache miss + sql exception
+		reset(mockStatement, mockPreparedStatementCache, mockConnection);
+	
+		Method mockConnectionPrepareStatementMethod = mockConnection.getClass().getMethod("prepareStatement", args);
+		
+		expect(mockPreparedStatementCache.get((String)anyObject())).andReturn(null).once();
+		// we should be creating the preparedStatement because it's not in the cache
+		expect(mockConnectionPrepareStatementMethod.invoke(mockConnection, params)).andThrow(new SQLException("test", "Z"));
+		
+		replay(mockStatement, mockPreparedStatementCache, mockConnection);
+		try{
+			prepStatementMethod.invoke(testClass, params);
+			fail("Should have thrown an exception");
+		} catch (Throwable t) {
+			// do nothing
+		}
+		
+		verify(mockStatement, mockPreparedStatementCache, mockConnection);
+
+
+		
+		// test for no cache defined
+		reset(mockStatement, mockPreparedStatementCache, mockConnection);
+		field = testClass.getClass().getDeclaredField("preparedStatementCache");
+		field.setAccessible(true);
+		IStatementCache oldCache = (IStatementCache) field.get(testClass);
+		field.set(testClass, null);
+
+
+		// we should be creating the preparedStatement because it's not in the cache
+		expect(mockConnectionPrepareStatementMethod.invoke(mockConnection, params)).andReturn(mockStatement);
+		
+		replay(mockStatement, mockPreparedStatementCache, mockConnection);
+		prepStatementMethod.invoke(testClass, params);
+		verify(mockStatement, mockPreparedStatementCache, mockConnection);
+		// restore sanity
+		field.set(testClass, oldCache);
+		
+		reset(mockStatement, mockPreparedStatementCache, mockConnection);
+		
+	}
+	
+	/** Test routine for callable statements.
+	 * @param args
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 */
+	@SuppressWarnings("unchecked")
+	private void callableStatementTest(Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+		Object[] params = new Object[args.length];
+		for (int i=0; i < args.length; i++){
+			params[i] = CommonTestUtils.instanceMap.get(args[i]);
+		}
+		
+		Method prepCallMethod = testClass.getClass().getMethod("prepareCall", args);
+		
+		CallableStatementHandle mockStatement = createNiceMock(CallableStatementHandle.class);
+		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
+		Field field = testClass.getClass().getDeclaredField("statementHandles");
+		field.setAccessible(true);
+		field.set(testClass, mockStatementHandles);
+		
+		testClass.renewConnection(); // logically open the connection
+		
+		// fetching a statement that is found in cache. Statement should be returned and marked as being (logically) open
+		expect(mockCallableStatementCache.get((String)anyObject())).andReturn(mockStatement).once();
+		
+	//	((StatementHandle)mockStatement).setLogicallyOpen();
+		expectLastCall();
+		replay(mockStatement, mockCallableStatementCache);
+		prepCallMethod.invoke(testClass, params);
+		verify(mockStatement, mockCallableStatementCache);
+		
+		reset(mockStatement, mockCallableStatementCache);
+		
+		
+		// test for a cache miss
+		expect(mockCallableStatementCache.get((String)anyObject())).andReturn(null).once();
+		// we should be creating the preparedStatement because it's not in the cache
+		expect(prepCallMethod.invoke(mockConnection, params)).andReturn(mockStatement);
+		// we should be tracking this statement
+		expect(mockStatementHandles.add(mockStatement)).andReturn(true);
+		
+		replay(mockStatement, mockCallableStatementCache, mockConnection);
+		prepCallMethod.invoke(testClass, params);
+		verify(mockStatement, mockCallableStatementCache, mockConnection);
+		
+
+		// test for cache miss + sql exception
+		reset(mockStatement, mockCallableStatementCache, mockConnection);
+	
+		Method mockConnectionPrepareCallMethod = mockConnection.getClass().getMethod("prepareCall", args);
+		
+		expect(mockCallableStatementCache.get((String)anyObject())).andReturn(null).once();
+		// we should be creating the preparedStatement because it's not in the cache
+		expect(mockConnectionPrepareCallMethod.invoke(mockConnection, params)).andThrow(new SQLException("test", "Z"));
+		
+		replay(mockStatement, mockCallableStatementCache, mockConnection);
+		try{
+			prepCallMethod.invoke(testClass, params);
+			fail("Should have thrown an exception");
+		} catch (Throwable t) {
+			// do nothing
+		}
+		
+		verify(mockStatement, mockCallableStatementCache, mockConnection);
+
+
+		
+		// test for no cache defined
+		reset(mockStatement, mockCallableStatementCache, mockConnection);
+		field = testClass.getClass().getDeclaredField("callableStatementCache");
+		field.setAccessible(true);
+		IStatementCache oldCache = (IStatementCache) field.get(testClass);
+		field.set(testClass, null);
+
+
+		// we should be creating the preparedStatement because it's not in the cache
+		expect(mockConnectionPrepareCallMethod.invoke(mockConnection, params)).andReturn(mockStatement);
+		
+		replay(mockStatement, mockCallableStatementCache, mockConnection);
+		prepCallMethod.invoke(testClass, params);
+		verify(mockStatement, mockCallableStatementCache, mockConnection);
+		// restore sanity
+		field.set(testClass, oldCache);
+		
+		reset(mockStatement, mockCallableStatementCache, mockConnection);
+		
+	}
+	
+	/** Set Client Info test.
+	 * @throws SQLClientInfoException
+	 */
+	@Test
+	public void testSetClientInfo() throws SQLClientInfoException {
+		Properties prop = new Properties();
+		mockConnection.setClientInfo(prop);
+		replay(mockConnection);
+		testClass.setClientInfo(prop);
+		verify(mockConnection);
+		
+		reset(mockConnection);
+		
+		String name = "name";
+		String value = "val";
+		mockConnection.setClientInfo(name, value);
+		replay(mockConnection);
+		testClass.setClientInfo(name, value);
+		verify(mockConnection);
+		
+	}
+
+
+}

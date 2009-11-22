@@ -1,0 +1,976 @@
+package com.jolbox.bonecp;
+
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.sql.Struct;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.log4j.Logger;
+
+import com.google.common.collect.ImmutableSet;
+
+/**
+ * Connection handle "wrapper". Proxies are nice and cool... but around twice as
+ * slow as doing it the boring old way. No proxy stuff here, we're aiming for
+ * the best speed possible at the expense of code readability...
+ * 
+ * @author wwadge
+ * 
+ */
+public class ConnectionHandle implements Connection {
+
+	/** Connection handle. */
+	private Connection connection = null;
+	/** Last time this connection was used by an application. */
+	private long connectionLastUsed = System.currentTimeMillis();
+	/** Last time we sent a reset to this connection. */
+	private long connectionLastReset = System.currentTimeMillis();
+	/** Pool handle. */
+	private BoneCP pool;
+	/**
+	 * If true, this connection might have failed communicating with the
+	 * database. We assume that exceptions should be rare here i.e. the normal
+	 * case is assumed to succeed.
+	 */
+	private boolean possiblyBroken;
+	/** If true, we've called internalClose() on this connection. */
+	private boolean connectionClosed = false;
+	/** Original partition. */
+	private ConnectionPartition originatingPartition = null;
+	/** Prepared Statement Cache. */
+	private IStatementCache preparedStatementCache = null;
+	/** Prepared Statement Cache. */
+	private IStatementCache callableStatementCache = null;
+	/** Logger handle. */
+	private static Logger logger = Logger.getLogger(ConnectionHandle.class);
+
+	/**
+	 * List of statements that will be closed when this preparedStatement is
+	 * logically closed.
+	 */
+	private ConcurrentLinkedQueue<Statement> statementHandles = new ConcurrentLinkedQueue<Statement>();
+	/**
+	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
+	 * Table 7. Class Code 08: Connection Exception
+		SQLSTATE Value	  
+		Value	Meaning
+		08001	The application requester is unable to establish the connection.
+		08002	The connection already exists.
+		08003	The connection does not exist.
+		08004	The application server rejected establishment of the connection.
+		08007	Transaction resolution unknown.
+		08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
+		08504	An error was encountered while processing the specified path rename configuration file.
+	 SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
+	  Anything else will be taken as the *connection* (not the db) being broken. 
+	  
+	  08S01 is a mysql-specific code to indicate a connection failure (though in my tests it was triggered even when the entire
+	  database was down so I treat that as a DB failure)
+	 */
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01"); 
+	/**
+	 * Connection wrapper constructor
+	 * 
+	 * @param url
+	 *            JDBC connection string
+	 * @param username
+	 *            user to use
+	 * @param password
+	 *            password for db
+	 * @param pool
+	 *            pool handle.
+	 * @throws SQLException
+	 *             on error
+	 */
+	public ConnectionHandle(String url, String username, String password,
+			BoneCP pool) throws SQLException {
+		try {
+			this.connection = DriverManager.getConnection(url, username,
+					password);
+
+			int cacheSize = pool.getConfig().getPreparedStatementsCacheSize();
+			if (cacheSize > 0) {
+				this.preparedStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
+			}
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		this.pool = pool;
+	}
+
+	/** Private constructor used solely for unit testing. 
+	 * @param connection 
+	 * @param preparedStatementCache 
+	 * @param callableStatementCache 
+	 * @param pool */
+	public ConnectionHandle(Connection connection, IStatementCache preparedStatementCache, IStatementCache callableStatementCache, BoneCP pool){
+		this.connection = connection;
+		this.preparedStatementCache = preparedStatementCache;
+		this.callableStatementCache = callableStatementCache;
+		this.pool = pool;
+	}
+
+
+	/**
+	 * Adds the given statement to a list.
+	 * 
+	 * @param statement
+	 *            Statement to keep track of
+	 * @return statement
+	 */
+	private Statement trackStatement(Statement statement) {
+		if (statement != null){
+			this.statementHandles.add(statement);
+		}
+		return statement;
+	}
+
+	/** 
+	 * Given an exception, flag the connection (or database) as being potentially broken. If the exception is a data-specific exception,
+	 * do nothing except throw it back to the application. 
+	 * 
+	 * @param e exception to process
+	 */
+	protected void markPossiblyBroken(SQLException e) {
+		String state = (e != null) ? e.getSQLState() : null;
+		if (state == null){ // safety;
+			state = "Z";
+		}
+		if (sqlStateDBFailureCodes.contains(state) && this.pool != null){
+			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
+			this.pool.terminateAllConnections();
+		}
+
+		// SQL-92 says:
+		//		 Class values that begin with one of the <digit>s '5', '6', '7',
+		//         '8', or '9' or one of the <simple Latin upper case letter>s 'I',
+		//         'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+		//         'W', 'X', 'Y', or 'Z' are reserved for implementation-specified
+		//         conditions.
+
+
+		char firstChar = state.charAt(0);
+		// if it's a communication exception or an implementation-specific error code, flag this connection as being potentially broken.
+		if (state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
+			this.possiblyBroken = true;
+		}
+	}
+
+	public void clearWarnings() throws SQLException {
+		checkClosed();
+		try {
+			this.connection.clearWarnings();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	/**
+	 * Checks if the connection is (logically) closed and throws an exception if it is.
+	 * 
+	 * @throws SQLException
+	 *             on error
+	 * 
+	 * 
+	 */
+	private void checkClosed() throws SQLException {
+		if (this.connectionClosed) {
+			throw new SQLException("Connection is closed.");
+		}
+	}
+
+	/**
+	 * Release the connection if called. never really thrown
+	 * 
+	 * @throws SQLException
+	 */
+	public void close() throws SQLException {
+		try {
+			if (!this.connectionClosed) {
+				this.connectionClosed = true;
+				this.pool.releaseConnection(this);
+			}
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	/**
+	 * Close off the connection.
+	 * 
+	 * @throws SQLException
+	 */
+	protected void internalClose() throws SQLException {
+		try {
+
+			Statement statement = null;
+			while ((statement = this.statementHandles.poll()) != null) {
+				((StatementHandle) statement).internalClose();
+			}
+
+			this.connection.close();
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void commit() throws SQLException {
+		checkClosed();
+		try {
+			this.connection.commit();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public Array createArrayOf(String typeName, Object[] elements)
+	throws SQLException {
+		Array result = null;
+		checkClosed();
+		try {
+			result = this.connection.createArrayOf(typeName, elements);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+
+		return result;
+	}
+
+	public Blob createBlob() throws SQLException {
+		Blob result = null;
+		checkClosed();
+		try {
+			result = this.connection.createBlob();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Clob createClob() throws SQLException {
+		Clob result = null;
+		checkClosed();
+		try {
+			result = this.connection.createClob();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+
+		return result;
+
+	}
+
+	public NClob createNClob() throws SQLException {
+		NClob result = null;
+		checkClosed();
+		try {
+			result = this.connection.createNClob();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public SQLXML createSQLXML() throws SQLException {
+		SQLXML result = null;
+		checkClosed();
+		try {
+			result = this.connection.createSQLXML();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Statement createStatement() throws SQLException {
+		Statement result = null;
+		checkClosed();
+		try {
+			result = trackStatement(new StatementHandle(this.connection
+					.createStatement(), this));
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Statement createStatement(int resultSetType, int resultSetConcurrency)
+	throws SQLException {
+		Statement result = null;
+		checkClosed();
+		try {
+			result = trackStatement(new StatementHandle(this.connection
+					.createStatement(resultSetType, resultSetConcurrency), this));
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Statement createStatement(int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability)
+	throws SQLException {
+		Statement result = null;
+		checkClosed();
+		try {
+			result = trackStatement(new StatementHandle(this.connection
+					.createStatement(resultSetType, resultSetConcurrency,
+							resultSetHoldability), this));
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+
+		return result;
+	}
+
+	public Struct createStruct(String typeName, Object[] attributes)
+	throws SQLException {
+		Struct result = null;
+		checkClosed();
+		try {
+			result = this.connection.createStruct(typeName, attributes);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public boolean getAutoCommit() throws SQLException {
+		boolean result = false;
+		checkClosed();
+		try {
+			result = this.connection.getAutoCommit();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public String getCatalog() throws SQLException {
+		String result = null;
+		checkClosed();
+		try {
+			result = this.connection.getCatalog();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Properties getClientInfo() throws SQLException {
+		Properties result = null;
+		checkClosed();
+		try {
+			result = this.connection.getClientInfo();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public String getClientInfo(String name) throws SQLException {
+		String result = null;
+		checkClosed();
+		try {
+			result = this.connection.getClientInfo(name);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public int getHoldability() throws SQLException {
+		int result = 0;
+		checkClosed();
+		try {
+			result = this.connection.getHoldability();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+
+		return result;
+	}
+
+	public DatabaseMetaData getMetaData() throws SQLException {
+		DatabaseMetaData result = null;
+		checkClosed();
+		try {
+			result = this.connection.getMetaData();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public int getTransactionIsolation() throws SQLException {
+		int result = 0;
+		checkClosed();
+		try {
+			result = this.connection.getTransactionIsolation();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Map<String, Class<?>> getTypeMap() throws SQLException {
+		Map<String, Class<?>> result = null;
+		checkClosed();
+		try {
+			result = this.connection.getTypeMap();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public SQLWarning getWarnings() throws SQLException {
+		SQLWarning result = null;
+		checkClosed();
+		try {
+			result = this.connection.getWarnings();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public boolean isClosed() throws SQLException {
+		boolean result = false;
+		checkClosed();
+		try {
+			result = this.connection.isClosed();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public boolean isReadOnly() throws SQLException {
+		boolean result = false;
+		checkClosed();
+		try {
+			result = this.connection.isReadOnly();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public boolean isValid(int timeout) throws SQLException {
+		boolean result = false;
+		checkClosed();
+		try {
+			result = this.connection.isValid(timeout);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public String nativeSQL(String sql) throws SQLException {
+		String result = null;
+		checkClosed();
+		try {
+			result = this.connection.nativeSQL(sql);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public CallableStatement prepareCall(String sql) throws SQLException {
+		CallableStatement result = null;
+		checkClosed();
+		try {
+
+			if (this.callableStatementCache != null) {
+				result = (CallableStatement) this.callableStatementCache.get(sql);
+				if (result == null) {
+					result = (CallableStatement) trackStatement(new CallableStatementHandle(this.connection.prepareCall(sql),
+							sql, this.callableStatementCache, this));
+					this.callableStatementCache.put(sql, result);
+				} else {
+					((CallableStatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareCall(sql);
+			}
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public CallableStatement prepareCall(String sql, int resultSetType,
+			int resultSetConcurrency) throws SQLException {
+		CallableStatement result = null;
+		checkClosed();
+		try {
+			if (this.callableStatementCache != null) {
+				result = (CallableStatement) this.callableStatementCache.get(sql);
+
+				if (result == null) {
+					result = (CallableStatement) trackStatement(new CallableStatementHandle(
+							this.connection.prepareCall(sql,
+									resultSetType, resultSetConcurrency), sql,
+									this.callableStatementCache, this));
+
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareCall(sql, resultSetType, resultSetConcurrency);
+			}
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public CallableStatement prepareCall(String sql, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability)
+	throws SQLException {
+		CallableStatement result = null;
+		checkClosed();
+		try {
+			if (this.callableStatementCache != null) {
+
+				result = (CallableStatement) this.callableStatementCache.get(sql);
+
+				if (result == null) {
+					result = (CallableStatement) trackStatement(new CallableStatementHandle(
+							this.connection.prepareCall(sql,
+									resultSetType, resultSetConcurrency, resultSetHoldability), sql,
+									this.callableStatementCache, this));
+				
+					this.callableStatementCache.put(sql, result);
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareCall(sql, resultSetType,
+						resultSetConcurrency, resultSetHoldability);
+			}
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public PreparedStatement prepareStatement(String sql) throws SQLException {
+		Statement result = null;
+		checkClosed();
+		try {
+			if (this.preparedStatementCache != null) {
+
+				result = this.preparedStatementCache.get(sql);
+
+				if (result == null) {
+					result =  trackStatement(new PreparedStatementHandle(
+							this.connection.prepareStatement(sql), sql,
+							this.preparedStatementCache, this));
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareStatement(sql);
+			}
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return (PreparedStatement) result;
+	}
+
+	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
+	throws SQLException {
+		PreparedStatement result = null;
+		checkClosed();
+		try {
+			if (this.preparedStatementCache != null) {
+
+				result = (PreparedStatement) this.preparedStatementCache.get(sql);
+
+				if (result == null) {
+					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
+							this.connection.prepareStatement(sql,
+									autoGeneratedKeys), sql,
+									this.preparedStatementCache, this));
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareStatement(sql,
+						autoGeneratedKeys);
+			}
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
+	throws SQLException {
+		PreparedStatement result = null;
+		checkClosed();
+		try {
+			if (this.preparedStatementCache != null) {
+
+				result = (PreparedStatement) this.preparedStatementCache.get(sql);
+
+				if (result == null) {
+					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
+							this.connection
+							.prepareStatement(sql, columnIndexes), sql,
+							this.preparedStatementCache, this));
+				}else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareStatement(sql, columnIndexes);
+			}
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public PreparedStatement prepareStatement(String sql, String[] columnNames)
+	throws SQLException {
+		PreparedStatement result = null;
+		checkClosed();
+		try {
+			if (this.preparedStatementCache != null) {
+
+				result = (PreparedStatement) this.preparedStatementCache.get(sql);
+
+				if (result == null) {
+					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
+							this.connection.prepareStatement(sql, columnNames),
+							sql, this.preparedStatementCache, this));
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareStatement(sql, columnNames);
+			}
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public PreparedStatement prepareStatement(String sql, int resultSetType,
+			int resultSetConcurrency) throws SQLException {
+		PreparedStatement result = null;
+		checkClosed();
+		try {
+			if (this.preparedStatementCache != null) {
+
+				result = (PreparedStatement) this.preparedStatementCache.get(sql);
+
+				if (result == null) {
+					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
+							this.connection.prepareStatement(sql,
+									resultSetType, resultSetConcurrency), sql,
+									this.preparedStatementCache, this));
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareStatement(sql, resultSetType,
+						resultSetConcurrency);
+			}
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public PreparedStatement prepareStatement(String sql, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability)
+	throws SQLException {
+		PreparedStatement result = null;
+		checkClosed();
+		try {
+			if (this.preparedStatementCache != null) {
+
+				result = (PreparedStatement) this.preparedStatementCache.get(sql);
+
+				if (result == null) {
+					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
+							this.connection.prepareStatement(sql,
+									resultSetType, resultSetConcurrency,
+									resultSetHoldability), sql,
+									this.preparedStatementCache, this));
+				} else {
+					((StatementHandle)result).setLogicallyOpen();
+				}
+			} else {
+				result = this.connection.prepareStatement(sql, resultSetType,
+						resultSetConcurrency, resultSetHoldability);
+			}
+
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.releaseSavepoint(savepoint);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void rollback() throws SQLException {
+		checkClosed();
+		try {
+			this.connection.rollback();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void rollback(Savepoint savepoint) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.rollback(savepoint);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void setAutoCommit(boolean autoCommit) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.setAutoCommit(autoCommit);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+
+		}
+	}
+
+	public void setCatalog(String catalog) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.setCatalog(catalog);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void setClientInfo(Properties properties)
+	throws SQLClientInfoException {
+		this.connection.setClientInfo(properties);
+	}
+
+	public void setClientInfo(String name, String value)
+	throws SQLClientInfoException {
+		this.connection.setClientInfo(name, value);
+	}
+
+	public void setHoldability(int holdability) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.setHoldability(holdability);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void setReadOnly(boolean readOnly) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.setReadOnly(readOnly);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public Savepoint setSavepoint() throws SQLException {
+		checkClosed();
+		Savepoint result = null;
+		try {
+			result = this.connection.setSavepoint();
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public Savepoint setSavepoint(String name) throws SQLException {
+		checkClosed();
+		Savepoint result = null;
+		try {
+			result = this.connection.setSavepoint(name);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+		return result;
+	}
+
+	public void setTransactionIsolation(int level) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.setTransactionIsolation(level);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
+		checkClosed();
+		try {
+			this.connection.setTypeMap(map);
+		} catch (SQLException e) {
+			markPossiblyBroken(e);
+			throw e;
+		}
+	}
+
+	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+		return this.connection.isWrapperFor(iface);
+	}
+
+	public <T> T unwrap(Class<T> iface) throws SQLException {
+		return this.connection.unwrap(iface);
+	}
+
+	/**
+	 * @return the connectionLastUsed
+	 */
+	public long getConnectionLastUsed() {
+		return this.connectionLastUsed;
+	}
+
+	/**
+	 * @param connectionLastUsed
+	 *            the connectionLastUsed to set
+	 */
+	public void setConnectionLastUsed(long connectionLastUsed) {
+		this.connectionLastUsed = connectionLastUsed;
+	}
+
+	/**
+	 * @return the connectionLastReset
+	 */
+	public long getConnectionLastReset() {
+		return this.connectionLastReset;
+	}
+
+	/**
+	 * @param connectionLastReset
+	 *            the connectionLastReset to set
+	 */
+	public void setConnectionLastReset(long connectionLastReset) {
+		this.connectionLastReset = connectionLastReset;
+	}
+
+	/**
+	 * Gets true if connection has triggered an exception at some point.
+	 * 
+	 * @return true if the connection has triggered an error
+	 */
+	public boolean isPossiblyBroken() {
+		return this.possiblyBroken;
+	}
+
+
+	/**
+	 * Gets the partition this came from.
+	 * 
+	 * @return the partition this came from
+	 */
+	public ConnectionPartition getOriginatingPartition() {
+		return this.originatingPartition;
+	}
+
+	/**
+	 * Sets Originating partition
+	 * 
+	 * @param originatingPartition
+	 *            to set
+	 */
+	public void setOriginatingPartition(ConnectionPartition originatingPartition) {
+		this.originatingPartition = originatingPartition;
+	}
+
+	/**
+	 * Renews this connection, i.e. Sets this connection to be logically open
+	 * (although it was never really closed)
+	 */
+	public void renewConnection() {
+		this.connectionClosed = false;
+	}
+}
