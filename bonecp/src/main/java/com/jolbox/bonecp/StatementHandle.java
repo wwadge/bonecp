@@ -27,18 +27,26 @@ public class StatementHandle implements Statement{
 	protected IStatementCache cache;
 	/** Handle to the connection holding this statement. */
 	protected ConnectionHandle connectionHandle;
+	/** The key to use in the cache. */
+	private String cacheKey ;
+
+
 	/**
 	 * Constructor to statement handle wrapper. 
 	 *
 	 * @param internalStatement handle to actual statement instance.
-	 * @param sql sql statement used for this handle.
+	 * @param sql statement used for this handle.
 	 * @param cache Cache handle 
 	 * @param connectionHandle Handle to the connection
+	 * @param cacheKey  
 	 */
-	public StatementHandle(Statement internalStatement, String sql, IStatementCache cache, ConnectionHandle connectionHandle) {
-		this.internalStatement = internalStatement;
+	public StatementHandle(Statement internalStatement, String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey) {
 		this.sql = sql;
+		this.internalStatement = internalStatement;
 		this.cache = cache;
+		
+		
+        this.cacheKey = cacheKey;
 		this.connectionHandle = connectionHandle;
 	}
 
@@ -66,8 +74,8 @@ public class StatementHandle implements Statement{
 			while ((rs=this.resultSetHandles.poll()) != null) {
 				rs.close();
 			}
-			if (this.cache != null){
-				this.cache.put(this.sql, this);
+			if (this.cache != null && this.cacheKey != null){
+				this.cache.put(this.cacheKey, this);
 			}
 
 		}

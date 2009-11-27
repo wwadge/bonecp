@@ -54,7 +54,7 @@ public class TestStatementHandle {
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 
-		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection);
+		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "testSQL");
 
 	}
 
@@ -106,7 +106,7 @@ public class TestStatementHandle {
 		// alternate constructor
 		StatementHandle handle = new StatementHandle(mockStatement, null);
 
-		handle = new StatementHandle(mockStatement, null, mockCache, null);
+		handle = new StatementHandle(mockStatement, null, mockCache, null, "testSQL");
 		handle.setLogicallyOpen();
 		handle.getConnection();
 		

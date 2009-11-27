@@ -42,7 +42,7 @@ public class TestPreparedStatementHandle {
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 
-		testClass = new PreparedStatementHandle(mockClass, "", mockCallableStatementCache, mockConnection);
+		testClass = new PreparedStatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "TestSQL");
 
 	}
 

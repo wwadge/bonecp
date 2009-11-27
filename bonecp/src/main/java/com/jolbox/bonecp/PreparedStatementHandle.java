@@ -43,10 +43,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 *            cache handle.
 	 * @param connectionHandle
 	 *            Handle to the connection this is tied to.
+	 * @param cacheKey 
 	 */
 	public PreparedStatementHandle(PreparedStatement internalPreparedStatement,
-			String sql, IStatementCache cache, ConnectionHandle connectionHandle) {
-		super(internalPreparedStatement, sql, cache, connectionHandle);
+			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey) {
+		super(internalPreparedStatement, sql, cache, connectionHandle, cacheKey);
 		this.internalPreparedStatement = internalPreparedStatement;
 		this.connectionHandle = connectionHandle;
 		this.sql = sql;

@@ -125,6 +125,44 @@ public class TestStatementCache {
 		CommonTestUtils.logPass();
 	}
 
+	/** Test case method for calling different get signatures.
+	 * @throws SQLException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testStatementCacheDifferentGetSignatures() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		CommonTestUtils.logTestInfo("Tests statement get() signatures.");
+
+		CommonTestUtils.logTestInfo("Tests statement close (put in cache).");
+		String sql = CommonTestUtils.TEST_QUERY;
+		BoneCP dsb = null ;
+		CommonTestUtils.config.setMinConnectionsPerPartition(1);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
+		CommonTestUtils.config.setAcquireIncrement(1);
+		CommonTestUtils.config.setPartitionCount(1);
+		CommonTestUtils.config.setPreparedStatementsCacheSize(5);
+		dsb = new BoneCP(CommonTestUtils.config);
+		Connection conn = dsb.getConnection();
+		Statement statement = conn.prepareStatement(sql);
+		statement.close();
+
+		
+		StatementCache cache = new StatementCache(5, 30);
+		cache.put("test1", statement);
+		assertNotNull(cache.get("test1"));
+		
+		assertNull(cache.get("test1", 1));
+		assertNull(cache.get("test1", new int[]{1}));
+		assertNull(cache.get("test1", new String[]{"1"}));
+		assertNull(cache.get("test1", 1, 1));
+		assertNull(cache.get("test1", 1, 1, 1));
+
+		CommonTestUtils.logPass();
+	}
+	
 	/** Test case for cache put.
 	 * @throws SQLException
 	 * @throws SecurityException
