@@ -5,7 +5,7 @@
 	<artifactId>bonecp-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Bone Connection Pool - Parent</name>
-	<version>0.5.2</version>
+	<version>0.5.3-rc1</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
@@ -19,7 +19,7 @@
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp</artifactId>
-				<version>0.5.2</version>
+				<version>0.5.3-rc1</version>
 				<scope>test</scope>
 			</dependency>
 
