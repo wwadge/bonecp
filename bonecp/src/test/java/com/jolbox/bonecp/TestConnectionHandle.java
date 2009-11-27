@@ -53,6 +53,7 @@ public class TestConnectionHandle {
 	private static BoneCP mockPool;
 	/** Mock handle. */
 	private static Logger mockLogger;
+	/** Mock handle. */
 	private static StatementCache testStatementCache;
 
 
