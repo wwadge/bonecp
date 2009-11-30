@@ -64,9 +64,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.addBatch();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -81,9 +81,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.clearParameters();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -98,9 +98,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.execute();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -115,9 +115,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.executeQuery();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -132,9 +132,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.executeUpdate();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -149,9 +149,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.getMetaData();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -166,9 +166,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.getParameterMetaData();
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -183,9 +183,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setArray(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -201,9 +201,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -221,9 +221,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -241,9 +241,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -259,9 +259,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBigDecimal(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -277,9 +277,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -297,9 +297,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -317,9 +317,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -334,9 +334,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -352,9 +352,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -371,9 +371,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -388,9 +388,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBoolean(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -405,9 +405,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setByte(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -422,9 +422,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBytes(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -441,9 +441,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -461,9 +461,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader, length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -481,9 +481,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader, length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -498,9 +498,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -515,9 +515,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -534,9 +534,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -551,9 +551,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -570,9 +570,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -587,9 +587,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDouble(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -604,9 +604,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setFloat(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -621,9 +621,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setInt(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -638,9 +638,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setLong(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -657,9 +657,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setNCharacterStream(parameterIndex,
 					value);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -677,9 +677,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setNCharacterStream(parameterIndex,
 					value, length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -694,9 +694,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, value);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -711,9 +711,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -730,9 +730,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -748,9 +748,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNString(parameterIndex, value);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -765,9 +765,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -784,9 +784,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType,
 					typeName);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -801,9 +801,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -820,9 +820,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x,
 					targetSqlType);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -840,9 +840,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x,
 					targetSqlType, scaleOrLength);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -857,9 +857,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setRef(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -874,9 +874,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setRowId(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -892,9 +892,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setSQLXML(parameterIndex, xmlObject);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -909,9 +909,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setShort(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -926,9 +926,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setString(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -943,9 +943,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -962,9 +962,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -980,9 +980,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -999,9 +999,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -1016,9 +1016,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setURL(parameterIndex, x);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
 		}
 
 	}
@@ -1037,9 +1037,8 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setUnicodeStream(parameterIndex, x,
 					length);
-		} catch (SQLException e) {
-			this.connectionHandle.markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
 		}
 
 	}

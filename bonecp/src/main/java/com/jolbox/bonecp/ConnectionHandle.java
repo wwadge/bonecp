@@ -109,9 +109,8 @@ public class ConnectionHandle implements Connection {
 				this.callableStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
 
 			}
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		this.pool = pool;
 	}
@@ -147,10 +146,19 @@ public class ConnectionHandle implements Connection {
 	 * Given an exception, flag the connection (or database) as being potentially broken. If the exception is a data-specific exception,
 	 * do nothing except throw it back to the application. 
 	 * 
-	 * @param e exception to process
+	 * @param t throwable exception to process
+	 * @return SQLException for further processing
 	 */
-	protected void markPossiblyBroken(SQLException e) {
-		String state = (e != null) ? e.getSQLState() : null;
+	protected SQLException markPossiblyBroken(Throwable t) {
+		SQLException e;
+		if (t instanceof SQLException){
+			e=(SQLException) t;
+		} else {
+			  e = new SQLException(t == null ? "Unknown error" : t.getMessage(), "08999");
+			  e.initCause( t );
+		}
+		
+		String state = e.getSQLState();
 		if (state == null){ // safety;
 			state = "Z";
 		}
@@ -172,15 +180,17 @@ public class ConnectionHandle implements Connection {
 		if (state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
 			this.possiblyBroken = true;
 		}
+		
+		return e;
 	}
+
 
 	public void clearWarnings() throws SQLException {
 		checkClosed();
 		try {
 			this.connection.clearWarnings();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -209,9 +219,8 @@ public class ConnectionHandle implements Connection {
 				this.connectionClosed = true;
 				this.pool.releaseConnection(this);
 			}
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -230,9 +239,8 @@ public class ConnectionHandle implements Connection {
 
 			this.connection.close();
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -240,9 +248,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.commit();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -252,9 +259,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.createArrayOf(typeName, elements);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 
 		return result;
@@ -265,9 +271,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.createBlob();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -277,9 +282,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.createClob();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 
 		return result;
@@ -291,9 +295,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.createNClob();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -303,9 +306,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.createSQLXML();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -316,9 +318,8 @@ public class ConnectionHandle implements Connection {
 		try {
 			result = trackStatement(new StatementHandle(this.connection
 					.createStatement(), this));
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -330,9 +331,8 @@ public class ConnectionHandle implements Connection {
 		try {
 			result = trackStatement(new StatementHandle(this.connection
 					.createStatement(resultSetType, resultSetConcurrency), this));
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -346,9 +346,8 @@ public class ConnectionHandle implements Connection {
 			result = trackStatement(new StatementHandle(this.connection
 					.createStatement(resultSetType, resultSetConcurrency,
 							resultSetHoldability), this));
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 
 		return result;
@@ -360,9 +359,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.createStruct(typeName, attributes);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -372,9 +370,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getAutoCommit();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -384,9 +381,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getCatalog();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -396,9 +392,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getClientInfo();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -408,9 +403,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getClientInfo(name);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -420,9 +414,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getHoldability();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 
 		return result;
@@ -433,9 +426,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getMetaData();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -445,9 +437,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getTransactionIsolation();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -457,9 +448,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getTypeMap();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -469,9 +459,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.getWarnings();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -481,9 +470,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.isClosed();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -493,9 +481,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.isReadOnly();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -505,9 +492,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.isValid(timeout);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -517,9 +503,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			result = this.connection.nativeSQL(sql);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -543,9 +528,8 @@ public class ConnectionHandle implements Connection {
 				result = this.connection.prepareCall(sql);
 			}
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -570,9 +554,8 @@ public class ConnectionHandle implements Connection {
 				result = this.connection.prepareCall(sql, resultSetType, resultSetConcurrency);
 			}
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -598,9 +581,8 @@ public class ConnectionHandle implements Connection {
 				result = this.connection.prepareCall(sql, resultSetType,
 						resultSetConcurrency, resultSetHoldability);
 			}
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -625,9 +607,8 @@ public class ConnectionHandle implements Connection {
 			} else {
 				result = this.connection.prepareStatement(sql);
 			}
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return (PreparedStatement) result;
 	}
@@ -655,9 +636,8 @@ public class ConnectionHandle implements Connection {
 						autoGeneratedKeys);
 			}
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -683,9 +663,8 @@ public class ConnectionHandle implements Connection {
 			} else {
 				result = this.connection.prepareStatement(sql, columnIndexes);
 			}
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -712,9 +691,8 @@ public class ConnectionHandle implements Connection {
 				result = this.connection.prepareStatement(sql, columnNames);
 			}
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -742,9 +720,8 @@ public class ConnectionHandle implements Connection {
 						resultSetConcurrency);
 			}
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -775,9 +752,8 @@ public class ConnectionHandle implements Connection {
 						resultSetConcurrency, resultSetHoldability);
 			}
 
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -786,9 +762,9 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.releaseSavepoint(savepoint);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
+			
 		}
 	}
 
@@ -796,9 +772,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.rollback();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -806,9 +781,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.rollback(savepoint);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -816,10 +790,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.setAutoCommit(autoCommit);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
-
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -827,9 +799,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.setCatalog(catalog);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -847,9 +818,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.setHoldability(holdability);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -857,9 +827,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.setReadOnly(readOnly);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -868,9 +837,8 @@ public class ConnectionHandle implements Connection {
 		Savepoint result = null;
 		try {
 			result = this.connection.setSavepoint();
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -880,9 +848,8 @@ public class ConnectionHandle implements Connection {
 		Savepoint result = null;
 		try {
 			result = this.connection.setSavepoint(name);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 		return result;
 	}
@@ -891,9 +858,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.setTransactionIsolation(level);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
@@ -901,9 +867,8 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 		try {
 			this.connection.setTypeMap(map);
-		} catch (SQLException e) {
-			markPossiblyBroken(e);
-			throw e;
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
 		}
 	}
 
