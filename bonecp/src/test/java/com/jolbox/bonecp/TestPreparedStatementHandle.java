@@ -15,10 +15,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.IStatementCache;
-import com.jolbox.bonecp.PreparedStatementHandle;
-
 /** Tests preparedStatementHandle class.
  * @author wwadge
  *
@@ -63,8 +59,7 @@ public class TestPreparedStatementHandle {
 	public void testStandardBounceMethods() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-
-		CommonTestUtils.testStatementBounceMethod(testClass, skipTests, mockClass);
+		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
 		
 	}
 }

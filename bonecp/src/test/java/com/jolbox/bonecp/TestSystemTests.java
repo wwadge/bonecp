@@ -1,13 +1,6 @@
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.createNiceMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.isA;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.reset;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -16,20 +9,15 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPDataSource;
-import com.jolbox.bonecp.ConnectionHandle;
 
 
 
@@ -57,9 +45,14 @@ public class TestSystemTests {
 
 		
 	/** Mostly for code coverage. 
-	 * @throws IOException */
+	 * @throws IOException 
+	 * @throws NoSuchMethodException 
+	 * @throws SecurityException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException */
 	@Test
-	public void testDataSource() throws SQLException, IOException {
+	public void testDataSource() throws SQLException, IOException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 		CommonTestUtils.config.setAcquireIncrement(5);
 		CommonTestUtils.config.setMinConnectionsPerPartition(30);
 		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
@@ -120,6 +113,12 @@ public class TestSystemTests {
 		} catch (SQLException e){
 			// do nothing
 		}
+		
+		Method method = dsb.getClass().getDeclaredMethod("parseNumber", new Class[]{String.class, int.class});
+		method.setAccessible(true);
+		int result = (Integer) method.invoke(dsb, "badNumber", 123);
+		// should fallback to default number
+		assertEquals(123, result);
 		
 		assertNull(dsb.unwrap(String.class));
 		assertEquals("5", dsb.getAcquireIncrement());

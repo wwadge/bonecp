@@ -20,8 +20,7 @@ import java.util.concurrent.Executors;
 import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
-
-import com.jolbox.bonecp.BoneCPConfig;
+import org.easymock.EasyMock;
 
 
 /**
@@ -115,6 +114,7 @@ public class CommonTestUtils {
 
 
 	/** Create mock expectations of the given classes then invoke the given method twice (once normal + once faking an SQL exception).
+	 * @param mockConnection 
 	 * @param mockClass
 	 * @param testClass
 	 * @param method
@@ -123,16 +123,21 @@ public class CommonTestUtils {
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	private static void doTestStatementBounceMethod(Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+	private static void doTestStatementBounceMethod(ConnectionHandle mockConnection, Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 
 		if (method.getReturnType() == void.class){
 			method.invoke(mockClass, args);
-			expectLastCall().once().andThrow(new SQLException()).once();
+			expectLastCall().once().andThrow(new Error()).once();
 		} else {
-			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new SQLException()).once();
+			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new Error()).once();
 		}
 
+		
+		expect(mockConnection.markPossiblyBroken((Throwable)EasyMock.anyObject())).andReturn(new SQLException()).anyTimes();
 		replay(mockClass);
+		if (!mockClass.equals(mockConnection)){
+			replay(mockConnection);
+		}
 		method.invoke(testClass, args);
 		try{
 			method.invoke(testClass, args); // and repeat the test with the fake exception trigger
@@ -140,11 +145,16 @@ public class CommonTestUtils {
 		} catch(Throwable t){
 			// do nothing
 		}
-		verify(mockClass);
-		reset(mockClass);
+			
+		verify(mockConnection);
+		if (!mockClass.equals(mockConnection)){
+				verify(mockClass);
+		}
+		reset(mockClass, mockConnection);
 	}
 
 	/** Create mock expectations of the given classes then invoke the given method twice (once normal + once faking an SQL exception).
+	 * @param mockConnection 
 	 * @param testClass
 	 * @param skipTests
 	 * @param mockClass
@@ -152,7 +162,7 @@ public class CommonTestUtils {
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public static void testStatementBounceMethod(Object testClass, Set<String> skipTests, Object mockClass) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+	public static void testStatementBounceMethod(ConnectionHandle mockConnection, Object testClass, Set<String> skipTests, Object mockClass) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 
 		Method[] methods = testClass.getClass().getDeclaredMethods();
 		for (Method method: methods){
@@ -165,7 +175,7 @@ public class CommonTestUtils {
 				mockParams[i] = CommonTestUtils.instanceMap.get(params[i]);
 			}
 
-			doTestStatementBounceMethod(mockClass, testClass, method, mockParams);
+			doTestStatementBounceMethod(mockConnection, mockClass, testClass, method, mockParams);
 		}
 	}
 

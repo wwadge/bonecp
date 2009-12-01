@@ -44,7 +44,7 @@ public class TestConnectionHandle {
 	/** Test class handle. */
 	private static ConnectionHandle testClass;
 	/** Mock handle. */
-	private static Connection mockConnection;
+	private static ConnectionHandle mockConnection;
 	/** Mock handle. */
 	private static IStatementCache mockPreparedStatementCache;
 	/** Mock handle. */
@@ -119,7 +119,7 @@ public class TestConnectionHandle {
 		skipTests.add("renewConnection");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
-		CommonTestUtils.testStatementBounceMethod(testClass, skipTests, mockConnection);
+		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockConnection);
 	}
 
 	/** Test marking of possibly broken status.

@@ -60,7 +60,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			return this.internalCallableStatement.getArray(parameterIndex);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
 		}
 
 	}

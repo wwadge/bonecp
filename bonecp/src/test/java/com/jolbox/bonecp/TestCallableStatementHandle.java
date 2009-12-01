@@ -14,10 +14,6 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.jolbox.bonecp.CallableStatementHandle;
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.IStatementCache;
 /**
  * @author Wallace
  *
@@ -40,7 +36,6 @@ public class TestCallableStatementHandle {
 		mockClass = createNiceMock(CallableStatementHandle.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
-
 		testClass = new CallableStatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "somesql");
 
 	}
@@ -62,8 +57,7 @@ public class TestCallableStatementHandle {
 	public void testStandardBounceMethods() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-
-		CommonTestUtils.testStatementBounceMethod(testClass, skipTests, mockClass);
+		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
 		
 	}
 }
