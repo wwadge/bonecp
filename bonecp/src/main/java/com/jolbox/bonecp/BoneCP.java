@@ -225,10 +225,12 @@ public class BoneCP {
 	/** Release a connection by placing the connection back in the pool.
 	 * @param conn Connection being released.
 	 * @throws InterruptedException 
+	 * @throws SQLException 
 	 **/
-	protected void internalReleaseConnection(Connection conn) throws InterruptedException {
+	protected void internalReleaseConnection(Connection conn) throws InterruptedException, SQLException {
 
 		ConnectionHandle connectionHandle = (ConnectionHandle)conn;
+		connectionHandle.clearStatementHandles();
 		if (connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();

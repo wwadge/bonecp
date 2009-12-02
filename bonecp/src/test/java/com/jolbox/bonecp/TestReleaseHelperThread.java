@@ -3,10 +3,12 @@ package com.jolbox.bonecp;
 
 import static org.easymock.classextension.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
 
+import java.sql.SQLException;
 import java.util.concurrent.BlockingQueue;
 
 import org.easymock.IAnswer;
@@ -46,9 +48,10 @@ public class TestReleaseHelperThread {
 	
 	/** Normal case test
 	 * @throws InterruptedException
+	 * @throws SQLException 
 	 */
 	@Test
-	public void testNormalCycle() throws InterruptedException {
+	public void testNormalCycle() throws InterruptedException, SQLException {
 		expect(mockQueue.take()).andAnswer(new IAnswer<ConnectionHandle>() {
 
 			@Override
@@ -60,7 +63,7 @@ public class TestReleaseHelperThread {
 					throw new InterruptedException();
 				
 			}
-		}).anyTimes();
+		}).times(2);
 
 		mockPool.internalReleaseConnection(mockConnection);
 		
@@ -69,9 +72,29 @@ public class TestReleaseHelperThread {
 		ReleaseHelperThread clazz = new ReleaseHelperThread(mockQueue, mockPool);
 		clazz.run();
 		verify(mockPool, mockQueue);
-
-		reset(mockPool);
+		reset(mockPool, mockQueue);
+		
+	
 	}
 	
-
+	/** Normal case test
+	 * @throws InterruptedException
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testSQLExceptionCycle() throws InterruptedException, SQLException {
+		first = true;
+		expect(mockQueue.take()).andReturn(mockConnection);
+		mockPool.internalReleaseConnection(mockConnection);
+		expectLastCall().andThrow(new SQLException());
+		
+		
+		replay(mockPool, mockQueue);
+		ReleaseHelperThread clazz = new ReleaseHelperThread(mockQueue, mockPool);
+		clazz.run();
+		verify(mockPool, mockQueue);
+		reset(mockPool, mockQueue);
+		
+	
+	}
 }

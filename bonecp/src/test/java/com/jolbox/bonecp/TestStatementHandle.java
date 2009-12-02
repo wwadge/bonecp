@@ -79,7 +79,8 @@ public class TestStatementHandle {
 		skipTests.add("isClosed");
 		skipTests.add("internalClose");
 		skipTests.add("trackResultSet");
-		skipTests.add("checkClosed"); 
+		skipTests.add("checkClosed");
+		skipTests.add("clearResultSetHandles"); 
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
 		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);

@@ -117,6 +117,7 @@ public class TestConnectionHandle {
 		skipTests.add("getOriginatingPartition");
 		skipTests.add("setOriginatingPartition");
 		skipTests.add("renewConnection");
+		skipTests.add("clearStatementHandles");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
 		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockConnection);

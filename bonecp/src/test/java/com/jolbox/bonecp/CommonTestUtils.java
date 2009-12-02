@@ -136,7 +136,7 @@ public class CommonTestUtils {
 		expect(mockConnection.markPossiblyBroken((Throwable)EasyMock.anyObject())).andReturn(new SQLException()).anyTimes();
 		replay(mockClass);
 		if (!mockClass.equals(mockConnection)){
-			replay(mockConnection);
+			replay(mockConnection); 
 		}
 		method.invoke(testClass, args);
 		try{

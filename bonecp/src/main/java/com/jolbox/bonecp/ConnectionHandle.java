@@ -231,14 +231,8 @@ public class ConnectionHandle implements Connection {
 	 */
 	protected void internalClose() throws SQLException {
 		try {
-
-			Statement statement = null;
-			while ((statement = this.statementHandles.poll()) != null) {
-				((StatementHandle) statement).internalClose();
-			}
-
+			clearStatementHandles();
 			this.connection.close();
-
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -945,5 +939,16 @@ public class ConnectionHandle implements Connection {
 	 */
 	public void renewConnection() {
 		this.connectionClosed = false;
+	}
+
+	
+	/** Clears out the statement handles.
+	 * @throws SQLException
+	 */
+	protected void clearStatementHandles() throws SQLException {
+		Statement statement = null;
+		while ((statement = this.statementHandles.poll()) != null) {
+			((StatementHandle) statement).internalClose();
+		}
 	}
 }

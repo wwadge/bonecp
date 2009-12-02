@@ -70,14 +70,22 @@ public class StatementHandle implements Statement{
 		if (!this.logicallyClosed){
 			this.logicallyClosed = true;
 
-			ResultSet rs = null;
-			while ((rs=this.resultSetHandles.poll()) != null) {
-				rs.close();
-			}
+			clearResultSetHandles();
 			if (this.cache != null && this.cacheKey != null){
 				this.cache.put(this.cacheKey, this);
 			}
 
+		}
+	}
+
+
+	/** Clears out all result set handles by closing them and removing them from tracking.
+	 * @throws SQLException on error
+	 */
+	protected void clearResultSetHandles() throws SQLException {
+		ResultSet rs = null;
+		while ((rs=this.resultSetHandles.poll()) != null) {
+			rs.close();
 		}
 	}
 
@@ -893,6 +901,8 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	public void internalClose() throws SQLException {
+		clearResultSetHandles();
+		
 		this.internalStatement.close();
 		if (this.cache != null){
 			this.cache.clear();
