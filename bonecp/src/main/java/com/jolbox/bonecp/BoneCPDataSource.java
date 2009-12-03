@@ -3,7 +3,6 @@ package com.jolbox.bonecp;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -125,8 +124,9 @@ public class BoneCPDataSource implements DataSource {
                 int releaseHelperThreads = parseNumber(this.releaseHelperThreads, 3);
                 int acquireIncrement = parseNumber(this.acquireIncrement, 10);
                 int partitions = parseNumber(this.partitions, 3);
-                long idleConnectionTestPeriod = TimeUnit.MILLISECONDS.convert(parseNumber(this.idleConnectionTestPeriod, 60), TimeUnit.MINUTES);
-                long idleMaxAge = TimeUnit.MILLISECONDS.convert(parseNumber(this.idleMaxAge, 240), TimeUnit.MINUTES);
+                
+                long idleConnectionTestPeriod = parseNumber(this.idleConnectionTestPeriod, 60);
+                long idleMaxAge = parseNumber(this.idleMaxAge, 240); 
                 int psCacheSize = parseNumber(this.preparedStatementCacheSize, 100);
                 int statementsCachedPerConnection = parseNumber(this.statementsCachedPerConnection, 30);
                 try {

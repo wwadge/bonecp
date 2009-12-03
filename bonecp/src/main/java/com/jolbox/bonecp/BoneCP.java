@@ -90,7 +90,7 @@ public class BoneCP {
 	 * @throws SQLException on error
 	 */
 	public BoneCP(BoneCPConfig config) throws SQLException {
-
+		
 		config.sanitize();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
@@ -230,7 +230,7 @@ public class BoneCP {
 	protected void internalReleaseConnection(Connection conn) throws InterruptedException, SQLException {
 
 		ConnectionHandle connectionHandle = (ConnectionHandle)conn;
-		connectionHandle.clearStatementHandles();
+		connectionHandle.clearStatementHandles(false);
 		if (connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();

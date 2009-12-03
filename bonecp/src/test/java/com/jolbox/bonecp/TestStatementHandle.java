@@ -153,13 +153,14 @@ public class TestStatementHandle {
 		
 		reset(mockResultSetHandle, mockResultSet);
 		handle.setLogicallyOpen();
-		expect(mockResultSetHandle.poll()).andReturn(mockResultSet).once();
+		
+		// expect(mockResultSetHandle.poll()).andReturn(mockResultSet).once();
 		mockResultSet.close();
 		expectLastCall();
 		replay(mockResultSet, mockResultSetHandle);
 		handle.close();
 
-		verify(mockResultSetHandle, mockResultSet);
+		verify(mockResultSetHandle); // , mockResultSet);
 				
 		handle.setLogicallyOpen();
 		Assert.assertFalse(handle.isClosed());

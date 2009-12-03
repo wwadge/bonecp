@@ -11,7 +11,7 @@
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.5.3.2-rc1</version>
+		<version>0.5.3.5-rc1</version>
 	</parent>
 
 

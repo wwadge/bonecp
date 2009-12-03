@@ -1,5 +1,7 @@
 package com.jolbox.bonecp;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.log4j.Logger;
 
 
@@ -281,6 +283,10 @@ public class BoneCPConfig {
      *
      */
     public void sanitize(){
+    	// convert to MS
+    	this.idleConnectionTestPeriod =  TimeUnit.MILLISECONDS.convert(this.idleConnectionTestPeriod, TimeUnit.MINUTES);
+    	this.idleMaxAge =  TimeUnit.MILLISECONDS.convert(this.idleMaxAge, TimeUnit.MINUTES);
+
         if (this.maxConnectionsPerPartition < 2) {
             logger.warn("Max Connections < 2. Setting to 50");
             this.maxConnectionsPerPartition = 50;

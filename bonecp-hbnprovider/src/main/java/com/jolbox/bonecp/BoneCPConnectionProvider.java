@@ -3,16 +3,12 @@ package com.jolbox.bonecp;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.util.PropertiesHelper;
-
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
 
 
 /**
@@ -99,8 +95,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		int acquireIncrement = configParseNumber(props, CONFIG_ACQUIRE_INCREMENT, 10);
 		int partcount = configParseNumber(props, CONFIG_PARTITION_COUNT, 3);
 		int releaseHelperThreads = configParseNumber(props, CONFIG_RELEASE_HELPER_THREADS, 3);
-		long idleMaxAge = TimeUnit.MILLISECONDS.convert(configParseNumber(props, CONFIG_IDLE_MAX_AGE, 240), TimeUnit.MINUTES);
-		long idleConnectionTestPeriod = TimeUnit.MILLISECONDS.convert(configParseNumber(props, CONFIG_IDLE_CONNECTION_TEST_PERIOD, 60), TimeUnit.MINUTES);
+		long idleMaxAge = configParseNumber(props, CONFIG_IDLE_MAX_AGE, 240);
+		long idleConnectionTestPeriod = configParseNumber(props, CONFIG_IDLE_CONNECTION_TEST_PERIOD, 60);
 
 		String url = props.getProperty(CONFIG_CONNECTION_URL, "JDBC URL NOT SET IN CONFIG");
 		String username = props.getProperty(CONFIG_CONNECTION_USERNAME, "username not set");
