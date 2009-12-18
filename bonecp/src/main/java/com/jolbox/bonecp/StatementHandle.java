@@ -905,21 +905,30 @@ public class StatementHandle implements Statement{
 	 * 
 	 *
 	 */
-	public void internalClose() throws SQLException {
+	protected void internalClose() throws SQLException {
 		clearResultSetHandles(true);
 
 		this.internalStatement.close();
+
+	}
+
+	/**
+	 * Clears out the cache of statements.
+	 */
+	protected void clearCache(){
 		if (this.cache != null){
 			this.cache.clear();
 		}
+
 	}
+
 
 
 	/**
 	 * Marks this statement as being "open"
 	 *
 	 */
-	public void setLogicallyOpen() {
+	protected void setLogicallyOpen() {
 		this.logicallyClosed = false;
 	}
 
