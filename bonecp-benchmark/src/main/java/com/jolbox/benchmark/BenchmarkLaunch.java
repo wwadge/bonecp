@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
-import java.util.BitSet;
 
 import javax.naming.NamingException;
 
@@ -70,9 +69,9 @@ public class BenchmarkLaunch {
 		}
 			
 		
-		BenchmarkTests.threads=100;
-		BenchmarkTests.stepping=20;
-		BenchmarkTests.pool_size=50;
+		BenchmarkTests.threads=400;
+		BenchmarkTests.stepping=5;
+		BenchmarkTests.pool_size=200;
 		if (cmd.hasOption("t")){
 			BenchmarkTests.threads=Integer.parseInt(cmd.getOptionValue("t", "400"));
 		} 
@@ -92,31 +91,37 @@ public class BenchmarkLaunch {
 
 
 		
-//		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
-//		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
-		do{
-			plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
-		} while (true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
-//		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
-//		
-//		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
-//		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
+		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
+		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
+		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
+		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
+		
+		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
+		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);
 
 	}
 
 
+	private static void plotLineGraph(long[][] results, int delay, boolean statementBenchmark) {
+		doPlotLineGraph(results, delay, statementBenchmark, true);
+		doPlotLineGraph(results, delay, statementBenchmark, false);
+	}
 	/**
 	 * @param results
 	 */
-	private static void plotLineGraph(long[][] results, int delay, boolean statementBenchmark) {
+	private static void doPlotLineGraph(long[][] results, int delay, boolean statementBenchmark, boolean noC3P0) {
+		
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for (int i=0; i <  ConnectionPoolType.values().length; i++){ //
+			if (!ConnectionPoolType.values()[i].isEnabled() || (noC3P0 && ConnectionPoolType.values()[i].equals(ConnectionPoolType.C3P0))){
+				continue;
+			}
 			XYSeries series = new XYSeries(ConnectionPoolType.values()[i].toString());
 
 			for (int j=1+BenchmarkTests.stepping; j < results[i].length; j+=BenchmarkTests.stepping){
@@ -132,7 +137,7 @@ public class BenchmarkLaunch {
 		}
         JFreeChart chart = ChartFactory.createXYLineChart(title, // Title
                 "threads", // x-axis Label
-                "time (ms)", // y-axis Label
+                "time (ns)", // y-axis Label
                 dataset, // Dataset
                 PlotOrientation.VERTICAL, // Plot Orientation
                 true, // Show Legend
@@ -145,8 +150,12 @@ public class BenchmarkLaunch {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
         plot.setRenderer(renderer);
         renderer.setSeriesPaint(0, Color.BLUE);
-        renderer.setSeriesPaint(1, Color.yellow);
+        renderer.setSeriesPaint(1, Color.YELLOW);
         renderer.setSeriesPaint(2, Color.BLACK);
+        renderer.setSeriesPaint(3, Color.DARK_GRAY);
+        renderer.setSeriesPaint(4, Color.MAGENTA);
+        renderer.setSeriesPaint(5, Color.RED);
+        renderer.setSeriesPaint(6, Color.LIGHT_GRAY);
 //          renderer.setSeriesShapesVisible(1, true);   
 //          renderer.setSeriesShapesVisible(2, true);   
 
@@ -155,7 +164,11 @@ public class BenchmarkLaunch {
         	if (statementBenchmark){
         		fname += "-with-preparedstatements";
         	}
-        	fname += "-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png";
+        	fname += "-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads;
+        	if (noC3P0){
+        		fname+="-noC3P0";
+        	}
+        	 fname += ".png";
             ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024, 768);
             System.out.println("******* Saved chart to: " + fname);
         } catch (IOException e) {
@@ -180,8 +193,8 @@ public class BenchmarkLaunch {
 				true, false);
 		try {
 			String fname = System.getProperty("java.io.tmpdir")+File.separator+filename;
-			ChartUtilities.saveChartAsPNG(new File(fname), chart, 500,
-					300);
+			ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024,
+					768);
 			System.out.println("******* Saved chart to: " + fname);
 		} catch (IOException e) {
 			e.printStackTrace();

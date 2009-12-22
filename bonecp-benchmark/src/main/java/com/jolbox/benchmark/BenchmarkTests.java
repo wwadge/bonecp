@@ -137,7 +137,7 @@ public class BenchmarkTests {
 	 * @throws InterruptedException 
 	 * @throws SQLException 
 	 */
-	private BoneCPDataSource multiThreadedBoneCP(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
+	private BoneCPDataSource multiThreadedBoneCP(boolean doPreparedStatement, int partitions) throws PropertyVetoException, InterruptedException, SQLException {
 
 		BoneCPDataSource dsb = new BoneCPDataSource();
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
@@ -151,8 +151,9 @@ public class BenchmarkTests {
 		} else {
 			dsb.setPreparedStatementCacheSize(0);
 		}
-		dsb.setMinConnections(pool_size);
-		dsb.setMaxConnections(pool_size);
+		dsb.setMinConnectionsPerPartition(pool_size / partitions);
+		dsb.setMaxConnectionsPerPartition(pool_size / partitions);
+		dsb.setPartitionCount(partitions);
 		dsb.setReleaseHelperThreads(0);
 //		dsb.setAcquireIncrement(5);
 		return dsb;
@@ -175,8 +176,9 @@ public class BenchmarkTests {
 		config.setIdleConnectionTestPeriod(0);
 		config.setIdleMaxAge(0);
 		config.setPreparedStatementsCacheSize(0);
-		config.setMinConnections(pool_size);
-		config.setMaxConnections(pool_size);
+		config.setMinConnectionsPerPartition(pool_size);
+		config.setMaxConnectionsPerPartition(pool_size);
+		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
 		config.setReleaseHelperThreads(0);
 		BoneCP dsb = new BoneCP(config);
@@ -286,7 +288,7 @@ public class BenchmarkTests {
 		long[] results = new long[ConnectionPoolType.values().length];
 
 		for (ConnectionPoolType poolType: ConnectionPoolType.values()){
-			if (!poolType.isEnabled()){
+			if (!poolType.isEnabled() && !poolType.isMultiPartitions()){
 				continue;
 			}
 			System.out.println("|- Benchmarking " + poolType);
@@ -301,7 +303,7 @@ public class BenchmarkTests {
 				case DBCP:
 					cycleResults[i]=singleDBCP();
 					break;
-				case BONECP: 		
+				case BONECP_1_PARTITIONS: 		
 					cycleResults[i]=singleBoneCP();
 					break;
 				default: 
@@ -438,9 +440,22 @@ public class BenchmarkTests {
 		long[] poolResults  = new long[threads];
 		DataSource ds = null;
 		switch (poolType) {
-		case BONECP: 			
-			ds=multiThreadedBoneCP(doPreparedStatement);
+		case BONECP_1_PARTITIONS: 			
+			ds=multiThreadedBoneCP(doPreparedStatement, 1);
 			break;
+		case BONECP_2_PARTITIONS: 			
+			ds=multiThreadedBoneCP(doPreparedStatement,2);
+			break;
+		case BONECP_4_PARTITIONS: 			
+			ds=multiThreadedBoneCP(doPreparedStatement,4);
+			break;
+		case BONECP_5_PARTITIONS: 			
+			ds=multiThreadedBoneCP(doPreparedStatement,5);
+			break;
+		case BONECP_10_PARTITIONS: 			
+			ds=multiThreadedBoneCP(doPreparedStatement,10);
+			break;
+
 		case C3P0: 			
 			ds=multiThreadedC3P0(doPreparedStatement);
 			break;
@@ -452,7 +467,7 @@ public class BenchmarkTests {
 		}
 
 
-		for (int threadCount=1; threadCount < threads; threadCount=threadCount+stepping){
+		for (int threadCount=1; threadCount <= threads; threadCount=threadCount+stepping){
 
 			for (int cycle=0; cycle < numCycles; cycle++){
 				if (ds == null){
@@ -573,8 +588,9 @@ public class BenchmarkTests {
 		config.setIdleConnectionTestPeriod(0);
 		config.setIdleMaxAge(0);
 		config.setPreparedStatementsCacheSize(30);
-		config.setMinConnections(pool_size);
-		config.setMaxConnections(pool_size);
+		config.setMinConnectionsPerPartition(pool_size);
+		config.setMaxConnectionsPerPartition(pool_size);
+		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
 		config.setReleaseHelperThreads(helper_threads);
 		BoneCP dsb = new BoneCP(config);
@@ -611,7 +627,7 @@ public class BenchmarkTests {
 		long[] results = new long[ConnectionPoolType.values().length];
 
 		for (ConnectionPoolType poolType: ConnectionPoolType.values()){
-			if (!poolType.isEnabled()){
+			if (!poolType.isEnabled() && !poolType.isMultiPartitions()){
 				continue;
 			}
 			System.out.println("|- Benchmarking " + poolType);
@@ -626,7 +642,7 @@ public class BenchmarkTests {
 				case DBCP:
 					cycleResults[i]=testPreparedStatementSingleThreadDBCP();
 					break;
-				case BONECP: 		
+				case BONECP_1_PARTITIONS: 		
 					cycleResults[i]=testPreparedStatementSingleThreadBoneCP();
 					break;
 				default: 
@@ -663,14 +679,14 @@ public class BenchmarkTests {
 
 		ExecutorService pool = Executors.newFixedThreadPool(threads);
 		ExecutorCompletionService<Long> ecs = new ExecutorCompletionService<Long>(pool);
-		for (int i = 0; i < threads; i++){ // create and start threads
+		for (int i = 0; i <= threads; i++){ // create and start threads
 			ecs.submit(new ThreadTesterUtil(startSignal, doneSignal, cpds, workDelay, doPreparedStatement));
 		}
 
 		startSignal.countDown(); // START TEST!
 		doneSignal.await(); 
 		long time = 0;
-		for (int i = 0; i < threads; i++){
+		for (int i = 0; i <= threads; i++){
 			try {
 				time = time + ecs.take().get();
 			} catch (ExecutionException e) {
