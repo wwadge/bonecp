@@ -327,6 +327,7 @@ public class TestStatementCache {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testStatementCacheClear() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
 		BlockingQueue<String> mockHardCache = createNiceMock(BlockingQueue.class);

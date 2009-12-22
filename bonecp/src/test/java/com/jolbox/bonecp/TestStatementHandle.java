@@ -178,7 +178,7 @@ public class TestStatementHandle {
 	public void clearResultSetHandles() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
 		Statement mockStatement = createNiceMock(Statement.class);
 		ResultSet mockResultSet = createNiceMock(ResultSet.class);
-		ConcurrentLinkedQueue<ResultSet> mockResultSetHandles = (ConcurrentLinkedQueue<ResultSet>)createNiceMock(ConcurrentLinkedQueue.class);
+		ConcurrentLinkedQueue<ResultSet> mockResultSetHandles = createNiceMock(ConcurrentLinkedQueue.class);
 
 		// alternate constructor
 		StatementHandle handle = new StatementHandle(mockStatement, null);

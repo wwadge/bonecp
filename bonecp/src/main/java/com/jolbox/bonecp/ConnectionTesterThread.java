@@ -94,6 +94,7 @@ public class ConnectionTesterThread implements Runnable {
 			try {
 				connection.internalClose();
 				this.partition.setUnableToCreateMoreTransactions(false);
+				this.partition.updateCreatedConnections(-1);
 			} catch (SQLException e) {
 				logger.error(e);
 			}
