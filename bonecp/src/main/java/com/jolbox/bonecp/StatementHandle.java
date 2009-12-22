@@ -919,7 +919,6 @@ public class StatementHandle implements Statement{
 		if (this.cache != null){
 			this.cache.clear();
 		}
-
 	}
 
 

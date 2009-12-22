@@ -74,6 +74,7 @@ public class BoneCP {
 		for (int i=0; i < this.partitionCount; i++) {
 			ConnectionHandle conn;
 			while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
+				this.partitions[i].updateCreatedConnections(-1);
 				try {
 					conn.internalClose();
 				} catch (SQLException e) {
@@ -236,6 +237,7 @@ public class BoneCP {
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			connectionPartition.setUnableToCreateMoreTransactions(false);
 			maybeSignalForMoreConnections(connectionPartition);
+			connectionPartition.updateCreatedConnections(-1);
 			return; // don't place back in queue - connection is broken!
 		}
 

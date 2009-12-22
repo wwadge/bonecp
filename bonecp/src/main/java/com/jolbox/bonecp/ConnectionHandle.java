@@ -58,6 +58,8 @@ public class ConnectionHandle implements Connection {
 	private IStatementCache callableStatementCache = null;
 	/** Logger handle. */
 	private static Logger logger = Logger.getLogger(ConnectionHandle.class);
+	/** An opaque handle for an application to use in any way it deems fit. */
+	private Object debugHandle;
 
 	/**
 	 * List of statements that will be closed when this preparedStatement is
@@ -951,5 +953,20 @@ public class ConnectionHandle implements Connection {
 				((StatementHandle) statement).internalClose();
 			}
 		}
+	}
+
+	/** Returns a debug handle as previously set by an application
+	 * @return DebugHandle
+	 */
+	public Object getDebugHandle() {
+		return this.debugHandle;
+	}
+
+	/** Sets a debugHandle, an object that is not used by the connection pool at all but may be set by an application to track
+	 * this particular connection handle for any purpose it deems fit.
+	 * @param debugHandle any object.
+	 */
+	public void setDebugHandle(Object debugHandle) {
+		this.debugHandle = debugHandle;
 	}
 }

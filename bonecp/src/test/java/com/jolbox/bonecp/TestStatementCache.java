@@ -3,6 +3,7 @@ package com.jolbox.bonecp;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.reset;
@@ -319,4 +320,28 @@ public class TestStatementCache {
 		
 		
 	}
+	
+	/** Tests statement cache clear.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testStatementCacheClear() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+		BlockingQueue<String> mockHardCache = createNiceMock(BlockingQueue.class);
+		
+		StatementCache testClass = new StatementCache(1, 1);
+		Field field = testClass.getClass().getDeclaredField("hardCache");
+		field.setAccessible(true);
+		field.set(testClass, mockHardCache);
+
+		mockHardCache.clear();
+		expectLastCall().once();
+		replay(mockHardCache);
+		testClass.clear();
+		verify(mockHardCache);
+		
+	}
+	
 }

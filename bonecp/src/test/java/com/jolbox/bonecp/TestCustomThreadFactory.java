@@ -52,7 +52,7 @@ public class TestCustomThreadFactory {
 		
 		for (int i=0; i < 5; i++) {
 				signalled = true;
-			Thread.sleep(500);
+			Thread.sleep(100);
 		}
 		verify(mockLogger);
 

@@ -291,6 +291,10 @@ public class TestConnectionHandle {
 		field.setAccessible(true);
 		field.setBoolean(testClass, true);
 		assertTrue(testClass.isPossiblyBroken());
+		
+		Object debugHandle = new Object();
+		testClass.setDebugHandle(debugHandle);
+		assertEquals(debugHandle, testClass.getDebugHandle());
 	}
 
 	/** Prepare statement tests.

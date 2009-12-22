@@ -26,11 +26,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.IStatementCache;
-import com.jolbox.bonecp.PreparedStatementHandle;
-import com.jolbox.bonecp.StatementHandle;
 /**
  * @author wwadge
  *
@@ -127,8 +122,6 @@ public class TestStatementHandle {
 		
 		mockStatement.close();
 		expectLastCall();
-		mockCache.clear();
-		expectLastCall();
 		replay(mockStatement, mockCache); 
 
 		handle.internalClose();
@@ -164,6 +157,41 @@ public class TestStatementHandle {
 				
 		handle.setLogicallyOpen();
 		Assert.assertFalse(handle.isClosed());
+		
+		reset(mockCache);
+		mockCache.clear();
+		expectLastCall().once();
+		replay(mockCache);
+		handle.clearCache();
+		verify(mockCache);
+	}
+	
+	/** Clear handles test
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void clearResultSetHandles() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
+		Statement mockStatement = createNiceMock(Statement.class);
+		ResultSet mockResultSet = createNiceMock(ResultSet.class);
+		ConcurrentLinkedQueue<ResultSet> mockResultSetHandles = (ConcurrentLinkedQueue<ResultSet>)createNiceMock(ConcurrentLinkedQueue.class);
+
+		// alternate constructor
+		StatementHandle handle = new StatementHandle(mockStatement, null);
+		Field field = handle.getClass().getDeclaredField("resultSetHandles");
+		field.setAccessible(true);
+		field.set(handle, mockResultSetHandles);
+		expect(mockResultSetHandles.poll()).andReturn(mockResultSet).once().andReturn(null).once();
+		mockResultSet.close();
+		expectLastCall().once();
+		replay(mockResultSetHandles, mockResultSet, mockStatement);
+		handle.clearResultSetHandles(true);
+		verify(mockResultSet, mockResultSetHandles, mockStatement);
+		
 	}
 
 }
