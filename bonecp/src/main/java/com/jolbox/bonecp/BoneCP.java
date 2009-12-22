@@ -59,8 +59,6 @@ public class BoneCP {
 	private ExecutorService connectionsScheduler;
 	/** Configuration object used in constructor. */
 	private BoneCPConfig config;
-	/** Keep track of number of connections obtained. */
-	private int connectionsObtained = 0;
 	/** almost full locking. **/
 	final Lock connectionsObtainedLock = new ReentrantLock();
 	/** If set to true, we have run out of connections at some point. */
@@ -152,12 +150,8 @@ public class BoneCP {
 		ConnectionPartition connectionPartition = this.partitions[partition];
 		if (!connectionPartition.isUnableToCreateMoreTransactions() ){
 			try{
-				// don't bother checking for connections on every single connections.
 				this.connectionsObtainedLock.lock();
-				if (this.connectionsObtained++  % 2  == 0){ 
-					// it's possible for connectionsObtained variable to wrap around but this is not dangerous
 	 				maybeSignalForMoreConnections(connectionPartition);
-				}
 			} finally {
 				this.connectionsObtainedLock.unlock(); 
 			}

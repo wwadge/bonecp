@@ -336,10 +336,6 @@ public class TestBoneCP {
 		field.setAccessible(true);
 		field.set(testClass, mockLock);
 		
-		field = testClass.getClass().getDeclaredField("connectionsObtained");
-		field.setAccessible(true);
-		field.setInt(testClass, 0);
-	
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
