@@ -30,6 +30,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	protected static final String CONFIG_CONNECTION_URL = "hibernate.connection.url";
 	/** Config key. */
 	protected static final String CONFIG_IDLE_MAX_AGE = "bonecp.idleMaxAge";
+	/** Config stuff. */
+	protected static final String CONFIG_CONNECTION_HOOK_CLASS = "bonecp.connectionHookClass";
 	/** Config key. */
 	protected static final String CONFIG_IDLE_CONNECTION_TEST_PERIOD = "bonecp.idleConnectionTestPeriod";
 	/** Config key. */
@@ -50,8 +52,6 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	protected static final String CONFIG_TEST_STATEMENT = "bonecp.connectionTestStatement";
 	/** Config stuff. */
 	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
-	/** Config stuff. */
-	private static final String CONFIG_CONNECTION_HOOK_CLASS = null;
 	/** Connection pool handle. */
 	private BoneCP pool;
 	/** Isolation level. */
@@ -139,16 +139,9 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		}
 		catch (NullPointerException e) {
 			throw new HibernateException(e);
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			throw new HibernateException(e);
-		} catch (InstantiationException e) {
-			throw new HibernateException(e);
-		} catch (IllegalAccessException e) {
-			throw new HibernateException(e);
-		} catch (ClassCastException e) {
-			throw new HibernateException(e);
-		}
-
+		} 
 	}
 
 	/** Creates the given connection pool with the given configuration. Extracted here to make unit mocking easier.
