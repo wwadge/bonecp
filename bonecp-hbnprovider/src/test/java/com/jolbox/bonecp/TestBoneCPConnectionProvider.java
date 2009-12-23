@@ -161,8 +161,8 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(5, config.getAcquireIncrement());
 		assertEquals(5, config.getPartitionCount());
 		assertEquals(3, config.getReleaseHelperThreads());
-		assertEquals(60*60*1000, config.getIdleConnectionTestPeriod());
-		assertEquals(240*60*1000, config.getIdleMaxAge()); 
+		assertEquals(60, config.getIdleConnectionTestPeriod());
+		assertEquals(240, config.getIdleMaxAge()); 
 		assertEquals(URL, config.getJdbcUrl());
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());

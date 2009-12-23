@@ -10,6 +10,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.util.PropertiesHelper;
 
+import com.jolbox.bonecp.hooks.ConnectionHook;
+
 
 /**
  * Hibernate Connection Provider.
@@ -48,6 +50,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	protected static final String CONFIG_TEST_STATEMENT = "bonecp.connectionTestStatement";
 	/** Config stuff. */
 	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
+	/** Config stuff. */
+	private static final String CONFIG_CONNECTION_HOOK_CLASS = null;
 	/** Connection pool handle. */
 	private BoneCP pool;
 	/** Isolation level. */
@@ -101,6 +105,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		String url = props.getProperty(CONFIG_CONNECTION_URL, "JDBC URL NOT SET IN CONFIG");
 		String username = props.getProperty(CONFIG_CONNECTION_USERNAME, "username not set");
 		String password = props.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set");
+		String connectionHookClass = props.getProperty(CONFIG_CONNECTION_HOOK_CLASS);
+
 
 		// Remember Isolation level
 		this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
@@ -123,16 +129,23 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setConnectionTestStatement(connectionTestStatement);
 			this.config.setPreparedStatementsCacheSize(preparedStatementCacheSize);
 			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
-			this.config.sanitize();
-
+			
+			if (connectionHookClass != null){
+				Object hookClass = Class.forName(connectionHookClass).newInstance();
+				this.config.setConnectionHook((ConnectionHook) hookClass);
+			}
 			// create the connection pool
 			this.pool = createPool(this.config);
 		}
 		catch (NullPointerException e) {
 			throw new HibernateException(e);
-		}
-
-		catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException e) {
+			throw new HibernateException(e);
+		} catch (InstantiationException e) {
+			throw new HibernateException(e);
+		} catch (IllegalAccessException e) {
+			throw new HibernateException(e);
+		} catch (ClassCastException e) {
 			throw new HibernateException(e);
 		}
 

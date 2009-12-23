@@ -59,11 +59,11 @@ public class CommonTestUtils {
 	/** A dummy query for HSQLDB. */
 	public static final String TEST_QUERY = "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
 	/** A Sample test query for use with HSQLDB*/
-	static String url="jdbc:hsqldb:mem:test";
+	public static String url="jdbc:hsqldb:mem:test";
 	/** hsqldb username. */
-	static String username="sa";
+	public static String username="sa";
 	/** hsqldb password. */
-	static String password="";
+	public static String password="";
 	/** hsqldb driver. */
 	static String driver = "org.hsqldb.jdbcDriver";
 	/** Config file handle. */

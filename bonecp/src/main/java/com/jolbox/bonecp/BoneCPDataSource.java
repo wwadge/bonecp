@@ -30,6 +30,8 @@ import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
 
+import com.jolbox.bonecp.hooks.ConnectionHook;
+
 
 /**
  * DataSource for use with LazyConnection Provider etc.
@@ -74,6 +76,10 @@ public class BoneCPDataSource implements DataSource {
     private ReadWriteLock rwl = new ReentrantReadWriteLock();
     /** Config setting. */
     private String releaseHelperThreads = "3";
+    /** Config setting. */
+    private ConnectionHook connectionHook = null;
+    /** Config setting. */
+	private String connectionHookClassName;
     /** Class logger. */
     private static final Logger logger = Logger.getLogger(BoneCPDataSource.class);
 
@@ -104,6 +110,7 @@ public class BoneCPDataSource implements DataSource {
         this.setPreparedStatementCacheSize(config.getPreparedStatementsCacheSize());
         this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
         this.setReleaseHelperThreads(config.getReleaseHelperThreads());
+        this.setConnectionHook(config.getConnectionHook());
     }
 
    
@@ -173,8 +180,7 @@ public class BoneCPDataSource implements DataSource {
                 config.setPreparedStatementsCacheSize(psCacheSize);
                 config.setStatementsCachedPerConnection(statementsCachedPerConnection);
                 config.setReleaseHelperThreads(releaseHelperThreads);
-                config.sanitize();
-
+                config.setConnectionHook(this.connectionHook);
                 this.pool = new BoneCP(config);
             }
 
@@ -672,5 +678,42 @@ public class BoneCPDataSource implements DataSource {
 	public void setStatementsCachedPerConnection(
 			Integer statementsCachedPerConnection) {
 		this.statementsCachedPerConnection = this.statementsCachedPerConnection.toString();
+	}
+	
+	/** Returns the connection hook instance.
+	 * @return the connectionHook instance.
+	 */
+	public ConnectionHook getConnectionHook() {
+		return this.connectionHook;
+	}
+	
+	/** Sets the connection hook instance.
+	 * @param connectionHook the connectionHook to set
+	 */
+	public void setConnectionHook(ConnectionHook connectionHook) {
+		this.connectionHook = connectionHook;
+	}
+	
+	/** Sets the connection hook class name.
+	 * @param connectionHookClassName the connectionHook class name to set
+	 */
+	public void setConnectionHookClassName(String connectionHookClassName) {
+		this.connectionHookClassName = connectionHookClassName;
+		if (connectionHookClassName != null){
+			Object hookClass;
+			try {
+				hookClass = Class.forName(connectionHookClassName).newInstance();
+				this.connectionHook = (ConnectionHook) hookClass;
+			} catch (Exception e) {
+				logger.error("Unable to create an instance of the connection hook class ("+connectionHookClassName+")");
+				this.connectionHook = null;
+			} 
+		}
+	}
+	/** Returns the connection hook class name as passed via the setter
+	 * @return the connectionHookClassName.
+	 */
+	public String getConnectionHookClassName() {
+		return this.connectionHookClassName;
 	}
 }

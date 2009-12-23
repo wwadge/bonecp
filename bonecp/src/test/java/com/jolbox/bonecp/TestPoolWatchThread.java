@@ -81,6 +81,7 @@ public class TestPoolWatchThread {
 
     	mockConfig = createNiceMock(BoneCPConfig.class);
     	expect(mockConfig.getPreparedStatementsCacheSize()).andReturn(0).anyTimes();
+    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes();
     	mockPool = createNiceMock(BoneCP.class);
 		
 		testClass = new PoolWatchThread(mockPartition, mockPool);
@@ -178,8 +179,7 @@ public class TestPoolWatchThread {
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
-    	replay(mockPool);
-		replay(mockPartition, mockLogger);
+		replay(mockConfig, mockPool, mockPartition, mockLogger);
 		testClass.run();
 		verify(mockPartition);
 		
