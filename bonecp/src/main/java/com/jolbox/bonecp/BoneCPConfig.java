@@ -31,7 +31,6 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * Helper class to avoid passing in dozens of parameters.
  *
  * @author wallacew
- * @version $Revision$
  */
 public class BoneCPConfig {
 	/** For toString(). */

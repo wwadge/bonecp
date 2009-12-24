@@ -42,7 +42,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 /**
- * 
+ * Wrapper around JDBC PreparedStatement.
  * 
  * @author wallacew
  * @version $Revision$

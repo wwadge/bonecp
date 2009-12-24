@@ -33,7 +33,6 @@ import com.google.common.collect.MapMaker;
  * JDBC statement cache.
  *
  * @author wallacew
- * @version $Revision$
  */
 public class StatementCache implements IStatementCache {
 

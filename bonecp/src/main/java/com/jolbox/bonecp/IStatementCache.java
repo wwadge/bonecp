@@ -25,10 +25,9 @@ import java.sql.Statement;
 
 
 /**
- * 
+ * Interface to the JDBC statement cache.
  *
  * @author wallacew
- * @version $Revision$
  */
 public interface IStatementCache {
 	/**

@@ -35,7 +35,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.log4j.Logger;
 
 /**
- * Connection pool.
+ * Connection pool (main class).
  * @author wwadge
  *
  */
@@ -45,7 +45,7 @@ public class BoneCP {
 	/** Constant for keep-alive test */
 	private static final String KEEPALIVEMETADATA = "BONECPKEEPALIVE";
 	/** Create more threads when we hit x% of our possible number of connections. */
-	public static final int HIT_THRESHOLD = 20;
+	protected static final int HIT_THRESHOLD = 20;
 	/** Number of partitions passed in constructor. **/
 	private int partitionCount;
 	/** Partitions handle. */
@@ -234,12 +234,12 @@ public class BoneCP {
 	}
 
 	/**
-	 * Move the incoming connection unto a different queue pending release.
+	 * Releases the given connection back to the pool.
 	 *
 	 * @param connection to release
 	 * @throws SQLException
 	 */
-	public void releaseConnection(Connection connection) throws SQLException {
+	protected void releaseConnection(Connection connection) throws SQLException {
 		
 		try {
 			ConnectionHandle handle = (ConnectionHandle)connection;
@@ -409,14 +409,14 @@ public class BoneCP {
 	/**
 	 * @return the releaseHelper
 	 */
-	public ExecutorService getReleaseHelper() {
+	protected ExecutorService getReleaseHelper() {
 		return this.releaseHelper;
 	}
 
 	/**
 	 * @param releaseHelper the releaseHelper to set
 	 */
-	public void setReleaseHelper(ExecutorService releaseHelper) {
+	protected void setReleaseHelper(ExecutorService releaseHelper) {
 		this.releaseHelper = releaseHelper;
 	}
 
