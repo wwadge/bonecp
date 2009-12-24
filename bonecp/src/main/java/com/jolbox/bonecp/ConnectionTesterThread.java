@@ -113,8 +113,8 @@ public class ConnectionTesterThread implements Runnable {
 		if (connection != null) {
 			try {
 				connection.internalClose();
-				this.partition.setUnableToCreateMoreTransactions(false);
-				this.partition.updateCreatedConnections(-1);
+				this.pool.postDestroyConnection(connection);
+				
 			} catch (SQLException e) {
 				logger.error(e);
 			}

@@ -39,6 +39,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.jolbox.bonecp.hooks.CustomHook;
+
 
 
 @SuppressWarnings("all") 
@@ -101,6 +103,14 @@ public class TestSystemTests {
 		dsb.setIdleConnectionTestPeriod(0L);
 		dsb.setIdleConnectionTestPeriod("0");
 		dsb.setConnectionTestStatement("test");
+	
+		dsb.setConnectionHookClassName("bad class name");
+		assertEquals("bad class name", dsb.getConnectionHookClassName());
+		assertNull(dsb.getConnectionHook());
+		
+		dsb.setConnectionHookClassName("com.jolbox.bonecp.hooks.CustomHook");
+		assertTrue(dsb.getConnectionHook() instanceof CustomHook);
+		
 		File tmp = File.createTempFile("bonecp", "");
 		dsb.setLogWriter(new PrintWriter(tmp));
 		assertNotNull(dsb.getLogWriter());

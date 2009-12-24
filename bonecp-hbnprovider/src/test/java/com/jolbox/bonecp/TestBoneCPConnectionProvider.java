@@ -3,20 +3,7 @@
  */
 package com.jolbox.bonecp;
 
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_ACQUIRE_INCREMENT;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_CONNECTION_DRIVER_CLASS;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_CONNECTION_PASSWORD;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_CONNECTION_URL;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_CONNECTION_USERNAME;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_IDLE_CONNECTION_TEST_PERIOD;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_IDLE_MAX_AGE;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_MAX_CONNECTIONS_PER_PARTITION;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_MIN_CONNECTIONS_PER_PARTITION;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_PARTITION_COUNT;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_PREPARED_STATEMENT_CACHE_SIZE;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_RELEASE_HELPER_THREADS;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_STATEMENTS_CACHED_PER_CONNECTION;
-import static com.jolbox.bonecp.BoneCPConnectionProvider.CONFIG_TEST_STATEMENT;
+import static com.jolbox.bonecp.BoneCPConnectionProvider.*;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expectLastCall;
@@ -133,7 +120,7 @@ public class TestBoneCPConnectionProvider {
 		expect(mockProperties.getProperty(CONFIG_PREPARED_STATEMENT_CACHE_SIZE)).andReturn("40").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_STATEMENTS_CACHED_PER_CONNECTION)).andReturn("30").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_MIN_CONNECTIONS_PER_PARTITION)).andReturn("20").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_MAX_CONNECTIONS_PER_PARTITION)).andReturn("50").anyTimes();
+		expect(mockProperties.getProperty(CONFIG_MAX_CONNECTIONS_PER_PARTITION)).andReturn("50").anyTimes(); 
 		expect(mockProperties.getProperty(CONFIG_ACQUIRE_INCREMENT)).andReturn("5").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_PARTITION_COUNT)).andReturn("5").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_RELEASE_HELPER_THREADS)).andReturn("3").anyTimes();
@@ -143,6 +130,7 @@ public class TestBoneCPConnectionProvider {
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_USERNAME, "username not set")).andReturn(USERNAME).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set")).andReturn(PASSWORD).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_DRIVER_CLASS)).andReturn(DRIVER).anyTimes();
+		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.hooks.CustomHook").anyTimes();
 
 		BoneCPConnectionProvider partialTestClass = createNiceMock(BoneCPConnectionProvider.class, 
 				BoneCPConnectionProvider.class.getDeclaredMethod("createPool", BoneCPConfig.class));
@@ -161,8 +149,8 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(5, config.getAcquireIncrement());
 		assertEquals(5, config.getPartitionCount());
 		assertEquals(3, config.getReleaseHelperThreads());
-		assertEquals(60*60*1000, config.getIdleConnectionTestPeriod());
-		assertEquals(240*60*1000, config.getIdleMaxAge()); 
+		assertEquals(60, config.getIdleConnectionTestPeriod());
+		assertEquals(240, config.getIdleMaxAge()); 
 		assertEquals(URL, config.getJdbcUrl());
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());
@@ -219,7 +207,7 @@ public class TestBoneCPConnectionProvider {
 	@Test
 	public void testCreatePool() throws SQLException, ClassNotFoundException {
 		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
-		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
+		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
@@ -240,7 +228,7 @@ public class TestBoneCPConnectionProvider {
 		
 		Class.forName("org.hsqldb.jdbcDriver");
 		mockConfig = createNiceMock(BoneCPConfig.class);
-		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
+		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();

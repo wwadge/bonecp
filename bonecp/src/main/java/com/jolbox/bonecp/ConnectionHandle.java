@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ImmutableSet;
+import com.jolbox.bonecp.hooks.ConnectionHook;
 
 /**
  * Connection handle "wrapper". Proxies are nice and cool... but around twice as
@@ -86,6 +87,9 @@ public class ConnectionHandle implements Connection {
 	 * logically closed.
 	 */
 	private ConcurrentLinkedQueue<Statement> statementHandles = new ConcurrentLinkedQueue<Statement>();
+	/** Handle to the connection hook as defined in the config. */
+	private ConnectionHook connectionHook;
+	
 	/**
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -121,6 +125,9 @@ public class ConnectionHandle implements Connection {
 	 */
 	public ConnectionHandle(String url, String username, String password,
 			BoneCP pool) throws SQLException {
+		
+		this.pool = pool;
+
 		try {
 			this.connection = DriverManager.getConnection(url, username,
 					password);
@@ -131,10 +138,15 @@ public class ConnectionHandle implements Connection {
 				this.callableStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
 
 			}
+			// keep track of this hook.
+			this.connectionHook = this.pool.getConfig().getConnectionHook();
+			// call the hook, if available.
+			if (this.connectionHook != null){
+				this.connectionHook.onAcquire(this);
+			}
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
-		this.pool = pool;
 	}
 
 	/** Private constructor used solely for unit testing. 
@@ -231,9 +243,9 @@ public class ConnectionHandle implements Connection {
 	}
 
 	/**
-	 * Release the connection if called. never really thrown
+	 * Release the connection if called. 
 	 * 
-	 * @throws SQLException
+	 * @throws SQLException Never really thrown
 	 */
 	public void close() throws SQLException {
 		try {
@@ -903,7 +915,7 @@ public class ConnectionHandle implements Connection {
 	 * @param connectionLastUsed
 	 *            the connectionLastUsed to set
 	 */
-	public void setConnectionLastUsed(long connectionLastUsed) {
+	protected void setConnectionLastUsed(long connectionLastUsed) {
 		this.connectionLastUsed = connectionLastUsed;
 	}
 
@@ -918,7 +930,7 @@ public class ConnectionHandle implements Connection {
 	 * @param connectionLastReset
 	 *            the connectionLastReset to set
 	 */
-	public void setConnectionLastReset(long connectionLastReset) {
+	protected void setConnectionLastReset(long connectionLastReset) {
 		this.connectionLastReset = connectionLastReset;
 	}
 
@@ -947,7 +959,7 @@ public class ConnectionHandle implements Connection {
 	 * @param originatingPartition
 	 *            to set
 	 */
-	public void setOriginatingPartition(ConnectionPartition originatingPartition) {
+	protected void setOriginatingPartition(ConnectionPartition originatingPartition) {
 		this.originatingPartition = originatingPartition;
 	}
 
@@ -955,7 +967,7 @@ public class ConnectionHandle implements Connection {
 	 * Renews this connection, i.e. Sets this connection to be logically open
 	 * (although it was never really closed)
 	 */
-	public void renewConnection() {
+	protected void renewConnection() {
 		this.connectionClosed = false;
 	}
 
@@ -988,5 +1000,19 @@ public class ConnectionHandle implements Connection {
 	 */
 	public void setDebugHandle(Object debugHandle) {
 		this.debugHandle = debugHandle;
+	}
+
+	/** Returns the internal connection as obtained via the JDBC driver.
+	 * @return the raw connection
+	 */
+	public Connection getRawConnection() {
+		return this.connection;
+	}
+
+	/** Returns the configured connection hook object.
+	 * @return the connectionHook that was set in the config
+	 */
+	public ConnectionHook getConnectionHook() {
+		return this.connectionHook;
 	}
 }

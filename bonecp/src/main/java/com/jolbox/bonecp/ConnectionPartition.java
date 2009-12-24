@@ -82,6 +82,7 @@ public class ConnectionPartition {
      */
     protected void addFreeConnection(ConnectionHandle connectionHandle){
         updateCreatedConnections(1);
+        connectionHandle.setOriginatingPartition(this);
         this.freeConnections.add(connectionHandle);
     }
 

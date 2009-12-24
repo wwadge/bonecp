@@ -9,7 +9,7 @@
 	<url>http://jolbox.com</url>
 	<inceptionYear>2009</inceptionYear>
 
-	<version>0.5.4</version>
+	<version>0.5.5-rc1</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
@@ -23,7 +23,7 @@
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp</artifactId>
-				<version>0.5.4</version>
+				<version>0.5.5-rc1</version>
 				<scope>test</scope>
 			</dependency>
 

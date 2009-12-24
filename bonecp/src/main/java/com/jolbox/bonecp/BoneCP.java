@@ -92,17 +92,31 @@ public class BoneCP {
 		for (int i=0; i < this.partitionCount; i++) {
 			ConnectionHandle conn;
 			while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
-				this.partitions[i].updateCreatedConnections(-1);
+				postDestroyConnection(conn);
+		
 				try {
 					conn.internalClose();
 				} catch (SQLException e) {
 					logger.error(e);
 				}
 			}
-			this.partitions[i].setUnableToCreateMoreTransactions(false); // we can create new ones now
 		}
 	}
 
+	/** Update counters and call hooks.
+	 * @param handle connection handle.
+	 */
+	protected void postDestroyConnection(ConnectionHandle handle){
+		ConnectionPartition partition = handle.getOriginatingPartition();
+		partition.updateCreatedConnections(-1);
+		partition.setUnableToCreateMoreTransactions(false); // we can create new ones now
+
+		// "Destroying" for us means: don't put it back in the pool.
+		if (handle.getConnectionHook() != null){
+			handle.getConnectionHook().onDestroy(handle);
+		}
+
+	}
 	/**
 	 * Constructor.
 	 * @param config Configuration for pool
@@ -148,13 +162,8 @@ public class BoneCP {
 		int partition = (int) (Thread.currentThread().getId() % this.partitionCount);
 
 		ConnectionPartition connectionPartition = this.partitions[partition];
-		if (!connectionPartition.isUnableToCreateMoreTransactions() ){
-			try{
-				this.connectionsObtainedLock.lock();
-	 				maybeSignalForMoreConnections(connectionPartition);
-			} finally {
-				this.connectionsObtainedLock.unlock(); 
-			}
+		if (!connectionPartition.isUnableToCreateMoreTransactions()){
+ 			maybeSignalForMoreConnections(connectionPartition);
 		}
 
 		ConnectionHandle result;
@@ -197,6 +206,12 @@ public class BoneCP {
 		}
 		result.setOriginatingPartition(connectionPartition);
 		result.renewConnection();
+		
+		// Give an application the chance to do something with it.
+		if (result.getConnectionHook() != null){
+			result.getConnectionHook().onCheckOut(result);
+		}
+
 		return result;
 	}
 
@@ -221,15 +236,23 @@ public class BoneCP {
 	/**
 	 * Move the incoming connection unto a different queue pending release.
 	 *
-	 * @param conn to release
+	 * @param connection to release
 	 * @throws SQLException
 	 */
-	public void releaseConnection(Connection conn) throws SQLException {
+	public void releaseConnection(Connection connection) throws SQLException {
+		
 		try {
+			ConnectionHandle handle = (ConnectionHandle)connection;
+			
+			// hook calls
+			if (handle.getConnectionHook() != null){
+				handle.getConnectionHook().onCheckIn(handle);
+			}
+			
 			if (this.releaseHelperThreadsConfigured){
-				((ConnectionHandle)conn).getOriginatingPartition().getConnectionsPendingRelease().put((ConnectionHandle) conn);
+				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
 			} else {
-				internalReleaseConnection(conn);
+				internalReleaseConnection(handle);
 			}
 		}
 		catch (InterruptedException e) {
@@ -238,20 +261,19 @@ public class BoneCP {
 	}
 
 	/** Release a connection by placing the connection back in the pool.
-	 * @param conn Connection being released.
+	 * @param connectionHandle Connection being released.
 	 * @throws InterruptedException 
 	 * @throws SQLException 
 	 **/
-	protected void internalReleaseConnection(Connection conn) throws InterruptedException, SQLException {
+	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws InterruptedException, SQLException {
 
-		ConnectionHandle connectionHandle = (ConnectionHandle)conn;
 		connectionHandle.clearStatementHandles(false);
 		if (connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
-			connectionPartition.setUnableToCreateMoreTransactions(false);
 			maybeSignalForMoreConnections(connectionPartition);
-			connectionPartition.updateCreatedConnections(-1);
+
+			postDestroyConnection(connectionHandle);
 			return; // don't place back in queue - connection is broken!
 		}
 

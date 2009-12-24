@@ -205,7 +205,7 @@ public class TestBoneCP {
 		mockConnection.internalClose();
 		expectLastCall().once().andThrow(new SQLException()).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		replay(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
 		
 		// test.
@@ -340,10 +340,6 @@ public class TestBoneCP {
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(0).anyTimes(); // cause a division by zero error
-		mockLock.lock();
-		expectLastCall().once();
-		mockLock.unlock();
-		expectLastCall().once();
 		replay(mockPartition, mockConnectionHandles, mockConnection, mockLock);
 		try{
 			testClass.getConnection();
@@ -435,7 +431,7 @@ public class TestBoneCP {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(java.sql.Connection)}.
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(ConnectionHandle)}.
 	 * @throws InterruptedException 
 	 * @throws SQLException 
 	 */
@@ -462,7 +458,7 @@ public class TestBoneCP {
 		// make it fail to return false
 		expect(mockConnection.getMetaData()).andThrow(new SQLException()).once();
 
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).once();
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		// we're about to destroy this connection, so we can create new ones.
 		mockPartition.setUnableToCreateMoreTransactions(false);
 		expectLastCall().once();

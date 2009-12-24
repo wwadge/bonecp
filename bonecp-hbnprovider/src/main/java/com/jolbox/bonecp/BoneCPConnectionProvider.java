@@ -10,6 +10,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.util.PropertiesHelper;
 
+import com.jolbox.bonecp.hooks.ConnectionHook;
+
 
 /**
  * Hibernate Connection Provider.
@@ -28,6 +30,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	protected static final String CONFIG_CONNECTION_URL = "hibernate.connection.url";
 	/** Config key. */
 	protected static final String CONFIG_IDLE_MAX_AGE = "bonecp.idleMaxAge";
+	/** Config stuff. */
+	protected static final String CONFIG_CONNECTION_HOOK_CLASS = "bonecp.connectionHookClass";
 	/** Config key. */
 	protected static final String CONFIG_IDLE_CONNECTION_TEST_PERIOD = "bonecp.idleConnectionTestPeriod";
 	/** Config key. */
@@ -101,6 +105,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		String url = props.getProperty(CONFIG_CONNECTION_URL, "JDBC URL NOT SET IN CONFIG");
 		String username = props.getProperty(CONFIG_CONNECTION_USERNAME, "username not set");
 		String password = props.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set");
+		String connectionHookClass = props.getProperty(CONFIG_CONNECTION_HOOK_CLASS);
+
 
 		// Remember Isolation level
 		this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
@@ -123,19 +129,19 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setConnectionTestStatement(connectionTestStatement);
 			this.config.setPreparedStatementsCacheSize(preparedStatementCacheSize);
 			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
-			this.config.sanitize();
-
+			
+			if (connectionHookClass != null){
+				Object hookClass = Class.forName(connectionHookClass).newInstance();
+				this.config.setConnectionHook((ConnectionHook) hookClass);
+			}
 			// create the connection pool
 			this.pool = createPool(this.config);
 		}
 		catch (NullPointerException e) {
 			throw new HibernateException(e);
-		}
-
-		catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			throw new HibernateException(e);
-		}
-
+		} 
 	}
 
 	/** Creates the given connection pool with the given configuration. Extracted here to make unit mocking easier.

@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import com.jolbox.bonecp.hooks.ConnectionHook;
+
 
 /**
  * Helper class to avoid passing in dozens of parameters.
@@ -62,6 +64,8 @@ public class BoneCPConfig {
     private int releaseHelperThreads;
     /** Logger class. */
     private static Logger logger = Logger.getLogger(BoneCPConfig.class);
+    /** Hook class (external). */
+    private ConnectionHook connectionHook;
     
     /**
      * Gets minConnectionsPerPartition
@@ -371,5 +375,19 @@ public class BoneCPConfig {
     	this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
     	this.releaseHelperThreads, this.idleMaxAge, this.idleConnectionTestPeriod);
     }
+
+	/** Returns the connection hook class.
+	 * @return the connectionHook
+	 */
+	public ConnectionHook getConnectionHook() {
+		return this.connectionHook;
+	}
+
+	/** Sets the connection hook.
+	 * @param connectionHook the connectionHook to set
+	 */
+	public void setConnectionHook(ConnectionHook connectionHook) {
+		this.connectionHook = connectionHook;
+	}
 
 }

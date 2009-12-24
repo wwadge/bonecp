@@ -315,6 +315,11 @@ public class TestConnectionHandle {
 		Object debugHandle = new Object();
 		testClass.setDebugHandle(debugHandle);
 		assertEquals(debugHandle, testClass.getDebugHandle());
+		
+		field = testClass.getClass().getDeclaredField("connection");
+		field.setAccessible(true);
+		field.set(testClass, mockConnection);
+		assertEquals(mockConnection, testClass.getRawConnection());
 	}
 
 	/** Prepare statement tests.
