@@ -42,15 +42,23 @@ public enum ConnectionPoolType {
 	BONECP_5_PARTITIONS(true, true),
 	/** pool type. */
 	BONECP_10_PARTITIONS(false, true);
-	
+	/** inner state. */
 	private boolean enabled;
+	/** inner state. */
 	private boolean multiPartitions;
 
+	/**
+	 * @param enabled
+	 * @param multiPartitions
+	 */
 	private ConnectionPoolType(boolean enabled, boolean multiPartitions){
 		this.enabled = enabled;
 		this.multiPartitions = multiPartitions;
 	}
 	
+	/**
+	 * @param enabled
+	 */
 	private ConnectionPoolType(boolean enabled){
 		this.enabled = enabled;
 		this.multiPartitions = false;
@@ -63,12 +71,18 @@ public enum ConnectionPoolType {
 		return this.enabled;
 	}
 
+	/**
+	 * @param enabled
+	 */
 	protected void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
 
 
+	/**
+	 * @return t/f
+	 */
 	protected boolean isMultiPartitions() {
-		return multiPartitions;
+		return this.multiPartitions;
 	}
 }
