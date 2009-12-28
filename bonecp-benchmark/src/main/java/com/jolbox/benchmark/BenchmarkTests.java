@@ -63,10 +63,13 @@ public class BenchmarkTests {
 	private static final int MAX_CONNECTIONS = 1000000;
 	/** Placeholder for all the results. */
 	private static List<String> results = new LinkedList<String>();
-
+	/** config setting. */
 	public static int threads = 500;
+	/** config setting. */
 	public static int stepping = 20;
+	/** config setting. */
 	public static int pool_size = 200;
+	/** config setting. */
 	public static int helper_threads = 5;
 
 	/** 
@@ -132,6 +135,7 @@ public class BenchmarkTests {
 	 * 
 	 *
 	 * @param doPreparedStatement 
+	 * @param partitions 
 	 * @return time taken
 	 * @throws PropertyVetoException 
 	 * @throws InterruptedException 
@@ -278,7 +282,7 @@ public class BenchmarkTests {
 	/**
 	 * 
 	 *
-	 * @return 
+	 * @return result
 	 * @throws SQLException
 	 * @throws PropertyVetoException
 	 */
@@ -326,7 +330,7 @@ public class BenchmarkTests {
 	/**
 	 * 
 	 *
-	 * @return 
+	 * @return  result
 	 * @throws SQLException
 	 * @throws PropertyVetoException
 	 */
@@ -353,7 +357,7 @@ public class BenchmarkTests {
 	/**
 	 * 
 	 *
-	 * @return 
+	 * @return result
 	 * @throws SQLException
 	 * @throws PropertyVetoException
 	 */
@@ -379,8 +383,9 @@ public class BenchmarkTests {
 	/**
 	 * 
 	 * 
-	 * @param stepping 
-	 * @return 
+	 * @param delay 
+	 * @param doStatements 
+	 * @return result
 	 * @throws SQLException
 	 * @throws PropertyVetoException
 	 * @throws InterruptedException
@@ -404,10 +409,34 @@ public class BenchmarkTests {
 		return finalResults;
 	}
 
+	/**
+	 * @param delay
+	 * @return result
+	 * @throws SQLException
+	 * @throws PropertyVetoException
+	 * @throws InterruptedException
+	 * @throws IllegalArgumentException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 */
 	public long[][] testMultiThreadedConstantDelay(int delay) throws SQLException, PropertyVetoException, InterruptedException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
 		return testMultiThreadedConstantDelay(delay, false);
 	}
 
+	/**
+	 * @param delay
+	 * @return result
+	 * @throws SQLException
+	 * @throws PropertyVetoException
+	 * @throws InterruptedException
+	 * @throws IllegalArgumentException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 */
 	public long[][] testMultiThreadedConstantDelayWithPreparedStatements(int delay) throws SQLException, PropertyVetoException, InterruptedException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
 		return testMultiThreadedConstantDelay(delay, true);
 	}
@@ -416,10 +445,9 @@ public class BenchmarkTests {
 	 * 
 	 *
 	 * @param workdelay
-	 * @param maxThreads 
 	 * @param doPreparedStatement
-	 * @param stepping 
-	 * @return 
+	 * @param poolType 
+	 * @return result
 	 * @throws PropertyVetoException
 	 * @throws InterruptedException
 	 * @throws SQLException
@@ -496,7 +524,7 @@ public class BenchmarkTests {
 
 	/**
 	 * Benchmarks PreparedStatement functionality (single thread) 
-	 * @return 
+	 * @return result
 	 * 
 	 * @throws PropertyVetoException
 	 * @throws SQLException
@@ -537,7 +565,7 @@ public class BenchmarkTests {
 
 	/**
 	 * Benchmarks PreparedStatement functionality (single thread) 
-	 * @return 
+	 * @return result
 	 * 
 	 * @throws PropertyVetoException
 	 * @throws SQLException
@@ -574,7 +602,7 @@ public class BenchmarkTests {
 
 	/**
 	 * Benchmarks PreparedStatement functionality (single thread) 
-	 * @return 
+	 * @return result
 	 * 
 	 * @throws PropertyVetoException
 	 * @throws SQLException
@@ -617,7 +645,7 @@ public class BenchmarkTests {
 	/**
 	 * 
 	 *
-	 * @return 
+	 * @return results
 	 * @throws SQLException
 	 * @throws PropertyVetoException
 	 */

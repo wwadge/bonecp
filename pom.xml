@@ -20,7 +20,7 @@
 		<url>https://launchpad.net/bonecp</url>
 	</issueManagement>
 
-	<version>0.5.5</version>
+	<version>0.6.0</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
@@ -43,7 +43,7 @@
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp</artifactId>
-				<version>0.5.5</version>
+				<version>0.6.0</version>
 				<scope>test</scope>
 			</dependency>
 

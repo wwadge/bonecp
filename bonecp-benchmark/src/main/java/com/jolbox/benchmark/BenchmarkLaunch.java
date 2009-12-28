@@ -127,12 +127,20 @@ public class BenchmarkLaunch {
 	}
 
 
+	/**
+	 * @param results
+	 * @param delay
+	 * @param statementBenchmark
+	 */
 	private static void plotLineGraph(long[][] results, int delay, boolean statementBenchmark) {
 		doPlotLineGraph(results, delay, statementBenchmark, true);
 		doPlotLineGraph(results, delay, statementBenchmark, false);
 	}
 	/**
 	 * @param results
+	 * @param delay 
+	 * @param statementBenchmark 
+	 * @param noC3P0 
 	 */
 	private static void doPlotLineGraph(long[][] results, int delay, boolean statementBenchmark, boolean noC3P0) {
 		
@@ -198,9 +206,9 @@ public class BenchmarkLaunch {
 
 
 	/**
-	 * @param singleC3P0
-	 * @param singleDBCP
-	 * @param singleBoneCP
+	 * @param title 
+	 * @param filename 
+	 * @param results 
 	 */
 	private static void plotBarGraph(String title, String filename, long[] results) {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();

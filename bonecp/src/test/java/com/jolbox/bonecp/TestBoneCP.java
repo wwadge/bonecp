@@ -347,6 +347,10 @@ public class TestBoneCP {
 		verify(mockPartition, mockConnectionHandles, mockConnection, mockLock);
 	}
 	
+	/** Test obtaining a connection asynchronously.
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	@Test
 	public void testGetAsyncConnection() throws InterruptedException, ExecutionException{
 			expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();

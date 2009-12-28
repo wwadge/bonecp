@@ -27,13 +27,20 @@ package com.jolbox.benchmark;
  *
  */
 public enum ConnectionPoolType {
+	/** pool type. */
 	C3P0(true), 
 //	NANOPOOL,
+	/** pool type. */
 	DBCP(true),
+	/** pool type. */
 	BONECP_1_PARTITIONS(true, false),
+	/** pool type. */
 	BONECP_2_PARTITIONS(true, true),
+	/** pool type. */
 	BONECP_4_PARTITIONS(false, true),
+	/** pool type. */
 	BONECP_5_PARTITIONS(true, true),
+	/** pool type. */
 	BONECP_10_PARTITIONS(false, true);
 	
 	private boolean enabled;
@@ -49,8 +56,11 @@ public enum ConnectionPoolType {
 		this.multiPartitions = false;
 	}
 
+	/** 
+	 * @return t/f
+	 */
 	protected boolean isEnabled() {
-		return enabled;
+		return this.enabled;
 	}
 
 	protected void setEnabled(boolean enabled) {

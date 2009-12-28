@@ -17,7 +17,7 @@
  * along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.jolbox.bonecp;
+package com.jolbox.bonecp.provider;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -29,6 +29,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.util.PropertiesHelper;
 
+import com.jolbox.bonecp.BoneCP;
+import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
 
@@ -101,7 +103,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	 */
 	public void closeConnection(Connection conn)
 	throws SQLException {
-		this.pool.releaseConnection(conn);
+		conn.close();
 	} 
 
 	/**

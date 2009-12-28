@@ -20,9 +20,9 @@
 /**
  * 
  */
-package com.jolbox.bonecp;
+package com.jolbox.bonecp.provider;
 
-import static com.jolbox.bonecp.BoneCPConnectionProvider.*;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.*;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expectLastCall;
@@ -45,6 +45,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.jolbox.bonecp.BoneCP;
+import com.jolbox.bonecp.BoneCPConfig;
+import com.jolbox.bonecp.ConnectionHandle;
+
 /** Test case for the Hibernate boneCP connection provider.
  * @author wallacew
  *
@@ -66,6 +70,8 @@ public class TestBoneCPConnectionProvider {
 	private static String PASSWORD = "";
 	/** hsqldb driver. */
 	private static String DRIVER = "org.hsqldb.jdbcDriver";
+	/** A dummy query for HSQLDB. */
+	public static final String TEST_QUERY = "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
 	
 	/** Class setup.
 	 * @throws SecurityException
@@ -101,7 +107,7 @@ public class TestBoneCPConnectionProvider {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#close()}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#close()}.
 	 */
 	@Test
 	public void testClose() {
@@ -113,12 +119,12 @@ public class TestBoneCPConnectionProvider {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#closeConnection(java.sql.Connection)}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#closeConnection(java.sql.Connection)}.
 	 * @throws SQLException 
 	 */
 	@Test
 	public void testCloseConnection() throws SQLException {
-		mockPool.releaseConnection(mockConnection);
+		mockConnection.close();
 		expectLastCall().once();
 		replay(mockPool);
 		testClass.closeConnection(mockConnection);
@@ -126,7 +132,7 @@ public class TestBoneCPConnectionProvider {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#configure(java.util.Properties)}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#configure(java.util.Properties)}.
 	 * @throws NoSuchFieldException 
 	 * @throws SecurityException 
 	 * @throws IllegalAccessException 
@@ -149,8 +155,8 @@ public class TestBoneCPConnectionProvider {
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_USERNAME, "username not set")).andReturn(USERNAME).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set")).andReturn(PASSWORD).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_DRIVER_CLASS)).andReturn(DRIVER).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.CustomHook").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_INIT_SQL)).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
+		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.provider.CustomHook").anyTimes();
+		expect(mockProperties.getProperty(CONFIG_INIT_SQL)).andReturn(TEST_QUERY).anyTimes();
 
 
 		BoneCPConnectionProvider partialTestClass = createNiceMock(BoneCPConnectionProvider.class, 
@@ -175,7 +181,7 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(URL, config.getJdbcUrl());
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());
-		assertEquals(CommonTestUtils.TEST_QUERY, config.getInitSQL());
+		assertEquals(TEST_QUERY, config.getInitSQL());
 
 
 		verify(mockProperties, partialTestClass);
@@ -222,7 +228,7 @@ public class TestBoneCPConnectionProvider {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#createPool(BoneCPConfig)}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#createPool(BoneCPConfig)}.
 	 * @throws SQLException 
 	 * @throws ClassNotFoundException 
 	 */
@@ -270,7 +276,7 @@ public class TestBoneCPConnectionProvider {
 		
 	}
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#configure(java.util.Properties)}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#configure(java.util.Properties)}.
 	 * @throws NoSuchMethodException 
 	 * @throws SecurityException 
 	 * @throws InvocationTargetException 
@@ -309,7 +315,7 @@ public class TestBoneCPConnectionProvider {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#getConnection()}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#getConnection()}.
 	 * @throws SQLException 
 	 * @throws NoSuchFieldException 
 	 * @throws SecurityException 
@@ -340,7 +346,7 @@ public class TestBoneCPConnectionProvider {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCPConnectionProvider#supportsAggressiveRelease()}.
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#supportsAggressiveRelease()}.
 	 */
 	@Test
 	public void testSupportsAggressiveRelease() {

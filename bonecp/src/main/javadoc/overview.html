@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+  <HEAD>
+    <TITLE>BoneCP Overview</TITLE>
+  </HEAD>
+  <BODY>
+      This document describes the API of BoneCP. 
+      Usage is simple:
+      <ul><li>Load the JDBC driver</li>
+      <li>Configure BoneCP (via a datasource or manually)</li>
+      <li>Call pool.getConnection() or pool.getAsyncConnection()</li></ul>
+      
+      The example below sets up the connection pool (manually) and obtains a connection. For clarity it omits exception handling.
+      
+      <pre>
+     
+// load the database driver (make sure this is in your classpath!)
+Class.forName("org.hsqldb.jdbcDriver");
+// setup the connection pool
+BoneCPConfig config = new BoneCPConfig();
+// jdbc url specific to your database, eg jdbc:mysql://127.0.0.1/yourdb
+config.setJdbcUrl("jdbc:hsqldb:mem:test"); 
+config.setUsername("sa"); 
+config.setPassword("");
+config.setMinConnectionsPerPartition(5);
+config.setMaxConnectionsPerPartition(10);
+config.setPartitionCount(1);
+	
+connectionPool = new BoneCP(config); // setup the connection pool
+			
+connection = connectionPool.getConnection(); // fetch a connection
+if (connection != null){
+	System.out.println("Connection successful!");
+    Statement stmt = connection.createStatement();
+    // do something with the connection.
+	ResultSet rs = stmt.executeQuery("SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS"); 
+	while(rs.next()){
+		System.out.println(rs.getString(1)); // should print out "1"'
+	}
+}
+			
+connection.close(); // close the connection
+connectionPool.shutdown(); // shutdown connection pool.
+	</pre>
+  </BODY>
+</HTML>
