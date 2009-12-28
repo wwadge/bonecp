@@ -52,7 +52,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_IDLE_MAX_AGE = "bonecp.idleMaxAge";
 	/** Config stuff. */
-	protected static final String CONFIG_CONNECTION_HOOK_CLASS = "bonecp.connectionHookClass";
+	protected static final String CONFIG_CONNECTION_HOOK_CLASS = "bonecp.connectionHookClassName";
 	/** Config key. */
 	protected static final String CONFIG_IDLE_CONNECTION_TEST_PERIOD = "bonecp.idleConnectionTestPeriod";
 	/** Config key. */

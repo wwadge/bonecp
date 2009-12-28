@@ -24,7 +24,7 @@ import com.jolbox.bonecp.ConnectionHandle;
 
 /**
  * Interface to the hooking mechanism of a connection lifecycle. Applications
- * will generally want to extend AbstractConnectionHook instead to provide a 
+ * will generally want to extend {@link com.jolbox.bonecp.hooks.AbstractConnectionHook} instead to provide a 
  * default implementation. Applications might also want to make use of 
  * connection.setDebugHandle(...) to keep track of additional information on 
  * each connection.

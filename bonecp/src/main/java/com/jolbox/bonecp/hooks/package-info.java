@@ -18,7 +18,10 @@
  */
 
 /**
- * Support for event notification on a connection state.
+ * Support for event notification on a connection state. 
+ * 
+ * Use the hook mechanism to register callbacks when a connection's state changes. Most applications will want to extend
+ * {@link com.jolbox.bonecp.hooks.AbstractConnectionHook} rather than implementing the {@link com.jolbox.bonecp.hooks.ConnectionHook} interface directly.
  * 
  */
 package com.jolbox.bonecp.hooks;

@@ -47,9 +47,7 @@ import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
 /**
- * Connection handle "wrapper". Proxies are nice and cool... but around twice as
- * slow as doing it the boring old way. No proxy stuff here, we're aiming for
- * the best speed possible at the expense of code readability...
+ * Connection handle wrapper around a JDBC connection.
  * 
  * @author wwadge
  * 

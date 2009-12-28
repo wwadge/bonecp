@@ -221,8 +221,14 @@ public class BoneCP {
 	}
 
 	
-	/** Queue a request to obtain a connection asynchronously. 
-	 * @return A future task which will return a connection when asked for it. 
+	/** Obtain a connection asynchronously by queuing a request to obtain a connection in a separate thread. 
+	 * 
+	 *  Use as follows:<p>
+	 *      Future&lt;Connection&gt; result = pool.getAsyncConnection();<p>
+	 *       ... do something else in your application here ...<p>
+	 *      Connection connection = result.get(); // get the connection<p>
+	 *      
+	 * @return A Future task returning a connection. 
 	 */
 	public Future<Connection> getAsyncConnection(){
 		
