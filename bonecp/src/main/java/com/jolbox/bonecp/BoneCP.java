@@ -25,8 +25,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -67,6 +69,8 @@ public class BoneCP {
 	private boolean releaseHelperThreadsConfigured;
 	/** pointer to the thread containing the release helper threads. */
 	private ExecutorService releaseHelper;
+	/** Executor service for obtaining a connection in an asynchronous fashion. */
+	private ExecutorService asyncExecutor;
 	/** Logger class. */
 	private static Logger logger = Logger.getLogger(BoneCP.class);
 
@@ -125,6 +129,7 @@ public class BoneCP {
 	public BoneCP(BoneCPConfig config) throws SQLException {
 		
 		config.sanitize();
+		this.asyncExecutor = Executors.newCachedThreadPool();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
@@ -215,6 +220,19 @@ public class BoneCP {
 		return result;
 	}
 
+	
+	/** Queue a request to obtain a connection asynchronously. 
+	 * @return A future task which will return a connection when asked for it. 
+	 */
+	public Future<Connection> getAsyncConnection(){
+		
+		return this.asyncExecutor.submit(new Callable<Connection>() {
+			
+			@Override
+			public Connection call() throws Exception {
+				return getConnection();
+			}});
+	}
 	/**
 	 * Tests if this partition has hit a threshold and signal to the pool watch thread to create new connections
 	 * @param connectionPartition to test for.

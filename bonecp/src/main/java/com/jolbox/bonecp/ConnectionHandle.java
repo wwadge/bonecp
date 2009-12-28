@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.jolbox.bonecp;
 
@@ -29,6 +29,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -89,7 +90,7 @@ public class ConnectionHandle implements Connection {
 	private ConcurrentLinkedQueue<Statement> statementHandles = new ConcurrentLinkedQueue<Statement>();
 	/** Handle to the connection hook as defined in the config. */
 	private ConnectionHook connectionHook;
-	
+
 	/**
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -125,7 +126,7 @@ public class ConnectionHandle implements Connection {
 	 */
 	public ConnectionHandle(String url, String username, String password,
 			BoneCP pool) throws SQLException {
-		
+
 		this.pool = pool;
 
 		try {
@@ -143,6 +144,18 @@ public class ConnectionHandle implements Connection {
 			// call the hook, if available.
 			if (this.connectionHook != null){
 				this.connectionHook.onAcquire(this);
+			}
+
+			// fetch any configured setup sql.
+			String initSQL = this.pool.getConfig().getInitSQL();
+			if (initSQL != null){
+				Statement stmt = this.connection.createStatement();
+				ResultSet rs = stmt.executeQuery(initSQL);
+				// free up resources 
+				if (rs != null){
+					rs.close();
+				}
+				stmt.close();
 			}
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);

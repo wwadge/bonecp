@@ -149,7 +149,9 @@ public class TestBoneCPConnectionProvider {
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_USERNAME, "username not set")).andReturn(USERNAME).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set")).andReturn(PASSWORD).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_DRIVER_CLASS)).andReturn(DRIVER).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.hooks.CustomHook").anyTimes();
+		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.CustomHook").anyTimes();
+		expect(mockProperties.getProperty(CONFIG_INIT_SQL)).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
+
 
 		BoneCPConnectionProvider partialTestClass = createNiceMock(BoneCPConnectionProvider.class, 
 				BoneCPConnectionProvider.class.getDeclaredMethod("createPool", BoneCPConfig.class));
@@ -173,6 +175,7 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(URL, config.getJdbcUrl());
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());
+		assertEquals(CommonTestUtils.TEST_QUERY, config.getInitSQL());
 
 
 		verify(mockProperties, partialTestClass);

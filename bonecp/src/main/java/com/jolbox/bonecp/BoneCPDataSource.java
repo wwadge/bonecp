@@ -82,7 +82,8 @@ public class BoneCPDataSource implements DataSource {
 	private String connectionHookClassName;
     /** Class logger. */
     private static final Logger logger = Logger.getLogger(BoneCPDataSource.class);
-
+    /** config setting. */
+    private String initSQL;
 
     /**
      * Default empty constructor.
@@ -111,6 +112,7 @@ public class BoneCPDataSource implements DataSource {
         this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
         this.setReleaseHelperThreads(config.getReleaseHelperThreads());
         this.setConnectionHook(config.getConnectionHook());
+        this.setInitSQL(config.getInitSQL());
     }
 
    
@@ -181,6 +183,7 @@ public class BoneCPDataSource implements DataSource {
                 config.setStatementsCachedPerConnection(statementsCachedPerConnection);
                 config.setReleaseHelperThreads(releaseHelperThreads);
                 config.setConnectionHook(this.connectionHook);
+                config.setInitSQL(this.initSQL);
                 this.pool = new BoneCP(config);
             }
 
@@ -715,5 +718,18 @@ public class BoneCPDataSource implements DataSource {
 	 */
 	public String getConnectionHookClassName() {
 		return this.connectionHookClassName;
+	}
+	
+	/** Returns the initSQL statement.
+	 * @return the initSQL
+	 */
+	public String getInitSQL() {
+		return this.initSQL;
+	}
+	/** Specifies an initial SQL statement that is run only when a connection is first created. 
+	 * @param initSQL the initSQL to set
+	 */
+	public void setInitSQL(String initSQL) {
+		this.initSQL = initSQL;
 	}
 }

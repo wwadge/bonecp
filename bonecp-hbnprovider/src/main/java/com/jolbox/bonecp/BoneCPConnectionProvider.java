@@ -69,6 +69,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	protected static final String CONFIG_PREPARED_STATEMENT_CACHE_SIZE = "bonecp.preparedStatementCacheSize";
 	/** Config key. */
 	protected static final String CONFIG_TEST_STATEMENT = "bonecp.connectionTestStatement";
+	/** Config key. */
+	protected static final String CONFIG_INIT_SQL  = "bonecp.initSQL";
 	/** Config stuff. */
 	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
 	/** Connection pool handle. */
@@ -125,6 +127,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		String username = props.getProperty(CONFIG_CONNECTION_USERNAME, "username not set");
 		String password = props.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set");
 		String connectionHookClass = props.getProperty(CONFIG_CONNECTION_HOOK_CLASS);
+		String initSQL = props.getProperty(CONFIG_INIT_SQL);
 
 
 		// Remember Isolation level
@@ -148,6 +151,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setConnectionTestStatement(connectionTestStatement);
 			this.config.setPreparedStatementsCacheSize(preparedStatementCacheSize);
 			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
+			this.config.setInitSQL(initSQL);
 			
 			if (connectionHookClass != null){
 				Object hookClass = Class.forName(connectionHookClass).newInstance();

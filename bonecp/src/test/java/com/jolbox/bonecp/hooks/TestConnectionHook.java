@@ -89,7 +89,7 @@ public class TestConnectionHook {
 	 */
 	@Test
 	public void testOnCheckOutAndOnCheckin() throws SQLException {
-		poolClass.releaseConnection(poolClass.getConnection());
+		poolClass.getConnection().close();
 		assertEquals(1, hookClass.checkout);
 		assertEquals(1, hookClass.checkin);
 	}
@@ -123,7 +123,7 @@ public class TestConnectionHook {
 		
 		poolClass = new BoneCP(mockConfig);	
 		
-		poolClass.releaseConnection(poolClass.getConnection());
+		poolClass.getConnection().close();
 		poolClass.close();
 	}
 }

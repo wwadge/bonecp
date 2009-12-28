@@ -25,10 +25,10 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +42,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.Lock;
@@ -51,11 +52,6 @@ import org.hsqldb.jdbc.jdbcResultSet;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ConnectionPartition;
 
 /**
  * @author wwadge
@@ -106,6 +102,7 @@ public class TestBoneCP {
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
+		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
 		replay(mockConfig);
 		
 		// once for no release threads, once with release threads....
@@ -348,8 +345,21 @@ public class TestBoneCP {
 			// do nothing
 		}
 		verify(mockPartition, mockConnectionHandles, mockConnection, mockLock);
+	}
+	
+	@Test
+	public void testGetAsyncConnection() throws InterruptedException, ExecutionException{
+			expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+			expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+			expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
+			mockConnection.setOriginatingPartition(mockPartition);
+			expectLastCall().once();
+			mockConnection.renewConnection();
+			expectLastCall().once();
 
-		
+			replay(mockPartition, mockConnectionHandles, mockConnection);
+			assertEquals(mockConnection, testClass.getAsyncConnection().get());
+			verify(mockPartition, mockConnectionHandles, mockConnection);
 
 	}
 

@@ -65,6 +65,8 @@ public class BoneCPConfig {
     private static Logger logger = Logger.getLogger(BoneCPConfig.class);
     /** Hook class (external). */
     private ConnectionHook connectionHook;
+    /** Query to send once to the database. */
+    private String initSQL;
     
     /**
      * Gets minConnectionsPerPartition
@@ -387,6 +389,20 @@ public class BoneCPConfig {
 	 */
 	public void setConnectionHook(ConnectionHook connectionHook) {
 		this.connectionHook = connectionHook;
+	}
+
+	/** Returns the initSQL parameter.
+	 * @return the initSQL
+	 */
+	public String getInitSQL() {
+		return this.initSQL;
+	}
+
+	/** Specifies an initial SQL statement that is run only when a connection is first created. 
+	 * @param initSQL the initSQL to set
+	 */
+	public void setInitSQL(String initSQL) {
+		this.initSQL = initSQL;
 	}
 
 }
