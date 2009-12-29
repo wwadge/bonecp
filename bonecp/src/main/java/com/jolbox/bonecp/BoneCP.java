@@ -16,10 +16,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.jolbox.bonecp;
 
+import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,14 +35,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.apache.log4j.Logger;
+
+import com.jolbox.bonecp.jmx.BoneCPMBean;
 
 /**
  * Connection pool (main class).
  * @author wwadge
  *
  */
-public class BoneCP {
+public class BoneCP implements BoneCPMBean {
 	/** Constant for keep-alive test */
 	private static final String[] METADATATABLE = new String[] {"TABLE"};
 	/** Constant for keep-alive test */
@@ -97,7 +103,7 @@ public class BoneCP {
 			ConnectionHandle conn;
 			while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
 				postDestroyConnection(conn);
-		
+
 				try {
 					conn.internalClose();
 				} catch (SQLException e) {
@@ -127,7 +133,7 @@ public class BoneCP {
 	 * @throws SQLException on error
 	 */
 	public BoneCP(BoneCPConfig config) throws SQLException {
-		
+
 		config.sanitize();
 		this.asyncExecutor = Executors.newCachedThreadPool();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
@@ -154,6 +160,25 @@ public class BoneCP {
 			// watch this partition for low no of threads
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
+
+		initJMX(); 
+	}
+
+	/**
+	 * Initialises JMX stuff.  
+	 */
+	private void initJMX() {
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer(); 
+		try {
+			ObjectName name = new ObjectName("com.jolbox.bonecp:type=BoneCP");
+			ObjectName configname = new ObjectName("com.jolbox.bonecp:type=BoneCPConfig");
+
+			mbs.registerMBean(this, name); 
+			mbs.registerMBean(this.config, configname); 
+
+		} catch (Exception e) {
+			logger.error("Unable to start JMX", e);
+		}
 	}
 
 
@@ -168,7 +193,7 @@ public class BoneCP {
 
 		ConnectionPartition connectionPartition = this.partitions[partition];
 		if (!connectionPartition.isUnableToCreateMoreTransactions()){
- 			maybeSignalForMoreConnections(connectionPartition);
+			maybeSignalForMoreConnections(connectionPartition);
 		}
 
 		ConnectionHandle result;
@@ -211,7 +236,7 @@ public class BoneCP {
 		}
 		result.setOriginatingPartition(connectionPartition);
 		result.renewConnection();
-		
+
 		// Give an application the chance to do something with it.
 		if (result.getConnectionHook() != null){
 			result.getConnectionHook().onCheckOut(result);
@@ -220,7 +245,7 @@ public class BoneCP {
 		return result;
 	}
 
-	
+
 	/** Obtain a connection asynchronously by queuing a request to obtain a connection in a separate thread. 
 	 * 
 	 *  Use as follows:<p>
@@ -231,9 +256,9 @@ public class BoneCP {
 	 * @return A Future task returning a connection. 
 	 */
 	public Future<Connection> getAsyncConnection(){
-		
+
 		return this.asyncExecutor.submit(new Callable<Connection>() {
-			
+
 			@Override
 			public Connection call() throws Exception {
 				return getConnection();
@@ -264,15 +289,15 @@ public class BoneCP {
 	 * @throws SQLException
 	 */
 	protected void releaseConnection(Connection connection) throws SQLException {
-		
+
 		try {
 			ConnectionHandle handle = (ConnectionHandle)connection;
-			
+
 			// hook calls
 			if (handle.getConnectionHook() != null){
 				handle.getConnectionHook().onCheckIn(handle);
 			}
-			
+
 			if (this.releaseHelperThreadsConfigured){
 				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
 			} else {
@@ -352,8 +377,8 @@ public class BoneCP {
 				stmt = connection.createStatement();
 				rs = stmt.executeQuery(testStatement);
 			}
-              
- 
+
+
 			if (rs != null) { 
 				rs.close();
 			}

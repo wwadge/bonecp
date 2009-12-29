@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.jmx.BoneCPConfigMBean;
 
 
 /**
@@ -32,7 +33,7 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  *
  * @author wallacew
  */
-public class BoneCPConfig {
+public class BoneCPConfig implements BoneCPConfigMBean {
 	/** For toString(). */
     private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d, idle test period = %d";
 	/** Min number of connections per partition. */
@@ -68,161 +69,169 @@ public class BoneCPConfig {
     /** Query to send once to the database. */
     private String initSQL;
     
-    /**
-     * Gets minConnectionsPerPartition
-     *
-     * @return minConnectionsPerPartition
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getMinConnectionsPerPartition()
+	 */
     public int getMinConnectionsPerPartition() {
         return this.minConnectionsPerPartition;
     }
     
     /**
-     * Sets minConnectionsPerPartition
+     * Sets the minimum number of connections that will be contained in every partition.
      *
-     * @param minConnectionsPerPartition 
+     * @param minConnectionsPerPartition number of connections
      */
     public void setMinConnectionsPerPartition(int minConnectionsPerPartition) {
         this.minConnectionsPerPartition = minConnectionsPerPartition;
     }
     
-    /**
-     * Gets maxConnectionsPerPartition
-     *
-     * @return maxConnectionsPerPartition
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getMaxConnectionsPerPartition()
+	 */
     public int getMaxConnectionsPerPartition() {
         return this.maxConnectionsPerPartition;
     }
     
     /**
-     * Sets maxConnectionsPerPartition
+     * Sets the maximum number of connections that will be contained in every partition. 
+     * Setting this to 5 with 3 partitions means you will have 15 unique connections to the database. 
+     * Note that the connection pool will not create all these connections in one go but rather start off 
+     * with minConnectionsPerPartition and gradually increase connections as required.
      *
-     * @param maxConnectionsPerPartition 
+     * @param maxConnectionsPerPartition number of connections.
      */
     public void setMaxConnectionsPerPartition(int maxConnectionsPerPartition) {
         this.maxConnectionsPerPartition = maxConnectionsPerPartition;
     }
     
-    /**
-     * Gets acquireIncrement
-     *
-     * @return acquireIncrement
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getAcquireIncrement()
+	 */
     public int getAcquireIncrement() {
         return this.acquireIncrement;
     }
     
     /**
-     * Sets acquireIncrement
+     * Sets the acquireIncrement property. 
+     * 
+     * When the available connections are about to run out, BoneCP will dynamically create new ones in batches. 
+     * This property controls how many new connections to create in one go (up to a maximum of maxConnectionsPerPartition). 
+     * <p>Note: This is a per partition setting.
      *
-     * @param acquireIncrement 
+     * @param acquireIncrement value to set. 
      */
     public void setAcquireIncrement(int acquireIncrement) {
         this.acquireIncrement = acquireIncrement;
     }
     
-    /**
-     * Gets partitionCount
-     *
-     * @return partitionCount
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getPartitionCount()
+	 */
     public int getPartitionCount() {
         return this.partitionCount;
     }
     
     /**
-     * Sets partitionCount
+     * Sets number of partitions to use. 
+     * 
+     * In order to reduce lock contention and thus improve performance, 
+     * each incoming connection request picks off a connection from a pool that has thread-affinity, 
+     * i.e. pool[threadId % partition_count]. The higher this number, the better your performance will be for the case 
+     * when you have plenty of short-lived threads. Beyond a certain threshold, maintenence of these pools will start 
+     * to have a negative effect on performance (and only for the case when connections on a partition start running out).
+     * 
+     * <p>Default: 3, minimum: 1, recommended: 3-4 (but very app specific)
      *
-     * @param partitionCount 
+     * @param partitionCount to set 
      */
     public void setPartitionCount(int partitionCount) {
         this.partitionCount = partitionCount;
     }
     
-    /**
-     * Gets jdbcUrl
-     *
-     * @return jdbcUrl
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getJdbcUrl()
+	 */
     public String getJdbcUrl() {
         return this.jdbcUrl;
     }
     
     /**
-     * Sets jdbcUrl
+     * Sets the JDBC connection URL.
      *
-     * @param jdbcUrl 
+     * @param jdbcUrl to set
      */
     public void setJdbcUrl(String jdbcUrl) {
         this.jdbcUrl = jdbcUrl;
     }
     
-    /**
-     * Gets username
-     *
-     * @return username
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getUsername()
+	 */
     public String getUsername() {
         return this.username;
     }
     
     /**
-     * Sets username
+     * Sets username to use for connections.
      *
-     * @param username 
+     * @param username to set
      */
     public void setUsername(String username) {
         this.username = username;
     }
     
     /**
-     * Gets password
-     *
-     * @return password
-     */
-    public String getPassword() {
+	 * Gets password to use for connections
+	 *
+	 * @return password
+	 */
+	 public String getPassword() {
         return this.password;
     }
     
     /**
-     * Sets password
+     * Sets password to use for connections.
      *
-     * @param password 
+     * @param password to set.
      */
     public void setPassword(String password) {
         this.password = password;
     }
     
-    /**
-     * Gets idleConnectionTestPeriod
-     *
-     * @return idleConnectionTestPeriod
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getIdleConnectionTestPeriod()
+	 */
     public long getIdleConnectionTestPeriod() {
         return this.idleConnectionTestPeriod;
     }
     
     /**
-     * Sets idleConnectionTestPeriod
+     * Sets the idleConnectionTestPeriod.
+     * 
+     * This sets the time (in minutes), for a connection to remain idle before sending 
+     * a test query to the DB. This is useful to prevent a DB from timing out connections 
+     * on its end. Do not use aggressive values here!
+     * 
+     * <p>Default: 240 min, set to 0 to disable
      *
-     * @param idleConnectionTestPeriod 
+     * @param idleConnectionTestPeriod to set 
      */
     public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod) {
         this.idleConnectionTestPeriod = idleConnectionTestPeriod;
     }
     
-    /**
-     * Gets idleMaxAge (time in ms).
-     *
-     * @return idleMaxAge
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getIdleMaxAge()
+	 */
     public long getIdleMaxAge() {
         return this.idleMaxAge;
     }
     
     /**
-     * Sets Idle max age (in ms).
+     * Sets Idle max age (in min).
+     * 
+     * The time (in minutes), for a connection to remain unused before it is closed off. Do not use aggressive values here! 
+     * <p>Default: 60 minutes, set to 0 to disable.
      *
      * @param idleMaxAge to set
      */
@@ -230,65 +239,74 @@ public class BoneCPConfig {
         this.idleMaxAge = idleMaxAge;
     }
     
-    /**
-     * Gets connectionTestStatement
-     *
-     * @return connectionTestStatement
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getConnectionTestStatement()
+	 */
     public String getConnectionTestStatement() {
         return this.connectionTestStatement;
     }
     
     /**
-     * Sets connectionTestStatement
+     *Sets the connection test statement.
      *
-     * @param connectionTestStatement 
+     *The query to send to the DB to maintain keep-alives and test for dead connections. 
+     *This is database specific and should be set to a query that consumes the minimal amount of load on the server. 
+     *Examples: MySQL: "SELECT 1", PostgreSQL: "SELECT NOW()". 
+     *If you do not set this, then BoneCP will issue a metadata request instead that should work on all databases but is probably slower.
+     *
+     *<p>Default: Use metadata request
+     *
+     * @param connectionTestStatement to set.
      */
     public void setConnectionTestStatement(String connectionTestStatement) {
         this.connectionTestStatement = connectionTestStatement;
     }
     
-    /**
-     * Gets preparedStatementsCacheSize
-     *
-     * @return preparedStatementsCacheSize
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getPreparedStatementsCacheSize()
+	 */
     public int getPreparedStatementsCacheSize() {
         return this.preparedStatementsCacheSize;
     }
     
     /**
-     * Sets preparedStatementsCacheSize
+     * Sets preparedStatementsCacheSize setting.
+     * 
+     * The number of prepared statements to cache. BoneCP will actually attempt to cache more 
+     * if required but uses SoftReferences for anything beyond the value you set here. 
+     * In other words, setting this to 50 will mean that BoneCP will cache at 
+     * least 50 prepared statements and any additional statements will also be cached 
+     * but will be released by the JVM garbage collector when there is insufficient memory (in a LRU fashion).
      *
-     * @param preparedStatementsCacheSize 
+     * @param preparedStatementsCacheSize to set.
      */
     public void setPreparedStatementsCacheSize(int preparedStatementsCacheSize) {
         this.preparedStatementsCacheSize = preparedStatementsCacheSize;
     }
     
-    /**
-     * Gets number of release-connection helper threads to create per partition.
-     *
-     * @return number of threads 
-     */
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getReleaseHelperThreads()
+	 */
     public int getReleaseHelperThreads() {
         return this.releaseHelperThreads;
     }
 
     
     /**
-     * Sets number of helper threads.
+     * Sets number of helper threads to create that will handle releasing a connection.
      *
+     * Useful when your application is doing lots of work on each connection 
+     * (i.e. perform an SQL query, do lots of non-DB stuff and perform another query), 
+     * otherwise will probably slow things down.
+     * 
      * @param releaseHelperThreads no to release 
      */
     public void setReleaseHelperThreads(int releaseHelperThreads) {
         this.releaseHelperThreads = releaseHelperThreads;
     }
     
-    /**
-	 * Gets no of statements cached per connection.
-	 *
-	 * @return no of statements cached per connection.
+    /** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getStatementsCachedPerConnection()
 	 */
 	public int getStatementsCachedPerConnection() {
 		return this.statementsCachedPerConnection;
@@ -296,6 +314,9 @@ public class BoneCPConfig {
 
 	/**
 	 * Sets no of statements cached per connection. 
+	 *
+	 * The number of prepared statements to cache per connection. This is usually only useful if you attempt to 
+	 * prepare the same prepared statement string in the same connection (usually due to a wrong design condition).
 	 *
 	 * @param statementsCachedPerConnection to set
 	 */
@@ -377,22 +398,26 @@ public class BoneCPConfig {
     	this.releaseHelperThreads, this.idleMaxAge, this.idleConnectionTestPeriod);
     }
 
-	/** Returns the connection hook class.
-	 * @return the connectionHook
+	/** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getConnectionHook()
 	 */
 	public ConnectionHook getConnectionHook() {
 		return this.connectionHook;
 	}
 
 	/** Sets the connection hook.
+	 * 
+	 * Fully qualified class name that implements the ConnectionHook interface (or extends AbstractConnectionHook). 
+	 * BoneCP will callback the specified class according to the connection state (onAcquire, onCheckIn, onCheckout, onDestroy).
+	 * 
 	 * @param connectionHook the connectionHook to set
 	 */
 	public void setConnectionHook(ConnectionHook connectionHook) {
 		this.connectionHook = connectionHook;
 	}
 
-	/** Returns the initSQL parameter.
-	 * @return the initSQL
+	/** {@inheritDoc}
+	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getInitSQL()
 	 */
 	public String getInitSQL() {
 		return this.initSQL;

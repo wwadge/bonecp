@@ -22,9 +22,24 @@
  */
 package com.jolbox.bonecp.provider;
 
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.*;
-import static org.easymock.EasyMock.expect;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_ACQUIRE_INCREMENT;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_DRIVER_CLASS;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_HOOK_CLASS;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_PASSWORD;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_URL;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_USERNAME;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_IDLE_CONNECTION_TEST_PERIOD;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_IDLE_MAX_AGE;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_INIT_SQL;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MAX_CONNECTIONS_PER_PARTITION;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MIN_CONNECTIONS_PER_PARTITION;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PARTITION_COUNT;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PREPARED_STATEMENT_CACHE_SIZE;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_RELEASE_HELPER_THREADS;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_STATEMENTS_CACHED_PER_CONNECTION;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_TEST_STATEMENT;
 import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.replay;
