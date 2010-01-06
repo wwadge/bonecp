@@ -104,6 +104,8 @@ public class TestSystemTests {
 		dsb.setIdleConnectionTestPeriod("0");
 		dsb.setConnectionTestStatement("test");
 		dsb.setInitSQL(CommonTestUtils.TEST_QUERY);
+		dsb.setCloseConnectionWatch(true);
+		dsb.setLogStatementsEnabled(false);
 	
 		dsb.setConnectionHookClassName("bad class name");
 		assertEquals("bad class name", dsb.getConnectionHookClassName());
@@ -167,7 +169,9 @@ public class TestSystemTests {
 		assertEquals("test", dsb.getConnectionTestStatement());
 		assertEquals("org.hsqldb.jdbcDriver", dsb.getDriverClass());
 		assertEquals(CommonTestUtils.TEST_QUERY, dsb.getInitSQL());
-		
+		assertEquals(true, dsb.isCloseConnectionWatch());
+		assertEquals(false, dsb.isLogStatementsEnabled());
+
 	}
 	
 	@Test(expected=SQLException.class)

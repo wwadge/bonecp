@@ -31,6 +31,7 @@ import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECT
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_IDLE_CONNECTION_TEST_PERIOD;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_IDLE_MAX_AGE;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_INIT_SQL;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_LOG_STATEMENTS_ENABLED;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MAX_CONNECTIONS_PER_PARTITION;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MIN_CONNECTIONS_PER_PARTITION;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PARTITION_COUNT;
@@ -172,6 +173,8 @@ public class TestBoneCPConnectionProvider {
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_DRIVER_CLASS)).andReturn(DRIVER).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.provider.CustomHook").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_INIT_SQL)).andReturn(TEST_QUERY).anyTimes();
+		expect(mockProperties.getProperty(CONFIG_LOG_STATEMENTS_ENABLED)).andReturn("true").anyTimes();
+
 
 
 		BoneCPConnectionProvider partialTestClass = createNiceMock(BoneCPConnectionProvider.class, 
@@ -197,6 +200,7 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());
 		assertEquals(TEST_QUERY, config.getInitSQL());
+		assertEquals(true, config.isLogStatementsEnabled());
 
 
 		verify(mockProperties, partialTestClass);
@@ -324,6 +328,46 @@ public class TestBoneCPConnectionProvider {
 
 		result = (Integer) method.invoke(testClass, mockProperties, "test", 123);
 		assertEquals(123, result);
+		verify(mockProperties);
+
+
+	}
+
+	
+	/**
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#configure(java.util.Properties)}.
+	 * @throws NoSuchMethodException 
+	 * @throws SecurityException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	@Test
+	public void testConfigParseBoolean() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+		expect(mockProperties.getProperty("test")).andReturn("true");
+		replay(mockProperties);
+		Method method = testClass.getClass().getDeclaredMethod("configParseBoolean", new Class[]{Properties.class, String.class, boolean.class});
+		method.setAccessible(true);
+
+		boolean result = (Boolean) method.invoke(testClass, mockProperties, "test", true);
+		assertEquals(true, result);
+		verify(mockProperties);
+
+		reset(mockProperties);
+		expect(mockProperties.getProperty("test")).andReturn("somethingbad");
+		replay(mockProperties);
+
+		result = (Boolean) method.invoke(testClass, mockProperties, "test", false);
+		assertEquals(false, result);
+		verify(mockProperties);
+
+		// test not finding a value
+		reset(mockProperties);
+		expect(mockProperties.getProperty("test")).andReturn(null);
+		replay(mockProperties);
+
+		result = (Boolean) method.invoke(testClass, mockProperties, "test", true);
+		assertEquals(true, result);
 		verify(mockProperties);
 
 

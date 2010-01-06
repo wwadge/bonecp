@@ -34,6 +34,8 @@ public class CustomHook extends AbstractConnectionHook{
 	int checkout;
 	/** junit helper.*/
 	int destroy;
+	/** junit helper.*/
+	int fail;
 
 	@Override
 	public void onAcquire(ConnectionHandle connection) {
@@ -55,4 +57,14 @@ public class CustomHook extends AbstractConnectionHook{
 		this.destroy++;
 	}
 
+	@Override
+	public boolean onAcquireFail(Throwable t) {
+		this.fail++;
+		if (this.fail < 3){
+			return true; // try 3 times
+		} 
+		
+		return false;
+
+	}
 }

@@ -58,10 +58,11 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	 * @param cache
 	 * @param connectionHandle
 	 * @param cacheKey key to cache
+	 * @param logStatementsEnabled if enabled, log sql statements.
 	 */
 	public CallableStatementHandle(CallableStatement internalCallableStatement,
-			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey) {
-		super(internalCallableStatement, sql, cache, connectionHandle, cacheKey);
+			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey, boolean logStatementsEnabled) {
+		super(internalCallableStatement, sql, cache, connectionHandle, cacheKey, logStatementsEnabled);
 		this.internalCallableStatement = internalCallableStatement;
 		this.connectionHandle = connectionHandle;
 		this.sql = sql;

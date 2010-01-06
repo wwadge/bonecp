@@ -65,5 +65,11 @@ public interface ConnectionHook {
 	 * @param connection
 	 */
 	void onDestroy(ConnectionHandle connection); 
+	
+	/** Called on attempting (and failing) to acquire a connection.
+	 * @param t Exception that occurred.
+	 * @return Return true to attempt the connection again.
+	 */
+	boolean onAcquireFail(Throwable t);
 	 
 }

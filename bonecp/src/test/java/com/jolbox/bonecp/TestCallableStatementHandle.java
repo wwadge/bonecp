@@ -53,7 +53,7 @@ public class TestCallableStatementHandle {
 		mockClass = createNiceMock(CallableStatementHandle.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
-		testClass = new CallableStatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "somesql");
+		testClass = new CallableStatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "somesql", true);
 
 	}
 

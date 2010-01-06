@@ -59,4 +59,12 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 		// do nothing
 	}
 
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onAcquireFail(Exception)
+	 */
+	@Override
+	public boolean onAcquireFail(Throwable e) {
+		return false; // by default do not try connecting again.
+	}
+
 }

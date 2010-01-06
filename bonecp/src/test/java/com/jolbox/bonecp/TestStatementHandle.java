@@ -65,7 +65,7 @@ public class TestStatementHandle {
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 
-		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "testSQL");
+		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "testSQL", true);
 
 	}
 
@@ -91,7 +91,7 @@ public class TestStatementHandle {
 		skipTests.add("internalClose");
 		skipTests.add("trackResultSet");
 		skipTests.add("checkClosed");
-		skipTests.add("clearResultSetHandles"); 
+		skipTests.add("closeAndClearResultSetHandles"); 
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
 		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
@@ -116,9 +116,9 @@ public class TestStatementHandle {
 		ResultSet mockResultSet = createNiceMock(ResultSet.class);
 
 		// alternate constructor
-		StatementHandle handle = new StatementHandle(mockStatement, null);
+		StatementHandle handle = new StatementHandle(mockStatement, null, true);
 
-		handle = new StatementHandle(mockStatement, null, mockCache, null, "testSQL");
+		handle = new StatementHandle(mockStatement, null, mockCache, null, "testSQL", true);
 		handle.setLogicallyOpen();
 		handle.getConnection();
 		
@@ -197,7 +197,7 @@ public class TestStatementHandle {
 		ConcurrentLinkedQueue<ResultSet> mockResultSetHandles = createNiceMock(ConcurrentLinkedQueue.class);
 
 		// alternate constructor
-		StatementHandle handle = new StatementHandle(mockStatement, null);
+		StatementHandle handle = new StatementHandle(mockStatement, null, true);
 		Field field = handle.getClass().getDeclaredField("resultSetHandles");
 		field.setAccessible(true);
 		field.set(handle, mockResultSetHandles);
@@ -205,7 +205,7 @@ public class TestStatementHandle {
 		mockResultSet.close();
 		expectLastCall().once();
 		replay(mockResultSetHandles, mockResultSet, mockStatement);
-		handle.clearResultSetHandles(true);
+		handle.closeAndClearResultSetHandles();
 		verify(mockResultSet, mockResultSetHandles, mockStatement);
 		
 	}

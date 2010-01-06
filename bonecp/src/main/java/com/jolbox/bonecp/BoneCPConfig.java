@@ -25,11 +25,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
-import com.jolbox.bonecp.jmx.BoneCPConfigMBean;
 
 
 /**
- * Helper class to avoid passing in dozens of parameters.
+ * Configuration class.
  *
  * @author wallacew
  */
@@ -68,9 +67,15 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     private ConnectionHook connectionHook;
     /** Query to send once to the database. */
     private String initSQL;
+	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to 
+	 * close the connection. FOR DEBUG PURPOSES ONLY!
+	 */
+    private boolean closeConnectionWatch;
+    /** If set to true, log SQL statements being executed. */ 
+    private boolean logStatementsEnabled;
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getMinConnectionsPerPartition()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
 	 */
     public int getMinConnectionsPerPartition() {
         return this.minConnectionsPerPartition;
@@ -86,7 +91,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getMaxConnectionsPerPartition()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMaxConnectionsPerPartition()
 	 */
     public int getMaxConnectionsPerPartition() {
         return this.maxConnectionsPerPartition;
@@ -105,7 +110,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getAcquireIncrement()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getAcquireIncrement()
 	 */
     public int getAcquireIncrement() {
         return this.acquireIncrement;
@@ -125,7 +130,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getPartitionCount()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getPartitionCount()
 	 */
     public int getPartitionCount() {
         return this.partitionCount;
@@ -137,7 +142,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
      * In order to reduce lock contention and thus improve performance, 
      * each incoming connection request picks off a connection from a pool that has thread-affinity, 
      * i.e. pool[threadId % partition_count]. The higher this number, the better your performance will be for the case 
-     * when you have plenty of short-lived threads. Beyond a certain threshold, maintenence of these pools will start 
+     * when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
      * to have a negative effect on performance (and only for the case when connections on a partition start running out).
      * 
      * <p>Default: 3, minimum: 1, recommended: 3-4 (but very app specific)
@@ -149,7 +154,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getJdbcUrl()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getJdbcUrl()
 	 */
     public String getJdbcUrl() {
         return this.jdbcUrl;
@@ -165,7 +170,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getUsername()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getUsername()
 	 */
     public String getUsername() {
         return this.username;
@@ -199,7 +204,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getIdleConnectionTestPeriod()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getIdleConnectionTestPeriod()
 	 */
     public long getIdleConnectionTestPeriod() {
         return this.idleConnectionTestPeriod;
@@ -221,7 +226,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getIdleMaxAge()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getIdleMaxAge()
 	 */
     public long getIdleMaxAge() {
         return this.idleMaxAge;
@@ -240,7 +245,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getConnectionTestStatement()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getConnectionTestStatement()
 	 */
     public String getConnectionTestStatement() {
         return this.connectionTestStatement;
@@ -263,7 +268,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getPreparedStatementsCacheSize()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getPreparedStatementsCacheSize()
 	 */
     public int getPreparedStatementsCacheSize() {
         return this.preparedStatementsCacheSize;
@@ -285,7 +290,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getReleaseHelperThreads()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getReleaseHelperThreads()
 	 */
     public int getReleaseHelperThreads() {
         return this.releaseHelperThreads;
@@ -306,7 +311,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
     
     /** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getStatementsCachedPerConnection()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCachedPerConnection()
 	 */
 	public int getStatementsCachedPerConnection() {
 		return this.statementsCachedPerConnection;
@@ -399,7 +404,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     }
 
 	/** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getConnectionHook()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getConnectionHook()
 	 */
 	public ConnectionHook getConnectionHook() {
 		return this.connectionHook;
@@ -417,7 +422,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
 	}
 
 	/** {@inheritDoc}
-	 * @see com.jolbox.bonecp.jmx.BoneCPConfigMBean#getInitSQL()
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getInitSQL()
 	 */
 	public String getInitSQL() {
 		return this.initSQL;
@@ -430,4 +435,35 @@ public class BoneCPConfig implements BoneCPConfigMBean {
 		this.initSQL = initSQL;
 	}
 
+	/** Returns if BoneCP is configured to create a helper thread to watch over connection acquires that are never released (or released
+	 * twice). 
+	 * FOR DEBUG PURPOSES ONLY. 
+	 * @return the current closeConnectionWatch setting.
+	 */
+	public boolean isCloseConnectionWatch() {
+		return this.closeConnectionWatch;
+	}
+
+	/** Instruct the pool to create a helper thread to watch over connection acquires that are never released (or released twice). 
+	 * This is for debugging purposes only and will create a new thread for each call to getConnection(). 
+	 * Enabling this option will have a big negative impact on pool performance.
+	 * @param closeConnectionWatch set to true to enable thread monitoring.
+	 */
+	public void setCloseConnectionWatch(boolean closeConnectionWatch) {
+		this.closeConnectionWatch = closeConnectionWatch;
+	}
+
+	/** Returns true if SQL logging is currently enabled, false otherwise.
+	 * @return the logStatementsEnabled status
+	 */
+	public boolean isLogStatementsEnabled() {
+		return this.logStatementsEnabled;
+	}
+
+	/** If enabled, log SQL statements being executed. 
+	 * @param logStatementsEnabled the logStatementsEnabled to set
+	 */
+	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
+		this.logStatementsEnabled = logStatementsEnabled;
+	}
 }

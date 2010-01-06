@@ -40,6 +40,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -105,12 +106,15 @@ public class TestConnectionHandle {
 	@Before
 	public void before() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		reset(mockConnection, mockPreparedStatementCache, mockPool);
-		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+		Field field = testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);
 		field.set(testClass, false);
 
 	}
 
+	
+
+	
 	/** Test bounce of inner connection.
 	 * @throws IllegalArgumentException
 	 * @throws SecurityException
@@ -138,6 +142,7 @@ public class TestConnectionHandle {
 		skipTests.add("setOriginatingPartition");
 		skipTests.add("renewConnection");
 		skipTests.add("clearStatementHandles");
+		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
 		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockConnection);
@@ -179,6 +184,10 @@ public class TestConnectionHandle {
 	@Test 
 	public void testClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException{
 
+		Field field = testClass.getClass().getDeclaredField("doubleCloseCheck");
+		field.setAccessible(true);
+		field.set(testClass, true);
+
 		testClass.renewConnection();
 		mockPool.releaseConnection((Connection)anyObject());
 		expectLastCall().once().andThrow(new SQLException()).once();
@@ -188,11 +197,12 @@ public class TestConnectionHandle {
 
 
 		// logically mark the connection as closed
-		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+		field = testClass.getClass().getDeclaredField("logicallyClosed");
 
 		field.setAccessible(true);
 		Assert.assertTrue(field.getBoolean(testClass));
 
+		
 
 		testClass.renewConnection();
 		try{
@@ -201,7 +211,69 @@ public class TestConnectionHandle {
 		} catch (Throwable t){
 			// do nothing.
 		}
+		
 		verify(mockPool);
+	}
+	
+	/** Tests sendInitialSQL method.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SQLException
+	 */
+	@Test
+	public void testSendInitialSQL() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
+		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
+		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockConfig.getInitSQL()).andReturn("test").anyTimes();
+		Field field = testClass.getClass().getDeclaredField("connection");
+		field.setAccessible(true);
+		field.set(testClass, mockConnection);
+		
+		Statement mockStatement = createNiceMock(Statement.class);
+		ResultSet mockResultSet = createNiceMock(ResultSet.class);
+		expect(mockConnection.createStatement()).andReturn(mockStatement).once();
+		expect(mockStatement.executeQuery("test")).andReturn(mockResultSet).once();
+		mockResultSet.close();
+		expectLastCall().once();
+		
+		replay(mockConfig, mockPool, mockConnection, mockStatement, mockResultSet);
+		testClass.sendInitSQL();
+		verify(mockConfig, mockPool, mockConnection,  mockStatement, mockResultSet);
+
+		
+	}
+	
+	/**
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SQLException
+	 */
+	@Test
+	public void testDoubleClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
+		Field field = testClass.getClass().getDeclaredField("doubleCloseCheck");
+		field.setAccessible(true);
+		field.set(testClass, true);
+
+		field = testClass.getClass().getDeclaredField("logicallyClosed");
+		field.setAccessible(true);
+		field.set(testClass, true);
+
+		field = testClass.getClass().getDeclaredField("doubleCloseException");
+		field.setAccessible(true);
+		field.set(testClass, "fakeexception");
+		mockLogger.error(anyObject());
+		expectLastCall().once();
+		
+		mockPool.releaseConnection((Connection)anyObject());
+		expectLastCall().once().andThrow(new SQLException()).once();
+		replay(mockLogger, mockPool);
+
+		testClass.close();
+
 	}
 
 	/** Closing a connection handle should release that connection back in the pool and mark it as closed.
@@ -260,7 +332,7 @@ public class TestConnectionHandle {
 		method.invoke(testClass);
 
 		// logically mark the connection as closed
-		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+		Field field = testClass.getClass().getDeclaredField("logicallyClosed");
 
 		field.setAccessible(true);
 		field.set(testClass, true);
@@ -280,10 +352,14 @@ public class TestConnectionHandle {
 	 */
 	@Test
 	public void testRenewConnection() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
-		Field field = testClass.getClass().getDeclaredField("connectionClosed");
+		Field field = testClass.getClass().getDeclaredField("doubleCloseCheck");
 		field.setAccessible(true);
 		field.set(testClass, true);
-
+		
+		field = testClass.getClass().getDeclaredField("logicallyClosed");
+		field.setAccessible(true);
+		field.set(testClass, true);
+		
 		testClass.renewConnection();
 		assertFalse(field.getBoolean(testClass));
 
@@ -320,6 +396,12 @@ public class TestConnectionHandle {
 		field.setAccessible(true);
 		field.set(testClass, mockConnection);
 		assertEquals(mockConnection, testClass.getRawConnection());
+		
+		field = testClass.getClass().getDeclaredField("logicallyClosed");
+		field.setAccessible(true);
+		field.setBoolean(testClass, true);
+		assertTrue(testClass.isLogicallyClosed());
+		
 	}
 
 	/** Prepare statement tests.
@@ -602,6 +684,7 @@ public class TestConnectionHandle {
 		verify(mockConnection);
 
 	}
-
+	
+	
 
 }

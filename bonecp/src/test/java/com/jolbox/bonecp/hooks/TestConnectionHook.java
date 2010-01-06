@@ -103,6 +103,8 @@ public class TestConnectionHook {
 		assertEquals(5, hookClass.destroy);
 	}
 
+	
+	
 	/** Just to do code coverage of abstract class.
 	 * @throws SQLException
 	 */
@@ -125,5 +127,53 @@ public class TestConnectionHook {
 		
 		poolClass.getConnection().close();
 		poolClass.close();
+		
+		reset(mockConfig);
+		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
+		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
+		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(hook).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("something-bad").anyTimes();
+		replay(mockConfig);
+		try{
+			poolClass = new BoneCP(mockConfig);
+			// should throw an exception
+		} catch (Exception e){
+			// do nothing
+		}
+
+	}
+	
+	/**
+	 * Test method for {@link com.jolbox.bonecp.hooks.AbstractConnectionHook#onDestroy(com.jolbox.bonecp.ConnectionHandle)}.
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testOnAcquireFail() throws SQLException {
+		hookClass = new CustomHook();
+		reset(mockConfig);
+		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
+		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("somethingbad").anyTimes();
+		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
+		replay(mockConfig);
+		
+		try{
+			poolClass = new BoneCP(mockConfig);	
+			poolClass.getConnection();
+		} catch (Exception e){
+			// do nothing
+		}
+		assertEquals(3, hookClass.fail);
+		
 	}
 }

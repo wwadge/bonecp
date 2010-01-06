@@ -72,6 +72,10 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_TEST_STATEMENT = "bonecp.connectionTestStatement";
 	/** Config key. */
+	protected static final String CONFIG_CLOSE_CONNECTION_WATCH = "bonecp.closeConnectionWatch";
+	/** Config key. */
+	protected static final String CONFIG_LOG_STATEMENTS_ENABLED = "bonecp.logStatementsEnabled";
+	/** Config key. */
 	protected static final String CONFIG_INIT_SQL  = "bonecp.initSQL";
 	/** Config stuff. */
 	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
@@ -130,8 +134,10 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		String password = props.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set");
 		String connectionHookClass = props.getProperty(CONFIG_CONNECTION_HOOK_CLASS);
 		String initSQL = props.getProperty(CONFIG_INIT_SQL);
+		boolean closeConnectionWatch = configParseBoolean(props, CONFIG_CLOSE_CONNECTION_WATCH, false);
+		boolean logStatementsEnabled = configParseBoolean(props, CONFIG_LOG_STATEMENTS_ENABLED, false);
 
-
+		
 		// Remember Isolation level
 		this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
 		this.autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
@@ -154,7 +160,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setPreparedStatementsCacheSize(preparedStatementCacheSize);
 			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
 			this.config.setInitSQL(initSQL);
-			
+			this.config.setCloseConnectionWatch(closeConnectionWatch);
+			this.config.setLogStatementsEnabled(logStatementsEnabled);
 			if (connectionHookClass != null){
 				Object hookClass = Class.forName(connectionHookClass).newInstance();
 				this.config.setConnectionHook((ConnectionHook) hookClass);
@@ -195,6 +202,25 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 				result = Integer.parseInt(val);
 			} catch (NumberFormatException e){
 				// do nothing, use the default value
+			}
+		}
+		return result;
+	}
+
+	/** Returns the value of the given property.
+	 * @param props Properties handle
+	 * @param propertyName property to read in
+	 * @param defaultValue value to return on no value being set (or error)
+	 * @return the boolean read in from the properties, or default value on error/no value set
+	 */
+	private boolean configParseBoolean(Properties props, String propertyName, boolean defaultValue) {
+		boolean result = defaultValue;
+		String val = props.getProperty(propertyName);
+		if (val != null) {
+			if (val.toUpperCase().equals("TRUE") || val.toUpperCase().equals("FALSE")){
+				result = Boolean.parseBoolean(val);
+			} else{ 
+				result = defaultValue;
 			}
 		}
 		return result;

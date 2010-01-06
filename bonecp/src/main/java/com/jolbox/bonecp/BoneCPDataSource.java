@@ -61,6 +61,8 @@ public class BoneCPDataSource implements DataSource {
     /** Config setting. */
     private String idleMaxAge="240";
     /** Config setting. */
+    private boolean closeConnectionWatch=false;
+    /** Config setting. */
     private String connectionTestStatement;
     /** Config setting. */
     private String jdbcUrl="JDBC URL NOT SET!";
@@ -84,6 +86,8 @@ public class BoneCPDataSource implements DataSource {
     private static final Logger logger = Logger.getLogger(BoneCPDataSource.class);
     /** config setting. */
     private String initSQL;
+    /** If enabled, log SQL statements being executed. */
+	private boolean logStatementsEnabled;
 
     /**
      * Default empty constructor.
@@ -113,6 +117,8 @@ public class BoneCPDataSource implements DataSource {
         this.setReleaseHelperThreads(config.getReleaseHelperThreads());
         this.setConnectionHook(config.getConnectionHook());
         this.setInitSQL(config.getInitSQL());
+        this.setCloseConnectionWatch(config.isCloseConnectionWatch());
+        this.setLogStatementsEnabled(config.isLogStatementsEnabled());
     }
 
    
@@ -184,6 +190,8 @@ public class BoneCPDataSource implements DataSource {
                 config.setReleaseHelperThreads(releaseHelperThreads);
                 config.setConnectionHook(this.connectionHook);
                 config.setInitSQL(this.initSQL);
+                config.setCloseConnectionWatch(this.closeConnectionWatch);
+                config.setLogStatementsEnabled(this.logStatementsEnabled);
                 this.pool = new BoneCP(config);
             }
 
@@ -731,5 +739,37 @@ public class BoneCPDataSource implements DataSource {
 	 */
 	public void setInitSQL(String initSQL) {
 		this.initSQL = initSQL;
+	}
+	
+	/** Returns if BoneCP is configured to create a helper thread to watch over connection acquires that are never released. 
+	 * FOR DEBUG PURPOSES ONLY. 
+	 * @return the current closeConnectionWatch setting.
+	 */
+	public boolean isCloseConnectionWatch() {
+		return this.closeConnectionWatch;
+	}
+	
+	/** Instruct the pool to create a helper thread to watch over connection acquires that are never released. This is for debugging
+	 * purposes only and will create a new thread for each call to getConnection(). Enabling this option will have a big negative impact 
+	 * on pool performance.
+	 * @param closeConnectionWatch set to true to enable thread monitoring.
+	 */
+	public void setCloseConnectionWatch(boolean closeConnectionWatch) {
+		this.closeConnectionWatch = closeConnectionWatch;
+	}
+	
+	/** Returns true if SQL logging is currently enabled, false otherwise.
+	 * @return the logStatementsEnabled status
+	 */
+	public boolean isLogStatementsEnabled() {
+		return this.logStatementsEnabled;
+	}
+
+	
+	/** If enabled, log SQL statements being executed. 
+	 * @param logStatementsEnabled the logStatementsEnabled to set
+	 */
+	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
+		this.logStatementsEnabled = logStatementsEnabled;
 	}
 }

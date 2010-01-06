@@ -64,10 +64,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 * @param connectionHandle
 	 *            Handle to the connection this is tied to.
 	 * @param cacheKey 
+	 * @param logStatementsEnabled if true, enable statement logging.
 	 */
 	public PreparedStatementHandle(PreparedStatement internalPreparedStatement,
-			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey) {
-		super(internalPreparedStatement, sql, cache, connectionHandle, cacheKey);
+			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey, boolean logStatementsEnabled) {
+		super(internalPreparedStatement, sql, cache, connectionHandle, cacheKey, logStatementsEnabled);
 		this.internalPreparedStatement = internalPreparedStatement;
 		this.connectionHandle = connectionHandle;
 		this.sql = sql;

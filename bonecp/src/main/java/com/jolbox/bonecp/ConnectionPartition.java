@@ -121,7 +121,7 @@ public class ConnectionPartition {
         int helperThreads = config.getReleaseHelperThreads();
         if (helperThreads > 0) {
         	
-            ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("TinyCP-release-thread-helper-thread", true));
+            ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread", true));
             pool.setReleaseHelper(releaseHelper); // keep a handle just in case
             
             for (int i = 0; i < helperThreads; i++) { 

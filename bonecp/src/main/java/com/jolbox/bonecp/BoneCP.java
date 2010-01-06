@@ -40,7 +40,7 @@ import javax.management.ObjectName;
 
 import org.apache.log4j.Logger;
 
-import com.jolbox.bonecp.jmx.BoneCPMBean;
+
 
 /**
  * Connection pool (main class).
@@ -48,6 +48,12 @@ import com.jolbox.bonecp.jmx.BoneCPMBean;
  *
  */
 public class BoneCP implements BoneCPMBean {
+	/** Exception message. */
+	private static final String UNCLOSED_EXCEPTION_MESSAGE = "Connection obtained from thread [%s] was never closed. \nStack trace of location where connection was obtained follows:\n";
+	/** JMX constant. */
+	public static final String MBEAN_CONFIG = "com.jolbox.bonecp:type=BoneCPConfig";
+	/** JMX constant. */
+	public static final String MBEAN_BONECP = "com.jolbox.bonecp:type=BoneCP";
 	/** Constant for keep-alive test */
 	private static final String[] METADATATABLE = new String[] {"TABLE"};
 	/** Constant for keep-alive test */
@@ -79,6 +85,16 @@ public class BoneCP implements BoneCPMBean {
 	private ExecutorService asyncExecutor;
 	/** Logger class. */
 	private static Logger logger = Logger.getLogger(BoneCP.class);
+	/** JMX support. */
+	private MBeanServer mbs; 
+	/** Prevent repeated termination of all connections when the DB goes down. */
+	protected Lock terminationLock = new ReentrantLock();
+	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to 
+	 * close the connection.
+	 */
+	private boolean closeConnectionWatch = false;
+	/** Threads monitoring for bad connection requests. */
+	private ExecutorService closeConnectionExecutor;
 
 
 	/**
@@ -98,17 +114,23 @@ public class BoneCP implements BoneCPMBean {
 
 	/** Closes off all connections in all partitions. */
 	protected void terminateAllConnections(){
-		// close off all connections.
-		for (int i=0; i < this.partitionCount; i++) {
-			ConnectionHandle conn;
-			while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
-				postDestroyConnection(conn);
+		if (this.terminationLock.tryLock()){
+			try{
+				// close off all connections.
+				for (int i=0; i < this.partitionCount; i++) {
+					ConnectionHandle conn;
+					while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
+						postDestroyConnection(conn);
 
-				try {
-					conn.internalClose();
-				} catch (SQLException e) {
-					logger.error(e);
+						try {
+							conn.internalClose();
+						} catch (SQLException e) {
+							logger.error(e);
+						}
+					}
 				}
+			} finally {
+				this.terminationLock.unlock();
 			}
 		}
 	}
@@ -139,10 +161,16 @@ public class BoneCP implements BoneCPMBean {
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
-		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("TinyCP-keep-alive-scheduler", true));
-		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("TinyCP-pool-watch-thread", true));
+		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler", true));
+		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread", true));
 		this.partitionCount = config.getPartitionCount();
+		this.closeConnectionWatch = config.isCloseConnectionWatch();
 
+		if (this.closeConnectionWatch){
+			logger.warn("Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!");
+			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread", true));
+
+		}
 		for (int p=0; p < config.getPartitionCount(); p++){
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this);
@@ -167,15 +195,20 @@ public class BoneCP implements BoneCPMBean {
 	/**
 	 * Initialises JMX stuff.  
 	 */
-	private void initJMX() {
-		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer(); 
+	protected void initJMX() {
+		if (this.mbs == null){ // this way makes it easier for mocking.
+			this.mbs = ManagementFactory.getPlatformMBeanServer();
+		}
 		try {
-			ObjectName name = new ObjectName("com.jolbox.bonecp:type=BoneCP");
-			ObjectName configname = new ObjectName("com.jolbox.bonecp:type=BoneCPConfig");
+			ObjectName name = new ObjectName(MBEAN_BONECP);
+			ObjectName configname = new ObjectName(MBEAN_CONFIG);
 
-			mbs.registerMBean(this, name); 
-			mbs.registerMBean(this.config, configname); 
-
+			if (!this.mbs.isRegistered(name)){
+				this.mbs.registerMBean(this, name); 
+			}
+			if (!this.mbs.isRegistered(configname)){
+				this.mbs.registerMBean(this.config, configname); 
+			}
 		} catch (Exception e) {
 			logger.error("Unable to start JMX", e);
 		}
@@ -242,9 +275,37 @@ public class BoneCP implements BoneCPMBean {
 			result.getConnectionHook().onCheckOut(result);
 		}
 
+		if (this.closeConnectionWatch){ // a debugging tool
+			watchConnection(result);
+		}
 		return result;
 	}
 
+
+	/** Starts off a new thread to monitor this connection attempt.
+	 * @param connectionHandle to monitor 
+	 */
+	private void watchConnection(ConnectionHandle connectionHandle) {
+		String message = captureStackTrace(UNCLOSED_EXCEPTION_MESSAGE);
+		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message));
+	}
+
+	/** Throw an exception to capture it so as to be able to print it out later on
+	 * @param message message to display
+	 * @return Stack trace message
+	 * 
+	 */
+	protected String captureStackTrace(String message) {
+		StringBuffer stringBuffer = new StringBuffer(String.format(message, Thread.currentThread().getName()));		
+			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+			for(int i = 0; i < trace.length; i++){
+				stringBuffer.append(" "+trace[i]+"\r\n");
+			}
+
+			stringBuffer.append("");
+
+		return stringBuffer.toString();
+	}
 
 	/** Obtain a connection asynchronously by queuing a request to obtain a connection in a separate thread. 
 	 * 
@@ -298,6 +359,7 @@ public class BoneCP implements BoneCPMBean {
 				handle.getConnectionHook().onCheckIn(handle);
 			}
 
+			// release immediately or place it in a queue so that another thread will eventually close it.
 			if (this.releaseHelperThreadsConfigured){
 				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
 			} else {
@@ -316,7 +378,9 @@ public class BoneCP implements BoneCPMBean {
 	 **/
 	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws InterruptedException, SQLException {
 
+		// close off tracked statements.
 		connectionHandle.clearStatementHandles(false);
+
 		if (connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();

@@ -47,7 +47,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.Lock;
 
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+
 import org.apache.log4j.Logger;
+import org.easymock.EasyMock;
 import org.hsqldb.jdbc.jdbcResultSet;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -103,6 +111,9 @@ public class TestBoneCP {
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
 		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
+		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
+		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
+
 		replay(mockConfig);
 		
 		// once for no release threads, once with release threads....
@@ -209,6 +220,24 @@ public class TestBoneCP {
 		testClass.terminateAllConnections();
 		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
 
+		// same test but to cover the finally section
+		reset(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockConnectionHandles.poll()).andReturn(mockConnection).anyTimes();
+		mockConnection.internalClose();
+		expectLastCall().once().andThrow(new RuntimeException()).once();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+		replay(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
+		
+		// test.
+		try{
+			testClass.terminateAllConnections();
+			fail("Should throw exception");
+		} catch (RuntimeException e){
+			// do nothing
+		}
+		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
+		
 	}
 
 	/**
@@ -223,6 +252,7 @@ public class TestBoneCP {
 	@Test
 	public void testGetConnection() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
 		// Test 1: Get connection - normal state
+		
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
@@ -696,5 +726,77 @@ public class TestBoneCP {
 		testClass.setReleaseHelper(mockReleaseHelper);
 		assertEquals(mockReleaseHelper, testClass.getReleaseHelper());
 	}
+	
+	/** JMX setup test
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InstanceAlreadyExistsException
+	 * @throws MBeanRegistrationException
+	 * @throws NotCompliantMBeanException
+	 */
+	@Test
+	public void testJMX() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException{
+		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
+		Field field = testClass.getClass().getDeclaredField("mbs");
+		field.setAccessible(true);
+		field.set(testClass, mockMbs);
+		ObjectInstance mockInstance = createNiceMock(ObjectInstance.class);
+		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
+		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
+		replay(mockMbs, mockInstance);
+		testClass.initJMX();
+		verify(mockMbs);
+	}
 
+	/**
+	 * @throws SecurityException
+	 * @throws NoSuchMethodException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	@Test
+	public void testCaptureException() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+		Method method = testClass.getClass().getDeclaredMethod("captureStackTrace",  String.class);
+		method.setAccessible(true);
+		try{
+			method.invoke(testClass);
+			fail("Should throw an exception");
+		} catch (Exception e){
+			// do nothing
+		}
+	}
+	
+	/** Tests for watch connection.
+	 * @throws SecurityException
+	 * @throws NoSuchMethodException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchFieldException
+	 */
+	@Test
+	public void testWatchConnection() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException{
+		Field field = testClass.getClass().getDeclaredField("closeConnectionExecutor");
+		field.setAccessible(true);
+		
+		ExecutorService mockExecutor = createNiceMock(ExecutorService.class);
+		field.set(testClass, mockExecutor);
+		
+		
+		Method method = testClass.getClass().getDeclaredMethod("watchConnection", ConnectionHandle.class);
+		method.setAccessible(true);
+		expect(mockExecutor.submit((CloseThreadMonitor) anyObject())).andReturn(null).once();
+		replay(mockExecutor);
+		method.invoke(testClass, mockConnection);
+		verify(mockExecutor);
+		
+		// Test #2: Code coverage
+		method.invoke(testClass, new Object[]{null});
+		
+
+		
+	}
 }

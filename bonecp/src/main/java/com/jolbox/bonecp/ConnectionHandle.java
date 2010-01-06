@@ -53,7 +53,10 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * 
  */
 public class ConnectionHandle implements Connection {
-
+	/** Exception message. */
+	private static final String LOG_ERROR_MESSAGE = "Connection closed twice exception detected.\n%s\n%s\n";
+	/** Exception message. */
+	private static final String CLOSED_TWICE_EXCEPTION_MESSAGE = "Connection closed from thread [%s] was closed again.\nStack trace of location where connection was first closed follows:\n";
 	/** Connection handle. */
 	private Connection connection = null;
 	/** Last time this connection was used by an application. */
@@ -68,8 +71,8 @@ public class ConnectionHandle implements Connection {
 	 * case is assumed to succeed.
 	 */
 	private boolean possiblyBroken;
-	/** If true, we've called internalClose() on this connection. */
-	private boolean connectionClosed = false;
+	/** If true, we've called close() on this connection. */
+	private boolean logicallyClosed = false;
 	/** Original partition. */
 	private ConnectionPartition originatingPartition = null;
 	/** Prepared Statement Cache. */
@@ -88,6 +91,12 @@ public class ConnectionHandle implements Connection {
 	private ConcurrentLinkedQueue<Statement> statementHandles = new ConcurrentLinkedQueue<Statement>();
 	/** Handle to the connection hook as defined in the config. */
 	private ConnectionHook connectionHook;
+	/** If true, give warnings if application tried to issue a close twice (for debugging only). */
+	private boolean doubleCloseCheck;
+	/** exception trace if doubleCloseCheck is enabled. */  
+	private volatile String doubleCloseException = null;
+	/** If true, log sql statements. */
+	private boolean logStatementsEnabled;
 
 	/**
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -125,38 +134,57 @@ public class ConnectionHandle implements Connection {
 	public ConnectionHandle(String url, String username, String password,
 			BoneCP pool) throws SQLException {
 
+		boolean tryAgain = false;
+
 		this.pool = pool;
+		do{
+			try {
+				// keep track of this hook.
+				this.connectionHook = this.pool.getConfig().getConnectionHook();
 
-		try {
-			this.connection = DriverManager.getConnection(url, username,
-					password);
+				this.connection = DriverManager.getConnection(url, username,
+						password);
 
-			int cacheSize = pool.getConfig().getPreparedStatementsCacheSize();
-			if (cacheSize > 0) {
-				this.preparedStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
-				this.callableStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
+				this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
+				this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
+				int cacheSize = pool.getConfig().getPreparedStatementsCacheSize();
+				if (cacheSize > 0) {
+					this.preparedStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
+					this.callableStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
 
-			}
-			// keep track of this hook.
-			this.connectionHook = this.pool.getConfig().getConnectionHook();
-			// call the hook, if available.
-			if (this.connectionHook != null){
-				this.connectionHook.onAcquire(this);
-			}
-
-			// fetch any configured setup sql.
-			String initSQL = this.pool.getConfig().getInitSQL();
-			if (initSQL != null){
-				Statement stmt = this.connection.createStatement();
-				ResultSet rs = stmt.executeQuery(initSQL);
-				// free up resources 
-				if (rs != null){
-					rs.close();
 				}
-				stmt.close();
+				// call the hook, if available.
+				if (this.connectionHook != null){
+					this.connectionHook.onAcquire(this);
+				}
+
+				sendInitSQL();
+			} catch (Throwable t) {
+				// call the hook, if available.
+				if (this.connectionHook != null){
+					tryAgain = this.connectionHook.onAcquireFail(t);
+				}
+				if (!tryAgain){
+					throw markPossiblyBroken(t);
+				}
 			}
-		} catch (Throwable t) {
-			throw markPossiblyBroken(t);
+		} while (tryAgain);
+	}
+
+	/** Sends any configured SQL init statement. 
+	 * @throws SQLException on error
+	 */
+	public void sendInitSQL() throws SQLException {
+		// fetch any configured setup sql.
+		String initSQL = this.pool.getConfig().getInitSQL();
+		if (initSQL != null){
+			Statement stmt = this.connection.createStatement();
+			ResultSet rs = stmt.executeQuery(initSQL);
+			// free up resources 
+			if (rs != null){
+				rs.close();
+			}
+			stmt.close();
 		}
 	}
 
@@ -191,7 +219,7 @@ public class ConnectionHandle implements Connection {
 	 * Given an exception, flag the connection (or database) as being potentially broken. If the exception is a data-specific exception,
 	 * do nothing except throw it back to the application. 
 	 * 
-	 * @param t throwable exception to process
+	 * @param t Throwable exception to process
 	 * @return SQLException for further processing
 	 */
 	protected SQLException markPossiblyBroken(Throwable t) {
@@ -207,6 +235,7 @@ public class ConnectionHandle implements Connection {
 		if (state == null){ // safety;
 			state = "Z";
 		}
+		// use the active key to prevent two connections each triggering a "DB is down" from destroying the database repeatedly
 		if (sqlStateDBFailureCodes.contains(state) && this.pool != null){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.terminateAllConnections();
@@ -248,8 +277,8 @@ public class ConnectionHandle implements Connection {
 	 * 
 	 */
 	private void checkClosed() throws SQLException {
-		if (this.connectionClosed) {
-			throw new SQLException("Connection is closed.");
+		if (this.logicallyClosed) {
+			throw new SQLException("Connection is closed!");
 		}
 	}
 
@@ -260,14 +289,24 @@ public class ConnectionHandle implements Connection {
 	 */
 	public void close() throws SQLException {
 		try {
-			if (!this.connectionClosed) {
-				this.connectionClosed = true;
+			if (!this.logicallyClosed) {
+				this.logicallyClosed = true;
 				this.pool.releaseConnection(this);
+
+				if (this.doubleCloseCheck){
+					this.doubleCloseException = this.pool.captureStackTrace(CLOSED_TWICE_EXCEPTION_MESSAGE);
+				}
+			} else {
+				if (this.doubleCloseCheck && this.doubleCloseException != null){
+					String currentLocation = this.pool.captureStackTrace("Last closed trace from thread ["+Thread.currentThread().getName()+"]:\n");
+					logger.error(String.format(LOG_ERROR_MESSAGE, this.doubleCloseException, currentLocation));
+				}
 			}
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
 	}
+
 
 	/**
 	 * Close off the connection.
@@ -355,7 +394,7 @@ public class ConnectionHandle implements Connection {
 		Statement result = null;
 		checkClosed();
 		try {
-			result = trackStatement(new StatementHandle(this.connection.createStatement(), this));
+			result = trackStatement(new StatementHandle(this.connection.createStatement(), this, this.logStatementsEnabled));
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -367,7 +406,7 @@ public class ConnectionHandle implements Connection {
 		Statement result = null;
 		checkClosed();
 		try {
-			result = trackStatement(new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency), this));
+			result = trackStatement(new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency), this, this.logStatementsEnabled));
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -380,7 +419,7 @@ public class ConnectionHandle implements Connection {
 		Statement result = null;
 		checkClosed();
 		try {
-			result = trackStatement(new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability), this));
+			result = trackStatement(new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability), this, this.logStatementsEnabled));
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -554,7 +593,7 @@ public class ConnectionHandle implements Connection {
 				if (result == null) {
 					String cacheKey = sql;
 					result = (CallableStatement) trackStatement(new CallableStatementHandle(this.connection.prepareCall(sql),
-							sql, this.callableStatementCache, this, cacheKey));
+							sql, this.callableStatementCache, this, cacheKey, this.logStatementsEnabled));
 
 				} 
 
@@ -580,7 +619,7 @@ public class ConnectionHandle implements Connection {
 				if (result == null) {
 					String cacheKey = this.callableStatementCache.calculateCacheKey(sql, resultSetType, resultSetConcurrency);
 					result = (CallableStatement) trackStatement(new CallableStatementHandle(
-							this.connection.prepareCall(sql, resultSetType, resultSetConcurrency), sql, this.callableStatementCache, this, cacheKey));
+							this.connection.prepareCall(sql, resultSetType, resultSetConcurrency), sql, this.callableStatementCache, this, cacheKey, this.logStatementsEnabled));
 
 				} 
 
@@ -608,7 +647,7 @@ public class ConnectionHandle implements Connection {
 				if (result == null) {
 					result = (CallableStatement) trackStatement(new CallableStatementHandle(
 							this.connection.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability), sql,
-							this.callableStatementCache, this, sql));
+							this.callableStatementCache, this, sql,this.logStatementsEnabled));
 
 				} 
 				((StatementHandle)result).setLogicallyOpen();
@@ -636,7 +675,7 @@ public class ConnectionHandle implements Connection {
 
 					result =  trackStatement(new PreparedStatementHandle(
 							this.connection.prepareStatement(sql), sql,
-							this.preparedStatementCache, this, cacheKey));
+							this.preparedStatementCache, this, cacheKey,this.logStatementsEnabled));
 				} 
 				((StatementHandle)result).setLogicallyOpen();
 			} else {
@@ -663,7 +702,7 @@ public class ConnectionHandle implements Connection {
 					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
 							this.connection.prepareStatement(sql,
 									autoGeneratedKeys), sql,
-									this.preparedStatementCache, this, cacheKey));
+									this.preparedStatementCache, this, cacheKey, this.logStatementsEnabled));
 				} 
 				((StatementHandle)result).setLogicallyOpen();
 			} else {
@@ -692,7 +731,7 @@ public class ConnectionHandle implements Connection {
 					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
 							this.connection
 							.prepareStatement(sql, columnIndexes), sql,
-							this.preparedStatementCache, this, cacheKey));
+							this.preparedStatementCache, this, cacheKey, this.logStatementsEnabled));
 				}
 				((StatementHandle)result).setLogicallyOpen();
 			} else {
@@ -718,7 +757,7 @@ public class ConnectionHandle implements Connection {
 
 					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
 							this.connection.prepareStatement(sql, columnNames),
-							sql, this.preparedStatementCache, this, cacheKey));
+							sql, this.preparedStatementCache, this, cacheKey, this.logStatementsEnabled));
 
 				} 
 				((StatementHandle)result).setLogicallyOpen();
@@ -747,7 +786,7 @@ public class ConnectionHandle implements Connection {
 					result = (PreparedStatement) trackStatement(new PreparedStatementHandle(
 							this.connection.prepareStatement(sql,
 									resultSetType, resultSetConcurrency), sql,
-									this.preparedStatementCache, this, cacheKey));
+									this.preparedStatementCache, this, cacheKey, this.logStatementsEnabled));
 				} 
 				((StatementHandle)result).setLogicallyOpen();
 			} else {
@@ -778,7 +817,7 @@ public class ConnectionHandle implements Connection {
 							this.connection.prepareStatement(sql,
 									resultSetType, resultSetConcurrency,
 									resultSetHoldability), sql,
-									this.preparedStatementCache, this, cacheKey));
+									this.preparedStatementCache, this, cacheKey, this.logStatementsEnabled));
 
 				} 
 				((StatementHandle)result).setLogicallyOpen();
@@ -976,10 +1015,13 @@ public class ConnectionHandle implements Connection {
 
 	/**
 	 * Renews this connection, i.e. Sets this connection to be logically open
-	 * (although it was never really closed)
+	 * (although it was never really physically closed)
 	 */
 	protected void renewConnection() {
-		this.connectionClosed = false;
+		this.logicallyClosed = false;
+		if (this.doubleCloseCheck){
+			this.doubleCloseException = null;
+		}
 	}
 
 
@@ -988,12 +1030,12 @@ public class ConnectionHandle implements Connection {
 	 * @throws SQLException
 	 */
 	protected void clearStatementHandles(boolean internalClose) throws SQLException {
-		if (!internalClose){
-			this.statementHandles.clear();
-		} else{
-			Statement statement = null;
-			while ((statement = this.statementHandles.poll()) != null) {
+		Statement statement = null;
+		while ((statement = this.statementHandles.poll()) != null) {
+			if (internalClose){
 				((StatementHandle) statement).internalClose();
+			} else {
+				((StatementHandle) statement).close();
 			}
 		}
 	}
@@ -1025,5 +1067,12 @@ public class ConnectionHandle implements Connection {
 	 */
 	public ConnectionHook getConnectionHook() {
 		return this.connectionHook;
+	}
+
+	/** Returns true if this connection has been logically closed.
+	 * @return the logicallyClosed setting.
+	 */
+	public boolean isLogicallyClosed() {
+		return this.logicallyClosed;
 	}
 }
