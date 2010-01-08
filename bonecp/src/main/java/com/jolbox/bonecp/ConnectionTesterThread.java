@@ -23,7 +23,8 @@ package com.jolbox.bonecp;
 import java.sql.SQLException;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Periodically sends a keep-alive statement to idle threads
@@ -44,7 +45,7 @@ public class ConnectionTesterThread implements Runnable {
 	/** Handle to connection pool. */
     private BoneCP pool;
     /** Logger handle. */
-    private static Logger logger = Logger.getLogger(ConnectionTesterThread.class);
+    private static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
     
 	/** Constructor
 	 * @param connectionPartition partition to work on
@@ -100,7 +101,7 @@ public class ConnectionTesterThread implements Runnable {
 			    logger.debug("Shutting down connection tester");
 				closeConnection(connection);
 			} else {
-				logger.error(e);
+				logger.error("Connection tester thread interrupted", e);
 			}
 		}
 	}
@@ -116,7 +117,7 @@ public class ConnectionTesterThread implements Runnable {
 				this.pool.postDestroyConnection(connection);
 				
 			} catch (SQLException e) {
-				logger.error(e);
+				logger.error("Destroy connection exception", e);
 			}
 		}
 	}

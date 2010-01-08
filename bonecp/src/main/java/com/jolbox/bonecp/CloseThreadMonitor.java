@@ -22,7 +22,8 @@
  */
 package com.jolbox.bonecp;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Thread that monitors another thread and displays stack trace if getConnection() was called without the corresponding close().
@@ -39,7 +40,7 @@ public class CloseThreadMonitor implements Runnable {
 	/** Thread to wait for termination. */
 	private Thread threadToMonitor;
 	/** Logger class. */
-	private static Logger logger = Logger.getLogger(CloseThreadMonitor.class);
+	private static Logger logger = LoggerFactory.getLogger(CloseThreadMonitor.class);
 
 
 	/**

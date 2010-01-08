@@ -22,21 +22,21 @@
  */
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.createStrictMock;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expectLastCall;
 
 import java.lang.reflect.Field;
 
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 
 /** Test for CloseThreadMonitor class
@@ -105,7 +105,7 @@ public class TestCloseThreadMonitor {
 	 */
 	@Test
 	public void testConnectionNotClosed() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject());
 		expectLastCall().once();
 		expect(mockConnection.isLogicallyClosed()).andReturn(false).once();
 		replay(mockConnection, mockLogger);

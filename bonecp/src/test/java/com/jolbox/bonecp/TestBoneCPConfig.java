@@ -20,21 +20,20 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.anyObject;
-import static org.easymock.classextension.EasyMock.expectLastCall;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
 
-import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
+import org.slf4j.Logger;
 
 /** Tests config object.
  * @author wwadge
@@ -58,9 +57,9 @@ public class TestBoneCPConfig {
 		Field field = CommonTestUtils.config.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 		field.set(CommonTestUtils.config, mockLogger);
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
-		mockLogger.warn(anyObject());
+		mockLogger.warn((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
 		replay(mockLogger);
 	}

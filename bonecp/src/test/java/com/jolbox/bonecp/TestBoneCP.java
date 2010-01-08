@@ -54,12 +54,12 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
-import org.apache.log4j.Logger;
 import org.easymock.EasyMock;
 import org.hsqldb.jdbc.jdbcResultSet;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 /**
  * @author wwadge
@@ -113,6 +113,7 @@ public class TestBoneCP {
 		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
 		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
 
 		replay(mockConfig);
 		
@@ -151,7 +152,7 @@ public class TestBoneCP {
 		mockDatabaseMetadata = createNiceMock(DatabaseMetaData.class);
 		mockResultSet = createNiceMock(jdbcResultSet.class);
 			
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
 	}
 

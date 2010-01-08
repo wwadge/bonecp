@@ -39,7 +39,8 @@ import java.util.concurrent.Executors;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.easymock.EasyMock;
 
 
@@ -51,7 +52,7 @@ import org.easymock.EasyMock;
  */
 public class CommonTestUtils {
 	/** Logger handle. */
-	private static Logger logger = Logger.getLogger(CommonTestUtils.class);
+	private static Logger logger = LoggerFactory.getLogger(CommonTestUtils.class);
 	/**
 	 * Helper map.
 	 */

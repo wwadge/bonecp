@@ -58,10 +58,25 @@
 				<artifactId>hsqldb</artifactId>
 				<version>1.8.0.10</version>
 			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>1.5.10</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>1.5.10</version>
+				<scope>test</scope>
+			</dependency>
+
 			<dependency>
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
 				<version>1.2.14</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.google.collections</groupId>
@@ -147,7 +162,7 @@
 					</descriptors>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>

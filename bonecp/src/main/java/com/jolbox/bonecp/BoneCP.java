@@ -38,7 +38,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -84,7 +85,7 @@ public class BoneCP implements BoneCPMBean {
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
 	private ExecutorService asyncExecutor;
 	/** Logger class. */
-	private static Logger logger = Logger.getLogger(BoneCP.class);
+	private static Logger logger = LoggerFactory.getLogger(BoneCP.class);
 	/** JMX support. */
 	private MBeanServer mbs; 
 	/** Prevent repeated termination of all connections when the DB goes down. */
@@ -125,7 +126,7 @@ public class BoneCP implements BoneCPMBean {
 						try {
 							conn.internalClose();
 						} catch (SQLException e) {
-							logger.error(e);
+							logger.error("Error in attempting to close connection", e);
 						}
 					}
 				}

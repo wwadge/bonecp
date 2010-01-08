@@ -35,16 +35,10 @@ import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ConnectionPartition;
-import com.jolbox.bonecp.ConnectionTesterThread;
+import org.slf4j.Logger;
 
 /**
  * Test for connection thread tester
@@ -249,7 +243,7 @@ public class TestConnectionThreadTester {
 		expect(mockExecutor.isShutdown()).andReturn(false);
 		mockPool.releaseInAnyFreePartition((ConnectionHandle)anyObject(), (ConnectionPartition)anyObject());
 		expectLastCall().andThrow(new InterruptedException());
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), (Exception)anyObject());
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor, mockLogger);
 		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);

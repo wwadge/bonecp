@@ -24,27 +24,21 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.verify;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import org.apache.log4j.Logger;
 import org.easymock.IAnswer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ConnectionPartition;
-import com.jolbox.bonecp.PoolWatchThread;
+import org.slf4j.Logger;
 
 
 /** Tests the functionality of the pool watch thread.
@@ -82,18 +76,20 @@ public class TestPoolWatchThread {
     	mockConfig = createNiceMock(BoneCPConfig.class);
     	expect(mockConfig.getPreparedStatementsCacheSize()).andReturn(0).anyTimes();
     	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes();
+    	expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
     	mockPool = createNiceMock(BoneCP.class);
-		
+    	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		replay(mockPool, mockConfig);
 		testClass = new PoolWatchThread(mockPartition, mockPool);
 
 		mockLogger = createNiceMock(Logger.class);
 		makeThreadSafe(mockLogger, true);
 
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
 		expect(mockLogger.isDebugEnabled()).andReturn(true).anyTimes();
 
-		mockLogger.debug(anyObject());
+		mockLogger.debug((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
 
 		Field field = testClass.getClass().getDeclaredField("logger");
@@ -179,7 +175,7 @@ public class TestPoolWatchThread {
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
-		replay(mockConfig, mockPool, mockPartition, mockLogger);
+		replay(mockPool, mockPartition, mockLogger);
 		testClass.run();
 		verify(mockPartition);
 		
@@ -244,7 +240,7 @@ public class TestPoolWatchThread {
 		}).once();
 		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes();
 
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall(); 
 		
 		replay(mockPartition, mockPool, mockLogger, mockConfig);

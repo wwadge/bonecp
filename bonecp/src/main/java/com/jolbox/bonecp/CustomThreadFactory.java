@@ -23,7 +23,8 @@ package com.jolbox.bonecp;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,7 +41,7 @@ public class CustomThreadFactory
     /** Thread name. */
     private String threadName;
     /** Logger handle. */
-    private static Logger logger = Logger.getLogger(CustomThreadFactory.class);
+    private static Logger logger = LoggerFactory.getLogger(CustomThreadFactory.class);
 
     /**
      *  Default constructor.

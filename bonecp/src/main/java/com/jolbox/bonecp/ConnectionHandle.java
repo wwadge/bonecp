@@ -41,7 +41,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.ConnectionHook;
@@ -80,7 +81,7 @@ public class ConnectionHandle implements Connection {
 	/** Prepared Statement Cache. */
 	private IStatementCache callableStatementCache = null;
 	/** Logger handle. */
-	private static Logger logger = Logger.getLogger(ConnectionHandle.class);
+	private static Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
 	/** An opaque handle for an application to use in any way it deems fit. */
 	private Object debugHandle;
 

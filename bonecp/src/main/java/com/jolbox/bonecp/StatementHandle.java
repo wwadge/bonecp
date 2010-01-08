@@ -27,7 +27,8 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -54,7 +55,7 @@ public class StatementHandle implements Statement{
 	/** If enabled, log all statements being executed. */
 	private boolean logStatementsEnabled;
     /** Class logger. */
-    private static final Logger logger = Logger.getLogger(BoneCPDataSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(BoneCPDataSource.class);
 
 
 

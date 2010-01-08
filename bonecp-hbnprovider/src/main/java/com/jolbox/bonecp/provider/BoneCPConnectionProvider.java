@@ -23,7 +23,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
@@ -38,7 +39,6 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * Hibernate Connection Provider.
  *
  * @author wallacew
- * @version $Revision$
  */
 public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
@@ -76,6 +76,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_LOG_STATEMENTS_ENABLED = "bonecp.logStatementsEnabled";
 	/** Config key. */
+	protected static final String CONFIG_ACQUIRE_RETRY_DELAY = "bonecp.acquireRetryDelay";
+	/** Config key. */
 	protected static final String CONFIG_INIT_SQL  = "bonecp.initSQL";
 	/** Config stuff. */
 	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
@@ -88,7 +90,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Configuration handle. */
 	private BoneCPConfig config;
 	/** Class logger. */
-	private static Logger logger = Logger.getLogger(BoneCPConnectionProvider.class);
+	private static Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
 
 	/**
 	 * {@inheritDoc}
@@ -128,6 +130,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		int releaseHelperThreads = configParseNumber(props, CONFIG_RELEASE_HELPER_THREADS, 3);
 		long idleMaxAge = configParseNumber(props, CONFIG_IDLE_MAX_AGE, 240);
 		long idleConnectionTestPeriod = configParseNumber(props, CONFIG_IDLE_CONNECTION_TEST_PERIOD, 60);
+		int acquireRetryDelay = configParseNumber(props, CONFIG_ACQUIRE_RETRY_DELAY, 100);
 
 		String url = props.getProperty(CONFIG_CONNECTION_URL, "JDBC URL NOT SET IN CONFIG");
 		String username = props.getProperty(CONFIG_CONNECTION_USERNAME, "username not set");
@@ -162,6 +165,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setInitSQL(initSQL);
 			this.config.setCloseConnectionWatch(closeConnectionWatch);
 			this.config.setLogStatementsEnabled(logStatementsEnabled);
+			this.config.setAcquireRetryDelay(acquireRetryDelay);
 			if (connectionHookClass != null){
 				Object hookClass = Class.forName(connectionHookClass).newInstance();
 				this.config.setConnectionHook((ConnectionHook) hookClass);

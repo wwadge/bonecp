@@ -106,6 +106,8 @@ public class TestSystemTests {
 		dsb.setInitSQL(CommonTestUtils.TEST_QUERY);
 		dsb.setCloseConnectionWatch(true);
 		dsb.setLogStatementsEnabled(false);
+		dsb.setAcquireRetryDelay(1000);
+		dsb.setAcquireRetryDelay("1000");
 	
 		dsb.setConnectionHookClassName("bad class name");
 		assertEquals("bad class name", dsb.getConnectionHookClassName());
@@ -171,6 +173,7 @@ public class TestSystemTests {
 		assertEquals(CommonTestUtils.TEST_QUERY, dsb.getInitSQL());
 		assertEquals(true, dsb.isCloseConnectionWatch());
 		assertEquals(false, dsb.isLogStatementsEnabled());
+		assertEquals("1000", dsb.getAcquireRetryDelay());
 
 	}
 	

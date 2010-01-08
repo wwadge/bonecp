@@ -21,6 +21,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -28,7 +29,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
@@ -39,8 +41,10 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * @author wallacew
  * @version $Revision$
  */
-public class BoneCPDataSource implements DataSource {
-    /** Config stuff. */
+public class BoneCPDataSource implements DataSource, Serializable{
+    /** Serialization UID. */
+	private static final long serialVersionUID = -1561804548443209469L;
+	/** Config stuff. */
     private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
     /** Config setting. */
     private PrintWriter logWriter = null;
@@ -83,12 +87,13 @@ public class BoneCPDataSource implements DataSource {
     /** Config setting. */
 	private String connectionHookClassName;
     /** Class logger. */
-    private static final Logger logger = Logger.getLogger(BoneCPDataSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(BoneCPDataSource.class);
     /** config setting. */
     private String initSQL;
     /** If enabled, log SQL statements being executed. */
 	private boolean logStatementsEnabled;
-
+	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
+	private String acquireRetryDelay;
     /**
      * Default empty constructor.
      *
@@ -119,6 +124,7 @@ public class BoneCPDataSource implements DataSource {
         this.setInitSQL(config.getInitSQL());
         this.setCloseConnectionWatch(config.isCloseConnectionWatch());
         this.setLogStatementsEnabled(config.isLogStatementsEnabled());
+        this.setAcquireRetryDelay(config.getAcquireRetryDelay());
     }
 
    
@@ -164,6 +170,7 @@ public class BoneCPDataSource implements DataSource {
                 long idleMaxAge = parseNumber(this.idleMaxAge, 240); 
                 int psCacheSize = parseNumber(this.preparedStatementCacheSize, 100);
                 int statementsCachedPerConnection = parseNumber(this.statementsCachedPerConnection, 30);
+                int acquireRetryDelay = parseNumber(this.acquireRetryDelay, 1000);
                 try {
                     Class.forName(this.driverClass);
                 }
@@ -192,6 +199,7 @@ public class BoneCPDataSource implements DataSource {
                 config.setInitSQL(this.initSQL);
                 config.setCloseConnectionWatch(this.closeConnectionWatch);
                 config.setLogStatementsEnabled(this.logStatementsEnabled);
+                config.setAcquireRetryDelay(acquireRetryDelay);
                 this.pool = new BoneCP(config);
             }
 
@@ -772,4 +780,24 @@ public class BoneCPDataSource implements DataSource {
 	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
 		this.logStatementsEnabled = logStatementsEnabled;
 	}
+	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure.
+	 * @return the acquireRetryDelay
+	 */
+	public String getAcquireRetryDelay() {
+		return this.acquireRetryDelay;
+	}
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure.
+	 * @param acquireRetryDelay the acquireRetryDelay to set
+	 */
+	public void setAcquireRetryDelay(String acquireRetryDelay) {
+		this.acquireRetryDelay = acquireRetryDelay;
+	}
+
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure.
+	 * @param acquireRetryDelay the acquireRetryDelay to set
+	 */
+	public void setAcquireRetryDelay(Integer acquireRetryDelay) {
+		this.acquireRetryDelay = acquireRetryDelay.toString();
+	}
+
 }

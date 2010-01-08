@@ -51,10 +51,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import junit.framework.Assert;
 
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 /**
  * Mock unit testing for Connection Handle class.
@@ -164,7 +164,7 @@ public class TestConnectionHandle {
 
 		// Test that a db fatal error will lead to the pool being instructed to terminate all connections (+ log)
 		mockPool.terminateAllConnections();
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), anyObject());
 		replay(mockPool);
 		testClass.markPossiblyBroken(new SQLException("test", "08001"));
 		verify(mockPool);
@@ -265,7 +265,7 @@ public class TestConnectionHandle {
 		field = testClass.getClass().getDeclaredField("doubleCloseException");
 		field.setAccessible(true);
 		field.set(testClass, "fakeexception");
-		mockLogger.error(anyObject());
+		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().once();
 		
 		mockPool.releaseConnection((Connection)anyObject());

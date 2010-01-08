@@ -22,7 +22,8 @@ package com.jolbox.bonecp;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
@@ -62,7 +63,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     	/** Number of release-connection helper threads to create per partition. */
     private int releaseHelperThreads;
     /** Logger class. */
-    private static Logger logger = Logger.getLogger(BoneCPConfig.class);
+    private static Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
     /** Hook class (external). */
     private ConnectionHook connectionHook;
     /** Query to send once to the database. */
@@ -73,6 +74,8 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     private boolean closeConnectionWatch;
     /** If set to true, log SQL statements being executed. */ 
     private boolean logStatementsEnabled;
+    /** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
+    private int acquireRetryDelay;
     
     /** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
@@ -374,6 +377,10 @@ public class BoneCPConfig implements BoneCPConfigMBean {
        	   logger.warn("statementsCachedPerConnection < 1! Setting to 30");
         	this.statementsCachedPerConnection = 30;
         }
+
+        if (this.acquireRetryDelay <= 0) {
+            this.acquireRetryDelay = 1000;
+        }
         
         if (this.jdbcUrl == null || this.jdbcUrl.trim().equals("")){
             logger.warn("JDBC url was not set in config!");
@@ -465,5 +472,19 @@ public class BoneCPConfig implements BoneCPConfigMBean {
 	 */
 	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
 		this.logStatementsEnabled = logStatementsEnabled;
+	}
+
+	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure.
+	 * @return the acquireRetryDelay
+	 */
+	public int getAcquireRetryDelay() {
+		return this.acquireRetryDelay;
+	}
+
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure.
+	 * @param acquireRetryDelay the acquireRetryDelay to set
+	 */
+	public void setAcquireRetryDelay(int acquireRetryDelay) {
+		this.acquireRetryDelay = acquireRetryDelay;
 	}
 }
