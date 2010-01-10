@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.6.2</version>
+		<version>0.6.3-rc1</version>
 	</parent>
 
 
@@ -15,7 +15,7 @@
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
-			<version>0.6.2</version>
+			<version>0.6.3-rc1</version>
 			<scope>compile</scope>
 		</dependency>
 

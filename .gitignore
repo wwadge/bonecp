@@ -1,0 +1,13 @@
+*.class
+target/
+bin/
+*.versionsBackup
+*.~*
+*.swp
+*.orig
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+
+
