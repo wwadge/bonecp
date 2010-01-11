@@ -187,7 +187,7 @@ public class TestBoneCPConnectionProvider {
 		// fetch the configuration object and check that everything is as we passed
 		BoneCPConfig config = partialTestClass.getConfig();
 
-		assertEquals(40, config.getPreparedStatementsCacheSize());
+		assertEquals(40, config.getStatementsCacheSize());
 		assertEquals(30, config.getStatementsCachedPerConnection());
 		assertEquals(20, config.getMinConnectionsPerPartition());
 		assertEquals(50, config.getMaxConnectionsPerPartition());

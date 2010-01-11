@@ -53,9 +53,11 @@ public class StatementHandle implements Statement{
 	/** The key to use in the cache. */
 	private String cacheKey ;
 	/** If enabled, log all statements being executed. */
-	private boolean logStatementsEnabled;
+	protected boolean logStatementsEnabled;
+	/** for logging of addBatch. */
+	private StringBuffer batchSQL = new StringBuffer();
     /** Class logger. */
-    private static final Logger logger = LoggerFactory.getLogger(BoneCPDataSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
 
 
 
@@ -88,11 +90,7 @@ public class StatementHandle implements Statement{
 	 * @param logStatementsEnabled set to true to enable sql logging.
 	 */
 	public StatementHandle(Statement internalStatement, ConnectionHandle connectionHandle, boolean logStatementsEnabled) {
-		this.internalStatement = internalStatement;
-		this.connectionHandle = connectionHandle;
-		this.sql = null;
-		this.cache = null;
-		this.logStatementsEnabled = logStatementsEnabled;
+		this(internalStatement, null, null, connectionHandle, null, logStatementsEnabled);
 	}
 
 
@@ -130,6 +128,10 @@ public class StatementHandle implements Statement{
 	throws SQLException {
 		checkClosed();
 		try{
+			if (this.logStatementsEnabled){
+				this.batchSQL.append(sql);
+			}
+
 			this.internalStatement.addBatch(sql);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -179,6 +181,9 @@ public class StatementHandle implements Statement{
 	throws SQLException {
 		checkClosed();
 		try{
+			if (this.logStatementsEnabled){
+				this.batchSQL = new StringBuffer();
+			}
 			this.internalStatement.clearBatch();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -307,6 +312,9 @@ public class StatementHandle implements Statement{
 		int[] result = null;
 		checkClosed();
 		try{
+			if (this.logStatementsEnabled){
+				logger.debug(this.batchSQL.toString());
+			}
 			result = this.internalStatement.executeBatch();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -412,7 +420,7 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			if (this.logStatementsEnabled){
-				logger.debug(sql);
+				logger.debug(sql, columnIndexes);
 			}
 			result = this.internalStatement.executeUpdate(sql, columnIndexes);
 		} catch (Throwable t) {
@@ -435,7 +443,7 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			if (this.logStatementsEnabled){
-				logger.debug(sql);
+				logger.debug(sql, columnNames);
 			}
 			result = this.internalStatement.executeUpdate(sql, columnNames);
 		} catch (Throwable t) {
@@ -960,7 +968,7 @@ public class StatementHandle implements Statement{
 	 */
 	protected void internalClose() throws SQLException {
 		closeAndClearResultSetHandles();
-
+		this.batchSQL = new StringBuffer();
 		this.internalStatement.close();
 
 	}

@@ -79,7 +79,7 @@ public class TestStatementCache {
 		CommonTestUtils.config.setPassword(CommonTestUtils.password);
 		CommonTestUtils.config.setIdleConnectionTestPeriod(0);
 		CommonTestUtils.config.setIdleMaxAge(0);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(0);
+		CommonTestUtils.config.setStatementsCacheSize(0);
 		CommonTestUtils.config.setReleaseHelperThreads(0);
 	}
 
@@ -100,7 +100,7 @@ public class TestStatementCache {
 		CommonTestUtils.config.setMaxConnectionsPerPartition(20);
 		CommonTestUtils.config.setAcquireIncrement(5);
 		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(0);
+		CommonTestUtils.config.setStatementsCacheSize(0);
 		dsb = new BoneCP(CommonTestUtils.config);
 
 		ConnectionHandle con = (ConnectionHandle) dsb.getConnection();
@@ -164,7 +164,7 @@ public class TestStatementCache {
 		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
 		CommonTestUtils.config.setAcquireIncrement(1);
 		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(5);
+		CommonTestUtils.config.setStatementsCacheSize(5);
 		dsb = new BoneCP(CommonTestUtils.config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
@@ -200,7 +200,7 @@ public class TestStatementCache {
 		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
 		CommonTestUtils.config.setAcquireIncrement(1);
 		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(5);
+		CommonTestUtils.config.setStatementsCacheSize(5);
 		dsb = new BoneCP(CommonTestUtils.config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
@@ -249,7 +249,7 @@ public class TestStatementCache {
 		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
 		CommonTestUtils.config.setAcquireIncrement(1);
 		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(5);
+		CommonTestUtils.config.setStatementsCacheSize(5);
 		dsb = new BoneCP(CommonTestUtils.config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);

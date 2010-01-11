@@ -160,7 +160,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
 			this.config.setIdleMaxAge(idleMaxAge);
 			this.config.setConnectionTestStatement(connectionTestStatement);
-			this.config.setPreparedStatementsCacheSize(preparedStatementCacheSize);
+			this.config.setStatementsCacheSize(preparedStatementCacheSize);
 			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
 			this.config.setInitSQL(initSQL);
 			this.config.setCloseConnectionWatch(closeConnectionWatch);

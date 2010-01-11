@@ -67,6 +67,7 @@ public class TestBoneCPConfig {
 	/**
 	 * Property get/set
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testGettersSetters(){
 		CommonTestUtils.config.setJdbcUrl(CommonTestUtils.url);
@@ -74,7 +75,7 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setPassword(CommonTestUtils.password);
 		CommonTestUtils.config.setIdleConnectionTestPeriod(10000);
 		CommonTestUtils.config.setIdleMaxAge(1);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(2);
+		CommonTestUtils.config.setStatementsCacheSize(2);
 		CommonTestUtils.config.setReleaseHelperThreads(3);
 		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
 		CommonTestUtils.config.setMinConnectionsPerPartition(5);
@@ -89,6 +90,7 @@ public class TestBoneCPConfig {
 		assertEquals(CommonTestUtils.password, CommonTestUtils.config.getPassword());
 		assertEquals(10000, CommonTestUtils.config.getIdleConnectionTestPeriod());
 		assertEquals(1, CommonTestUtils.config.getIdleMaxAge());
+		assertEquals(2, CommonTestUtils.config.getStatementsCacheSize());
 		assertEquals(2, CommonTestUtils.config.getPreparedStatementsCacheSize());
 		assertEquals(3, CommonTestUtils.config.getReleaseHelperThreads());
 		assertEquals(5, CommonTestUtils.config.getMaxConnectionsPerPartition());
@@ -109,7 +111,7 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setMaxConnectionsPerPartition(-1);
 		CommonTestUtils.config.setMinConnectionsPerPartition(-1);
 		CommonTestUtils.config.setPartitionCount(-1);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(-1);
+		CommonTestUtils.config.setStatementsCacheSize(-1);
 		CommonTestUtils.config.setStatementsCachedPerConnection(-1);
 		CommonTestUtils.config.setConnectionTestStatement("");
 		CommonTestUtils.config.setJdbcUrl(null);
@@ -126,7 +128,7 @@ public class TestBoneCPConfig {
 		assertFalse(CommonTestUtils.config.getMaxConnectionsPerPartition() == -1);
 		assertFalse(CommonTestUtils.config.getMinConnectionsPerPartition() == -1);
 		assertFalse(CommonTestUtils.config.getPartitionCount() == -1);
-		assertFalse(CommonTestUtils.config.getPreparedStatementsCacheSize() == -1);
+		assertFalse(CommonTestUtils.config.getStatementsCacheSize() == -1);
 		assertFalse(CommonTestUtils.config.getStatementsCachedPerConnection() == -1);
 
 		CommonTestUtils.config.setMinConnectionsPerPartition(CommonTestUtils.config.getMaxConnectionsPerPartition()+1);

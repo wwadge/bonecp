@@ -402,6 +402,9 @@ public class TestConnectionHandle {
 		field.setBoolean(testClass, true);
 		assertTrue(testClass.isLogicallyClosed());
 		
+		testClass.setLogStatementsEnabled(true);
+		assertTrue(testClass.isLogStatementsEnabled());
+		
 	}
 
 	/** Prepare statement tests.
@@ -473,7 +476,7 @@ public class TestConnectionHandle {
 		prepStatementMethod.invoke(testClass, params);
 		verify(mockStatement, mockPreparedStatementCache);
 
-		reset(mockStatement, mockPreparedStatementCache);
+		reset(mockStatement, mockPreparedStatementCache, mockStatementHandles);
 
 
 		// test for a cache miss
@@ -512,7 +515,7 @@ public class TestConnectionHandle {
 
 
 		// test for no cache defined
-		reset(mockStatement, mockPreparedStatementCache, mockConnection);
+		reset(mockStatement, mockPreparedStatementCache, mockConnection, mockStatementHandles);
 		field = testClass.getClass().getDeclaredField("preparedStatementCache");
 		field.setAccessible(true);
 		IStatementCache oldCache = (IStatementCache) field.get(testClass);
@@ -521,14 +524,16 @@ public class TestConnectionHandle {
 
 		// we should be creating the preparedStatement because it's not in the cache
 		expect(mockConnectionPrepareStatementMethod.invoke(mockConnection, params)).andReturn(mockStatement);
+		// we should be tracking this statement
+		expect(mockStatementHandles.add(mockStatement)).andReturn(true);
 
-		replay(mockStatement, mockPreparedStatementCache, mockConnection);
+		replay(mockStatement, mockPreparedStatementCache, mockConnection, mockStatementHandles);
 		prepStatementMethod.invoke(testClass, params);
 		verify(mockStatement, mockPreparedStatementCache, mockConnection);
 		// restore sanity
 		field.set(testClass, oldCache);
 
-		reset(mockStatement, mockPreparedStatementCache, mockConnection);
+		reset(mockStatement, mockPreparedStatementCache, mockConnection, mockStatementHandles);
 
 	}
 
@@ -602,7 +607,7 @@ public class TestConnectionHandle {
 		prepCallMethod.invoke(testClass, params);
 		verify(mockStatement, mockCallableStatementCache);
 
-		reset(mockStatement, mockCallableStatementCache);
+		reset(mockStatement, mockCallableStatementCache, mockStatementHandles);
 
 
 		// test for a cache miss
@@ -614,7 +619,7 @@ public class TestConnectionHandle {
 		// we should be tracking this statement
 		expect(mockStatementHandles.add(mockStatement)).andReturn(true);
 
-		replay(mockStatement, mockCallableStatementCache, mockConnection);
+		replay(mockStatement, mockCallableStatementCache, mockConnection, mockStatementHandles);
 		prepCallMethod.invoke(testClass, params);
 		verify(mockStatement, mockCallableStatementCache, mockConnection);
 

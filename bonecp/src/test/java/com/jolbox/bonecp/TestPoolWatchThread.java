@@ -74,7 +74,7 @@ public class TestPoolWatchThread {
 
 
     	mockConfig = createNiceMock(BoneCPConfig.class);
-    	expect(mockConfig.getPreparedStatementsCacheSize()).andReturn(0).anyTimes();
+    	expect(mockConfig.getStatementsCacheSize()).andReturn(0).anyTimes();
     	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes();
     	expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
     	mockPool = createNiceMock(BoneCP.class);
@@ -230,7 +230,7 @@ public class TestPoolWatchThread {
 		mockPartition.lockAlmostFullLock();
 		expectLastCall().once();
 
-		expect(mockConfig.getPreparedStatementsCacheSize()).andAnswer(new IAnswer<Integer>() {
+		expect(mockConfig.getStatementsCacheSize()).andAnswer(new IAnswer<Integer>() {
 			
 			@Override
 			public Integer answer() throws Throwable {

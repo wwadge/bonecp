@@ -57,7 +57,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     /** SQL statement to use for keep-alive/test of connection. */
     private String connectionTestStatement;
     /** Min no of prepared statements to cache. */
-    private int preparedStatementsCacheSize;
+    private int statementsCacheSize;
     /** No of statements that can be cached per connection */
     private int statementsCachedPerConnection;
     	/** Number of release-connection helper threads to create per partition. */
@@ -270,28 +270,49 @@ public class BoneCPConfig implements BoneCPConfigMBean {
         this.connectionTestStatement = connectionTestStatement;
     }
     
-    /** {@inheritDoc}
+    /** Deprecated. Use getStatementsCacheSize() instead
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getPreparedStatementsCacheSize()
 	 */
+    @Deprecated
     public int getPreparedStatementsCacheSize() {
-        return this.preparedStatementsCacheSize;
+        return this.statementsCacheSize;
+    }
+    
+
+
+    /**
+     * Deprecated. Use setStatementsCacheSize() instead. 
+     *
+     * @param preparedStatementsCacheSize to set.
+     */
+	@Deprecated
+    public void setPreparedStatementsCacheSize(int preparedStatementsCacheSize) {
+        this.statementsCacheSize = preparedStatementsCacheSize;
     }
     
     /**
-     * Sets preparedStatementsCacheSize setting.
+     * Sets statementsCacheSize setting.
      * 
-     * The number of prepared statements to cache. BoneCP will actually attempt to cache more 
+     * The number of statements to cache. BoneCP will actually attempt to cache more 
      * if required but uses SoftReferences for anything beyond the value you set here. 
      * In other words, setting this to 50 will mean that BoneCP will cache at 
      * least 50 prepared statements and any additional statements will also be cached 
      * but will be released by the JVM garbage collector when there is insufficient memory (in a LRU fashion).
      *
-     * @param preparedStatementsCacheSize to set.
+     * @param statementsCacheSize to set.
      */
-    public void setPreparedStatementsCacheSize(int preparedStatementsCacheSize) {
-        this.preparedStatementsCacheSize = preparedStatementsCacheSize;
+    public void setStatementsCacheSize(int statementsCacheSize) {
+        this.statementsCacheSize = statementsCacheSize;
     }
-    
+
+	/** {@inheritDoc}
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCacheSize()
+	 */
+	@Override
+	public int getStatementsCacheSize() {
+		return this.statementsCacheSize;
+	}
+
     /** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getReleaseHelperThreads()
 	 */
@@ -368,9 +389,9 @@ public class BoneCPConfig implements BoneCPConfigMBean {
             this.releaseHelperThreads = 3;
         }
         
-        if (this.preparedStatementsCacheSize < 0) {
+        if (this.statementsCacheSize < 0) {
             logger.warn("preparedStatementsCacheSize < 0! Setting to 0");
-            this.preparedStatementsCacheSize = 0;
+            this.statementsCacheSize = 0;
         }
         
         if (this.statementsCachedPerConnection < 1) {
