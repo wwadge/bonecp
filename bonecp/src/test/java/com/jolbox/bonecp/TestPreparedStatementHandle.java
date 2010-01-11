@@ -20,6 +20,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 
+import static org.easymock.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.reset;
 
@@ -27,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.easymock.classextension.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -53,8 +55,9 @@ public class TestPreparedStatementHandle {
 		mockClass = createNiceMock(PreparedStatementHandle.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
-
-		testClass = new PreparedStatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "TestSQL", true);
+		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		EasyMock.replay(mockConnection);
+		testClass = new PreparedStatementHandle(mockClass, "", mockConnection, "TestSQL", mockCallableStatementCache);
 
 	}
 

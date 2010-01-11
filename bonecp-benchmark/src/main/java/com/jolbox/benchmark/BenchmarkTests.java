@@ -179,7 +179,7 @@ public class BenchmarkTests {
 		config.setPassword(password);
 		config.setIdleConnectionTestPeriod(0);
 		config.setIdleMaxAge(0);
-		config.setPreparedStatementsCacheSize(0);
+		config.setStatementsCacheSize(0);
 		config.setMinConnectionsPerPartition(pool_size);
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);
@@ -615,7 +615,7 @@ public class BenchmarkTests {
 		config.setPassword(password);
 		config.setIdleConnectionTestPeriod(0);
 		config.setIdleMaxAge(0);
-		config.setPreparedStatementsCacheSize(30);
+		config.setStatementsCacheSize(30);
 		config.setMinConnectionsPerPartition(pool_size);
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);

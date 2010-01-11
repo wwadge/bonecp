@@ -58,11 +58,10 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	 * @param cache
 	 * @param connectionHandle
 	 * @param cacheKey key to cache
-	 * @param logStatementsEnabled if enabled, log sql statements.
 	 */
 	public CallableStatementHandle(CallableStatement internalCallableStatement,
-			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey, boolean logStatementsEnabled) {
-		super(internalCallableStatement, sql, cache, connectionHandle, cacheKey, logStatementsEnabled);
+			String sql, ConnectionHandle connectionHandle, String cacheKey, IStatementCache cache) {
+		super(internalCallableStatement, sql, connectionHandle, cacheKey, cache);
 		this.internalCallableStatement = internalCallableStatement;
 		this.connectionHandle = connectionHandle;
 		this.sql = sql;
@@ -301,8 +300,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	public Reader getCharacterStream(int parameterIndex) throws SQLException {
 		checkClosed();
 		try {
-			return this.internalCallableStatement
-					.getCharacterStream(parameterIndex);
+			return this.internalCallableStatement.getCharacterStream(parameterIndex);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -319,8 +317,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	public Reader getCharacterStream(String parameterName) throws SQLException {
 		checkClosed();
 		try {
-			return this.internalCallableStatement
-					.getCharacterStream(parameterName);
+			return this.internalCallableStatement.getCharacterStream(parameterName);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -715,8 +712,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			return this.internalCallableStatement
-					.getObject(parameterIndex, map);
+			return this.internalCallableStatement.getObject(parameterIndex, map);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1098,8 +1094,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.registerOutParameter(parameterIndex,
-					sqlType);
+			this.internalCallableStatement.registerOutParameter(parameterIndex, sqlType);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1118,8 +1113,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.registerOutParameter(parameterName,
-					sqlType);
+			this.internalCallableStatement.registerOutParameter(parameterName, sqlType);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1137,8 +1131,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.registerOutParameter(parameterIndex,
-					sqlType, scale);
+			this.internalCallableStatement.registerOutParameter(parameterIndex, sqlType, scale);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1157,8 +1150,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			String typeName) throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.registerOutParameter(parameterIndex,
-					sqlType, typeName);
+			this.internalCallableStatement.registerOutParameter(parameterIndex, sqlType, typeName);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1177,8 +1169,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			int scale) throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.registerOutParameter(parameterName,
-					sqlType, scale);
+			this.internalCallableStatement.registerOutParameter(parameterName, sqlType, scale);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1197,8 +1188,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			String typeName) throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.registerOutParameter(parameterName,
-					sqlType, typeName);
+			this.internalCallableStatement.registerOutParameter(parameterName, sqlType, typeName);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1236,8 +1226,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalCallableStatement.setAsciiStream(parameterName, x,
-					length);
+			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			

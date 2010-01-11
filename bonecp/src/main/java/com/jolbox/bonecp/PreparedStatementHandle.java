@@ -41,6 +41,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Wrapper around JDBC PreparedStatement.
  * 
@@ -52,7 +55,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	/** Handle to the real prepared statement. */
 	private PreparedStatement internalPreparedStatement;
+	/** Class logger. */
+    private static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
 
+	
 	/**
 	 * PreparedStatement Wrapper constructor.
 	 * 
@@ -64,11 +70,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 * @param connectionHandle
 	 *            Handle to the connection this is tied to.
 	 * @param cacheKey 
-	 * @param logStatementsEnabled if true, enable statement logging.
 	 */
 	public PreparedStatementHandle(PreparedStatement internalPreparedStatement,
-			String sql, IStatementCache cache, ConnectionHandle connectionHandle, String cacheKey, boolean logStatementsEnabled) {
-		super(internalPreparedStatement, sql, cache, connectionHandle, cacheKey, logStatementsEnabled);
+			String sql, ConnectionHandle connectionHandle, String cacheKey, IStatementCache cache) {
+		super(internalPreparedStatement, sql, cache, connectionHandle, cacheKey, connectionHandle.isLogStatementsEnabled());
 		this.internalPreparedStatement = internalPreparedStatement;
 		this.connectionHandle = connectionHandle;
 		this.sql = sql;
@@ -118,6 +123,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 	public boolean execute() throws SQLException {
 		checkClosed();
 		try {
+			if (this.logStatementsEnabled){
+				logger.debug(this.sql);
+			}
 			return this.internalPreparedStatement.execute();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -135,6 +143,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 	public ResultSet executeQuery() throws SQLException {
 		checkClosed();
 		try {
+			if (this.logStatementsEnabled){
+				logger.debug(this.sql);
+			}
 			return this.internalPreparedStatement.executeQuery();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -152,6 +163,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 	public int executeUpdate() throws SQLException {
 		checkClosed();
 		try {
+			if (this.logStatementsEnabled){
+				logger.debug(this.sql);
+			}
 			return this.internalPreparedStatement.executeUpdate();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);

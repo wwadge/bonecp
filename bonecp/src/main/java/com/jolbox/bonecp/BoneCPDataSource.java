@@ -117,7 +117,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
         this.setMinConnectionsPerPartition(config.getMinConnectionsPerPartition());
         this.setAcquireIncrement(config.getAcquireIncrement());
         this.setConnectionTestStatement(config.getConnectionTestStatement());
-        this.setPreparedStatementCacheSize(config.getPreparedStatementsCacheSize());
+        this.setPreparedStatementCacheSize(config.getStatementsCacheSize());
         this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
         this.setReleaseHelperThreads(config.getReleaseHelperThreads());
         this.setConnectionHook(config.getConnectionHook());
@@ -192,7 +192,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
                 config.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
                 config.setIdleMaxAge(idleMaxAge);
                 config.setConnectionTestStatement(this.connectionTestStatement);
-                config.setPreparedStatementsCacheSize(psCacheSize);
+                config.setStatementsCacheSize(psCacheSize);
                 config.setStatementsCachedPerConnection(statementsCachedPerConnection);
                 config.setReleaseHelperThreads(releaseHelperThreads);
                 config.setConnectionHook(this.connectionHook);

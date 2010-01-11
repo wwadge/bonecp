@@ -71,7 +71,7 @@ public class StatementCache implements IStatementCache {
 		StringBuffer tmp = calculateCacheKeyInternal(sql, resultSetType,
 				resultSetConcurrency);
 		
-		tmp.append("H");
+		tmp.append(", H:");
 		tmp.append(resultSetHoldability);
 		
 		return tmp.toString();
@@ -101,9 +101,9 @@ public class StatementCache implements IStatementCache {
 		StringBuffer tmp = new StringBuffer(sql.length()+20);
 		tmp.append(sql);
 
-		tmp.append("T");
+		tmp.append(", T");
 		tmp.append(resultSetType);
-		tmp.append("C");
+		tmp.append(", C");
 		tmp.append(resultSetConcurrency);
 		return tmp;
 	}

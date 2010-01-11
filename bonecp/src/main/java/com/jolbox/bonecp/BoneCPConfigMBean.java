@@ -104,6 +104,13 @@ public interface BoneCPConfigMBean {
 	int getPreparedStatementsCacheSize();
 
 	/**
+	 * Gets statementsCacheSize setting.
+	 * 
+	 * @return statementsCacheSize
+	 */
+	int getStatementsCacheSize();
+
+	/**
 	 * Gets number of release-connection helper threads to create per partition.
 	 *
 	 * @return number of threads 
