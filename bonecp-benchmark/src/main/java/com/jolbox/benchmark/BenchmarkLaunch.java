@@ -24,7 +24,9 @@ package com.jolbox.benchmark;
 
 import java.awt.Color;
 import java.beans.PropertyVetoException;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
@@ -143,7 +145,6 @@ public class BenchmarkLaunch {
 	 * @param noC3P0 
 	 */
 	private static void doPlotLineGraph(long[][] results, int delay, boolean statementBenchmark, boolean noC3P0) {
-		
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for (int i=0; i <  ConnectionPoolType.values().length; i++){ //
 			if (!ConnectionPoolType.values()[i].isEnabled() || (noC3P0 && ConnectionPoolType.values()[i].equals(ConnectionPoolType.C3P0))){
