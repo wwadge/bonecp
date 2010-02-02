@@ -71,7 +71,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
     /** Config setting. */
     private String jdbcUrl="JDBC URL NOT SET!";
     /** Config setting. */
-    private String driverClass="DRIVER CLASS NOT SET!";
+    private String driverClass=null;
     /** Config setting. */
     private String username="USERNAME NOT SET!";
     /** Config setting. */
@@ -94,6 +94,8 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	private boolean logStatementsEnabled;
 	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
 	private String acquireRetryDelay;
+	/** Classloader to use. */
+	private ClassLoader classLoader;
     /**
      * Default empty constructor.
      *
@@ -172,10 +174,12 @@ public class BoneCPDataSource implements DataSource, Serializable{
                 int statementsCachedPerConnection = parseNumber(this.statementsCachedPerConnection, 30);
                 int acquireRetryDelay = parseNumber(this.acquireRetryDelay, 1000);
                 try {
-                    Class.forName(this.driverClass);
+                	if (this.driverClass != null){
+                		loadClass(this.driverClass);
+                	}
                 }
                 catch (ClassNotFoundException e) {
-                    throw new SQLException(e);
+                	throw new SQLException(e);
                 }
 
 
@@ -721,7 +725,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 		if (connectionHookClassName != null){
 			Object hookClass;
 			try {
-				hookClass = Class.forName(connectionHookClassName).newInstance();
+				hookClass = loadClass(connectionHookClassName).newInstance();
 				this.connectionHook = (ConnectionHook) hookClass;
 			} catch (Exception e) {
 				logger.error("Unable to create an instance of the connection hook class ("+connectionHookClassName+")");
@@ -800,4 +804,30 @@ public class BoneCPDataSource implements DataSource, Serializable{
 		this.acquireRetryDelay = acquireRetryDelay.toString();
 	}
 
+	/** Loads the given class, respecting the given classloader.
+	 * @param clazz class to laod
+	 * @return Loaded class
+	 * @throws ClassNotFoundException
+	 */
+	private Class<?> loadClass(String clazz) throws ClassNotFoundException {
+		if (this.classLoader == null){
+			return Class.forName(clazz);
+		}
+		
+		return Class.forName(clazz, true, this.classLoader);
+		
+	}
+	/** Returns the currently active classloader. 
+	 * @return the classLoader
+	 */
+	public ClassLoader getClassLoader() {
+		return this.classLoader;
+	}
+	
+	/** Sets the classloader to use to load JDBC driver and hooks (set to null to use default).
+	 * @param classLoader the classLoader to set
+	 */
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
 }

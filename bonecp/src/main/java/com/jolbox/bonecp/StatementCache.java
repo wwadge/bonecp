@@ -38,8 +38,6 @@ public class StatementCache implements IStatementCache {
 
     /** The cache of our statements. */
     private ConcurrentMap<Object, BlockingQueue<Statement>> cache;
-    /** Holds a reference just to make our weakhashmap hang on to our objects. */ 
-    private BlockingQueue<String> hardCache;
     /** No of entries cached per connection. */
 	private int statementsCachedPerConnection;
 
@@ -53,9 +51,7 @@ public class StatementCache implements IStatementCache {
     public StatementCache(int size, int statementsCachedPerConnection){
         this.cache = new MapMaker()
         .concurrencyLevel(32)
-        .weakKeys()
         .makeMap();
-        this.hardCache = new ArrayBlockingQueue<String>(size);
         
         this.statementsCachedPerConnection = Math.max(1, statementsCachedPerConnection);
     }
@@ -206,12 +202,6 @@ public class StatementCache implements IStatementCache {
      */
     @Override
     public void put(String key, Statement value) throws SQLException{
-        if (this.hardCache.remainingCapacity() == 0){
-            this.hardCache.poll(); // remove the front element
-        }
-        // might race and fail to insert in cache but this just means 
-        // it might not remain cached for long
-        this.hardCache.offer(key); 
 
         // now add to our cache
         BlockingQueue<Statement> queue = new ArrayBlockingQueue<Statement>(this.statementsCachedPerConnection);
@@ -266,16 +256,7 @@ public class StatementCache implements IStatementCache {
      */
     @Override
     public void clear() {
-        this.hardCache.clear();
+        this.cache.clear();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @see com.jolbox.bonecp.IStatementCache#sizeHardCache()
-     */
-    @Override
-    public int sizeHardCache() {
-        return this.hardCache.size();
-    }
 }

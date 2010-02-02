@@ -293,11 +293,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     /**
      * Sets statementsCacheSize setting.
      * 
-     * The number of statements to cache. BoneCP will actually attempt to cache more 
-     * if required but uses SoftReferences for anything beyond the value you set here. 
-     * In other words, setting this to 50 will mean that BoneCP will cache at 
-     * least 50 prepared statements and any additional statements will also be cached 
-     * but will be released by the JVM garbage collector when there is insufficient memory (in a LRU fashion).
+     * The number of statements to cache. 
      *
      * @param statementsCacheSize to set.
      */

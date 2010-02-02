@@ -46,12 +46,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.IStatementCache;
-import com.jolbox.bonecp.StatementCache;
-import com.jolbox.bonecp.StatementHandle;
-
 
 /** Test class for statement cache
  * @author wwadge
@@ -261,9 +255,6 @@ public class TestStatementCache {
 		cache.put("test4", statement);
 		cache.put("test5", statement);
 
-		assertEquals(5, cache.sizeHardCache());
-		cache.put("test6", statement);
-		assertEquals(5, cache.sizeHardCache());
 
 		conn.close();
 
@@ -281,8 +272,6 @@ public class TestStatementCache {
 		}
 		// some elements should have been dropped in the soft cache
 		assertFalse(cache.size()==5000000);
-		// but the hardcache should still contain some elements
-		assertEquals(5, cache.sizeHardCache());
 		// add some more entries...
 		String[] testSQL = {"hardcache1", "hardcache2", "hardcache3", "hardcache4", "hardcache5"};
 		for (int i=0; i < testSQL.length; i++){
@@ -312,22 +301,16 @@ public class TestStatementCache {
 		BlockingQueue<Statement> mockStatementCache = createNiceMock(BlockingQueue.class);
 		StatementHandle mockValue = org.easymock.classextension.EasyMock.createNiceMock(StatementHandle.class);
 		
-		StatementCache testClass = new StatementCache(1, 1);
-		Field field = testClass.getClass().getDeclaredField("hardCache");
-		field.setAccessible(true);
-		field.set(testClass, mockHardCache);
 
-		field = testClass.getClass().getDeclaredField("cache");
+		StatementCache testClass = new StatementCache(1, 1);
+		Field field = testClass.getClass().getDeclaredField("cache");
 		field.setAccessible(true);
 		field.set(testClass, mockLocalCache);
-
 		
-		expect(mockHardCache.remainingCapacity()).andReturn(1).anyTimes();
-
-		expect(mockHardCache.offer((String)anyObject())).andReturn(true).once();
+		expect(mockLocalCache.putIfAbsent((String)anyObject(), (BlockingQueue)EasyMock.anyObject())).andReturn(mockStatementCache).once();
+		expect(mockHardCache.offer((String)anyObject())).andReturn(false).once();
 		
 		
-		expect(mockLocalCache.putIfAbsent(anyObject(), (BlockingQueue)EasyMock.anyObject())).andReturn(mockStatementCache).once();
 		expect(mockStatementCache.offer((Statement)anyObject())).andReturn(false).once();
 		mockValue.internalClose();
 		
@@ -335,8 +318,8 @@ public class TestStatementCache {
 		org.easymock.classextension.EasyMock.replay(mockValue);
 		
 		testClass.put("whatever", mockValue);
-		verify(mockHardCache, mockLocalCache, mockStatementCache);
 		org.easymock.classextension.EasyMock.verify(mockValue);
+		verify(mockLocalCache, mockStatementCache);
 		
 		
 	}
@@ -350,18 +333,18 @@ public class TestStatementCache {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testStatementCacheClear() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-		BlockingQueue<String> mockHardCache = createNiceMock(BlockingQueue.class);
+		ConcurrentMap mockCache = createNiceMock(ConcurrentMap.class);
 		
 		StatementCache testClass = new StatementCache(1, 1);
-		Field field = testClass.getClass().getDeclaredField("hardCache");
+		Field field = testClass.getClass().getDeclaredField("cache");
 		field.setAccessible(true);
-		field.set(testClass, mockHardCache);
+		field.set(testClass, mockCache);
 
-		mockHardCache.clear();
+		mockCache.clear();
 		expectLastCall().once();
-		replay(mockHardCache);
+		replay(mockCache);
 		testClass.clear();
-		verify(mockHardCache);
+		verify(mockCache);
 		
 	}
 	

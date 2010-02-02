@@ -87,11 +87,13 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	private Integer isolation;
 	/** Autocommit option. */
 	private boolean autocommit;
+	/** Classloader to use to load the jdbc driver. */
+	private ClassLoader classLoader;
 	/** Configuration handle. */
 	private BoneCPConfig config;
 	/** Class logger. */
 	private static Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
-
+	
 	/**
 	 * {@inheritDoc}
 	 *
@@ -140,13 +142,16 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		boolean closeConnectionWatch = configParseBoolean(props, CONFIG_CLOSE_CONNECTION_WATCH, false);
 		boolean logStatementsEnabled = configParseBoolean(props, CONFIG_LOG_STATEMENTS_ENABLED, false);
 
-		
+
 		// Remember Isolation level
 		this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
 		this.autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
 
 		try {
-			Class.forName(props.getProperty(CONFIG_CONNECTION_DRIVER_CLASS));
+			String driver = props.getProperty(CONFIG_CONNECTION_DRIVER_CLASS, "");
+			if (!driver.trim().equals("")){
+				loadClass(driver);
+			}
 			logger.debug(String.format(CONFIG_STATUS, url, username, minsize, maxsize, acquireIncrement, partcount, idleConnectionTestPeriod/1000, idleMaxAge/(60*1000)));
 			this.config = new BoneCPConfig();
 			this.config.setMinConnectionsPerPartition(minsize);
@@ -167,7 +172,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setLogStatementsEnabled(logStatementsEnabled);
 			this.config.setAcquireRetryDelay(acquireRetryDelay);
 			if (connectionHookClass != null){
-				Object hookClass = Class.forName(connectionHookClass).newInstance();
+				Object hookClass = loadClass(connectionHookClass).newInstance();
 				this.config.setConnectionHook((ConnectionHook) hookClass);
 			}
 			// create the connection pool
@@ -178,6 +183,20 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		} catch (Exception e) {
 			throw new HibernateException(e);
 		} 
+	}
+
+	/** Loads the given class, respecting the given classloader.
+	 * @param clazz class to laod
+	 * @return Loaded class
+	 * @throws ClassNotFoundException
+	 */
+	private Class<?> loadClass(String clazz) throws ClassNotFoundException {
+		if (this.classLoader == null){
+			return Class.forName(clazz);
+		}
+		
+		return Class.forName(clazz, true, this.classLoader);
+		
 	}
 
 	/** Creates the given connection pool with the given configuration. Extracted here to make unit mocking easier.
@@ -267,6 +286,21 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	 */
 	protected BoneCPConfig getConfig() {
 		return this.config;
+	}
+
+	/** Returns the classloader to use when attempting to load the jdbc driver (if a value is given).
+	 * @return the classLoader currently set.
+	 */
+	public ClassLoader getClassLoader() {
+		return this.classLoader;
+	}
+
+	/** Specifies the classloader to use when attempting to load the jdbc driver (if a value is given). Set to null to use the default
+	 * loader.
+ 	 * @param classLoader the classLoader to set
+	 */
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
 	}
 
 }

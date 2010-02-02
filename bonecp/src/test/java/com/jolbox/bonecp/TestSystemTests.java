@@ -174,6 +174,11 @@ public class TestSystemTests {
 		assertEquals(true, dsb.isCloseConnectionWatch());
 		assertEquals(false, dsb.isLogStatementsEnabled());
 		assertEquals("1000", dsb.getAcquireRetryDelay());
+		dsb.setClassLoader(getClass().getClassLoader());
+		method = dsb.getClass().getDeclaredMethod("loadClass", new Class[]{String.class});
+		method.setAccessible(true);
+		method.invoke("java.lang.String");
+		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
 
 	}
 	

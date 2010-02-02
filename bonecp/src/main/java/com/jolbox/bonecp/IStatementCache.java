@@ -48,17 +48,11 @@ public interface IStatementCache {
 	void put(String key, Statement value) throws SQLException;
 
 	/**
-	 * Returns size of the softcache.  
+	 * Returns size of the cache.  
 	 *
 	 * @return cache size
 	 */
 	int size();
-	/**
-	 * Returns size of the hard cache.
-	 *
-	 * @return hard cache size.
-	 */
-	int sizeHardCache();
 
 	/**
 	 * Returns the size of the queue of identical JDBC statements identified
