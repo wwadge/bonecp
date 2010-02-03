@@ -41,9 +41,9 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     /** Max number of connections per partition. */
     private int maxConnectionsPerPartition;
     /** Number of new connections to create in 1 batch. */
-    private int acquireIncrement;
+    private int acquireIncrement = 2;
     /** Number of partitions. */
-    private int partitionCount;
+    private int partitionCount = 2;
     /** DB connection string. */
     private String jdbcUrl;
     /** User name to use. */
@@ -51,17 +51,17 @@ public class BoneCPConfig implements BoneCPConfigMBean {
     /** Password to use. */
     private String password;
     /** Connections older than this are sent a keep-alive statement. In milliseconds. */
-    private long idleConnectionTestPeriod;
+    private long idleConnectionTestPeriod = 240;
     /** Maximum age of an unused connection before it is closed off. In milliseconds*/ 
-    private long idleMaxAge;
+    private long idleMaxAge = 60;
     /** SQL statement to use for keep-alive/test of connection. */
     private String connectionTestStatement;
     /** Min no of prepared statements to cache. */
-    private int statementsCacheSize;
+    private int statementsCacheSize = 100;
     /** No of statements that can be cached per connection */
-    private int statementsCachedPerConnection;
+    private int statementsCachedPerConnection = 30;
     	/** Number of release-connection helper threads to create per partition. */
-    private int releaseHelperThreads;
+    private int releaseHelperThreads = 3;
     /** Logger class. */
     private static Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
     /** Hook class (external). */
@@ -148,7 +148,7 @@ public class BoneCPConfig implements BoneCPConfigMBean {
      * when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
      * to have a negative effect on performance (and only for the case when connections on a partition start running out).
      * 
-     * <p>Default: 3, minimum: 1, recommended: 3-4 (but very app specific)
+     * <p>Default: 2, minimum: 1, recommended: 3-4 (but very app specific)
      *
      * @param partitionCount to set 
      */

@@ -148,8 +148,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		this.autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
 
 		try {
-			String driver = props.getProperty(CONFIG_CONNECTION_DRIVER_CLASS, "");
-			if (!driver.trim().equals("")){
+			String driver = props.getProperty(CONFIG_CONNECTION_DRIVER_CLASS);
+			if (driver != null && !driver.trim().equals("")){
 				loadClass(driver);
 			}
 			logger.debug(String.format(CONFIG_STATUS, url, username, minsize, maxsize, acquireIncrement, partcount, idleConnectionTestPeriod/1000, idleMaxAge/(60*1000)));
@@ -186,11 +186,11 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	}
 
 	/** Loads the given class, respecting the given classloader.
-	 * @param clazz class to laod
+	 * @param clazz class to load
 	 * @return Loaded class
 	 * @throws ClassNotFoundException
 	 */
-	private Class<?> loadClass(String clazz) throws ClassNotFoundException {
+	protected Class<?> loadClass(String clazz) throws ClassNotFoundException {
 		if (this.classLoader == null){
 			return Class.forName(clazz);
 		}

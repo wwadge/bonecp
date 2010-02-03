@@ -154,9 +154,10 @@ public class TestBoneCPConnectionProvider {
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 * @throws NoSuchMethodException 
+	 * @throws ClassNotFoundException 
 	 */
 	@Test
-	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException {
+	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException {
 		expect(mockProperties.getProperty(CONFIG_TEST_STATEMENT)).andReturn(null).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_PREPARED_STATEMENT_CACHE_SIZE)).andReturn("40").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_STATEMENTS_CACHED_PER_CONNECTION)).andReturn("30").anyTimes();
@@ -244,6 +245,11 @@ public class TestBoneCPConnectionProvider {
 			// do nothing
 		}
 
+		testClass.setClassLoader(getClass().getClassLoader());
+		testClass.loadClass("java.lang.String");
+
+		testClass.setClassLoader(this.getClass().getClassLoader());
+		assertEquals(this.getClass().getClassLoader(), testClass.getClassLoader());
 	}
 
 	/**

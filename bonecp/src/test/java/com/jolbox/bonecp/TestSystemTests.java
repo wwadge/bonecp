@@ -72,9 +72,10 @@ public class TestSystemTests {
 	 * @throws SecurityException 
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException */
+	 * @throws IllegalArgumentException 
+	 * @throws ClassNotFoundException */
 	@Test
-	public void testDataSource() throws SQLException, IOException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+	public void testDataSource() throws SQLException, IOException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
 		CommonTestUtils.config.setAcquireIncrement(5);
 		CommonTestUtils.config.setMinConnectionsPerPartition(30);
 		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
@@ -175,9 +176,7 @@ public class TestSystemTests {
 		assertEquals(false, dsb.isLogStatementsEnabled());
 		assertEquals("1000", dsb.getAcquireRetryDelay());
 		dsb.setClassLoader(getClass().getClassLoader());
-		method = dsb.getClass().getDeclaredMethod("loadClass", new Class[]{String.class});
-		method.setAccessible(true);
-		method.invoke("java.lang.String");
+		dsb.loadClass("java.lang.String");
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
 
 	}

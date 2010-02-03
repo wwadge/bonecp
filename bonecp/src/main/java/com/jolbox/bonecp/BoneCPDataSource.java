@@ -805,11 +805,11 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	}
 
 	/** Loads the given class, respecting the given classloader.
-	 * @param clazz class to laod
+	 * @param clazz class to load
 	 * @return Loaded class
 	 * @throws ClassNotFoundException
 	 */
-	private Class<?> loadClass(String clazz) throws ClassNotFoundException {
+	protected Class<?> loadClass(String clazz) throws ClassNotFoundException {
 		if (this.classLoader == null){
 			return Class.forName(clazz);
 		}
