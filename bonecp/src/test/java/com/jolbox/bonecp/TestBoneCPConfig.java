@@ -27,9 +27,11 @@ import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
+
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -134,6 +136,23 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setMinConnectionsPerPartition(CommonTestUtils.config.getMaxConnectionsPerPartition()+1);
 		CommonTestUtils.config.sanitize();
 		assertEquals(CommonTestUtils.config.getMinConnectionsPerPartition(), CommonTestUtils.config.getMaxConnectionsPerPartition());
+
+	}
+	
+	/**
+	 * Tests general methods.
+	 */
+	@Test
+	public void testCloneEqualsHashCode(){
+		BoneCPConfig clone = CommonTestUtils.config.clone();
+		assertTrue(clone.equals(CommonTestUtils.config));
+		assertEquals(clone.hashCode(), CommonTestUtils.config.hashCode());
+		
+		assertFalse(clone.equals(null));
+		assertTrue(clone.equals(clone));
+		
+		clone.setJdbcUrl("something else");
+		assertFalse(clone.equals(CommonTestUtils.config));
 
 	}
 

@@ -44,7 +44,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -236,7 +235,6 @@ public class TestStatementCache {
 	 * @throws IllegalAccessException
 	 */
 	@Test
-	@Ignore
 	public void testStatementCacheLimits() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		CommonTestUtils.logTestInfo("Tests statement caching module.");
 		String sql = CommonTestUtils.TEST_QUERY;
@@ -260,29 +258,18 @@ public class TestStatementCache {
 
 		conn.close();
 
-		// try adding a bunch of statements in the softhashmap, some of them
-		// should be garbage collected as it runs out of memory.
 		for (int i=0; i < 5000000; i++){
 			cache.put("test"+i, statement);
 			if ((i % 10000) == 0){
 				System.gc();
 			}
 			if (cache.size() != i) {
-				// the garbage collector is doing its thing
 				break;
 			}
 		}
-		// some elements should have been dropped in the soft cache
+		// some elements should have been dropped in the cache
 		assertFalse(cache.size()==5000000);
-		// add some more entries...
-		String[] testSQL = {"hardcache1", "hardcache2", "hardcache3", "hardcache4", "hardcache5"};
-		for (int i=0; i < testSQL.length; i++){
-			cache.put(testSQL[i], statement);
-		}
-		// and test that our cache holds them...
-		for (int i=0; i < testSQL.length; i++){
-			assertNotNull(cache.get(testSQL[i]));
-		}
+	
 
 		dsb.shutdown();
 		CommonTestUtils.logPass();

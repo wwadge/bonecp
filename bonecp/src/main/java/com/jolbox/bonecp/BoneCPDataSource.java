@@ -856,6 +856,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				safePrint(this.idleMaxAge), 
 				safePrint(this.idleConnectionTestPeriod));
 	}
+	
 	/** Returns a configuration object built during initialization of the connection pool. 
 	 * Only valid when at least one connection has been retrieved.  
 	 * @return the config

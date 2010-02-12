@@ -109,7 +109,9 @@ public class TestSystemTests {
 		dsb.setLogStatementsEnabled(false);
 		dsb.setAcquireRetryDelay(1000);
 		dsb.setAcquireRetryDelay("1000");
-	
+		dsb.getConnection().close();
+		assertNotNull(dsb.getConfig());
+		assertNotNull(dsb.toString());
 		dsb.setConnectionHookClassName("bad class name");
 		assertEquals("bad class name", dsb.getConnectionHookClassName());
 		assertNull(dsb.getConnectionHook());
@@ -243,6 +245,7 @@ public class TestSystemTests {
 		}
 		assertEquals(0, dsb.getTotalLeased());
 		assertEquals(30, dsb.getTotalFree());
+
 
 		dsb.shutdown();
 		CommonTestUtils.logPass();
