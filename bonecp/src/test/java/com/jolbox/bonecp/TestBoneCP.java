@@ -97,10 +97,23 @@ public class TestBoneCP {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	@SuppressWarnings("unchecked")
 	@BeforeClass
 	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		Class.forName("org.hsqldb.jdbcDriver");
+	}
+	
+	
+	/**
+	 * Reset the mocks.
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws SQLException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 */
+	@SuppressWarnings("unchecked")
+	@Before
+	public void before() throws IllegalArgumentException, IllegalAccessException, SQLException, SecurityException, NoSuchFieldException{
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
@@ -154,16 +167,7 @@ public class TestBoneCP {
 			
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
-	}
-
-
-
-	
-	/**
-	 * Reset the mocks.
-	 */
-	@Before
-	public void before(){
+		
 		reset(mockConfig, mockKeepAliveScheduler, mockConnectionsScheduler, mockPartition, 
 				mockConnectionHandles, mockConnection, mockLock);
 	}
@@ -201,6 +205,7 @@ public class TestBoneCP {
 	 */ 
 	@Test
 	public void testClose() {
+		testClass.poolShuttingDown=false;
 		testShutdownClose(false);
 	}
 
@@ -544,7 +549,7 @@ public class TestBoneCP {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#isConnectionHandleAlive(com.jolbox.bonecp.ConnectionHandle)}.
+	 * Test method for com.jolbox.bonecp.BoneCP isConnectionHandleAlive.
 	 * @throws SQLException 
 	 */
 	@Test

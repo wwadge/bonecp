@@ -22,6 +22,7 @@ package com.jolbox.bonecp;
 
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -49,6 +50,10 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class BoneCP implements BoneCPMBean {
+	/** Exception message. */
+	private static final String ERROR_TEST_CONNECTION = "Unable to open a test connection to the given database. JDBC url = %s, username = %s. Terminating connection pool.";
+	/** Exception message. */
+	private static final String SHUTDOWN_LOCATION_TRACE = "Attempting to obtain a connection from a pool that has already been shutdown. \nStack trace of location where pool was shutdown follows:\n";
 	/** Exception message. */
 	private static final String UNCLOSED_EXCEPTION_MESSAGE = "Connection obtained from thread [%s] was never closed. \nStack trace of location where connection was obtained follows:\n";
 	/** JMX constant. */
@@ -96,16 +101,34 @@ public class BoneCP implements BoneCPMBean {
 	private boolean closeConnectionWatch = false;
 	/** Threads monitoring for bad connection requests. */
 	private ExecutorService closeConnectionExecutor;
-
+	/** set to true if the connection pool has been flagged as shutting down. */
+	protected volatile boolean poolShuttingDown;
+	/** Placeholder to give more useful info in case of a double shutdown. */
+	private String shutdownStackTrace;
 
 	/**
 	 * Closes off this connection pool.
 	 */
 	public void shutdown(){
-		this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
-		this.connectionsScheduler.shutdownNow(); // stop threads from firing.
+		if (!this.poolShuttingDown){
+			logger.info("Shutting down connection pool...");
+			this.poolShuttingDown = true;
 
-		terminateAllConnections();
+			this.shutdownStackTrace = captureStackTrace(SHUTDOWN_LOCATION_TRACE);
+			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
+			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
+			if (this.releaseHelperThreadsConfigured){
+				this.releaseHelper.shutdownNow();
+			}
+			if (this.asyncExecutor != null){
+				this.asyncExecutor.shutdownNow();
+			}
+			if (this.closeConnectionExecutor != null){
+				this.closeConnectionExecutor.shutdownNow();
+			}
+			terminateAllConnections();
+			logger.info("Connection pool has been shutdown.");
+		}
 	}
 
 	/** Just a synonym to shutdown. */
@@ -158,6 +181,17 @@ public class BoneCP implements BoneCPMBean {
 	public BoneCP(BoneCPConfig config) throws SQLException {
 
 		config.sanitize();
+
+		try{
+			Connection sanityConnection = DriverManager.getConnection(config.getJdbcUrl(), config.getUsername(), config.getPassword());
+			sanityConnection.close();
+		} catch (Exception e){
+			if (config.getConnectionHook() != null){
+				config.getConnectionHook().onAcquireFail(e);
+			}
+			throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), config.getPassword()));
+		}
+		
 		this.asyncExecutor = Executors.newCachedThreadPool();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
@@ -223,6 +257,9 @@ public class BoneCP implements BoneCPMBean {
 	 * @throws SQLException 
 	 */
 	public Connection getConnection() throws SQLException {
+		if (this.poolShuttingDown){
+			throw new SQLException(this.shutdownStackTrace);
+		}
 		int partition = (int) (Thread.currentThread().getId() % this.partitionCount);
 
 		ConnectionPartition connectionPartition = this.partitions[partition];
@@ -298,12 +335,12 @@ public class BoneCP implements BoneCPMBean {
 	 */
 	protected String captureStackTrace(String message) {
 		StringBuffer stringBuffer = new StringBuffer(String.format(message, Thread.currentThread().getName()));		
-			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-			for(int i = 0; i < trace.length; i++){
-				stringBuffer.append(" "+trace[i]+"\r\n");
-			}
+		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+		for(int i = 0; i < trace.length; i++){
+			stringBuffer.append(" "+trace[i]+"\r\n");
+		}
 
-			stringBuffer.append("");
+		stringBuffer.append("");
 
 		return stringBuffer.toString();
 	}
@@ -332,7 +369,7 @@ public class BoneCP implements BoneCPMBean {
 	 */
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
-		if (!connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < HIT_THRESHOLD){
+		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < HIT_THRESHOLD){
 			try{
 				connectionPartition.lockAlmostFullLock();
 				connectionPartition.almostFullSignal();
@@ -360,8 +397,9 @@ public class BoneCP implements BoneCPMBean {
 				handle.getConnectionHook().onCheckIn(handle);
 			}
 
-			// release immediately or place it in a queue so that another thread will eventually close it.
-			if (this.releaseHelperThreadsConfigured){
+			// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
+			// close off the connection right away because the helper threads have gone away.
+			if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){
 				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
 			} else {
 				internalReleaseConnection(handle);
@@ -382,7 +420,7 @@ public class BoneCP implements BoneCPMBean {
 		// close off tracked statements.
 		connectionHandle.clearStatementHandles(false);
 
-		if (connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
+		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			maybeSignalForMoreConnections(connectionPartition);
@@ -392,7 +430,11 @@ public class BoneCP implements BoneCPMBean {
 		}
 
 		connectionHandle.setConnectionLastUsed(System.currentTimeMillis());
-		releaseInAnyFreePartition(connectionHandle, connectionHandle.getOriginatingPartition());
+		if (!this.poolShuttingDown){ 
+			releaseInAnyFreePartition(connectionHandle, connectionHandle.getOriginatingPartition());
+		} else {
+			connectionHandle.internalClose();
+		}
 	}
 
 	/**
@@ -428,7 +470,7 @@ public class BoneCP implements BoneCPMBean {
 	 * @param connection Connection handle to perform activity on
 	 * @return true if test query worked, false otherwise
 	 */
-	public boolean isConnectionHandleAlive(ConnectionHandle connection) {
+	public boolean isConnectionHandleAlive(Connection connection) {
 		Statement stmt = null;
 		boolean result = false; 
 		try {

@@ -77,8 +77,7 @@ public class PoolWatchThread implements Runnable {
 					fillConnections(Math.min(maxNewConnections, this.partition.getAcquireIncrement()));
 				}
 			} catch (InterruptedException e) {
-				//				    logger.debug("Pool Watch scheduler has been shut down. Terminating");
-				return;
+				return; // we've been asked to terminate.
 			} finally {
 				this.partition.unlockAlmostFullLock();
 			}

@@ -173,7 +173,7 @@ public class TestConnectionHook {
 		} catch (Exception e){
 			// do nothing
 		}
-		assertEquals(3, hookClass.fail);
+		assertEquals(1, hookClass.fail);
 		
 	}
 }

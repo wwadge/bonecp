@@ -24,9 +24,7 @@ package com.jolbox.benchmark;
 
 import java.awt.Color;
 import java.beans.PropertyVetoException;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;

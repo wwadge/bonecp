@@ -27,9 +27,11 @@ import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
+
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -73,7 +75,7 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setJdbcUrl(CommonTestUtils.url);
 		CommonTestUtils.config.setUsername(CommonTestUtils.username);
 		CommonTestUtils.config.setPassword(CommonTestUtils.password);
-		CommonTestUtils.config.setIdleConnectionTestPeriod(10000);
+		CommonTestUtils.config.setIdleConnectionTestPeriod(1);
 		CommonTestUtils.config.setIdleMaxAge(1);
 		CommonTestUtils.config.setStatementsCacheSize(2);
 		CommonTestUtils.config.setReleaseHelperThreads(3);
@@ -88,8 +90,8 @@ public class TestBoneCPConfig {
 		assertEquals(CommonTestUtils.url, CommonTestUtils.config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, CommonTestUtils.config.getUsername());
 		assertEquals(CommonTestUtils.password, CommonTestUtils.config.getPassword());
-		assertEquals(10000, CommonTestUtils.config.getIdleConnectionTestPeriod());
-		assertEquals(1, CommonTestUtils.config.getIdleMaxAge());
+		assertEquals(60*1000, CommonTestUtils.config.getIdleConnectionTestPeriod());
+		assertEquals(60*1000, CommonTestUtils.config.getIdleMaxAge());
 		assertEquals(2, CommonTestUtils.config.getStatementsCacheSize());
 		assertEquals(2, CommonTestUtils.config.getPreparedStatementsCacheSize());
 		assertEquals(3, CommonTestUtils.config.getReleaseHelperThreads());
@@ -134,6 +136,23 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setMinConnectionsPerPartition(CommonTestUtils.config.getMaxConnectionsPerPartition()+1);
 		CommonTestUtils.config.sanitize();
 		assertEquals(CommonTestUtils.config.getMinConnectionsPerPartition(), CommonTestUtils.config.getMaxConnectionsPerPartition());
+
+	}
+	
+	/**
+	 * Tests general methods.
+	 */
+	@Test
+	public void testCloneEqualsHashCode(){
+		BoneCPConfig clone = CommonTestUtils.config.clone();
+		assertTrue(clone.equals(CommonTestUtils.config));
+		assertEquals(clone.hashCode(), CommonTestUtils.config.hashCode());
+		
+		assertFalse(clone.equals(null));
+		assertTrue(clone.equals(clone));
+		
+		clone.setJdbcUrl("something else");
+		assertFalse(clone.equals(CommonTestUtils.config));
 
 	}
 

@@ -40,7 +40,7 @@ public class StatementCache implements IStatementCache {
 	private ConcurrentMap<Object, BlockingQueue<Statement>> cache;
 	/** No of entries cached per connection. */
 	private int statementsCachedPerConnection;
-	/** no of elements this cache will accept. */
+	/** How many items to cache. */
 	private int cacheSize;
 
 
@@ -54,6 +54,7 @@ public class StatementCache implements IStatementCache {
 		this.cache = new MapMaker()
 		.concurrencyLevel(32)
 		.makeMap();
+
 		this.cacheSize = size;
 		this.statementsCachedPerConnection = Math.max(1, statementsCachedPerConnection);
 	}
@@ -204,15 +205,10 @@ public class StatementCache implements IStatementCache {
 	 */
 	@Override
 	public void put(String key, Statement value) throws SQLException{
-
-		if (this.cache.size() <= this.cacheSize){ 
-			// we're only keeping the first cached statements. Perhaps employ a LRU policy? That would slow things
-			// down though - need to investigate this a bit more. Hmm....
-
+		if (this.cache.size() <=  this.cacheSize){ // perhaps use LRU in future?? Worth the overhead? Hmm....
 			// now add to our cache
 			BlockingQueue<Statement> queue = new ArrayBlockingQueue<Statement>(this.statementsCachedPerConnection);
 			BlockingQueue<Statement> statementCache = this.cache.putIfAbsent(key, queue);
-
 			if (statementCache != null) {
 				queue = statementCache;
 			}

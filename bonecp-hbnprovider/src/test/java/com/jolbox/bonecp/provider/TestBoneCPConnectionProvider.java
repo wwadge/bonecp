@@ -195,8 +195,8 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(5, config.getAcquireIncrement());
 		assertEquals(5, config.getPartitionCount());
 		assertEquals(3, config.getReleaseHelperThreads());
-		assertEquals(60, config.getIdleConnectionTestPeriod());
-		assertEquals(240, config.getIdleMaxAge()); 
+		assertEquals(60*60*1000, config.getIdleConnectionTestPeriod());
+		assertEquals(240*60*1000, config.getIdleMaxAge()); 
 		assertEquals(URL, config.getJdbcUrl());
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());
@@ -267,7 +267,7 @@ public class TestBoneCPConnectionProvider {
 		expect(mockConfig.getUsername()).andReturn("somethingbad").anyTimes();
 		expect(mockConfig.getPassword()).andReturn("somethingbad").anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("somethingbad").anyTimes();
-		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
+//		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
 		replay(mockConfig);
 		try{
 			testClass.createPool(mockConfig);
