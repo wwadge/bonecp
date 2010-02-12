@@ -98,7 +98,7 @@ public class ConnectionTesterThread implements Runnable {
 			} // throw it back on the queue
 		} catch (InterruptedException e) {
 			if (this.scheduler.isShutdown()){
-			    logger.debug("Shutting down connection tester");
+			    logger.debug("Shutting down connection tester thread.");
 				closeConnection(connection);
 			} else {
 				logger.error("Connection tester thread interrupted", e);

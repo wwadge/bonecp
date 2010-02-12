@@ -63,7 +63,19 @@ implements Runnable {
 			} catch (SQLException e) {
 				interrupted = true;
 			} catch (InterruptedException e) {
-				interrupted = true;
+				if (this.pool.poolShuttingDown){
+					// cleanup any remaining stuff. This is a gentle shutdown
+					ConnectionHandle connection;
+					while ((connection = this.queue.poll()) != null){
+						try {
+							this.pool.internalReleaseConnection(connection);
+						} catch (Exception e1) {
+							// yeah we're shutting down, shut up for a bit...
+						}
+					}
+					
+				}
+					interrupted = true;
 			}
 		}
 	}

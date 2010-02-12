@@ -80,7 +80,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_INIT_SQL  = "bonecp.initSQL";
 	/** Config stuff. */
-	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d, Max Age=%d";
+	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d mins, Max Age=%d mins";
 	/** Connection pool handle. */
 	private BoneCP pool;
 	/** Isolation level. */
@@ -152,7 +152,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			if (driver != null && !driver.trim().equals("")){
 				loadClass(driver);
 			}
-			logger.debug(String.format(CONFIG_STATUS, url, username, minsize, maxsize, acquireIncrement, partcount, idleConnectionTestPeriod/1000, idleMaxAge/(60*1000)));
+			logger.debug(String.format(CONFIG_STATUS, url, username, minsize, maxsize, acquireIncrement, partcount, idleConnectionTestPeriod, idleMaxAge));
 			this.config = new BoneCPConfig();
 			this.config.setMinConnectionsPerPartition(minsize);
 			this.config.setMaxConnectionsPerPartition(maxsize);

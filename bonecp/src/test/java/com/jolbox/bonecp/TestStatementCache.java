@@ -44,6 +44,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -235,6 +236,7 @@ public class TestStatementCache {
 	 * @throws IllegalAccessException
 	 */
 	@Test
+	@Ignore
 	public void testStatementCacheLimits() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		CommonTestUtils.logTestInfo("Tests statement caching module.");
 		String sql = CommonTestUtils.TEST_QUERY;
