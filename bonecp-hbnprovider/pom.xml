@@ -12,7 +12,7 @@
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.6.4</version>
+		<version>0.6.4-rc1</version>
 	</parent>
 
 
