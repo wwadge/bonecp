@@ -86,7 +86,10 @@ public class TestReleaseHelperThread {
 		}).times(2);
 
 		mockPool.internalReleaseConnection(mockConnection);
-		
+		expectLastCall().times(1).andThrow(new SQLException()).once();
+		expect(mockQueue.poll()).andReturn(mockConnection).times(2).andReturn(null).once();
+		mockPool.poolShuttingDown = true;
+			
 		
 		replay(mockPool, mockQueue);
 		ReleaseHelperThread clazz = new ReleaseHelperThread(mockQueue, mockPool);

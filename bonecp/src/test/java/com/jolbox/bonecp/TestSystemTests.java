@@ -181,6 +181,12 @@ public class TestSystemTests {
 		dsb.loadClass("java.lang.String");
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
 
+		method = dsb.getClass().getDeclaredMethod("safePrint", new Class[]{String.class});
+		method.setAccessible(true);
+		assertTrue("".equals(method.invoke(dsb, new Object[]{null})));
+		String tmpString = "foo";
+		assertEquals(tmpString, method.invoke(dsb, tmpString));
+
 	}
 	
 	@Test(expected=SQLException.class)

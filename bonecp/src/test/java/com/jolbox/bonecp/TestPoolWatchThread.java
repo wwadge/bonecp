@@ -40,6 +40,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.jolbox.bonecp.hooks.CoverageHook;
+
 
 /** Tests the functionality of the pool watch thread.
  * @author wwadge
@@ -75,8 +77,10 @@ public class TestPoolWatchThread {
 
     	mockConfig = createNiceMock(BoneCPConfig.class);
     	expect(mockConfig.getStatementsCacheSize()).andReturn(0).anyTimes();
-    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes();
+//    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes(); 
     	expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
+
     	mockPool = createNiceMock(BoneCP.class);
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockConfig);
@@ -238,7 +242,7 @@ public class TestPoolWatchThread {
 				
 			} 
 		}).once();
-		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes();
+		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes(); 
 
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall(); 
