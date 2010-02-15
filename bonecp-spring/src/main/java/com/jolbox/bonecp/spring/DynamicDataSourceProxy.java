@@ -37,7 +37,7 @@ import com.jolbox.bonecp.BoneCPDataSource;
  * connections are unaffected) and a new one will take it's place. A typical use case would be to transparently instruct your application
  * to use a new database without restarting the application.
  *   
- * @author wallacew
+ * @author Wallace
  *
  */
 public class DynamicDataSourceProxy extends DelegatingDataSource{
