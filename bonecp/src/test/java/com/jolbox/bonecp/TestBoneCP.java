@@ -173,9 +173,13 @@ public class TestBoneCP {
 	}
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#shutdown()}.
+	 * @throws IllegalAccessException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalArgumentException 
+	 * @throws SecurityException 
 	 */
 	@Test
-	public void testShutdown() {
+	public void testShutdown() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testShutdownClose(true);
 	}
 
@@ -184,27 +188,41 @@ public class TestBoneCP {
 	/**
 	 * Tests shutdown/close method.
 	 * @param doShutdown call shutdown or call close
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
-	private void testShutdownClose(boolean doShutdown) {
+	private void testShutdownClose(boolean doShutdown) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
 		expect(mockKeepAliveScheduler.shutdownNow()).andReturn(null).once();
 		expect(mockConnectionsScheduler.shutdownNow()).andReturn(null).once();
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		replay(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles);
+		Field field = testClass.getClass().getDeclaredField("releaseHelperThreadsConfigured");
+		field.setAccessible(true);
+		field.setBoolean(testClass, true);
+		ExecutorService mockReleaseHelper = createNiceMock(ExecutorService.class);
+		testClass.setReleaseHelper(mockReleaseHelper);
+		expect(mockReleaseHelper.shutdownNow()).andReturn(null).once();
+		replay(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
 		
 		if (doShutdown){
 			testClass.shutdown();
 		} else {
 			testClass.close();
 		}
-		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles);
+		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
 	}
 
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#close()}.
+	 * @throws IllegalAccessException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalArgumentException 
+	 * @throws SecurityException 
 	 */ 
 	@Test
-	public void testClose() {
+	public void testClose() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testClass.poolShuttingDown=false;
 		testShutdownClose(false);
 	}
@@ -381,6 +399,16 @@ public class TestBoneCP {
 			// do nothing
 		}
 		verify(mockPartition, mockConnectionHandles, mockConnection, mockLock);
+		
+		// Test #8: Attempting to fetch a connection from a pool that is marked as being shut down should throw an exception
+		testClass.poolShuttingDown = true;
+		try{
+			testClass.getConnection();
+			fail("Should have thrown an exception");
+		} catch (SQLException e){
+			// do nothing
+		}
+		
 	}
 	
 	/** Test obtaining a connection asynchronously.

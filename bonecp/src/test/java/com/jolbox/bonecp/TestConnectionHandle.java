@@ -56,6 +56,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.hooks.CoverageHook;
+
 /**
  * Mock unit testing for Connection Handle class.
  * @author wwadge
@@ -690,6 +693,25 @@ public class TestConnectionHandle {
 
 	}
 	
+	/** Tests that a thrown exception will call the onAcquireFail hook.
+	 * @throws SQLException
+	 */
+	@Test
+	public void testConstructorFail() throws SQLException{
+		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
+		ConnectionHook mockConnectionHook = createNiceMock(CoverageHook.class);
+		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(mockConnectionHook).once();
+		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject())).andReturn(false).once();
+		replay(mockPool, mockConfig, mockConnectionHook);
+		try{
+			new ConnectionHandle("", "", "", mockPool);
+			fail("Should throw an exception");
+		} catch (Throwable t){
+			// do nothing.
+		}
+		verify(mockPool, mockConfig, mockPool);
+	}
 	
 
 }
