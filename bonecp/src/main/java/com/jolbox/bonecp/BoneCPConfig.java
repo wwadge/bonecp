@@ -78,7 +78,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable {
 	private boolean logStatementsEnabled;
 	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
 	private int acquireRetryDelay;
-
+	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
+	private boolean lazyInit;
+	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
 	 */
@@ -502,6 +504,20 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable {
 		this.acquireRetryDelay = acquireRetryDelay;
 	}
 
+	/** Returns true if connection pool is to be initialized lazily.
+	 * @return lazyInit setting 
+	 */
+	public boolean isLazyInit() {
+		return this.lazyInit;
+	}
+
+	/** Set to true to force the connection pool to obtain the initial connections lazily.
+	 * @param lazyInit the lazyInit setting to set
+	 */
+	public void setLazyInit(boolean lazyInit) {
+		this.lazyInit = lazyInit;
+	}
+
 
 	@Override
 	public BoneCPConfig clone(){
@@ -547,6 +563,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable {
 				&& Objects.equal(this.statementsCacheSize, that.getStatementsCacheSize())
 				&& Objects.equal(this.username, that.getUsername())
 				&& Objects.equal(this.password, that.getPassword())
+				&& Objects.equal(this.lazyInit, that.isLazyInit())
+				
 		){
 			return true;
 		} 
@@ -559,7 +577,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable {
 		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelay, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
 				this.connectionTestStatement, this.idleConnectionTestPeriod, this.idleMaxAge, this.initSQL, this.jdbcUrl, 
 				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
-				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password);
+				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit);
 	}
-
 }

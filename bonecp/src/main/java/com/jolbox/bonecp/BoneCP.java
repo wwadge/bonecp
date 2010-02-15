@@ -182,16 +182,17 @@ public class BoneCP implements BoneCPMBean {
 
 		config.sanitize();
 
-		try{
-			Connection sanityConnection = DriverManager.getConnection(config.getJdbcUrl(), config.getUsername(), config.getPassword());
-			sanityConnection.close();
-		} catch (Exception e){
-			if (config.getConnectionHook() != null){
-				config.getConnectionHook().onAcquireFail(e);
+		if (!config.isLazyInit()){
+			try{
+				Connection sanityConnection = DriverManager.getConnection(config.getJdbcUrl(), config.getUsername(), config.getPassword());
+				sanityConnection.close();
+			} catch (Exception e){
+				if (config.getConnectionHook() != null){
+					config.getConnectionHook().onAcquireFail(e);
+				}
+				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), config.getPassword()));
 			}
-			throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), config.getPassword()));
 		}
-		
 		this.asyncExecutor = Executors.newCachedThreadPool();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
@@ -212,8 +213,10 @@ public class BoneCP implements BoneCPMBean {
 			this.partitions[p]=connectionPartition;
 			this.partitions[p].setFreeConnections(new ArrayBlockingQueue<ConnectionHandle>(config.getMaxConnectionsPerPartition()));
 
-			for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
-				this.partitions[p].addFreeConnection(new ConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this));
+			if (!config.isLazyInit()){
+				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
+					this.partitions[p].addFreeConnection(new ConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this));
+				}
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){

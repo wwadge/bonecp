@@ -94,6 +94,8 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	private String initSQL;
 	/** If enabled, log SQL statements being executed. */
 	private boolean logStatementsEnabled;
+	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
+	private boolean lazyInit;
 	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
 	private String acquireRetryDelay;
 	/** Classloader to use. */
@@ -131,6 +133,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 		this.setCloseConnectionWatch(config.isCloseConnectionWatch());
 		this.setLogStatementsEnabled(config.isLogStatementsEnabled());
 		this.setAcquireRetryDelay(config.getAcquireRetryDelay());
+		this.setLazyInit(config.isLazyInit());
 	}
 
 
@@ -207,6 +210,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				this.config.setInitSQL(this.initSQL);
 				this.config.setCloseConnectionWatch(this.closeConnectionWatch);
 				this.config.setLogStatementsEnabled(this.logStatementsEnabled);
+				this.config.setLazyInit(this.lazyInit);
 				this.config.setAcquireRetryDelay(acquireRetryDelay);
 				this.pool = new BoneCP(this.config);
 			}
@@ -863,5 +867,19 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	 */
 	public BoneCPConfig getConfig() {
 		return this.config;
+	}
+	
+	/** Returns true if connection pool is to be initialized lazily.
+	 * @return lazyInit setting 
+	 */
+	protected boolean isLazyInit() {
+		return this.lazyInit;
+	}
+	
+	/** Set to true to force the connection pool to obtain the initial connections lazily.
+	 * @param lazyInit the lazyInit setting to set
+	 */
+	protected void setLazyInit(boolean lazyInit) {
+		this.lazyInit = lazyInit;
 	}
 }

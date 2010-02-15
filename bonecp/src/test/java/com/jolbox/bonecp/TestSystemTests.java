@@ -179,6 +179,9 @@ public class TestSystemTests {
 		assertEquals("1000", dsb.getAcquireRetryDelay());
 		dsb.setClassLoader(getClass().getClassLoader());
 		dsb.loadClass("java.lang.String");
+		dsb.setLazyInit(true);
+		assertEquals(true, dsb.isLazyInit());
+		dsb.setLazyInit(false);
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
 
 		method = dsb.getClass().getDeclaredMethod("safePrint", new Class[]{String.class});
@@ -212,7 +215,6 @@ public class TestSystemTests {
 		CommonTestUtils.config.setMinConnectionsPerPartition(30);
 		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
 		CommonTestUtils.config.setPartitionCount(1);
-
 		BoneCP dsb = new BoneCP(CommonTestUtils.config);
 		Connection con = dsb.getConnection();
 		// kill off the db...
