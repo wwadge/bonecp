@@ -24,6 +24,7 @@
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
+		<module>bonecp-spring</module>
 		<module>bonecp-benchmark</module>
 	</modules>
 

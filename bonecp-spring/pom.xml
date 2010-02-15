@@ -2,12 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.jolbox</groupId>
-	<artifactId>bonecp-provider</artifactId>
+	<artifactId>bonecp-spring</artifactId>
 	<packaging>jar</packaging>
 
-	<name>BoneCP Hibernate provider</name>
-	<description>Helper class for easier hibernate intergration
-	</description>
+	<name>BoneCP Spring support</name>
+	<description>Helper classes for additional integration with the spring framework</description>
 	<url>http://jolbox.com</url>
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
@@ -17,12 +16,19 @@
 
 
 	<dependencies>
+
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate</artifactId>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
@@ -33,12 +39,6 @@
 			<groupId>org.easymock</groupId>
 			<artifactId>easymockclassextension</artifactId>
 			<version>2.4</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>
 

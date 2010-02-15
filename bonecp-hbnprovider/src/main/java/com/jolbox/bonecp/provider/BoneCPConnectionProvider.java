@@ -177,9 +177,6 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			}
 			// create the connection pool
 			this.pool = createPool(this.config);
-		}
-		catch (NullPointerException e) {
-			throw new HibernateException(e);
 		} catch (Exception e) {
 			throw new HibernateException(e);
 		} 

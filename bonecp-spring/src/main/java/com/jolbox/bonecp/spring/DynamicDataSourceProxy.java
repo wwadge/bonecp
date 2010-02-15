@@ -17,7 +17,7 @@
  * along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.jolbox.bonecp.provider;
+package com.jolbox.bonecp.spring;
 
 import java.sql.SQLException;
 
@@ -60,14 +60,14 @@ public class DynamicDataSourceProxy extends DelegatingDataSource{
 		// default constructor
 	}
 	
-	/** Switch to a new datasource using the given configuration.
-	 * @param newConfig BoneCP datasource to use.
+	/** Switch to a new DataSource using the given configuration.
+	 * @param newConfig BoneCP DataSource to use.
 	 * @throws SQLException
 	 */
 	public void switchDataSource(BoneCPConfig newConfig) throws SQLException {
 		logger.info("Switch to new datasource requested. New Config: "+newConfig);
 		DataSource oldDS = getTargetDataSource();
-
+ 
 		if (!(oldDS instanceof BoneCPDataSource)){
 			throw new SQLException("Unknown datasource type! Was expecting BoneCPDataSource but received "+oldDS.getClass()+". Not switching datasource!");
 		}
