@@ -20,6 +20,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import java.io.Serializable;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,8 +34,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author wwadge
  *
  */
-public class ConnectionPartition {
-    /**  Connections available to be taken  */
+public class ConnectionPartition implements Serializable{
+	/** Serialization UID */
+	private static final long serialVersionUID = -7864443421028454573L;
+	/**  Connections available to be taken  */
     private ArrayBlockingQueue<ConnectionHandle> freeConnections;
     /** When connections start running out, add these number of new connections. */
     private final int acquireIncrement;

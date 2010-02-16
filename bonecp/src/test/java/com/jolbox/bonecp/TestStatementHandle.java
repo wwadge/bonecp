@@ -115,7 +115,7 @@ public class TestStatementHandle {
 		IStatementCache mockCache = createNiceMock(IStatementCache.class);
 		ResultSet mockResultSet = createNiceMock(ResultSet.class);
 
-		// alternate constructor
+		// alternate constructor 
 		StatementHandle handle = new StatementHandle(mockStatement, null, true);
 
 		handle = new StatementHandle(mockStatement, null, mockCache, null, "testSQL", true);

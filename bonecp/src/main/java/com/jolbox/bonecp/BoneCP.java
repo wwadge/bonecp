@@ -20,6 +20,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -49,7 +50,9 @@ import org.slf4j.LoggerFactory;
  * @author wwadge
  *
  */
-public class BoneCP implements BoneCPMBean {
+public class BoneCP implements BoneCPMBean, Serializable {
+	/** Serialization UID */
+	private static final long serialVersionUID = -8386816681977604817L;
 	/** Exception message. */
 	private static final String ERROR_TEST_CONNECTION = "Unable to open a test connection to the given database. JDBC url = %s, username = %s. Terminating connection pool.";
 	/** Exception message. */
@@ -190,7 +193,7 @@ public class BoneCP implements BoneCPMBean {
 				if (config.getConnectionHook() != null){
 					config.getConnectionHook().onAcquireFail(e);
 				}
-				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), config.getPassword()));
+				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername()));
 			}
 		}
 		this.asyncExecutor = Executors.newCachedThreadPool();

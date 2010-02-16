@@ -20,6 +20,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +36,9 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  *
  * @author wallacew
  */
-public class BoneCPConfig implements BoneCPConfigMBean, Cloneable {
+public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable {
+	/** Serialization UID. */
+	private static final long serialVersionUID = 6090570773474131622L;
 	/** For toString(). */
 	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d, idle test period = %d";
 	/** Logger class. */
@@ -520,8 +523,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable {
 
 
 	@Override
-	public BoneCPConfig clone(){
-		BoneCPConfig clone = new BoneCPConfig();
+	public BoneCPConfig clone() throws CloneNotSupportedException {
+		
+		BoneCPConfig clone = (BoneCPConfig)super.clone();
 		Field[] fields = this.getClass().getDeclaredFields();
 		for (Field field: fields){
 			try {

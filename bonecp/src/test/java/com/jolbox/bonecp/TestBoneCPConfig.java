@@ -141,9 +141,10 @@ public class TestBoneCPConfig {
 	
 	/**
 	 * Tests general methods.
+	 * @throws CloneNotSupportedException 
 	 */
 	@Test
-	public void testCloneEqualsHashCode(){
+	public void testCloneEqualsHashCode() throws CloneNotSupportedException{
 		BoneCPConfig clone = CommonTestUtils.config.clone();
 		assertTrue(clone.equals(CommonTestUtils.config));
 		assertEquals(clone.hashCode(), CommonTestUtils.config.hashCode());

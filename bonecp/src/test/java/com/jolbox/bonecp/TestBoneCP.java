@@ -137,6 +137,8 @@ public class TestBoneCP {
 		Field field = testClass.getClass().getDeclaredField("partitions");
 		field.setAccessible(true);
 		ConnectionPartition[] partitions = (ConnectionPartition[]) field.get(testClass);
+		
+		
 		// if all ok 
 		assertEquals(2, partitions.length);
 		// switch to our mock version now
@@ -288,81 +290,56 @@ public class TestBoneCP {
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		assertEquals(mockConnection, testClass.getConnection());
 		verify(mockPartition, mockConnectionHandles, mockConnection);
-	
-		// Test #2: get connection, not finding any available block to wait for one
-		reset(mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.poll()).andReturn(null).once();
-		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
-		
-		mockConnection.setOriginatingPartition(mockPartition);
-		expectLastCall().once();
-		mockConnection.renewConnection();
-		expectLastCall().once();
+	}
 
-		replay(mockPartition, mockConnectionHandles, mockConnection);
-		assertEquals(mockConnection, testClass.getConnection());
-		verify(mockPartition, mockConnectionHandles, mockConnection);
-	
 
-		// Test #3: Like test #2 but simulate an interrupted exception
-		Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
-		field.setAccessible(true);
-		field.setBoolean(testClass, true);
-		reset(mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
-		
-		replay(mockPartition, mockConnectionHandles, mockConnection);
+	/**
+	 * Attempting to fetch a connection from a pool that is marked as being shut down should throw an exception
+	 */
+	@Test
+	public void testGetConnectionOnShutdownPool() {
+		// Test #8: 
+		testClass.poolShuttingDown = true;
 		try{
 			testClass.getConnection();
-			fail("Should have throw an SQL Exception");
+			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// do nothing
 		}
-		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
 
-		
-		// Test #4: Like test #2 but simulate an interrupted exception in another take()
-		 field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
+
+	/** Like test 6, except we fake an unchecked exception to make sure our locks are released.
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testGetConnectionUncheckedExceptionTriggeredWhileWaiting()
+			throws NoSuchFieldException, IllegalAccessException {
+		Field field = testClass.getClass().getDeclaredField("connectionsObtainedLock");
 		field.setAccessible(true);
-		field.setBoolean(testClass, false);
-		reset(mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.poll()).andReturn(null).once();
-		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
+		field.set(testClass, mockLock);
 		
-		replay(mockPartition, mockConnectionHandles, mockConnection);
+		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getMaxConnections()).andReturn(0).anyTimes(); // cause a division by zero error
+		replay(mockPartition, mockConnectionHandles, mockConnection, mockLock);
 		try{
 			testClass.getConnection();
-			fail("Should have throw an SQL Exception");
-		} catch (SQLException e){
+			fail("Should have thrown an exception");
+		} catch (Throwable t){
 			// do nothing
 		}
-		verify(mockPartition, mockConnectionHandles, mockConnection);
+		verify(mockPartition, mockConnectionHandles, mockConnection, mockLock);
+	}
 
-		// Test #5: Connection queues are starved of free connections. Should block and wait on one without spin-locking.
-		field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
-		field.setAccessible(true);
-		field.setBoolean(testClass, true);
-		reset(mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
 
-		mockConnection.setOriginatingPartition(mockPartition);
-		expectLastCall().once();
-		mockConnection.renewConnection();
-		expectLastCall().once();
-
-		replay(mockPartition, mockConnectionHandles, mockConnection);
-		assertEquals(mockConnection, testClass.getConnection());
-		verify(mockPartition, mockConnectionHandles, mockConnection);
-
-		// Test #6: If we hit our limit, we should signal for more connections to be created on the fly
+	/** If we hit our limit, we should signal for more connections to be created on the fly
+	 * @throws SQLException
+	 */
+	@Test
+	public void testGetConnectionLimitsHit() throws SQLException {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
@@ -380,35 +357,117 @@ public class TestBoneCP {
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		testClass.getConnection();
 		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
 
-		
-		// Test #7: Like test 6, except we fake an unchecked exception to make sure our locks are released.
-		field = testClass.getClass().getDeclaredField("connectionsObtainedLock");
+
+	/** Connection queues are starved of free connections. Should block and wait on one without spin-locking.
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws InterruptedException
+	 * @throws SQLException
+	 */
+	@Test
+	public void testGetConnectionConnectionQueueStarved()
+			throws NoSuchFieldException, IllegalAccessException,
+			InterruptedException, SQLException {
+		Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
 		field.setAccessible(true);
-		field.set(testClass, mockLock);
-		
+		field.setBoolean(testClass, true);
 		reset(mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockPartition.getMaxConnections()).andReturn(0).anyTimes(); // cause a division by zero error
-		replay(mockPartition, mockConnectionHandles, mockConnection, mockLock);
-		try{
-			testClass.getConnection();
-			fail("Should have thrown an exception");
-		} catch (Throwable t){
-			// do nothing
-		}
-		verify(mockPartition, mockConnectionHandles, mockConnection, mockLock);
+		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
+
+		mockConnection.setOriginatingPartition(mockPartition);
+		expectLastCall().once();
+		mockConnection.renewConnection();
+		expectLastCall().once();
+
+		replay(mockPartition, mockConnectionHandles, mockConnection);
+		assertEquals(mockConnection, testClass.getConnection());
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
+
+
+	/** Simulate an interrupted exception elsewhere.
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testGetConnectionSimulateInterruptedException2()
+			throws NoSuchFieldException, IllegalAccessException,
+			InterruptedException {
+		 Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
+		field.setAccessible(true);
+		field.setBoolean(testClass, false);
+		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockConnectionHandles.poll()).andReturn(null).once();
+		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
 		
-		// Test #8: Attempting to fetch a connection from a pool that is marked as being shut down should throw an exception
-		testClass.poolShuttingDown = true;
+		replay(mockPartition, mockConnectionHandles, mockConnection);
 		try{
 			testClass.getConnection();
-			fail("Should have thrown an exception");
+			fail("Should have throw an SQL Exception");
 		} catch (SQLException e){
 			// do nothing
 		}
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
+
+
+	/**	Test #3: Like test #2 but simulate an interrupted exception
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testGetConnectionSimulateInterruptedException()
+			throws NoSuchFieldException, IllegalAccessException,
+			InterruptedException {
+		Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
+		field.setAccessible(true);
+		field.setBoolean(testClass, true);
+		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
 		
+		replay(mockPartition, mockConnectionHandles, mockConnection);
+		try{
+			testClass.getConnection();
+			fail("Should have throw an SQL Exception");
+		} catch (SQLException e){
+			// do nothing
+		}
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
+
+
+	/** Get connection, not finding any available block to wait for one
+	 * @throws InterruptedException
+	 * @throws SQLException
+	 */
+	@Test
+	public void testGetConnectionBlockOnUnavailable()
+			throws InterruptedException, SQLException {
+
+		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockConnectionHandles.poll()).andReturn(null).once();
+		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
+		
+		mockConnection.setOriginatingPartition(mockPartition);
+		expectLastCall().once();
+		mockConnection.renewConnection();
+		expectLastCall().once();
+
+		replay(mockPartition, mockConnectionHandles, mockConnection);
+		assertEquals(mockConnection, testClass.getConnection());
+		verify(mockPartition, mockConnectionHandles, mockConnection);
 	}
 	
 	/** Test obtaining a connection asynchronously.

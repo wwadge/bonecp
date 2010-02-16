@@ -80,7 +80,8 @@ public class TestPoolWatchThread {
 //    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes(); 
     	expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
-
+		expect(mockConfig.isLazyInit()).andReturn(true).anyTimes();
+		
     	mockPool = createNiceMock(BoneCP.class);
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockConfig);
