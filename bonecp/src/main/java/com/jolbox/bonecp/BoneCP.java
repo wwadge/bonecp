@@ -83,7 +83,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Configuration object used in constructor. */
 	private BoneCPConfig config;
 	/** almost full locking. **/
-	final Lock connectionsObtainedLock = new ReentrantLock();
+	private final Lock connectionsObtainedLock = new ReentrantLock();
 	/** If set to true, we have run out of connections at some point. */
 	private volatile boolean connectionStarvationTriggered = false;
 	/** If set to true, config has specified the use of helper threads. */
@@ -193,7 +193,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				if (config.getConnectionHook() != null){
 					config.getConnectionHook().onAcquireFail(e);
 				}
-				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername()));
+				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername()), e);
 			}
 		}
 		this.asyncExecutor = Executors.newCachedThreadPool();
