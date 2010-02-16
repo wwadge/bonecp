@@ -77,7 +77,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	/** Config setting. */
 	private String password="PASSWORD NOT SET!";
 	/** Pool handle. */
-	private volatile BoneCP pool = null;
+	private transient volatile BoneCP pool = null;
 	/** Lock for init. */
 	private ReadWriteLock rwl = new ReentrantReadWriteLock();
 	/** Config setting. */
