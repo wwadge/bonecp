@@ -208,6 +208,7 @@ public class BoneCP implements BoneCPMBean {
 
 		}
 		for (int p=0; p < config.getPartitionCount(); p++){
+			
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this);
 			this.partitions[p]=connectionPartition;

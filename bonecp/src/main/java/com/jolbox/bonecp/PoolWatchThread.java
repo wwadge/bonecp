@@ -39,6 +39,8 @@ public class PoolWatchThread implements Runnable {
 	private boolean signalled;
 	/** How long to wait before retrying to add a connection upon failure. */
 	private long acquireRetryDelay = 1000L;
+	/** Start off lazily. */
+	private boolean lazyInit;
 	/** Logger handle. */
 	private static Logger logger = LoggerFactory.getLogger(PoolWatchThread.class);
 
@@ -50,6 +52,7 @@ public class PoolWatchThread implements Runnable {
 	public PoolWatchThread(ConnectionPartition connectionPartition, BoneCP pool) {
 		this.partition = connectionPartition;
 		this.pool = pool;
+		this.lazyInit = this.pool.getConfig().isLazyInit();
 		this.acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
 	}
 
@@ -62,6 +65,11 @@ public class PoolWatchThread implements Runnable {
 
 			try{
 				this.partition.lockAlmostFullLock();
+				if (this.lazyInit){ // block the first time if this is on.
+					this.lazyInit = false; 
+					this.partition.almostFullWait();
+				}
+
 				maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				// loop for spurious interrupt
 				while (maxNewConnections == 0 || (this.partition.getFreeConnections().size()*100/this.partition.getMaxConnections() > BoneCP.HIT_THRESHOLD)){
@@ -73,9 +81,11 @@ public class PoolWatchThread implements Runnable {
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				}
 				
-				if (maxNewConnections > 0){
+				if (maxNewConnections > 0 && !this.lazyInit){
 					fillConnections(Math.min(maxNewConnections, this.partition.getAcquireIncrement()));
 				}
+
+
 			} catch (InterruptedException e) {
 				return; // we've been asked to terminate.
 			} finally {

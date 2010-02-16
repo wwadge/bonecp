@@ -191,11 +191,12 @@
 			</plugin>
 		</plugins>
 		<extensions>
-			<extension>
+		<!-- 	<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-ftp</artifactId>
 				<version>1.0-alpha-6</version>
 			</extension>
+			 -->
 		</extensions>
 	</build>
 	<reporting>
