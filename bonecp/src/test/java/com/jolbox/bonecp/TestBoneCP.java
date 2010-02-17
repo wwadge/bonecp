@@ -316,10 +316,6 @@ public class TestBoneCP {
 	@Test
 	public void testGetConnectionUncheckedExceptionTriggeredWhileWaiting()
 			throws NoSuchFieldException, IllegalAccessException {
-		Field field = testClass.getClass().getDeclaredField("connectionsObtainedLock");
-		field.setAccessible(true);
-		field.set(testClass, mockLock);
-		
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();

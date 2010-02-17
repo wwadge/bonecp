@@ -82,8 +82,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private ExecutorService connectionsScheduler;
 	/** Configuration object used in constructor. */
 	private BoneCPConfig config;
-	/** almost full locking. **/
-	private final Lock connectionsObtainedLock = new ReentrantLock();
 	/** If set to true, we have run out of connections at some point. */
 	private volatile boolean connectionStarvationTriggered = false;
 	/** If set to true, config has specified the use of helper threads. */
