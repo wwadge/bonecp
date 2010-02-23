@@ -40,11 +40,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -149,7 +149,6 @@ public class TestStatementCache {
 	 * @throws IllegalAccessException
 	 */
 	@Test
-	@Ignore
 	public void testStatementCacheDifferentGetSignatures() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		CommonTestUtils.logTestInfo("Tests statement get() signatures.");
 
@@ -164,7 +163,7 @@ public class TestStatementCache {
 		dsb = new BoneCP(CommonTestUtils.config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
-		statement.close();
+//		statement.close();
 
 		
 		StatementCache cache = new StatementCache(5, 30);
@@ -286,14 +285,12 @@ public class TestStatementCache {
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
-	@Ignore
 	public void testStatementCachePutFull() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
 		BlockingQueue<String> mockHardCache = createNiceMock(BlockingQueue.class);
 		ConcurrentMap<Object, BlockingQueue<Statement>> mockLocalCache = createNiceMock(ConcurrentMap.class);
 		BlockingQueue<Statement> mockStatementCache = createNiceMock(BlockingQueue.class);
 		StatementHandle mockValue = org.easymock.classextension.EasyMock.createNiceMock(StatementHandle.class);
-		
-
+		mockValue.inCache = new AtomicBoolean();
 		StatementCache testClass = new StatementCache(1, 1);
 		Field field = testClass.getClass().getDeclaredField("cache");
 		field.setAccessible(true);
