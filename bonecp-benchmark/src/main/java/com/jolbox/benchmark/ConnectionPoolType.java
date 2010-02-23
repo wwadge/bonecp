@@ -28,10 +28,10 @@ package com.jolbox.benchmark;
  */
 public enum ConnectionPoolType {
 	/** pool type. */
-	C3P0(true), 
+	C3P0(false), 
 //	NANOPOOL,
 	/** pool type. */
-	DBCP(true),
+	DBCP(false),
 	/** pool type. */
 	BONECP_1_PARTITIONS(true, false),
 	/** pool type. */

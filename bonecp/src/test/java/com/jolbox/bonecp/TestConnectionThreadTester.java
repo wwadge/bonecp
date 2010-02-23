@@ -149,7 +149,7 @@ public class TestConnectionThreadTester {
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
-		mockPool.releaseInAnyFreePartition((ConnectionHandle)anyObject(), (ConnectionPartition)anyObject());
+		mockPool.putConnectionBackInPartition((ConnectionHandle)anyObject());
 		
 		// connection should be closed
 		mockConnection.setConnectionLastReset(anyLong());
@@ -205,7 +205,7 @@ public class TestConnectionThreadTester {
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
 		expect(mockExecutor.isShutdown()).andReturn(true);
-		mockPool.releaseInAnyFreePartition((ConnectionHandle)anyObject(), (ConnectionPartition)anyObject());
+		mockPool.putConnectionBackInPartition((ConnectionHandle)anyObject());
 		expectLastCall().andThrow(new InterruptedException());
 		// connection should be closed
 		mockConnection.internalClose();
@@ -241,7 +241,7 @@ public class TestConnectionThreadTester {
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
 		expect(mockExecutor.isShutdown()).andReturn(false);
-		mockPool.releaseInAnyFreePartition((ConnectionHandle)anyObject(), (ConnectionPartition)anyObject());
+		mockPool.putConnectionBackInPartition((ConnectionHandle)anyObject());
 		expectLastCall().andThrow(new InterruptedException());
 		mockLogger.error((String)anyObject(), (Exception)anyObject());
 		

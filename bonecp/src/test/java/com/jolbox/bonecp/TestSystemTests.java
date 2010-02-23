@@ -58,10 +58,9 @@ public class TestSystemTests {
 		CommonTestUtils.config.setPassword(CommonTestUtils.password);
 		CommonTestUtils.config.setIdleConnectionTestPeriod(10000);
 		CommonTestUtils.config.setIdleMaxAge(0);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(0);
+		CommonTestUtils.config.setStatementsCacheSize(0);
 		CommonTestUtils.config.setReleaseHelperThreads(0);
 		CommonTestUtils.config.setStatementsCachedPerConnection(30);
-
 	}
 
 

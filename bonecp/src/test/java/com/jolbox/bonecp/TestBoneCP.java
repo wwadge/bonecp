@@ -366,9 +366,6 @@ public class TestBoneCP {
 	public void testGetConnectionConnectionQueueStarved()
 			throws NoSuchFieldException, IllegalAccessException,
 			InterruptedException, SQLException {
-		Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
-		field.setAccessible(true);
-		field.setBoolean(testClass, true);
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
@@ -394,9 +391,6 @@ public class TestBoneCP {
 	public void testGetConnectionSimulateInterruptedException2()
 			throws NoSuchFieldException, IllegalAccessException,
 			InterruptedException {
-		 Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
-		field.setAccessible(true);
-		field.setBoolean(testClass, false);
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
@@ -423,16 +417,13 @@ public class TestBoneCP {
 	public void testGetConnectionSimulateInterruptedException()
 			throws NoSuchFieldException, IllegalAccessException,
 			InterruptedException {
-		Field field = testClass.getClass().getDeclaredField("connectionStarvationTriggered");
-		field.setAccessible(true);
-		field.setBoolean(testClass, true);
 		reset(mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+		expect(mockPartition.getMaxConnections()).andReturn(100).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
 		
 		replay(mockPartition, mockConnectionHandles, mockConnection);
-		try{
+		try{ 
 			testClass.getConnection();
 			fail("Should have throw an SQL Exception");
 		} catch (SQLException e){
@@ -605,29 +596,18 @@ public class TestBoneCP {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#releaseInAnyFreePartition(com.jolbox.bonecp.ConnectionHandle, com.jolbox.bonecp.ConnectionPartition)}.
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#putConnectionBackInPartition(com.jolbox.bonecp.ConnectionHandle)}.
 	 * @throws InterruptedException 
 	 */
 	@Test
-	public void testReleaseInAnyFreePartition() throws InterruptedException {
+	public void testPutConnectionBackInPartition() throws InterruptedException {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		// Test 1: Active partition is full up
-		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).once().andReturn(true).once();
-		replay(mockPartition, mockConnectionHandles);
-		testClass.releaseInAnyFreePartition(mockConnection, mockPartition);
-		verify(mockPartition, mockConnectionHandles);
-		
-		// Test #2: Same test where all partitions are full
-		reset(mockPartition, mockConnectionHandles);
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).once();
-		
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		mockConnectionHandles.put(mockConnection);
 		expectLastCall().once();
 		replay(mockPartition, mockConnectionHandles, mockConnection);
-		testClass.releaseInAnyFreePartition(mockConnection, mockPartition);
-		verify(mockPartition, mockConnectionHandles, mockConnection);
+		testClass.putConnectionBackInPartition(mockConnection);
+		verify(mockPartition, mockConnectionHandles);
 		
 	}
 

@@ -82,8 +82,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private ExecutorService connectionsScheduler;
 	/** Configuration object used in constructor. */
 	private BoneCPConfig config;
-	/** If set to true, we have run out of connections at some point. */
-	private volatile boolean connectionStarvationTriggered = false;
 	/** If set to true, config has specified the use of helper threads. */
 	private boolean releaseHelperThreadsConfigured;
 	/** pointer to the thread containing the release helper threads. */
@@ -266,54 +264,43 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			throw new SQLException(this.shutdownStackTrace);
 		}
 		int partition = (int) (Thread.currentThread().getId() % this.partitionCount);
-
 		ConnectionPartition connectionPartition = this.partitions[partition];
-		if (!connectionPartition.isUnableToCreateMoreTransactions()){
-			maybeSignalForMoreConnections(connectionPartition);
-		}
-
+	
 		ConnectionHandle result;
-		if (this.connectionStarvationTriggered) {
-			try{
-				result = connectionPartition.getFreeConnections().take();
-			}
-			catch (InterruptedException e) {
-				throw new SQLException(e);
-			}
-		} else { 
-			result = connectionPartition.getFreeConnections().poll();
-		}
 
+		result = connectionPartition.getFreeConnections().poll();
 
 		if (result == null) { 
-
 			// we ran out of space on this partition, pick another free one
 			for (int i=0; i < this.partitionCount ; i++){
 				if (i == partition) {
 					continue; // we already determined it's not here
 				}
-				result = this.partitions[i].getFreeConnections().poll();
+				result = this.partitions[i].getFreeConnections().poll(); // try our luck with this partition
 				connectionPartition = this.partitions[i];
 				if (result != null) {
-					break;
+					break;  // we found a connection
 				}
 			}
+		}
+		
+		if (!connectionPartition.isUnableToCreateMoreTransactions()){ // unless we can't create any more connections...   
+			maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
 		}
 
 		// we still didn't find an empty one, wait forever until our partition is free
 		if (result == null) {
 			try {
-				this.connectionStarvationTriggered   = true; 
 				result = connectionPartition.getFreeConnections().take();
 			}
 			catch (InterruptedException e) {
 				throw new SQLException(e);
 			}
 		}
-		result.setOriginatingPartition(connectionPartition);
-		result.renewConnection();
+		result.setOriginatingPartition(connectionPartition); // track the winning partition to keep partitions balanced
+		result.renewConnection(); // mark it as being logically "open"
 
-		// Give an application the chance to do something with it.
+		// Give an application a chance to do something with it.
 		if (result.getConnectionHook() != null){
 			result.getConnectionHook().onCheckOut(result);
 		}
@@ -436,40 +423,20 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		connectionHandle.setConnectionLastUsed(System.currentTimeMillis());
 		if (!this.poolShuttingDown){ 
-			releaseInAnyFreePartition(connectionHandle, connectionHandle.getOriginatingPartition());
+			putConnectionBackInPartition(connectionHandle);
 		} else {
 			connectionHandle.internalClose();
 		}
 	}
 
-	/**
-	 * Releases the given connection in any available partition, starting off
-	 * with the active one.
-	 *
-	 * @param connectionHandle to release
-	 * @param activePartition Preferred partition to release this connection to
-	 * @throws InterruptedException on break
+	/** Places a connection back in the originating partition.
+	 * @param connectionHandle to place back
+	 * @throws InterruptedException on interrupt
 	 */
-	protected void releaseInAnyFreePartition(ConnectionHandle connectionHandle, ConnectionPartition activePartition) throws InterruptedException  {
-
-		ConnectionPartition workingPartition = activePartition;
-		if (!workingPartition.getFreeConnections().offer(connectionHandle)){
-			// we ran out of space on this partition, pick another free one
-			boolean released = false;
-			for (int i=0; i < this.partitionCount; i++){
-				if (this.partitions[i].getFreeConnections().offer(connectionHandle)){
-					released=true;
-					break;
-				}
-			}
-
-			if (!released)	{
-				// we still didn't find an empty one, wait forever until our partition is free
-				connectionHandle.getOriginatingPartition().getFreeConnections().put(connectionHandle);
-			}
-		}
-
+	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws InterruptedException {
+		connectionHandle.getOriginatingPartition().getFreeConnections().put(connectionHandle);
 	}
+
 
 	/** Sends a dummy statement to the server to keep the connection alive
 	 * @param connection Connection handle to perform activity on

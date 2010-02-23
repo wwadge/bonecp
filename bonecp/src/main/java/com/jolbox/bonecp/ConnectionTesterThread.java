@@ -72,6 +72,7 @@ public class ConnectionTesterThread implements Runnable {
 			 
 				connection = this.partition.getFreeConnections().poll();
 				if (connection != null){
+					connection.setOriginatingPartition(this.partition);
 					if (connection.isPossiblyBroken() || 
 							((this.idleMaxAge > 0) && (this.partition.getFreeConnections().size() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
 						// kill off this connection
@@ -90,7 +91,7 @@ public class ConnectionTesterThread implements Runnable {
 						connection.setConnectionLastReset(System.currentTimeMillis());
 					}
 
-				    this.pool.releaseInAnyFreePartition(connection, this.partition);
+				    this.pool.putConnectionBackInPartition(connection);
 				    
 					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
 				}

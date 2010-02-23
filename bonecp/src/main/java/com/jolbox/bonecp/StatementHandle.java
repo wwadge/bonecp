@@ -96,14 +96,11 @@ public class StatementHandle implements Statement{
 
 	@Override
 	public void close() throws SQLException {
-		if (!this.logicallyClosed){
-			this.logicallyClosed = true;
-
-			closeAndClearResultSetHandles();
-			if (this.cache != null && this.cacheKey != null){
-				this.cache.put(this.cacheKey, this);
-			}
-
+		closeAndClearResultSetHandles();
+		if (this.cache != null && this.cacheKey != null){
+			this.cache.put(this.cacheKey, this);
+		} else {
+			internalClose();
 		}
 	}
 
