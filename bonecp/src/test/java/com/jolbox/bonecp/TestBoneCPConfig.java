@@ -85,6 +85,8 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setConnectionTestStatement("test");
 		CommonTestUtils.config.setAcquireIncrement(6);
 		CommonTestUtils.config.setStatementsCachedPerConnection(7);
+		CommonTestUtils.config.setPreparedStatementsCacheSize(2);
+		
 
 		
 		assertEquals(CommonTestUtils.url, CommonTestUtils.config.getJdbcUrl());

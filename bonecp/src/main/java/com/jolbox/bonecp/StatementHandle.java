@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,8 @@ public class StatementHandle implements Statement{
 	private StringBuffer batchSQL = new StringBuffer();
     /** Class logger. */
     private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
-
+    /** Set to true if we are caching this statement already to avoid adding the same item to the cache when using the tracking feature. */
+    protected AtomicBoolean inCache = new AtomicBoolean(false);
 
 
 	/**
@@ -988,5 +990,6 @@ public class StatementHandle implements Statement{
 	protected void setLogicallyOpen() {
 		this.logicallyClosed = false;
 	}
+
 
 }

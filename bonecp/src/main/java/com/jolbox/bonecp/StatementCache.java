@@ -164,7 +164,9 @@ public class StatementCache implements IStatementCache {
 		if (statementCache != null) {
 			result = statementCache.poll();
 		}
-
+		if (result != null){
+			((StatementHandle)result).inCache.set(false);
+		}
 		return result;
 	}
 
@@ -205,7 +207,7 @@ public class StatementCache implements IStatementCache {
 	 */
 	@Override
 	public void put(String key, Statement value) throws SQLException{
-		if (this.cache.size() <=  this.cacheSize){ // perhaps use LRU in future?? Worth the overhead? Hmm....
+		if (this.cache.size() <=  this.cacheSize && ((StatementHandle)value).inCache.compareAndSet(false, true)){ // perhaps use LRU in future?? Worth the overhead? Hmm....
 			// now add to our cache
 			BlockingQueue<Statement> queue = new ArrayBlockingQueue<Statement>(this.statementsCachedPerConnection);
 			BlockingQueue<Statement> statementCache = this.cache.putIfAbsent(key, queue);
@@ -213,7 +215,7 @@ public class StatementCache implements IStatementCache {
 				queue = statementCache;
 			}
 
-			// save this...
+			// save this if you can
 			if (!queue.offer(value)){
 				// but if you can't, just throw it away after closing
 				((StatementHandle)value).internalClose(); 
