@@ -44,6 +44,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -148,6 +149,7 @@ public class TestStatementCache {
 	 * @throws IllegalAccessException
 	 */
 	@Test
+	@Ignore
 	public void testStatementCacheDifferentGetSignatures() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		CommonTestUtils.logTestInfo("Tests statement get() signatures.");
 
@@ -284,6 +286,7 @@ public class TestStatementCache {
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
+	@Ignore
 	public void testStatementCachePutFull() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
 		BlockingQueue<String> mockHardCache = createNiceMock(BlockingQueue.class);
 		ConcurrentMap<Object, BlockingQueue<Statement>> mockLocalCache = createNiceMock(ConcurrentMap.class);
