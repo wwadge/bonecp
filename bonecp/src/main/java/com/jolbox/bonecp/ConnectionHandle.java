@@ -39,7 +39,6 @@ import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +53,7 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * 
  */
 public class ConnectionHandle implements Connection {
+	private static final String STATEMENT_NOT_CLOSED = "Stack trace of location where statement was opened follows:\n%s";
 	/** Exception message. */
 	private static final String LOG_ERROR_MESSAGE = "Connection closed twice exception detected.\n%s\n%s\n";
 	/** Exception message. */
@@ -84,12 +84,6 @@ public class ConnectionHandle implements Connection {
 	private static Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
 	/** An opaque handle for an application to use in any way it deems fit. */
 	private Object debugHandle;
-
-	/**
-	 * List of statements that will be closed when this preparedStatement is
-	 * logically closed.
-	 */
-	private ConcurrentLinkedQueue<Statement> statementHandles = new ConcurrentLinkedQueue<Statement>();
 	/** Handle to the connection hook as defined in the config. */
 	private ConnectionHook connectionHook;
 	/** If true, give warnings if application tried to issue a close twice (for debugging only). */
@@ -150,8 +144,8 @@ public class ConnectionHandle implements Connection {
 				this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
 				int cacheSize = pool.getConfig().getStatementsCacheSize();
 				if (cacheSize > 0) {
-					this.preparedStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
-					this.callableStatementCache = new StatementCache(cacheSize,  pool.getConfig().getStatementsCachedPerConnection());
+					this.preparedStatementCache = new StatementCache(cacheSize);
+					this.callableStatementCache = new StatementCache(cacheSize);
 
 				}
 				// call the hook, if available.
@@ -201,20 +195,6 @@ public class ConnectionHandle implements Connection {
 		this.pool = pool;
 	}
 
-
-	/**
-	 * Adds the given statement to a list.
-	 * 
-	 * @param statement
-	 *            Statement to keep track of
-	 * @return statement
-	 */
-	private Statement trackStatement(Statement statement) {
-		if (statement != null){
-			this.statementHandles.add(statement);
-		}
-		return statement;
-	}
 
 	/** 
 	 * Given an exception, flag the connection (or database) as being potentially broken. If the exception is a data-specific exception,
@@ -316,7 +296,7 @@ public class ConnectionHandle implements Connection {
 	 */
 	protected void internalClose() throws SQLException {
 		try {
-			clearStatementHandles(true);
+			clearStatementCaches(true);
 			this.connection.close();
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
@@ -395,7 +375,7 @@ public class ConnectionHandle implements Connection {
 		Statement result = null;
 		checkClosed();
 		try {
-			result = trackStatement(new StatementHandle(this.connection.createStatement(), this, this.logStatementsEnabled));
+			result =new StatementHandle(this.connection.createStatement(), this, this.logStatementsEnabled);
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -407,7 +387,7 @@ public class ConnectionHandle implements Connection {
 		Statement result = null;
 		checkClosed();
 		try {
-			result = trackStatement(new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency), this, this.logStatementsEnabled));
+			result = new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency), this, this.logStatementsEnabled);
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -420,7 +400,7 @@ public class ConnectionHandle implements Connection {
 		Statement result = null;
 		checkClosed();
 		try {
-			result = trackStatement(new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability), this, this.logStatementsEnabled));
+			result = new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability), this, this.logStatementsEnabled);
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -585,7 +565,7 @@ public class ConnectionHandle implements Connection {
 	}
 
 	public CallableStatement prepareCall(String sql) throws SQLException {
-		Statement result = null;
+		StatementHandle result = null;
 		String cacheKey = null;
 		
 		checkClosed();
@@ -601,13 +581,16 @@ public class ConnectionHandle implements Connection {
 								sql, this, cacheKey, this.callableStatementCache);
 			}
 			
-			((StatementHandle)result).setLogicallyOpen();
+			result.setLogicallyOpen();
+			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
+			}
 		
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (CallableStatement) trackStatement(result);	
+		return (CallableStatement) result;	
 	}
 
 	public CallableStatement prepareCall(String sql, int resultSetType,	int resultSetConcurrency) throws SQLException {
@@ -633,7 +616,7 @@ public class ConnectionHandle implements Connection {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (CallableStatement) trackStatement(result);	
+		return (CallableStatement) result;	
 	}
 
 	public CallableStatement prepareCall(String sql, int resultSetType,
@@ -661,11 +644,11 @@ public class ConnectionHandle implements Connection {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (CallableStatement) trackStatement(result);	
+		return (CallableStatement) result;	
 	}
 
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
-		Statement result = null;
+		StatementHandle result = null;
 		String cacheKey = null;
 		
 		checkClosed();
@@ -680,11 +663,16 @@ public class ConnectionHandle implements Connection {
 				result =  new PreparedStatementHandle(this.connection.prepareStatement(sql), sql, this, cacheKey, this.preparedStatementCache);
 			}
 			
-			((StatementHandle)result).setLogicallyOpen();
+			result.setLogicallyOpen();
+
+			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
+			}
+
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
-		return (PreparedStatement) trackStatement(result);
+		return (PreparedStatement) result;
 	}
 
 	
@@ -708,7 +696,7 @@ public class ConnectionHandle implements Connection {
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
-		return (PreparedStatement) trackStatement(result);
+		return (PreparedStatement) result;
 
 	}
 
@@ -736,7 +724,7 @@ public class ConnectionHandle implements Connection {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (PreparedStatement) trackStatement(result);
+		return (PreparedStatement) result;
 	}
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames)
@@ -763,7 +751,7 @@ public class ConnectionHandle implements Connection {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (PreparedStatement) trackStatement(result);
+		return (PreparedStatement) result;
 
 	}
 
@@ -790,7 +778,7 @@ public class ConnectionHandle implements Connection {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (PreparedStatement) trackStatement(result);
+		return (PreparedStatement) result;
 
 	}
 
@@ -818,7 +806,7 @@ public class ConnectionHandle implements Connection {
 			throw markPossiblyBroken(t);
 		}
 		
-		return (PreparedStatement) trackStatement(result);
+		return (PreparedStatement) result;
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
@@ -1018,13 +1006,14 @@ public class ConnectionHandle implements Connection {
 	 * @param internalClose if true, close the inner statement handle too. 
 	 * @throws SQLException
 	 */
-	protected void clearStatementHandles(boolean internalClose) throws SQLException {
-		Statement statement = null;
-		while ((statement = this.statementHandles.poll()) != null) {
-			if (internalClose){
-				((StatementHandle) statement).internalClose();
-			} else {
-				((StatementHandle) statement).close();
+	protected void clearStatementCaches(boolean internalClose) throws SQLException {
+		if (internalClose){
+			this.callableStatementCache.clear();
+			this.preparedStatementCache.clear();
+		} else {
+			if (this.pool.closeConnectionWatch){
+				this.callableStatementCache.checkForProperClosure();
+				this.preparedStatementCache.checkForProperClosure();
 			}
 		}
 	}

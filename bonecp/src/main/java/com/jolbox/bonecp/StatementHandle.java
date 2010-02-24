@@ -25,7 +25,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -40,11 +39,9 @@ import org.slf4j.LoggerFactory;
  */
 public class StatementHandle implements Statement{
 	/** Set to true if the connection has been "closed". */
-	private volatile boolean logicallyClosed = false;
+	protected AtomicBoolean logicallyClosed = new AtomicBoolean(false);
 	/** A handle to the actual statement. */
 	protected Statement internalStatement;
-	/** List of resultSet that will be closed when this preparedStatement is logically closed. */ 
-	private ConcurrentLinkedQueue<ResultSet> resultSetHandles = new ConcurrentLinkedQueue<ResultSet>();
 	/** SQL Statement used for this statement. */
 	protected String sql;
 	/** Cache pertaining to this statement. */
@@ -57,10 +54,10 @@ public class StatementHandle implements Statement{
 	protected boolean logStatementsEnabled;
 	/** for logging of addBatch. */
 	private StringBuffer batchSQL = new StringBuffer();
+	public volatile boolean inCache = false;
+	public String openStackTrace;
     /** Class logger. */
     private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
-    /** Set to true if we are caching this statement already to avoid adding the same item to the cache when using the tracking feature. */
-    protected AtomicBoolean inCache = new AtomicBoolean(false);
 
 
 	/**
@@ -81,6 +78,11 @@ public class StatementHandle implements Statement{
 		this.cacheKey = cacheKey;
 		this.connectionHandle = connectionHandle;
 		this.logStatementsEnabled = logStatementsEnabled;
+		
+		// store it in the cache (unless it's already there). FIXME: make this a direct call to putIfAbsent.
+		if (this.cache != null){
+			this.cache.put(this.cacheKey, this);
+		}
 	}
 
 
@@ -98,24 +100,13 @@ public class StatementHandle implements Statement{
 
 	@Override
 	public void close() throws SQLException {
-		closeAndClearResultSetHandles();
-		if (this.cache != null && this.cacheKey != null){
-			this.cache.put(this.cacheKey, this);
-		} else {
+		this.logicallyClosed.set(true);
+		if (this.cache == null || !this.inCache){ // no cache = throw it away right now
 			internalClose();
 		}
 	}
 
 
-	/** Clears out all result set handles by closing them and removing them from tracking.
-	 * @throws SQLException on error
-	 */
-	protected void closeAndClearResultSetHandles() throws SQLException {
-		ResultSet rs = null;
-		while ((rs=this.resultSetHandles.poll()) != null) {
-			rs.close();
-		}
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -146,7 +137,7 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void checkClosed() throws SQLException {
-		if (this.logicallyClosed) {
+		if (this.logicallyClosed.get()) {
 			throw new SQLException("Statement is closed");
 		}
 	}
@@ -337,7 +328,7 @@ public class StatementHandle implements Statement{
 			if (this.logStatementsEnabled){
 				logger.debug(sql);
 			}
-			result = trackResultSet(this.internalStatement.executeQuery(sql));
+			result = this.internalStatement.executeQuery(sql);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 
@@ -345,21 +336,6 @@ public class StatementHandle implements Statement{
 		return result;
 
 	}
-
-	/**
-	 * Adds the given result set to a list.
-	 *
-	 * @param rs ResultSet to keep track of
-	 * @return rs
-	 */
-	private ResultSet trackResultSet(ResultSet rs) {
-		if (rs != null){
-			this.resultSetHandles.add(rs);
-		}
-		return rs;
-	}
-
-
 
 	/**
 	 * {@inheritDoc}
@@ -515,7 +491,7 @@ public class StatementHandle implements Statement{
 		ResultSet result = null;
 		checkClosed();
 		try{
-			result = trackResultSet(this.internalStatement.getGeneratedKeys());
+			result = this.internalStatement.getGeneratedKeys();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 
@@ -636,7 +612,7 @@ public class StatementHandle implements Statement{
 		ResultSet result = null;
 		checkClosed();
 		try{
-			result = trackResultSet(this.internalStatement.getResultSet());
+			result = this.internalStatement.getResultSet();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 
@@ -751,10 +727,8 @@ public class StatementHandle implements Statement{
 	 * @see java.sql.Statement#isClosed()
 	 */
 	@Override
-	public boolean isClosed()
-	throws SQLException {
-
-		return this.logicallyClosed;
+	public boolean isClosed() {
+		return this.logicallyClosed.get();
 	}
 
 	/**
@@ -966,10 +940,8 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void internalClose() throws SQLException {
-		closeAndClearResultSetHandles();
 		this.batchSQL = new StringBuffer();
 		this.internalStatement.close();
-
 	}
 
 	/**
@@ -988,8 +960,28 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void setLogicallyOpen() {
-		this.logicallyClosed = false;
+		this.logicallyClosed.set(false);
 	}
 
 
+	@Override
+	public String toString(){
+		return this.sql;
+	}
+
+
+	/**
+	 * @return the openStackTrace
+	 */
+	public String getOpenStackTrace() {
+		return openStackTrace;
+	}
+
+
+	/**
+	 * @param openStackTrace the openStackTrace to set
+	 */
+	public void setOpenStackTrace(String openStackTrace) {
+		this.openStackTrace = openStackTrace;
+	}
 }

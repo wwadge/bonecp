@@ -97,7 +97,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to 
 	 * close the connection.
 	 */
-	private boolean closeConnectionWatch = false;
+	protected boolean closeConnectionWatch = false;
 	/** Threads monitoring for bad connection requests. */
 	private ExecutorService closeConnectionExecutor;
 	/** set to true if the connection pool has been flagged as shutting down. */
@@ -408,9 +408,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @throws SQLException 
 	 **/
 	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws InterruptedException, SQLException {
-
-		// close off tracked statements.
-		connectionHandle.clearStatementHandles(false);
+		connectionHandle.clearStatementCaches(false);
 
 		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 

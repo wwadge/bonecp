@@ -65,7 +65,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String connectionTestStatement;
 	/** Min no of prepared statements to cache. */
 	private int statementsCacheSize = 100;
-	/** No of statements that can be cached per connection */
+	/** No of statements that can be cached per connection. Deprecated. */
 	private int statementsCachedPerConnection = 30;
 	/** Number of release-connection helper threads to create per partition. */
 	private int releaseHelperThreads = 3;
@@ -340,6 +340,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCachedPerConnection()
 	 */
+	@Deprecated
 	public int getStatementsCachedPerConnection() {
 		return this.statementsCachedPerConnection;
 	}
@@ -352,6 +353,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 *
 	 * @param statementsCachedPerConnection to set
 	 */
+	@Deprecated
 	public void setStatementsCachedPerConnection(int statementsCachedPerConnection) {
 		this.statementsCachedPerConnection = statementsCachedPerConnection;
 	}
@@ -391,10 +393,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if (this.statementsCacheSize < 0) {
 			logger.warn("preparedStatementsCacheSize < 0! Setting to 0");
 			this.statementsCacheSize = 0;
-		}
-
-		if (this.statementsCachedPerConnection < 1) {
-			this.statementsCachedPerConnection = 30;
 		}
 
 		if (this.acquireRetryDelay <= 0) {

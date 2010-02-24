@@ -126,7 +126,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 		this.setAcquireIncrement(config.getAcquireIncrement());
 		this.setConnectionTestStatement(config.getConnectionTestStatement());
 		this.setPreparedStatementCacheSize(config.getStatementsCacheSize());
-		this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
+//		this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
 		this.setReleaseHelperThreads(config.getReleaseHelperThreads());
 		this.setConnectionHook(config.getConnectionHook());
 		this.setInitSQL(config.getInitSQL());
@@ -178,7 +178,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				long idleConnectionTestPeriod = parseNumber(this.idleConnectionTestPeriod, 60);
 				long idleMaxAge = parseNumber(this.idleMaxAge, 240); 
 				int psCacheSize = parseNumber(this.preparedStatementCacheSize, 100);
-				int statementsCachedPerConnection = parseNumber(this.statementsCachedPerConnection, 30);
+//				int statementsCachedPerConnection = parseNumber(this.statementsCachedPerConnection, 30);
 				int acquireRetryDelay = parseNumber(this.acquireRetryDelay, 1000);
 				try {
 					if (this.driverClass != null){
@@ -204,7 +204,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				this.config.setIdleMaxAge(idleMaxAge);
 				this.config.setConnectionTestStatement(this.connectionTestStatement);
 				this.config.setStatementsCacheSize(psCacheSize);
-				this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
+//				this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
 				this.config.setReleaseHelperThreads(releaseHelperThreads);
 				this.config.setConnectionHook(this.connectionHook);
 				this.config.setInitSQL(this.initSQL);
