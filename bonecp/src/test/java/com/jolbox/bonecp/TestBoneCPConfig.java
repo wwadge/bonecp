@@ -116,7 +116,6 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setMinConnectionsPerPartition(-1);
 		CommonTestUtils.config.setPartitionCount(-1);
 		CommonTestUtils.config.setStatementsCacheSize(-1);
-		CommonTestUtils.config.setStatementsCachedPerConnection(-1);
 		CommonTestUtils.config.setConnectionTestStatement("");
 		CommonTestUtils.config.setJdbcUrl(null);
 		CommonTestUtils.config.setUsername(null);
@@ -133,7 +132,6 @@ public class TestBoneCPConfig {
 		assertFalse(CommonTestUtils.config.getMinConnectionsPerPartition() == -1);
 		assertFalse(CommonTestUtils.config.getPartitionCount() == -1);
 		assertFalse(CommonTestUtils.config.getStatementsCacheSize() == -1);
-		assertFalse(CommonTestUtils.config.getStatementsCachedPerConnection() == -1);
 
 		CommonTestUtils.config.setMinConnectionsPerPartition(CommonTestUtils.config.getMaxConnectionsPerPartition()+1);
 		CommonTestUtils.config.sanitize();

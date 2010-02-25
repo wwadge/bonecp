@@ -54,7 +54,9 @@ public class StatementHandle implements Statement{
 	protected boolean logStatementsEnabled;
 	/** for logging of addBatch. */
 	private StringBuffer batchSQL = new StringBuffer();
+	/** If true, this statement is in the cache. */
 	public volatile boolean inCache = false;
+	/** Stack trace capture of where this statement was opened. */ 
 	public String openStackTrace;
     /** Class logger. */
     private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
@@ -970,15 +972,15 @@ public class StatementHandle implements Statement{
 	}
 
 
-	/**
+	/** Returns the stack trace where this statement was first opened.
 	 * @return the openStackTrace
 	 */
 	public String getOpenStackTrace() {
-		return openStackTrace;
+		return this.openStackTrace;
 	}
 
 
-	/**
+	/** Sets the stack trace where this statement was first opened.
 	 * @param openStackTrace the openStackTrace to set
 	 */
 	public void setOpenStackTrace(String openStackTrace) {

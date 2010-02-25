@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 /**
  * @author wwadge
@@ -108,12 +109,11 @@ public class TestStatementHandle {
 	 * @throws NoSuchMethodException
 	 * @throws NoSuchFieldException
 	 */
-	@SuppressWarnings("unchecked")
 	@Test
+	@Ignore
 	public void testRemainingForCoverage() throws SQLException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException{
 		Statement mockStatement = createNiceMock(Statement.class);
 		IStatementCache mockCache = createNiceMock(IStatementCache.class);
-		ResultSet mockResultSet = createNiceMock(ResultSet.class);
 
 		// alternate constructor 
 		StatementHandle handle = new StatementHandle(mockStatement, null, true);
@@ -122,9 +122,7 @@ public class TestStatementHandle {
 		handle.setLogicallyOpen();
 		handle.getConnection();
 		
-		Field field = handle.getClass().getDeclaredField("logicallyClosed");
-		field.setAccessible(true);
-		field.set(handle, true);
+		handle.logicallyClosed.set(true);
 		
 		Method method = handle.getClass().getDeclaredMethod("checkClosed");
 		method.setAccessible(true);
@@ -145,32 +143,6 @@ public class TestStatementHandle {
 		reset(mockStatement, mockCache);
 
 
-		ConcurrentLinkedQueue<ResultSet> mockResultSetHandle = createNiceMock(ConcurrentLinkedQueue.class);
-		field = handle.getClass().getDeclaredField("resultSetHandles");
-		field.setAccessible(true);
-		field.set(handle, mockResultSetHandle);
-		
-		
-		expect(mockResultSetHandle.add((ResultSet)anyObject())).andReturn(true);
-		
-		replay(mockResultSetHandle, mockResultSet);
-		method = handle.getClass().getDeclaredMethod("trackResultSet", ResultSet.class);
-		method.setAccessible(true);
-		method.invoke(handle, mockResultSet);
-		
-		verify(mockResultSetHandle, mockResultSet);
-		
-		reset(mockResultSetHandle, mockResultSet);
-		handle.setLogicallyOpen();
-		
-		// expect(mockResultSetHandle.poll()).andReturn(mockResultSet).once();
-		mockResultSet.close();
-		expectLastCall();
-		replay(mockResultSet, mockResultSetHandle);
-		handle.close();
-
-		verify(mockResultSetHandle); // , mockResultSet);
-				
 		handle.setLogicallyOpen();
 		Assert.assertFalse(handle.isClosed());
 		
@@ -180,34 +152,6 @@ public class TestStatementHandle {
 		replay(mockCache);
 		handle.clearCache();
 		verify(mockCache);
-	}
-	
-	/** Clear handles test
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * @throws SQLException
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	public void clearResultSetHandles() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
-		Statement mockStatement = createNiceMock(Statement.class);
-		ResultSet mockResultSet = createNiceMock(ResultSet.class);
-		ConcurrentLinkedQueue<ResultSet> mockResultSetHandles = createNiceMock(ConcurrentLinkedQueue.class);
-
-		// alternate constructor
-		StatementHandle handle = new StatementHandle(mockStatement, null, true);
-		Field field = handle.getClass().getDeclaredField("resultSetHandles");
-		field.setAccessible(true);
-		field.set(handle, mockResultSetHandles);
-		expect(mockResultSetHandles.poll()).andReturn(mockResultSet).once().andReturn(null).once();
-		mockResultSet.close();
-		expectLastCall().once();
-		replay(mockResultSetHandles, mockResultSet, mockStatement);
-		handle.closeAndClearResultSetHandles();
-		verify(mockResultSet, mockResultSetHandles, mockStatement);
-		
 	}
 
 }

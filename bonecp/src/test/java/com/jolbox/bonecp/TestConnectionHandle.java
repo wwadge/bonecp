@@ -93,8 +93,9 @@ public class TestConnectionHandle {
 		mockLogger = createNiceMock(Logger.class);
 		makeThreadSafe(mockLogger, true);
 		mockPool = createNiceMock(BoneCP.class);
+		mockPool.closeConnectionWatch=true;
 		testClass = new ConnectionHandle(mockConnection, mockPreparedStatementCache, mockCallableStatementCache, mockPool);
-		testStatementCache = new StatementCache(100, 100);
+		testStatementCache = new StatementCache(100);
 		Field field = testClass.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 		field.set(null, mockLogger);
@@ -108,7 +109,8 @@ public class TestConnectionHandle {
 	 */
 	@Before
 	public void before() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
-		reset(mockConnection, mockPreparedStatementCache, mockPool);
+		reset(mockConnection, mockPreparedStatementCache, mockPool, mockCallableStatementCache);
+
 		Field field = testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);
 		field.set(testClass, false);
@@ -144,7 +146,7 @@ public class TestConnectionHandle {
 		skipTests.add("getOriginatingPartition");
 		skipTests.add("setOriginatingPartition");
 		skipTests.add("renewConnection");
-		skipTests.add("clearStatementHandles");
+		skipTests.add("clearStatementCaches");
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
@@ -293,14 +295,6 @@ public class TestConnectionHandle {
 	public void testInternalClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException{
 		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
 		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
-		Field field = testClass.getClass().getDeclaredField("statementHandles");
-
-		field.setAccessible(true);
-		field.set(testClass, mockStatementHandles); 
-
-		expect(mockStatementHandles.poll()).andReturn(mockStatement).once().andReturn(null).once();
-		mockStatement.internalClose();
-		expectLastCall().once();
 		mockConnection.close();
 		expectLastCall().once().andThrow(new SQLException()).once();
 		replay(mockStatement, mockConnection, mockStatementHandles);
@@ -420,6 +414,8 @@ public class TestConnectionHandle {
 	 */
 	@Test
 	public void testPrepareStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+		expect(mockPool.captureStackTrace((String)anyObject())).andReturn("").anyTimes();
+		replay(mockPool);
 		prepareStatementTest(String.class);
 		prepareStatementTest(String.class, int.class);
 		prepareStatementTest(String.class, int[].class);
@@ -438,6 +434,9 @@ public class TestConnectionHandle {
 	 */
 	@Test
 	public void testCallableStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+		expect(mockPool.captureStackTrace((String)anyObject())).andReturn("").anyTimes();
+		replay(mockPool);
+	
 		callableStatementTest(String.class);
 		callableStatementTest(String.class, int.class, int.class);
 		callableStatementTest(String.class, int.class, int.class, int.class);
@@ -461,13 +460,11 @@ public class TestConnectionHandle {
 		}
 
 		Method prepStatementMethod = testClass.getClass().getMethod("prepareStatement", args);
-
+		
 		PreparedStatementHandle mockStatement = createNiceMock(PreparedStatementHandle.class);
-		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
-		Field field = testClass.getClass().getDeclaredField("statementHandles");
-		field.setAccessible(true);
-		field.set(testClass, mockStatementHandles);
-
+		mockStatement.setOpenStackTrace((String)anyObject());
+		expectLastCall().anyTimes();
+		
 		testClass.renewConnection(); // logically open the connection
 
 		// fetching a statement that is found in cache. Statement should be returned and marked as being (logically) open
@@ -479,16 +476,14 @@ public class TestConnectionHandle {
 		prepStatementMethod.invoke(testClass, params);
 		verify(mockStatement, mockPreparedStatementCache);
 
-		reset(mockStatement, mockPreparedStatementCache, mockStatementHandles);
+		reset(mockStatement, mockPreparedStatementCache);
 
 
 		// test for a cache miss
 		doStatementMock(mockPreparedStatementCache, null, params, args);
 		// we should be creating the preparedStatement because it's not in the cache
 		expect(prepStatementMethod.invoke(mockConnection, params)).andReturn(mockStatement);
-		// we should be tracking this statement
-		expect(mockStatementHandles.add(mockStatement)).andReturn(true);
-
+		
 		replay(mockStatement, mockPreparedStatementCache, mockConnection);
 		prepStatementMethod.invoke(testClass, params);
 		verify(mockStatement, mockPreparedStatementCache, mockConnection);
@@ -518,8 +513,8 @@ public class TestConnectionHandle {
 
 
 		// test for no cache defined
-		reset(mockStatement, mockPreparedStatementCache, mockConnection, mockStatementHandles);
-		field = testClass.getClass().getDeclaredField("preparedStatementCache");
+		reset(mockStatement, mockPreparedStatementCache, mockConnection);
+		Field field = testClass.getClass().getDeclaredField("preparedStatementCache");
 		field.setAccessible(true);
 		IStatementCache oldCache = (IStatementCache) field.get(testClass);
 		field.set(testClass, null);
@@ -527,16 +522,14 @@ public class TestConnectionHandle {
 
 		// we should be creating the preparedStatement because it's not in the cache
 		expect(mockConnectionPrepareStatementMethod.invoke(mockConnection, params)).andReturn(mockStatement);
-		// we should be tracking this statement
-		expect(mockStatementHandles.add(mockStatement)).andReturn(true);
 
-		replay(mockStatement, mockPreparedStatementCache, mockConnection, mockStatementHandles);
+		replay(mockStatement, mockPreparedStatementCache, mockConnection);
 		prepStatementMethod.invoke(testClass, params);
 		verify(mockStatement, mockPreparedStatementCache, mockConnection);
 		// restore sanity
 		field.set(testClass, oldCache);
 
-		reset(mockStatement, mockPreparedStatementCache, mockConnection, mockStatementHandles);
+		reset(mockStatement, mockPreparedStatementCache, mockConnection);
 
 	}
 
@@ -546,7 +539,7 @@ public class TestConnectionHandle {
 	 * @param params
 	 * @param args
 	 */
-	private void doStatementMock(IStatementCache cache, Statement returnVal, Object[] params, Class<?>... args) {
+	private void doStatementMock(IStatementCache cache, StatementHandle returnVal, Object[] params, Class<?>... args) {
 		expect(cache.get((String)anyObject())).andReturn(returnVal).anyTimes();
 //		expect(cache.calculateCacheKey((String)anyObject())).andReturn(testStatementCache.calculateCacheKey((String)params[0])).anyTimes();
 
@@ -593,9 +586,6 @@ public class TestConnectionHandle {
 
 		CallableStatementHandle mockStatement = createNiceMock(CallableStatementHandle.class);
 		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
-		Field field = testClass.getClass().getDeclaredField("statementHandles");
-		field.setAccessible(true);
-		field.set(testClass, mockStatementHandles);
 
 		testClass.renewConnection(); // logically open the connection
 
@@ -604,7 +594,7 @@ public class TestConnectionHandle {
 
 //		expect(mockCallableStatementCache.get((String)anyObject())).andReturn(mockStatement).anyTimes();
 
-		//	((StatementHandle)mockStatement).setLogicallyOpen();
+		((StatementHandle)mockStatement).setLogicallyOpen();
 		expectLastCall();
 		replay(mockStatement, mockCallableStatementCache);
 		prepCallMethod.invoke(testClass, params);
@@ -615,7 +605,6 @@ public class TestConnectionHandle {
 
 		// test for a cache miss
 		doStatementMock(mockCallableStatementCache, null, params, args);
-//		expect(mockCallableStatementCache.get((String)anyObject())).andReturn(null).once();
 
 		// we should be creating the preparedStatement because it's not in the cache
 		expect(prepCallMethod.invoke(mockConnection, params)).andReturn(mockStatement);
@@ -652,7 +641,7 @@ public class TestConnectionHandle {
 
 		// test for no cache defined
 		reset(mockStatement, mockCallableStatementCache, mockConnection);
-		field = testClass.getClass().getDeclaredField("callableStatementCache");
+		Field field = testClass.getClass().getDeclaredField("callableStatementCache");
 		field.setAccessible(true);
 		IStatementCache oldCache = (IStatementCache) field.get(testClass);
 		field.set(testClass, null);

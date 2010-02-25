@@ -20,8 +20,6 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
-import java.sql.SQLException;
-import java.sql.Statement;
 
 
 /**
@@ -150,6 +148,10 @@ public interface IStatementCache {
 	String calculateCacheKey(String sql, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability);
 
+	
+	/**
+	 * Checks that the entries in the cache have been properly closed when the connection dies down.
+	 */
 	void checkForProperClosure();
 
 

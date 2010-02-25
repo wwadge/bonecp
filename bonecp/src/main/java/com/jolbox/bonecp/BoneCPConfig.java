@@ -346,6 +346,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
+	 * DEPRECATED. No longer necessary to call at all. 
+	 * 
 	 * Sets no of statements cached per connection. 
 	 *
 	 * The number of prepared statements to cache per connection. This is usually only useful if you attempt to 

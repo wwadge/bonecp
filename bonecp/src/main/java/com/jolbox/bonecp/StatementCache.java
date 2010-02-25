@@ -21,7 +21,6 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
