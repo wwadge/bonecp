@@ -93,6 +93,8 @@ public class ConnectionHandle implements Connection {
 	private volatile String doubleCloseException = null;
 	/** If true, log sql statements. */
 	private boolean logStatementsEnabled;
+	/** Set to true if we have statement caching enabled. */
+	protected boolean statementCachingEnabled;
 
 	/**
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -133,7 +135,7 @@ public class ConnectionHandle implements Connection {
 		boolean tryAgain = false;
 
 		this.pool = pool;
-		do{
+		do{ 
 			try {
 				// keep track of this hook.
 				this.connectionHook = this.pool.getConfig().getConnectionHook();
@@ -147,7 +149,7 @@ public class ConnectionHandle implements Connection {
 				if (cacheSize > 0) {
 					this.preparedStatementCache = new StatementCache(cacheSize);
 					this.callableStatementCache = new StatementCache(cacheSize);
-
+					this.statementCachingEnabled = true;
 				}
 				// call the hook, if available.
 				if (this.connectionHook != null){
@@ -165,6 +167,22 @@ public class ConnectionHandle implements Connection {
 				}
 			}
 		} while (tryAgain);
+	}
+	
+	/** Private constructor used solely for unit testing. 
+	 * @param connection 
+	 * @param preparedStatementCache 
+	 * @param callableStatementCache 
+	 * @param pool */
+	public ConnectionHandle(Connection connection, IStatementCache preparedStatementCache, IStatementCache callableStatementCache, BoneCP pool){
+		this.connection = connection;
+		this.preparedStatementCache = preparedStatementCache;
+		this.callableStatementCache = callableStatementCache;
+		this.pool = pool;
+		int cacheSize = pool.getConfig().getStatementsCacheSize();
+		if (cacheSize > 0) {
+			this.statementCachingEnabled = true;
+		}
 	}
 
 	/** Sends any configured SQL init statement. 
@@ -184,17 +202,6 @@ public class ConnectionHandle implements Connection {
 		}
 	}
 
-	/** Private constructor used solely for unit testing. 
-	 * @param connection 
-	 * @param preparedStatementCache 
-	 * @param callableStatementCache 
-	 * @param pool */
-	public ConnectionHandle(Connection connection, IStatementCache preparedStatementCache, IStatementCache callableStatementCache, BoneCP pool){
-		this.connection = connection;
-		this.preparedStatementCache = preparedStatementCache;
-		this.callableStatementCache = callableStatementCache;
-		this.pool = pool;
-	}
 
 
 	/** 
@@ -572,7 +579,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.callableStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = sql;
 				result = this.callableStatementCache.get(cacheKey);
 			}
@@ -583,7 +590,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 	 		result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -601,7 +608,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.callableStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.callableStatementCache.calculateCacheKey(sql, resultSetType, resultSetConcurrency);
 				result = this.callableStatementCache.get(cacheKey);
 			}
@@ -612,7 +619,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 		} catch (Throwable t) {
@@ -631,7 +638,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.callableStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.callableStatementCache.calculateCacheKey(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 				result = this.callableStatementCache.get(cacheKey);
 			}
@@ -642,7 +649,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 		} catch (Throwable t) {
@@ -656,10 +663,10 @@ public class ConnectionHandle implements Connection {
 		StatementHandle result = null;
 		String cacheKey = null;
  
-		checkClosed();
+		checkClosed(); 
 
 		try {
-			if (this.preparedStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = sql;
 				result = this.preparedStatementCache.get(cacheKey);
 			}
@@ -670,7 +677,7 @@ public class ConnectionHandle implements Connection {
 
 			result.setLogicallyOpen();
 
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -688,7 +695,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.preparedStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.preparedStatementCache.calculateCacheKey(sql, autoGeneratedKeys);
 				result = this.preparedStatementCache.get(cacheKey);
 			}
@@ -697,7 +704,7 @@ public class ConnectionHandle implements Connection {
 				result = new PreparedStatementHandle(this.connection.prepareStatement(sql, autoGeneratedKeys), sql, this, cacheKey, this.preparedStatementCache);
 			}
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch  && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -716,7 +723,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.preparedStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.preparedStatementCache.calculateCacheKey(sql, columnIndexes);
 				result = this.preparedStatementCache.get(cacheKey);
 			}
@@ -727,7 +734,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch  && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -746,7 +753,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.preparedStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.preparedStatementCache.calculateCacheKey(sql, columnNames);
 				result = this.preparedStatementCache.get(cacheKey);
 			}
@@ -757,7 +764,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -776,7 +783,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.preparedStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.preparedStatementCache.calculateCacheKey(sql, resultSetType, resultSetConcurrency);
 				result = this.preparedStatementCache.get(cacheKey);
 			}
@@ -787,7 +794,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -807,7 +814,7 @@ public class ConnectionHandle implements Connection {
 		checkClosed();
 
 		try {
-			if (this.preparedStatementCache != null) {
+			if (this.statementCachingEnabled) {
 				cacheKey = this.preparedStatementCache.calculateCacheKey(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 				result = this.preparedStatementCache.get(cacheKey);
 			}
@@ -818,7 +825,7 @@ public class ConnectionHandle implements Connection {
 			}
 
 			result.setLogicallyOpen();
-			if (this.pool.closeConnectionWatch){ // debugging mode enabled?
+			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 
@@ -1020,15 +1027,14 @@ public class ConnectionHandle implements Connection {
 			this.doubleCloseException = null;
 		}
 	}
-
+ 
 
 	/** Clears out the statement handles.
 	 * @param internalClose if true, close the inner statement handle too. 
-	 * @throws SQLException
 	 */
-	protected void clearStatementCaches(boolean internalClose) throws SQLException {
+	protected void clearStatementCaches(boolean internalClose) {
 		
-		if (this.callableStatementCache != null && this.preparedStatementCache != null){ // safety
+		if (this.statementCachingEnabled){ // safety
 
 			if (internalClose){
 				this.callableStatementCache.clear();

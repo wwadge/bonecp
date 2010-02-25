@@ -21,12 +21,12 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 import static org.easymock.EasyMock.anyObject;
-import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
-import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.EasyMock.reset;
+import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -38,14 +38,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 
 /** Test class for statement cache
@@ -55,6 +53,8 @@ import org.junit.Test;
 public class TestStatementCache {
 	/** Mock handle. */
 	private static IStatementCache mockCache;
+	/** Mock handle. */
+	private static Logger mockLogger;
 
 	/** Mock setup.
 	 * @throws ClassNotFoundException
@@ -63,6 +63,10 @@ public class TestStatementCache {
 	public static void setup() throws ClassNotFoundException{
 		Class.forName("org.hsqldb.jdbcDriver");
 		mockCache = createNiceMock(IStatementCache.class);
+		mockLogger = createNiceMock(Logger.class);
+
+	
+
 	}
 	/**
 	 * Init.
@@ -95,7 +99,7 @@ public class TestStatementCache {
 		CommonTestUtils.config.setMaxConnectionsPerPartition(20);
 		CommonTestUtils.config.setAcquireIncrement(5);
 		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setStatementsCacheSize(0);
+		CommonTestUtils.config.setStatementsCacheSize(1);
 		dsb = new BoneCP(CommonTestUtils.config);
 
 		ConnectionHandle con = (ConnectionHandle) dsb.getConnection();
@@ -273,43 +277,6 @@ public class TestStatementCache {
 		CommonTestUtils.logPass();
 	}
 
-	/** Tests case when statement cache is full.
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * @throws SQLException
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	@Ignore
-	public void testStatementCachePutFull() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
-		BlockingQueue<String> mockHardCache = createNiceMock(BlockingQueue.class);
-		ConcurrentMap<Object, BlockingQueue<Statement>> mockLocalCache = createNiceMock(ConcurrentMap.class);
-		BlockingQueue<Statement> mockStatementCache = createNiceMock(BlockingQueue.class);
-		StatementHandle mockValue = org.easymock.classextension.EasyMock.createNiceMock(StatementHandle.class);
-		mockValue.inCache = false;
-		StatementCache testClass = new StatementCache(1);
-		Field field = testClass.getClass().getDeclaredField("cache");
-		field.setAccessible(true);
-		field.set(testClass, mockLocalCache);
-		
-		expect(mockLocalCache.putIfAbsent((String)anyObject(), (BlockingQueue)EasyMock.anyObject())).andReturn(mockStatementCache).once();
-		expect(mockHardCache.offer((String)anyObject())).andReturn(false).once();
-		
-		
-		expect(mockStatementCache.offer((Statement)anyObject())).andReturn(false).once();
-		mockValue.internalClose();
-		
-		replay(mockHardCache, mockLocalCache, mockStatementCache);
-		org.easymock.classextension.EasyMock.replay(mockValue);
-		
-		testClass.put("whatever", mockValue);
-		verify(mockValue);
-		verify(mockLocalCache, mockStatementCache);
-		
-		
-	}
 	
 	/** Tests statement cache clear.
 	 * @throws SecurityException
@@ -333,10 +300,10 @@ public class TestStatementCache {
 		
 		expect(mockCache.values()).andReturn(mockStatementCollections).anyTimes();
 		expect(mockStatementCollections.iterator()).andReturn(mockIterator).anyTimes();
-		expect(mockIterator.hasNext()).andReturn(true).once().andReturn(false).once();
-		expect(mockIterator.next()).andReturn(mockStatement).once();
+		expect(mockIterator.hasNext()).andReturn(true).times(2).andReturn(false).once();
+		expect(mockIterator.next()).andReturn(mockStatement).anyTimes();
 		mockStatement.internalClose();
-		expectLastCall().once();
+		expectLastCall().once().andThrow(new SQLException()).once();
 		
 		mockCache.clear();
 		expectLastCall().once();
@@ -346,5 +313,44 @@ public class TestStatementCache {
 		verify(mockCache, mockStatement);
 		
 	}
-	
+
+	/** Proper closure test
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testStatementCacheCheckForProperClosure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException {
+		
+		ConcurrentMap mockCache = createNiceMock(ConcurrentMap.class);
+		List<StatementHandle> mockStatementCollections = createNiceMock(List.class);
+		StatementCache testClass = new StatementCache(1);
+		Field field = testClass.getClass().getDeclaredField("cache");
+		field.setAccessible(true);
+		field.set(testClass, mockCache);
+		
+		field = testClass.getClass().getDeclaredField("logger");
+		field.setAccessible(true);
+		field.set(null, mockLogger);
+		
+		Iterator<StatementHandle> mockIterator = createNiceMock(Iterator.class);
+		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
+		
+		expect(mockCache.values()).andReturn(mockStatementCollections).anyTimes();
+		expect(mockStatementCollections.iterator()).andReturn(mockIterator).anyTimes();
+		expect(mockIterator.hasNext()).andReturn(true).once().andReturn(false).once();
+		expect(mockIterator.next()).andReturn(mockStatement).anyTimes();
+		expect(mockStatement.isClosed()).andReturn(false).once();
+		mockLogger.error((String)anyObject());
+		expectLastCall().once();
+		replay(mockCache, mockStatementCollections, mockIterator,mockStatement, mockLogger);
+		
+		testClass.checkForProperClosure();
+		verify(mockCache, mockStatement, mockLogger);
+		
+	}
+
 }

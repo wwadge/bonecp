@@ -20,28 +20,24 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 /**
  * @author wwadge
@@ -110,7 +106,6 @@ public class TestStatementHandle {
 	 * @throws NoSuchFieldException
 	 */
 	@Test
-	@Ignore
 	public void testRemainingForCoverage() throws SQLException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException{
 		Statement mockStatement = createNiceMock(Statement.class);
 		IStatementCache mockCache = createNiceMock(IStatementCache.class);
@@ -139,7 +134,7 @@ public class TestStatementHandle {
 		replay(mockStatement, mockCache); 
 
 		handle.internalClose();
-		verify(mockStatement, mockCache);
+		verify(mockStatement);
 		reset(mockStatement, mockCache);
 
 
@@ -152,6 +147,11 @@ public class TestStatementHandle {
 		replay(mockCache);
 		handle.clearCache();
 		verify(mockCache);
+		
+		handle.setOpenStackTrace("foo");
+		assertEquals("foo", handle.getOpenStackTrace());
+		handle.sql = "foo";
+		assertNotNull(handle.toString());
 	}
 
 }

@@ -89,11 +89,15 @@ public class TestConnectionHandle {
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockPreparedStatementCache = createNiceMock(IStatementCache.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
+		
 
 		mockLogger = createNiceMock(Logger.class);
 		makeThreadSafe(mockLogger, true);
 		mockPool = createNiceMock(BoneCP.class);
 		mockPool.closeConnectionWatch=true;
+		expect(mockPool.getConfig()).andReturn(CommonTestUtils.config).anyTimes();
+		CommonTestUtils.config.setStatementsCacheSize(1);
+		replay(mockPool);
 		testClass = new ConnectionHandle(mockConnection, mockPreparedStatementCache, mockCallableStatementCache, mockPool);
 		testStatementCache = new StatementCache(100);
 		Field field = testClass.getClass().getDeclaredField("logger");
@@ -514,11 +518,9 @@ public class TestConnectionHandle {
 
 		// test for no cache defined
 		reset(mockStatement, mockPreparedStatementCache, mockConnection);
-		Field field = testClass.getClass().getDeclaredField("preparedStatementCache");
-		field.setAccessible(true);
-		IStatementCache oldCache = (IStatementCache) field.get(testClass);
-		field.set(testClass, null);
+		boolean oldState = testClass.statementCachingEnabled;
 
+		testClass.statementCachingEnabled = false;
 
 		// we should be creating the preparedStatement because it's not in the cache
 		expect(mockConnectionPrepareStatementMethod.invoke(mockConnection, params)).andReturn(mockStatement);
@@ -527,7 +529,7 @@ public class TestConnectionHandle {
 		prepStatementMethod.invoke(testClass, params);
 		verify(mockStatement, mockPreparedStatementCache, mockConnection);
 		// restore sanity
-		field.set(testClass, oldCache);
+		testClass.statementCachingEnabled = oldState;
 
 		reset(mockStatement, mockPreparedStatementCache, mockConnection);
 
@@ -641,10 +643,9 @@ public class TestConnectionHandle {
 
 		// test for no cache defined
 		reset(mockStatement, mockCallableStatementCache, mockConnection);
-		Field field = testClass.getClass().getDeclaredField("callableStatementCache");
-		field.setAccessible(true);
-		IStatementCache oldCache = (IStatementCache) field.get(testClass);
-		field.set(testClass, null);
+		boolean oldState = testClass.statementCachingEnabled;
+
+		testClass.statementCachingEnabled = false;
 
 
 		// we should be creating the preparedStatement because it's not in the cache
@@ -654,7 +655,7 @@ public class TestConnectionHandle {
 		prepCallMethod.invoke(testClass, params);
 		verify(mockStatement, mockCallableStatementCache, mockConnection);
 		// restore sanity
-		field.set(testClass, oldCache);
+		testClass.statementCachingEnabled = oldState;
 
 		reset(mockStatement, mockCallableStatementCache, mockConnection);
 
@@ -703,4 +704,33 @@ public class TestConnectionHandle {
 	}
 	
 
+	/**
+	 * Test for clear statement caches.
+	 */
+	@Test
+	public void testClearStatementCaches(){
+		
+		testClass.statementCachingEnabled = true;
+		mockPreparedStatementCache.clear();
+		expectLastCall().once();
+		mockCallableStatementCache.clear();
+		expectLastCall().once();
+		
+		replay(mockPreparedStatementCache, mockCallableStatementCache);
+		testClass.clearStatementCaches(true);
+		verify(mockPreparedStatementCache, mockCallableStatementCache);
+		reset(mockPreparedStatementCache, mockCallableStatementCache);
+	
+		
+		mockPool.closeConnectionWatch = true;
+		mockPreparedStatementCache.checkForProperClosure();
+		expectLastCall().once();
+		mockCallableStatementCache.checkForProperClosure();
+		expectLastCall().once();
+
+		replay(mockPreparedStatementCache, mockCallableStatementCache);
+		testClass.clearStatementCaches(false);
+		verify(mockPreparedStatementCache, mockCallableStatementCache);
+		
+	}
 }

@@ -77,11 +77,11 @@ public class StatementHandle implements Statement{
 		this.sql = sql;
 		this.internalStatement = internalStatement;
 		this.cache = cache;
-		this.cacheKey = cacheKey;
+		this.cacheKey = cacheKey; 
 		this.connectionHandle = connectionHandle;
 		this.logStatementsEnabled = logStatementsEnabled;
 		
-		// store it in the cache (unless it's already there). FIXME: make this a direct call to putIfAbsent.
+		// store it in the cache if caching is enabled(unless it's already there). FIXME: make this a direct call to putIfAbsent.
 		if (this.cache != null){
 			this.cache.put(this.cacheKey, this);
 		}
