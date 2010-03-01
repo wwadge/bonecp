@@ -126,7 +126,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		String connectionTestStatement = props.getProperty(CONFIG_TEST_STATEMENT);
 
 		int preparedStatementCacheSize = configParseNumber(props, CONFIG_PREPARED_STATEMENT_CACHE_SIZE, 50);
-		int statementsCachedPerConnection = configParseNumber(props, CONFIG_STATEMENTS_CACHED_PER_CONNECTION, 30);
+//		int statementsCachedPerConnection = configParseNumber(props, CONFIG_STATEMENTS_CACHED_PER_CONNECTION, 30);
 		int minsize = configParseNumber(props, CONFIG_MIN_CONNECTIONS_PER_PARTITION, 20);
 		int maxsize = configParseNumber(props, CONFIG_MAX_CONNECTIONS_PER_PARTITION, 50);
 		int acquireIncrement = configParseNumber(props, CONFIG_ACQUIRE_INCREMENT, 10);
@@ -169,7 +169,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setIdleMaxAge(idleMaxAge);
 			this.config.setConnectionTestStatement(connectionTestStatement);
 			this.config.setStatementsCacheSize(preparedStatementCacheSize);
-			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
+//			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
 			this.config.setInitSQL(initSQL);
 			this.config.setCloseConnectionWatch(closeConnectionWatch);
 			this.config.setLogStatementsEnabled(logStatementsEnabled);

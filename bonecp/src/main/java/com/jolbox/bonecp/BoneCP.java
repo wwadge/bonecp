@@ -355,6 +355,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				return getConnection();
 			}});
 	}
+	
 	/**
 	 * Tests if this partition has hit a threshold and signal to the pool watch thread to create new connections
 	 * @param connectionPartition to test for.

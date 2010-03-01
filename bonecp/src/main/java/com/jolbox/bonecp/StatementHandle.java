@@ -338,6 +338,7 @@ public class StatementHandle implements Statement{
 		return result;
 
 	}
+	
 
 	/**
 	 * {@inheritDoc}
@@ -362,6 +363,7 @@ public class StatementHandle implements Statement{
 
 	}
 
+	
 	/**
 	 * {@inheritDoc}
 	 *
@@ -385,6 +387,7 @@ public class StatementHandle implements Statement{
 
 	}
 
+	
 	/**
 	 * {@inheritDoc}
 	 *
@@ -407,6 +410,7 @@ public class StatementHandle implements Statement{
 		return result; 
 
 	}
+	
 
 	/**
 	 * {@inheritDoc}
@@ -425,11 +429,11 @@ public class StatementHandle implements Statement{
 			result = this.internalStatement.executeUpdate(sql, columnNames);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-
 		}
+		
 		return result; 
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 *
