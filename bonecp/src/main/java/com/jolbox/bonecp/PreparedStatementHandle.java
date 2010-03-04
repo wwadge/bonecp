@@ -85,6 +85,17 @@ public class PreparedStatementHandle extends StatementHandle implements
 		this.cache = cache;
 	}
 
+	/** Helper method
+	 * @param o items to print
+	 * @return String for safe printing.
+	 */
+	protected String safePrint(Object... o){
+		StringBuilder sb = new StringBuilder();
+		for (Object obj: o){
+			sb.append(obj != null ? obj : "null");
+		}
+		return sb.toString();
+	}
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -152,7 +163,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			sb.append("[Param #");
 			sb.append(entry.getKey());
 			sb.append("] ");
-			sb.append(entry.getValue());
+			sb.append(safePrint(entry.getValue()));
 			sb.append("\n");
 		}
 		return sb.toString();
@@ -284,8 +295,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setAsciiStream(parameterIndex, x,
-					length);
+			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
 			if (this.logStatementsEnabled){
 				this.logParams.put(parameterIndex, x);
 			}
@@ -581,8 +591,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			long length) throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setCharacterStream(parameterIndex,
-					reader, length);
+			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader, length);
 			if (this.logStatementsEnabled){
 				this.logParams.put(parameterIndex, reader);
 			}
@@ -688,7 +697,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, x.toString()+", "+cal.toString());
+				this.logParams.put(parameterIndex, safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -935,7 +944,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType, typeName);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, "[SQL NULL of type "+sqlType+", type = "+typeName+"]");
+				this.logParams.put(parameterIndex, safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -1141,7 +1150,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, x+", cal="+cal);
+				this.logParams.put(parameterIndex, safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -1184,7 +1193,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, x+", cal="+cal);
+				this.logParams.put(parameterIndex, safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);

@@ -21,6 +21,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 
+import static org.easymock.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.reset;
 
@@ -53,6 +54,7 @@ public class TestCallableStatementHandle {
 		mockClass = createNiceMock(CallableStatementHandle.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
+		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		testClass = new CallableStatementHandle(mockClass, "",  mockConnection, "somesql", mockCallableStatementCache);
 
 	}
