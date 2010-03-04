@@ -40,8 +40,6 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -60,9 +58,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	private PreparedStatement internalPreparedStatement;
 	/** Class logger. */
     private static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
-    /** For logging purposes - stores parameters to be used for execution. */
-	protected Map<Object, Object> logParams = new TreeMap<Object, Object>();
-	
+    
 	
 	/**
 	 * PreparedStatement Wrapper constructor.

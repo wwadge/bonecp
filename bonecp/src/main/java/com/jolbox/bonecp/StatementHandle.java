@@ -25,6 +25,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -38,6 +40,8 @@ import org.slf4j.LoggerFactory;
  * @version $Revision$
  */
 public class StatementHandle implements Statement{
+	/** For logging purposes - stores parameters to be used for execution. */
+	protected Map<Object, Object> logParams = new TreeMap<Object, Object>();
 	/** Set to true if the connection has been "closed". */
 	protected AtomicBoolean logicallyClosed = new AtomicBoolean(false);
 	/** A handle to the actual statement. */
@@ -103,6 +107,9 @@ public class StatementHandle implements Statement{
 	@Override
 	public void close() throws SQLException {
 		this.logicallyClosed.set(true);
+		if (this.logStatementsEnabled){
+			this.logParams.clear();
+		}
 		if (this.cache == null || !this.inCache){ // no cache = throw it away right now
 			internalClose();
 		}
@@ -947,6 +954,9 @@ public class StatementHandle implements Statement{
 	 */
 	protected void internalClose() throws SQLException {
 		this.batchSQL = new StringBuffer();
+		if (this.logStatementsEnabled){
+			this.logParams.clear();
+		}
 		this.internalStatement.close();
 	}
 
