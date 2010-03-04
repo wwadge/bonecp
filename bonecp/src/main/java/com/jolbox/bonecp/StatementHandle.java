@@ -60,7 +60,7 @@ public class StatementHandle implements Statement{
 	public String openStackTrace;
     /** Class logger. */
     private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
-
+    
 
 	/**
 	 * Constructor to statement handle wrapper. 

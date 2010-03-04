@@ -40,6 +40,9 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +55,14 @@ import org.slf4j.LoggerFactory;
  */
 public class PreparedStatementHandle extends StatementHandle implements
 		PreparedStatement {
-
+	
 	/** Handle to the real prepared statement. */
 	private PreparedStatement internalPreparedStatement;
 	/** Class logger. */
     private static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
-
+    /** For logging purposes - stores parameters to be used for execution. */
+	protected Map<Object, Object> logParams = new TreeMap<Object, Object>();
+	
 	
 	/**
 	 * PreparedStatement Wrapper constructor.
@@ -107,6 +112,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.clearParameters();
+			if (this.logStatementsEnabled){
+				this.logParams.clear();
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -124,7 +132,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled){
-				logger.debug(this.sql);
+				logger.debug(fillLogParams(this.sql));
 			}
 			return this.internalPreparedStatement.execute();
 		} catch (Throwable t) {
@@ -132,6 +140,22 @@ public class PreparedStatementHandle extends StatementHandle implements
 			
 		}
 
+	}
+
+	/** Returns sql statement used in this prepared statement together with the parameters.
+	 * @param sql base sql statement
+	 * @return returns printable statement 
+	 */
+	private String fillLogParams(String sql) {
+		StringBuilder sb = new StringBuilder(sql+"\n");
+		for (Entry<Object, Object> entry: this.logParams.entrySet()){
+			sb.append("[Param #");
+			sb.append(entry.getKey());
+			sb.append("] ");
+			sb.append(entry.getValue());
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -144,7 +168,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled){
-				logger.debug(this.sql);
+				logger.debug(fillLogParams(this.sql));
 			}
 			return this.internalPreparedStatement.executeQuery();
 		} catch (Throwable t) {
@@ -164,7 +188,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled){
-				logger.debug(this.sql);
+				logger.debug(fillLogParams(this.sql));
 			}
 			return this.internalPreparedStatement.executeUpdate();
 		} catch (Throwable t) {
@@ -218,6 +242,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setArray(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -236,6 +263,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -256,6 +286,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x,
 					length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -274,8 +307,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setAsciiStream(parameterIndex, x,
-					length);
+			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -294,6 +329,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBigDecimal(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -312,6 +350,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -330,8 +371,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setBinaryStream(parameterIndex, x,
-					length);
+			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -350,8 +393,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setBinaryStream(parameterIndex, x,
-					length);
+			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -369,6 +414,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -387,6 +435,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, inputStream);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -404,8 +455,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setBlob(parameterIndex, inputStream,
-					length);
+			this.internalPreparedStatement.setBlob(parameterIndex, inputStream, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, inputStream);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -423,6 +476,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBoolean(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -440,6 +496,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setByte(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -457,6 +516,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBytes(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -474,8 +536,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setCharacterStream(parameterIndex,
-					reader);
+			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -496,6 +560,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -516,6 +583,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -533,6 +603,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -550,6 +623,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -567,8 +643,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setClob(parameterIndex, reader,
-					length);
+			this.internalPreparedStatement.setClob(parameterIndex, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -586,6 +665,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -605,6 +687,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x.toString()+", "+cal.toString());
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -622,6 +707,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDouble(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -639,6 +727,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setFloat(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -656,6 +747,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setInt(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -673,6 +767,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setLong(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -690,8 +787,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setNCharacterStream(parameterIndex,
-					value);
+			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
+
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -710,8 +810,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			long length) throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setNCharacterStream(parameterIndex,
-					value, length);
+			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -729,6 +831,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -746,6 +851,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -763,8 +871,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setNClob(parameterIndex, reader,
-					length);
+			this.internalPreparedStatement.setNClob(parameterIndex, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -783,6 +893,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNString(parameterIndex, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -800,6 +913,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, "[SQL NULL of type "+sqlType+"]");
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -817,8 +933,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setNull(parameterIndex, sqlType,
-					typeName);
+			this.internalPreparedStatement.setNull(parameterIndex, sqlType, typeName);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, "[SQL NULL of type "+sqlType+", type = "+typeName+"]");
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -836,6 +954,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -853,8 +974,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setObject(parameterIndex, x,
-					targetSqlType);
+			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -873,8 +996,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			int scaleOrLength) throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setObject(parameterIndex, x,
-					targetSqlType, scaleOrLength);
+			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -892,6 +1017,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setRef(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -909,6 +1037,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setRowId(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -927,6 +1058,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setSQLXML(parameterIndex, xmlObject);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, xmlObject);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -944,6 +1078,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setShort(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -961,6 +1098,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setString(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -978,6 +1118,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -997,6 +1140,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x+", cal="+cal);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1015,6 +1161,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1034,6 +1183,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x+", cal="+cal);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1051,6 +1203,9 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setURL(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -1070,8 +1225,10 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setUnicodeStream(parameterIndex, x,
-					length);
+			this.internalPreparedStatement.setUnicodeStream(parameterIndex, x, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 		}
