@@ -54,8 +54,10 @@ public class TestCallableStatementHandle {
 		mockClass = createNiceMock(CallableStatementHandle.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
+		
 		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		testClass = new CallableStatementHandle(mockClass, "",  mockConnection, "somesql", mockCallableStatementCache);
+		testClass.logStatementsEnabled=true;
 
 	}
 

@@ -36,6 +36,7 @@ import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MAX_CON
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MIN_CONNECTIONS_PER_PARTITION;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PARTITION_COUNT;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PREPARED_STATEMENT_CACHE_SIZE;
+import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_STATEMENT_CACHE_SIZE;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_RELEASE_HELPER_THREADS;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_STATEMENTS_CACHED_PER_CONNECTION;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_TEST_STATEMENT;
@@ -160,6 +161,7 @@ public class TestBoneCPConnectionProvider {
 	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException {
 		expect(mockProperties.getProperty(CONFIG_TEST_STATEMENT)).andReturn(null).anyTimes();
 		expect(mockProperties.getProperty(CONFIG_PREPARED_STATEMENT_CACHE_SIZE)).andReturn("40").anyTimes();
+		expect(mockProperties.getProperty(CONFIG_STATEMENT_CACHE_SIZE)).andReturn("40").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_STATEMENTS_CACHED_PER_CONNECTION)).andReturn("30").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_MIN_CONNECTIONS_PER_PARTITION)).andReturn("20").anyTimes();
 		expect(mockProperties.getProperty(CONFIG_MAX_CONNECTIONS_PER_PARTITION)).andReturn("50").anyTimes(); 

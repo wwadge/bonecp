@@ -92,6 +92,8 @@ public class TestSystemTests {
 		dsb.setMinConnectionsPerPartition("30");
 		dsb.setStatementsCachedPerConnection("30");
 		dsb.setStatementsCachedPerConnection(30);
+		dsb.setStatementCacheSize(30);
+		dsb.setStatementCacheSize("30");
 		dsb.setReleaseHelperThreads(0);
 		dsb.setReleaseHelperThreads("0");
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
@@ -167,9 +169,10 @@ public class TestSystemTests {
 		assertEquals(CommonTestUtils.url, dsb.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, dsb.getUsername());
 		assertEquals(CommonTestUtils.password, dsb.getPassword());
-		assertEquals("0", dsb.getPreparedStatementCacheSize());
+		assertEquals("30", dsb.getPreparedStatementCacheSize());
 		assertEquals("0", dsb.getReleaseHelperThreads());
 		assertEquals("30", dsb.getStatementsCachedPerConnection());
+		assertEquals("30", dsb.getStatementCacheSize());
 		assertEquals("test", dsb.getConnectionTestStatement());
 		assertEquals("org.hsqldb.jdbcDriver", dsb.getDriverClass());
 		assertEquals(CommonTestUtils.TEST_QUERY, dsb.getInitSQL());
