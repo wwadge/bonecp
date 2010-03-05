@@ -70,6 +70,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_PREPARED_STATEMENT_CACHE_SIZE = "bonecp.preparedStatementCacheSize";
 	/** Config key. */
+	protected static final String CONFIG_STATEMENT_CACHE_SIZE = "bonecp.statementCacheSize";
+	/** Config key. */
 	protected static final String CONFIG_TEST_STATEMENT = "bonecp.connectionTestStatement";
 	/** Config key. */
 	protected static final String CONFIG_CLOSE_CONNECTION_WATCH = "bonecp.closeConnectionWatch";
@@ -125,8 +127,10 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	throws HibernateException {
 		String connectionTestStatement = props.getProperty(CONFIG_TEST_STATEMENT);
 
-		int preparedStatementCacheSize = configParseNumber(props, CONFIG_PREPARED_STATEMENT_CACHE_SIZE, 50);
-//		int statementsCachedPerConnection = configParseNumber(props, CONFIG_STATEMENTS_CACHED_PER_CONNECTION, 30);
+		int statementCacheSize = configParseNumber(props, CONFIG_PREPARED_STATEMENT_CACHE_SIZE, 50);
+		if (statementCacheSize != 50){
+			statementCacheSize = configParseNumber(props, CONFIG_STATEMENT_CACHE_SIZE, 50);
+		}
 		int minsize = configParseNumber(props, CONFIG_MIN_CONNECTIONS_PER_PARTITION, 20);
 		int maxsize = configParseNumber(props, CONFIG_MAX_CONNECTIONS_PER_PARTITION, 50);
 		int acquireIncrement = configParseNumber(props, CONFIG_ACQUIRE_INCREMENT, 10);
@@ -168,8 +172,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
 			this.config.setIdleMaxAge(idleMaxAge);
 			this.config.setConnectionTestStatement(connectionTestStatement);
-			this.config.setStatementsCacheSize(preparedStatementCacheSize);
-//			this.config.setStatementsCachedPerConnection(statementsCachedPerConnection);
+			this.config.setStatementsCacheSize(statementCacheSize);
 			this.config.setInitSQL(initSQL);
 			this.config.setCloseConnectionWatch(closeConnectionWatch);
 			this.config.setLogStatementsEnabled(logStatementsEnabled);
