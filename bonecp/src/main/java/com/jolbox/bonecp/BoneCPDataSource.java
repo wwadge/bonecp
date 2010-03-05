@@ -53,7 +53,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	/** Config setting. */
 	private String minConnectionsPerPartition="10";
 	/** Config setting. */
-	private String preparedStatementCacheSize="50";
+	private String statementCacheSize="50";
 	/** Config setting. */
 	private String statementsCachedPerConnection="30";
 	/** Config setting. */
@@ -125,7 +125,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 		this.setMinConnectionsPerPartition(config.getMinConnectionsPerPartition());
 		this.setAcquireIncrement(config.getAcquireIncrement());
 		this.setConnectionTestStatement(config.getConnectionTestStatement());
-		this.setPreparedStatementCacheSize(config.getStatementsCacheSize());
+		this.setStatementCacheSize(config.getStatementsCacheSize());
 //		this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
 		this.setReleaseHelperThreads(config.getReleaseHelperThreads());
 		this.setConnectionHook(config.getConnectionHook());
@@ -177,7 +177,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 
 				long idleConnectionTestPeriod = parseNumber(this.idleConnectionTestPeriod, 60);
 				long idleMaxAge = parseNumber(this.idleMaxAge, 240); 
-				int psCacheSize = parseNumber(this.preparedStatementCacheSize, 100);
+				int psCacheSize = parseNumber(this.statementCacheSize, 100);
 //				int statementsCachedPerConnection = parseNumber(this.statementsCachedPerConnection, 30);
 				int acquireRetryDelay = parseNumber(this.acquireRetryDelay, 1000);
 				try {
@@ -627,7 +627,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	 * @return preparedStatementCacheSize
 	 */
 	public String getPreparedStatementCacheSize() {
-		return this.preparedStatementCacheSize;
+		return this.statementCacheSize;
 	}
 
 
@@ -637,18 +637,45 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	 * @param preparedStatementCacheSize to set
 	 */
 	public void setPreparedStatementCacheSize(String preparedStatementCacheSize) {
-		this.preparedStatementCacheSize = preparedStatementCacheSize;
+		this.statementCacheSize = preparedStatementCacheSize;
 	}
+
+	/**
+	 * Sets cache size for statements. Called via reflection 
+	 *
+	 * @param statementCacheSize to set
+	 */
+	public void setStatementCacheSize(Integer statementCacheSize) {
+		this.statementCacheSize = statementCacheSize.toString();
+	}
+
+	/**
+	 * Gets statementCacheSize to set.
+	 *
+	 * @return statementCacheSize
+	 */
+	public String getStatementCacheSize() {
+		return this.statementCacheSize;
+	}
+
 
 	/**
 	 * Sets cache size for prepared statements. Called via reflection 
 	 *
-	 * @param preparedStatementCacheSize to set
+	 * @param statementCacheSize to set
 	 */
-	public void setPreparedStatementCacheSize(Integer preparedStatementCacheSize) {
-		this.preparedStatementCacheSize = preparedStatementCacheSize.toString();
+	public void setStatementCacheSize(String statementCacheSize) {
+		this.statementCacheSize = statementCacheSize;
 	}
 
+	/**
+	 * Sets cache size for statements. Called via reflection 
+	 *
+	 * @param statementCacheSize to set
+	 */
+	public void setPreparedStatementCacheSize(Integer statementCacheSize) {
+		this.statementCacheSize = statementCacheSize.toString();
+	}
 	/**
 	 * Returns the total leased connections.
 	 *
