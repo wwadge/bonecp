@@ -528,15 +528,13 @@ public class ConnectionHandle implements Connection {
 		return result;
 	}
 
-	public boolean isClosed() throws SQLException {
-		boolean result = false;
-		checkClosed();
-		try {
-			result = this.connection.isClosed();
-		} catch (Throwable t) {
-			throw markPossiblyBroken(t);
-		}
-		return result;
+
+	/** Returns true if this connection has been (logically) closed.
+	 * @return the logicallyClosed setting.
+	 */
+	@Override
+	public boolean isClosed() {
+		return this.logicallyClosed;
 	}
 
 	public boolean isReadOnly() throws SQLException {
@@ -1077,13 +1075,6 @@ public class ConnectionHandle implements Connection {
 		return this.connectionHook;
 	}
 
-	/** Returns true if this connection has been logically closed.
-	 * @return the logicallyClosed setting.
-	 */
-	public boolean isLogicallyClosed() {
-		return this.logicallyClosed;
-	}
-
 	/** Returns true if logging of statements is enabled
 	 * @return logStatementsEnabled status
 	 */
@@ -1096,5 +1087,18 @@ public class ConnectionHandle implements Connection {
 	 */
 	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
 		this.logStatementsEnabled = logStatementsEnabled;
+	}
+	
+	/** {@inheritDoc}
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		if (!isClosed()){
+			close();
+			logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
+					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+		}
 	}
 }

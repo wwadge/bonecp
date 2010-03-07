@@ -147,7 +147,6 @@ public class CommonTestUtils {
 	private static void doTestStatementBounceMethod(ConnectionHandle mockConnection, Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		
-
 		if (method.getReturnType() == void.class){
 			method.invoke(mockClass, args);
 			expectLastCall().once().andThrow(new Error()).once();

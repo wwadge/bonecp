@@ -91,7 +91,7 @@ public class TestCloseThreadMonitor {
 		mockThread.join();
 	//	expectLastCall().once();
 		
-		expect(mockConnection.isLogicallyClosed()).andReturn(true).once();
+		expect(mockConnection.isClosed()).andReturn(true).once();
 		replay(mockConnection, mockLogger, mockThread);
 		testClass.run();
 		verify(mockConnection, mockLogger, mockThread);
@@ -107,7 +107,7 @@ public class TestCloseThreadMonitor {
 	public void testConnectionNotClosed() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		mockLogger.error((String)anyObject());
 		expectLastCall().once();
-		expect(mockConnection.isLogicallyClosed()).andReturn(false).once();
+		expect(mockConnection.isClosed()).andReturn(false).once();
 		replay(mockConnection, mockLogger);
 		testClass.run();
 		verify(mockConnection, mockLogger);
@@ -123,7 +123,7 @@ public class TestCloseThreadMonitor {
 	@Test
 	public void testConnectionInterrupted() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InterruptedException{
 		
-		expect(mockConnection.isLogicallyClosed()).andThrow(new RuntimeException()).once();
+		expect(mockConnection.isClosed()).andThrow(new RuntimeException()).once();
 		replay(mockConnection, mockLogger);
 		testClass.run();
 		verify(mockConnection, mockLogger);

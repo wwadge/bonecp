@@ -337,7 +337,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		return stringBuffer.toString();
 	}
 
-	/** Obtain a connection asynchronously by queuing a request to obtain a connection in a separate thread. 
+	/** Obtain a connection asynchronously by queueing a request to obtain a connection in a separate thread. 
 	 * 
 	 *  Use as follows:<p>
 	 *      Future&lt;Connection&gt; result = pool.getAsyncConnection();<p>
@@ -389,7 +389,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			if (handle.getConnectionHook() != null){
 				handle.getConnectionHook().onCheckIn(handle);
 			}
-
+  
 			// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
 			// close off the connection right away because the helper threads have gone away.
 			if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){

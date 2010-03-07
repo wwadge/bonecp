@@ -62,9 +62,9 @@ public class StatementHandle implements Statement{
 	public volatile boolean inCache = false;
 	/** Stack trace capture of where this statement was opened. */ 
 	public String openStackTrace;
-    /** Class logger. */
-    private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
-    
+	/** Class logger. */
+	private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
+
 
 	/**
 	 * Constructor to statement handle wrapper. 
@@ -84,7 +84,7 @@ public class StatementHandle implements Statement{
 		this.cacheKey = cacheKey; 
 		this.connectionHandle = connectionHandle;
 		this.logStatementsEnabled = logStatementsEnabled;
-		
+
 		// store it in the cache if caching is enabled(unless it's already there). FIXME: make this a direct call to putIfAbsent.
 		if (this.cache != null){
 			this.cache.put(this.cacheKey, this);
@@ -345,7 +345,7 @@ public class StatementHandle implements Statement{
 		return result;
 
 	}
-	
+
 
 	/**
 	 * {@inheritDoc}
@@ -370,7 +370,7 @@ public class StatementHandle implements Statement{
 
 	}
 
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -394,7 +394,7 @@ public class StatementHandle implements Statement{
 
 	}
 
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -417,7 +417,7 @@ public class StatementHandle implements Statement{
 		return result; 
 
 	}
-	
+
 
 	/**
 	 * {@inheritDoc}
@@ -437,10 +437,10 @@ public class StatementHandle implements Statement{
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 		}
-		
+
 		return result; 
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -999,5 +999,17 @@ public class StatementHandle implements Statement{
 	 */
 	public void setOpenStackTrace(String openStackTrace) {
 		this.openStackTrace = openStackTrace;
+	}
+
+	/** {@inheritDoc}
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		if (!isClosed()){
+			close();
+			logger.warn("BoneCP detected an unclosed statement and has closed it for you. You should be closing this statement in your application - enable connectionWatch and statement caching for additional debugging assistance.");
+		}
 	}
 }

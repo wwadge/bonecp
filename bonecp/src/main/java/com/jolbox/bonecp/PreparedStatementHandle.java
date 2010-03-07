@@ -1240,4 +1240,16 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
+	/** {@inheritDoc}
+	 * @see java.lang.Object#finalize()
+	 *
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		  if (!isClosed()){
+			  close();
+			  logger.warn("BoneCP detected an unclosed statement and has closed it for you. You should be closing this statement in your application - enable connectionWatch config setting for additional debugging assistance.");
+		   }
+	}
+	*/
 }

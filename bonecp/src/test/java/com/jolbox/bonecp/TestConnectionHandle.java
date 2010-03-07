@@ -138,6 +138,7 @@ public class TestConnectionHandle {
 		skipTests.add("markPossiblyBroken");
 		skipTests.add("trackStatement");
 		skipTests.add("checkClosed");
+		skipTests.add("isClosed");
 		skipTests.add("internalClose");
 		skipTests.add("prepareCall");
 		skipTests.add("prepareStatement");
@@ -210,7 +211,7 @@ public class TestConnectionHandle {
 
 		field.setAccessible(true);
 		Assert.assertTrue(field.getBoolean(testClass));
-
+		assertTrue(testClass.isClosed());
 		
 
 		testClass.renewConnection();
@@ -401,7 +402,7 @@ public class TestConnectionHandle {
 		field = testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);
 		field.setBoolean(testClass, true);
-		assertTrue(testClass.isLogicallyClosed());
+		assertTrue(testClass.isClosed());
 		
 		testClass.setLogStatementsEnabled(true);
 		assertTrue(testClass.isLogStatementsEnabled());
