@@ -79,6 +79,8 @@ public class TestPoolWatchThread {
     	expect(mockConfig.getStatementsCacheSize()).andReturn(0).anyTimes();
 //    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes(); 
     	expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
+    	expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();
+
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		expect(mockConfig.isLazyInit()).andReturn(true).anyTimes();
 		
@@ -149,6 +151,7 @@ public class TestPoolWatchThread {
 	@Test
 	public void testRunCreateConnections() throws InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		expect(mockLogger.isDebugEnabled()).andReturn(true).anyTimes();
+
 		ArrayBlockingQueue<ConnectionHandle> fakeConnections = new ArrayBlockingQueue<ConnectionHandle>(5);
 		mockPartition.almostFullWait();
 		expectLastCall().anyTimes();
@@ -212,7 +215,7 @@ public class TestPoolWatchThread {
 
 		first = true;
 		expect(mockPartition.getFreeConnections()).andReturn(fakeConnections).anyTimes();
-
+		
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
 
 			@Override
@@ -243,7 +246,10 @@ public class TestPoolWatchThread {
 				
 			} 
 		}).once();
-		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes(); 
+		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes();
+    	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+
+		expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();
 
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall(); 

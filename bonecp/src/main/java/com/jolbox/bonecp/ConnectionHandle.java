@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
 
 /**
  * Connection handle wrapper around a JDBC connection.
@@ -102,7 +103,7 @@ public class ConnectionHandle implements Connection {
 	/** If true, connection is currently playing back a saved transaction. */
 	private boolean inReplayMode;
 	/** Map of translations + result from last recovery. */
-	protected RecoveryResult recoveryResult = new RecoveryResult();
+	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	private final String url;	
 	/** Connection username. */
@@ -169,8 +170,8 @@ public class ConnectionHandle implements Connection {
 		}
 	}
 
-	/**
-	 * @return 
+	/** Obtains a database connection, retrying if necessary.
+	 * @return A DB connection.
 	 * @throws SQLException
 	 */
 	protected Connection obtainInternalConnection() throws SQLException {
@@ -185,6 +186,10 @@ public class ConnectionHandle implements Connection {
 
 				this.connection = DriverManager.getConnection(this.url, this.username, this.password);
 				tryAgain = false;
+
+				if (acquireRetryAttempts != this.pool.getConfig().getAcquireRetryAttempts()){
+					logger.info("Successfully re-established connection to DB");
+				}
 				// call the hook, if available.
 				if (this.connectionHook != null){
 					this.connectionHook.onAcquire(this);
@@ -291,9 +296,10 @@ public class ConnectionHandle implements Connection {
 
 
 		//		char firstChar = state.charAt(0);
-		// if it's a communication exception (or a mysql deadlock), flag this connection as being potentially broken.
+		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
-		if (state.equals("40001") || state.startsWith("08")){
+		char firstChar = state.charAt(0);
+		if (state.equals("40001") || state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
 			this.possiblyBroken = true;
 		}
 

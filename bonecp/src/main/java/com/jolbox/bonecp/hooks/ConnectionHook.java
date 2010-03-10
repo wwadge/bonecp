@@ -41,7 +41,7 @@ import com.jolbox.bonecp.ConnectionHandle;
 public interface ConnectionHook {
 
 	/** Called upon getting a new connection from the JDBC driver (and prior to
-	 * inserting into the pool). You may call connection.getRawConnection() to obtain
+	 * inserting into the pool). You may call connection.getInternalConnection() to obtain
 	 * a handle to the actual (unwrapped) connection obtained from the driver. 
 	 * @param connection Handle to the new connection
 	 */
@@ -67,10 +67,12 @@ public interface ConnectionHook {
 	void onDestroy(ConnectionHandle connection); 
 	
 	/** Called on attempting (and failing) to acquire a connection. Note that implementing this means that acquireRetry/delay logic
-	 * is disabled so as to give you maximum control.
+	 * will be overridden by this code.
 	 * @param t Exception that occurred.
 	 * @return Return true to attempt the connection again.
 	 */
 	boolean onAcquireFail(Throwable t);
+	
+	
 	 
 }

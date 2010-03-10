@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.jolbox.bonecp;
+package com.jolbox.bonecp.proxy;
 
 import java.sql.CallableStatement;
 
@@ -10,5 +10,5 @@ import java.sql.CallableStatement;
  *
  */
 public interface CallableStatementProxy extends CallableStatement {
-
+	// just a way to get our proxy to work with driver-specific types
 }

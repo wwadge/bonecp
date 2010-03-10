@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.jolbox.bonecp;
+package com.jolbox.bonecp.proxy;
 
 import java.sql.PreparedStatement;
 
@@ -10,5 +10,5 @@ import java.sql.PreparedStatement;
  *
  */
 public interface PreparedStatementProxy extends PreparedStatement {
-
+	// just a way to get our proxy to work with driver-specific types
 }

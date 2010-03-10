@@ -18,8 +18,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
+import com.jolbox.bonecp.proxy.CallableStatementProxy;
+import com.jolbox.bonecp.proxy.ConnectionProxy;
+import com.jolbox.bonecp.proxy.PreparedStatementProxy;
+import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
+import com.jolbox.bonecp.proxy.StatementProxy;
 
-/**
+/** This code takes care of recording and playing back of transactions (when a failure occurs). The idea behind this is to wrap a connection
+ * or statement with proxies and log all method calls. When a failure occurs, thrash the inner connection, obtain a new one and play back
+ * the previously recorded methods. 
+ * 
  * @author Wallace
  *
  */
@@ -96,11 +104,13 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	public Object invoke(Object proxy, Method method,
 			Object[] args) throws Throwable {
 
-		if (this.connectionHandle.isInReplayMode()){
+		Object result;
+
+		if (this.connectionHandle.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
 			return method.invoke(this.target, args);
 		}
-		Object result;
-		if (this.connectionHandle.recoveryResult != null){
+		
+		if (this.connectionHandle.recoveryResult != null){ // if we previously failed, do the mapping to the new connection/statements
 			Object remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.target);
 			if (remap != null){
 				this.target = remap;
@@ -110,10 +120,12 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				this.connectionHandle = (ConnectionHandle) remap;
 			}
 		}
+		
 		// record this invocation
 		if (!this.connectionHandle.isInReplayMode() && !method.getName().equals("hashCode") && !method.getName().equals("equals") && !method.getName().equals("toString")){
 			this.connectionHandle.getReplayLog().add(new ReplayLog(this.target, method, args));
 		}
+		
 		try{
 			// swap with proxies to these too.
 			if (method.getName().equals("createStatement")){
@@ -127,6 +139,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			}
 			else result = method.invoke(this.target, args);
 
+			// when we commit/close/rollback, destroy our log
 			if (!this.connectionHandle.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
 				this.connectionHandle.getReplayLog().clear();
 				this.connectionHandle.recoveryResult.getReplaceTarget().clear();
@@ -162,8 +175,8 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	 * @throws SQLException 
 	 * 
 	 */
-	private RecoveryResult attemptRecovery(List<ReplayLog> oldReplayLog) throws SQLException{
-		RecoveryResult recoveryResult = this.connectionHandle.recoveryResult;
+	private TransactionRecoveryResult attemptRecovery(List<ReplayLog> oldReplayLog) throws SQLException{
+		TransactionRecoveryResult recoveryResult = this.connectionHandle.recoveryResult;
 		List<PreparedStatement> prepStatementTarget = new ArrayList<PreparedStatement>();
 		List<CallableStatement> callableStatementTarget = new ArrayList<CallableStatement>();
 		List<Statement> statementTarget = new ArrayList<Statement>();

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.jolbox.bonecp;
+package com.jolbox.bonecp.proxy;
 
 import java.sql.Connection;
 
@@ -10,7 +10,6 @@ import java.sql.Connection;
  *
  */
 public interface ConnectionProxy extends Connection {
-
-
+	// just a way to get our proxy to work with driver-specific types
 }
 
