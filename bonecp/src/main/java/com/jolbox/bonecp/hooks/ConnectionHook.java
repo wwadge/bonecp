@@ -66,7 +66,8 @@ public interface ConnectionHook {
 	 */
 	void onDestroy(ConnectionHandle connection); 
 	
-	/** Called on attempting (and failing) to acquire a connection.
+	/** Called on attempting (and failing) to acquire a connection. Note that implementing this means that acquireRetry/delay logic
+	 * is disabled so as to give you maximum control.
 	 * @param t Exception that occurred.
 	 * @return Return true to attempt the connection again.
 	 */

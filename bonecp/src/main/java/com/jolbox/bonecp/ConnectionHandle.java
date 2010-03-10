@@ -97,13 +97,20 @@ public class ConnectionHandle implements Connection {
 	private boolean logStatementsEnabled;
 	/** Set to true if we have statement caching enabled. */
 	protected boolean statementCachingEnabled;
-	/** If set to true, stores all activity on this connection to allow for replaying it again. */
-	protected boolean replayTransaction = true;
+	/** The recorded actions list used to replay the transaction. */
 	private List<ReplayLog> replayLog;
-	protected boolean inReplayMode;
+	/** If true, connection is currently playing back a saved transaction. */
+	private boolean inReplayMode;
+	/** Map of translations + result from last recovery. */
 	protected RecoveryResult recoveryResult = new RecoveryResult();
+	/** Connection url. */
+	private final String url;	
+	/** Connection username. */
+	private final String username;
+	/** Connection password. */
+	private final String password;
 
-	
+
 	/**
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -138,50 +145,79 @@ public class ConnectionHandle implements Connection {
 	public ConnectionHandle(String url, String username, String password,
 			BoneCP pool) throws SQLException {
 
-		boolean tryAgain = false;
 
 		this.pool = pool;
+		this.url = url;
+		this.username = username;
+		this.password = password;
+		this.connection = obtainInternalConnection();
+
+		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
+			this.replayLog = new ArrayList<ReplayLog>(30);
+			// this kick-starts recording everything
+			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
+		}
+
+
+		this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
+		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
+		int cacheSize = pool.getConfig().getStatementsCacheSize();
+		if (cacheSize > 0) {
+			this.preparedStatementCache = new StatementCache(cacheSize);
+			this.callableStatementCache = new StatementCache(cacheSize);
+			this.statementCachingEnabled = true;
+		}
+	}
+
+	/**
+	 * @return 
+	 * @throws SQLException
+	 */
+	protected Connection obtainInternalConnection() throws SQLException {
+		boolean tryAgain = false;
+		Connection result = null;
+		int acquireRetryAttempts = this.pool.getConfig().getAcquireRetryAttempts();
+		int acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
+		this.connectionHook = this.pool.getConfig().getConnectionHook();
 		do{ 
 			try {
 				// keep track of this hook.
-				this.connectionHook = this.pool.getConfig().getConnectionHook();
 
-				this.connection = DriverManager.getConnection(url, username,
-						password);
-
-				if (this.replayTransaction){
-					this.replayLog = new ArrayList<ReplayLog>();
-					// this kick-starts recording everything
-					this.connection = MemorizeTransactionProxy.memorize(this.connection, this.replayLog, this);
-				}
-
-
-				this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
-				this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
-				int cacheSize = pool.getConfig().getStatementsCacheSize();
-				if (cacheSize > 0) {
-					this.preparedStatementCache = new StatementCache(cacheSize);
-					this.callableStatementCache = new StatementCache(cacheSize);
-					this.statementCachingEnabled = true;
-				}
+				this.connection = DriverManager.getConnection(this.url, this.username, this.password);
+				tryAgain = false;
 				// call the hook, if available.
 				if (this.connectionHook != null){
 					this.connectionHook.onAcquire(this);
 				}
 
 				sendInitSQL();
+				result = this.connection;
 			} catch (Throwable t) {
 				// call the hook, if available.
 				if (this.connectionHook != null){
 					tryAgain = this.connectionHook.onAcquireFail(t);
+				} else {
+					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelay+"ms. Attempts left: "+acquireRetryAttempts);
+
+					try {
+						Thread.sleep(acquireRetryDelay);
+						if (acquireRetryAttempts > 0){
+							tryAgain = (--acquireRetryAttempts) != 0;
+						}
+					} catch (InterruptedException e) {
+						tryAgain=false;
+					}
 				}
 				if (!tryAgain){
 					throw markPossiblyBroken(t);
 				}
 			}
 		} while (tryAgain);
+
+		return result;
+
 	}
-	
+
 	/** Private constructor used solely for unit testing. 
 	 * @param connection 
 	 * @param preparedStatementCache 
@@ -192,6 +228,9 @@ public class ConnectionHandle implements Connection {
 		this.preparedStatementCache = preparedStatementCache;
 		this.callableStatementCache = callableStatementCache;
 		this.pool = pool;
+		this.url=null;
+		this.username=null;
+		this.password=null;
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
 		if (cacheSize > 0) {
 			this.statementCachingEnabled = true;
@@ -251,7 +290,7 @@ public class ConnectionHandle implements Connection {
 		//         conditions.
 
 
-//		char firstChar = state.charAt(0);
+		//		char firstChar = state.charAt(0);
 		// if it's a communication exception (or a mysql deadlock), flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
 		if (state.equals("40001") || state.startsWith("08")){
@@ -602,7 +641,7 @@ public class ConnectionHandle implements Connection {
 						sql, this, cacheKey, this.callableStatementCache);
 			}
 
-	 		result.setLogicallyOpen();
+			result.setLogicallyOpen();
 			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
@@ -675,7 +714,7 @@ public class ConnectionHandle implements Connection {
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		StatementHandle result = null;
 		String cacheKey = null;
- 
+
 		checkClosed(); 
 
 		try {
@@ -1040,13 +1079,13 @@ public class ConnectionHandle implements Connection {
 			this.doubleCloseException = null;
 		}
 	}
- 
+
 
 	/** Clears out the statement handles.
 	 * @param internalClose if true, close the inner statement handle too. 
 	 */
 	protected void clearStatementCaches(boolean internalClose) {
-		
+
 		if (this.statementCachingEnabled){ // safety
 
 			if (internalClose){
@@ -1084,7 +1123,7 @@ public class ConnectionHandle implements Connection {
 	public Connection getRawConnection() {
 		return this.connection;
 	}
-	
+
 	/** Returns the internal connection as obtained via the JDBC driver.
 	 * @return the raw connection
 	 */
@@ -1112,7 +1151,7 @@ public class ConnectionHandle implements Connection {
 	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
 		this.logStatementsEnabled = logStatementsEnabled;
 	}
-	
+
 	/** {@inheritDoc}
 	 * @see java.lang.Object#finalize()
 	 */
@@ -1122,7 +1161,7 @@ public class ConnectionHandle implements Connection {
 		if (!isClosed()){
 			close();
 			logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
-					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+			"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
 		}
 	}
 
@@ -1139,7 +1178,7 @@ public class ConnectionHandle implements Connection {
 	protected void setInReplayMode(boolean inReplayMode) {
 		this.inReplayMode = inReplayMode;
 	}
-	
+
 	/** Sends a test query to the underlying connection and return true if connection is alive.
 	 * @return True if connection is valid, false otherwise.
 	 */
@@ -1162,15 +1201,15 @@ public class ConnectionHandle implements Connection {
 		return this.pool;
 	}
 
-	/**
-	 * @return
+	/** Returns transaction history log
+	 * @return replay list
 	 */
 	public List<ReplayLog> getReplayLog() {
 		return this.replayLog;
 	}
 
-	/**
-	 * @param replayLog2
+	/** Sets the transaction history log
+	 * @param replayLog to set.
 	 */
 	protected void setReplayLog(List<ReplayLog> replayLog) {
 		this.replayLog = replayLog;

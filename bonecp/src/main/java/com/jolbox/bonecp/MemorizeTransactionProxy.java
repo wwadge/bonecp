@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -21,146 +24,165 @@ import com.google.common.collect.ImmutableSet;
  *
  */
 public class MemorizeTransactionProxy implements InvocationHandler {
-
+	/** Target of proxy. */
 	private Object target;
+	/** Connection handle. */
 	private ConnectionHandle connectionHandle;
-	private List<ReplayLog> replayLog;
+	/** List of methods that will trigger a reset of the transaction. */
 	private static final ImmutableSet<String> clearLogConditions = ImmutableSet.of("rollback", "commit", "close"); 
+	/** Class logger. */
+	private static final Logger logger = LoggerFactory.getLogger(MemorizeTransactionProxy.class);
 
 
-	public static Connection memorize(final Connection target, List<ReplayLog> replayLog, final ConnectionHandle connectionHandle) {
+	/** Wrap connection with a proxy.
+	 * @param target connection handle
+	 * @param connectionHandle originating bonecp connection
+	 * @return Proxy to a connection.
+	 */
+	protected static Connection memorize(final Connection target, final ConnectionHandle connectionHandle) {
 
 		return (Connection) Proxy.newProxyInstance(
 				ConnectionProxy.class.getClassLoader(),
 				new Class[] {ConnectionProxy.class},
-				new MemorizeTransactionProxy(target, replayLog, connectionHandle));
+				new MemorizeTransactionProxy(target, connectionHandle));
 	}
 
-	public static Statement memorize(final Statement target, List<ReplayLog> replayLog, final ConnectionHandle connectionHandle) {
+	/** Wrap Statement with a proxy.
+	 * @param target statement handle
+	 * @param connectionHandle originating bonecp connection
+	 * @return Proxy to a statement.
+	 */
+	protected static Statement memorize(final Statement target, final ConnectionHandle connectionHandle) {
 		return (Statement) Proxy.newProxyInstance(
 				StatementProxy.class.getClassLoader(),
 				new Class[] {StatementProxy.class},
-				new MemorizeTransactionProxy(target, replayLog, connectionHandle));
+				new MemorizeTransactionProxy(target, connectionHandle));
 	}
 
-	public static PreparedStatement memorize(final PreparedStatement target, List<ReplayLog> replayLog, final ConnectionHandle connectionHandle) {
+	/** Wrap PreparedStatement with a proxy.
+	 * @param target statement handle
+	 * @param connectionHandle originating bonecp connection
+	 * @return Proxy to a Preparedstatement.
+	 */
+	protected static PreparedStatement memorize(final PreparedStatement target, final ConnectionHandle connectionHandle) {
 		return (PreparedStatement) Proxy.newProxyInstance(
 				PreparedStatementProxy.class.getClassLoader(),
 				new Class[] {PreparedStatementProxy.class},
-				new MemorizeTransactionProxy(target, replayLog, connectionHandle));
+				new MemorizeTransactionProxy(target, connectionHandle));
 	}
 
-	public static CallableStatement memorize(final CallableStatement target, List<ReplayLog> replayLog, final ConnectionHandle connectionHandle) {
+
+	/** Wrap CallableStatement with a proxy.
+	 * @param target statement handle
+	 * @param connectionHandle originating bonecp connection
+	 * @return Proxy to a Callablestatement.
+	 */
+	protected static CallableStatement memorize(final CallableStatement target, final ConnectionHandle connectionHandle) {
 		return (CallableStatement) Proxy.newProxyInstance(
 				CallableStatementProxy.class.getClassLoader(),
 				new Class[] {CallableStatementProxy.class},
-				new MemorizeTransactionProxy(target, replayLog, connectionHandle));
+				new MemorizeTransactionProxy(target, connectionHandle));
 	}
 
-	private MemorizeTransactionProxy(Object target, List<ReplayLog> replayLog, ConnectionHandle connectionHandle) {
+	/** Main constructor
+	 * @param target target to actual handle
+	 * @param connectionHandle bonecp ref
+	 */
+	private MemorizeTransactionProxy(Object target, ConnectionHandle connectionHandle) {
 		this.target = target;
-		this.replayLog = replayLog;
 		this.connectionHandle = connectionHandle;
 	}
 
 	public Object invoke(Object proxy, Method method,
 			Object[] args) throws Throwable {
 
+		if (this.connectionHandle.isInReplayMode()){
+			return method.invoke(this.target, args);
+		}
 		Object result;
-		int allowedFailedAttemptsRemaining = 3;
-		do{
-			if (this.connectionHandle.recoveryResult != null){
-				Object remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.target);
-				if (remap != null){
-					this.target = remap;
-				}
-				remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.connectionHandle);
-				if (remap != null){
-					this.connectionHandle = (ConnectionHandle) remap;
-				}
+		if (this.connectionHandle.recoveryResult != null){
+			Object remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.target);
+			if (remap != null){
+				this.target = remap;
 			}
-			// record this invocation
-			if (!this.connectionHandle.inReplayMode){
-				this.replayLog.add(new ReplayLog(this.target, method, args));
+			remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.connectionHandle);
+			if (remap != null){
+				this.connectionHandle = (ConnectionHandle) remap;
 			}
-			try{
-				// swap with proxies to these too.
-				if (method.getName().equals("createStatement")){
-					result = memorize((Statement)method.invoke(this.target, args), this.replayLog, this.connectionHandle);
-				}
-				else if (method.getName().equals("prepareStatement")){
-					result = memorize((PreparedStatement)method.invoke(this.target, args), this.replayLog, this.connectionHandle);
-				}
-				else if (method.getName().equals("prepareCall")){
-					result = memorize((CallableStatement)method.invoke(this.target, args), this.replayLog, this.connectionHandle);
-				}
-				else result = method.invoke(this.target, args);
-				
-				if (!this.connectionHandle.inReplayMode && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
-					this.replayLog.clear();
-					this.connectionHandle.recoveryResult.getReplaceTarget().clear();
-				}
-				return result;
-			} catch (Throwable t){
-				List<ReplayLog> oldReplayLog = this.connectionHandle.getReplayLog();
-				this.connectionHandle.inReplayMode = true; // stop recording
+		}
+		// record this invocation
+		if (!this.connectionHandle.isInReplayMode() && !method.getName().equals("hashCode") && !method.getName().equals("equals") && !method.getName().equals("toString")){
+			this.connectionHandle.getReplayLog().add(new ReplayLog(this.target, method, args));
+		}
+		try{
+			// swap with proxies to these too.
+			if (method.getName().equals("createStatement")){
+				result = memorize((Statement)method.invoke(this.target, args), this.connectionHandle);
+			}
+			else if (method.getName().equals("prepareStatement")){
+				result = memorize((PreparedStatement)method.invoke(this.target, args), this.connectionHandle);
+			}
+			else if (method.getName().equals("prepareCall")){
+				result = memorize((CallableStatement)method.invoke(this.target, args), this.connectionHandle);
+			}
+			else result = method.invoke(this.target, args);
 
-				this.connectionHandle.markPossiblyBroken(t.getCause()); // this will possible terminate all connections here
-
-				if (this.connectionHandle.isPossiblyBroken()){ // connection is possibly recoverable...  
-					// let's try and recover
-					try{
-						this.connectionHandle.recoveryResult = attemptRecovery(oldReplayLog); // this might also fail
-						this.replayLog = oldReplayLog; // markPossiblyBroken will probably destroy our original connection handle
-						this.connectionHandle.inReplayMode = false; // start recording again
-						return this.connectionHandle.recoveryResult.getResult();
-					} catch(Throwable t2){
-						allowedFailedAttemptsRemaining--;
-						if (allowedFailedAttemptsRemaining == 0){
-							throw t; // throw the original exception
-						}
-					}
-				} else{
-					throw t.getCause();
-				}
+			if (!this.connectionHandle.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
+				this.connectionHandle.getReplayLog().clear();
+				this.connectionHandle.recoveryResult.getReplaceTarget().clear();
 			}
-		} while(allowedFailedAttemptsRemaining >= 0);
-		return null; // never reached
+			return result;
+		} catch (Throwable t){
+			List<ReplayLog> oldReplayLog = this.connectionHandle.getReplayLog();
+			this.connectionHandle.setInReplayMode(true); // stop recording
+
+			this.connectionHandle.markPossiblyBroken(t.getCause()); // this will possibly terminate all connections here
+
+			if (this.connectionHandle.isPossiblyBroken()){ // connection is possibly recoverable...
+				logger.error("Connection failed. Attempting to recover transaction....");
+				// let's try and recover
+				try{
+					this.connectionHandle.recoveryResult = attemptRecovery(oldReplayLog); // this might also fail
+					this.connectionHandle.setReplayLog(oldReplayLog); // markPossiblyBroken will probably destroy our original connection handle
+					this.connectionHandle.setInReplayMode(false); // start recording again
+					return this.connectionHandle.recoveryResult.getResult();
+				} catch(Throwable t2){
+					throw new SQLException("Could not recover transaction", t2);
+				}
+			} 
+			
+			throw t.getCause();
+			
+		}
 	}
 
-	/**
+	/** Play back a transaction
 	 * @param oldReplayLog 
+	 * @return map + result
 	 * @throws SQLException 
 	 * 
 	 */
-	protected RecoveryResult attemptRecovery(List<ReplayLog> oldReplayLog) throws SQLException{
+	private RecoveryResult attemptRecovery(List<ReplayLog> oldReplayLog) throws SQLException{
 		RecoveryResult recoveryResult = this.connectionHandle.recoveryResult;
 		List<PreparedStatement> prepStatementTarget = new ArrayList<PreparedStatement>();
 		List<CallableStatement> callableStatementTarget = new ArrayList<CallableStatement>();
 		List<Statement> statementTarget = new ArrayList<Statement>();
 		Object result = null;
-		
+
 		// this connection is dead
-		this.connectionHandle.inReplayMode = true; // don't go in a loop of saving our saved log!
+		this.connectionHandle.setInReplayMode(true); // don't go in a loop of saving our saved log!
 		try{
-			this.connectionHandle.internalClose(); // possibly this will trigger some useless log recording but no harm done
+			this.connectionHandle.clearStatementCaches(true);
+			this.connectionHandle.close();
 		} catch(Throwable t){
 			// do nothing - also likely to fail here
 		}
-		// this connection is never coming back again. Update counters.
-		this.connectionHandle.getPool().postDestroyConnection(this.connectionHandle);
-		
-		ConnectionHandle con = (ConnectionHandle) this.connectionHandle.getPool().getConnection();
-		con.logicallyClosed = true;
-		this.connectionHandle.setInternalConnection(con.getInternalConnection());
-		this.connectionHandle.renewConnection(); // mark it as logically open again
-		con.setReplayLog(oldReplayLog);
-		con.recoveryResult = this.connectionHandle.recoveryResult;
-		con.inReplayMode = true; // don't go in a loop of saving our saved log!
+		this.connectionHandle.setInternalConnection(this.connectionHandle.obtainInternalConnection());
+
 		Map<Object, Object> replaceTarget = recoveryResult.getReplaceTarget();
-		
+
 		for (ReplayLog replay: oldReplayLog){
-			
+
 			// we got new connections/statement handles so replace what we've got with the new ones
 			if (replay.getTarget() instanceof Connection){
 				replaceTarget.put(replay.getTarget(), this.connectionHandle.getInternalConnection());
@@ -177,7 +199,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					replaceTarget.put(replay.getTarget(), statementTarget.remove(0));
 				}
 			}
-			
+
 			replay.setTarget(replaceTarget.get(replay.getTarget())); // fix our log
 
 			try {
@@ -185,7 +207,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				result = replay.getMethod().invoke(replay.getTarget(), replay.getArgs());
 				// remember what we've got
 				recoveryResult.setResult(result);
-				
+
 				// if we got a new statement (eg a prepareStatement call), save it, we'll use it for our search/replace
 				if (result instanceof PreparedStatement){
 					prepStatementTarget.add((PreparedStatement)result);

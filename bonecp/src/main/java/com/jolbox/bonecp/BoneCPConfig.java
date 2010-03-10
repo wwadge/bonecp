@@ -80,9 +80,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If set to true, log SQL statements being executed. */ 
 	private boolean logStatementsEnabled;
 	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
-	private int acquireRetryDelay;
+	private int acquireRetryDelay=7000;
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. */
+	private int acquireRetryAttempts=5;
 	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
 	private boolean lazyInit;
+	/** If set to true, stores all activity on this connection to allow for replaying it again. */
+	private boolean transactionRecoveryEnabled;
 	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
@@ -493,14 +497,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.logStatementsEnabled = logStatementsEnabled;
 	}
 
-	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure.
+	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @return the acquireRetryDelay
 	 */
 	public int getAcquireRetryDelay() {
 		return this.acquireRetryDelay;
 	}
 
-	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure.
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @param acquireRetryDelay the acquireRetryDelay to set
 	 */
 	public void setAcquireRetryDelay(int acquireRetryDelay) {
@@ -568,6 +572,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				&& Objects.equal(this.username, that.getUsername())
 				&& Objects.equal(this.password, that.getPassword())
 				&& Objects.equal(this.lazyInit, that.isLazyInit())
+				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
+				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
+				
 				
 		){
 			return true;
@@ -581,6 +588,38 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelay, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
 				this.connectionTestStatement, this.idleConnectionTestPeriod, this.idleMaxAge, this.initSQL, this.jdbcUrl, 
 				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
-				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit);
+				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit, this.transactionRecoveryEnabled,
+				this.acquireRetryAttempts);
 	}
+
+	/** Returns true if the pool is configured to record all transaction activity and replay the transaction automatically in case
+	 * of connection failures.
+	 * @return the transactionRecoveryEnabled status
+	 */
+	public boolean isTransactionRecoveryEnabled() {
+		return this.transactionRecoveryEnabled;
+	}
+
+	/** Set to true to enable recording of all transaction activity and replay the transaction automatically in case
+	 * of a connection failure.
+	 * @param transactionRecoveryEnabled the transactionRecoveryEnabled status to set
+	 */
+	public void setTransactionRecoveryEnabled(boolean transactionRecoveryEnabled) {
+		this.transactionRecoveryEnabled = transactionRecoveryEnabled;
+	}
+
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. Default 5. 
+	 * @return the acquireRetryAttempts value
+	 */
+	public int getAcquireRetryAttempts() {
+		return this.acquireRetryAttempts;
+	}
+
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. Default 5. 
+	 * @param acquireRetryAttempts the acquireRetryAttempts to set
+	 */
+	public void setAcquireRetryAttempts(int acquireRetryAttempts) {
+		this.acquireRetryAttempts = acquireRetryAttempts;
+	}
+
 }
