@@ -37,6 +37,8 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -74,7 +76,7 @@ public class ConnectionHandle implements Connection {
 	 */
 	private boolean possiblyBroken;
 	/** If true, we've called close() on this connection. */
-	private boolean logicallyClosed = false;
+	protected boolean logicallyClosed = false;
 	/** Original partition. */
 	private ConnectionPartition originatingPartition = null;
 	/** Prepared Statement Cache. */
@@ -95,7 +97,13 @@ public class ConnectionHandle implements Connection {
 	private boolean logStatementsEnabled;
 	/** Set to true if we have statement caching enabled. */
 	protected boolean statementCachingEnabled;
+	/** If set to true, stores all activity on this connection to allow for replaying it again. */
+	protected boolean replayTransaction = true;
+	private List<ReplayLog> replayLog;
+	protected boolean inReplayMode;
+	protected RecoveryResult recoveryResult = new RecoveryResult();
 
+	
 	/**
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -111,10 +119,8 @@ public class ConnectionHandle implements Connection {
 	 SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
 	  Anything else will be taken as the *connection* (not the db) being broken. 
 
-	  08S01 is a mysql-specific code to indicate a connection failure (though in my tests it was triggered even when the entire
-	  database was down so I treat that as a DB failure)
 	 */
-	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01"); 
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007"); 
 	/**
 	 * Connection wrapper constructor
 	 * 
@@ -142,6 +148,13 @@ public class ConnectionHandle implements Connection {
 
 				this.connection = DriverManager.getConnection(url, username,
 						password);
+
+				if (this.replayTransaction){
+					this.replayLog = new ArrayList<ReplayLog>();
+					// this kick-starts recording everything
+					this.connection = MemorizeTransactionProxy.memorize(this.connection, this.replayLog, this);
+				}
+
 
 				this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
 				this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
@@ -224,7 +237,7 @@ public class ConnectionHandle implements Connection {
 		if (state == null){ // safety;
 			state = "Z";
 		}
-		// use the active key to prevent two connections each triggering a "DB is down" from destroying the database repeatedly
+
 		if (sqlStateDBFailureCodes.contains(state) && this.pool != null){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.terminateAllConnections();
@@ -238,9 +251,10 @@ public class ConnectionHandle implements Connection {
 		//         conditions.
 
 
-		char firstChar = state.charAt(0);
-		// if it's a communication exception or an implementation-specific error code, flag this connection as being potentially broken.
-		if (state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
+//		char firstChar = state.charAt(0);
+		// if it's a communication exception (or a mysql deadlock), flag this connection as being potentially broken.
+		// state == 40001 is mysql specific triggered when a deadlock is detected
+		if (state.equals("40001") || state.startsWith("08")){
 			this.possiblyBroken = true;
 		}
 
@@ -306,6 +320,7 @@ public class ConnectionHandle implements Connection {
 		try {
 			clearStatementCaches(true);
 			this.connection.close();
+			this.logicallyClosed = true;
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -1061,10 +1076,19 @@ public class ConnectionHandle implements Connection {
 		this.debugHandle = debugHandle;
 	}
 
+	/** Deprecated. Please use getInternalConnection() instead. 
+	 *  
+	 * @return the raw connection
+	 */
+	@Deprecated
+	public Connection getRawConnection() {
+		return this.connection;
+	}
+	
 	/** Returns the internal connection as obtained via the JDBC driver.
 	 * @return the raw connection
 	 */
-	public Connection getRawConnection() {
+	public Connection getInternalConnection() {
 		return this.connection;
 	}
 
@@ -1100,5 +1124,55 @@ public class ConnectionHandle implements Connection {
 			logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
 					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
 		}
+	}
+
+	/**
+	 * @return the inReplayMode
+	 */
+	protected boolean isInReplayMode() {
+		return this.inReplayMode;
+	}
+
+	/**
+	 * @param inReplayMode the inReplayMode to set
+	 */
+	protected void setInReplayMode(boolean inReplayMode) {
+		this.inReplayMode = inReplayMode;
+	}
+	
+	/** Sends a test query to the underlying connection and return true if connection is alive.
+	 * @return True if connection is valid, false otherwise.
+	 */
+	public boolean isConnectionAlive(){
+		return this.pool.isConnectionHandleAlive(this);
+	}
+
+	/** Sets the internal connection to use. Be careful how to use this method, normally you should never need it! This is here
+	 * for odd use cases only!
+	 * @param rawConnection to set
+	 */
+	public void setInternalConnection(Connection rawConnection) {
+		this.connection = rawConnection;
+	}
+
+	/** Returns a handle to the global pool from where this connection was obtained.
+	 * @return BoneCP handle
+	 */
+	public BoneCP getPool() {
+		return this.pool;
+	}
+
+	/**
+	 * @return
+	 */
+	public List<ReplayLog> getReplayLog() {
+		return this.replayLog;
+	}
+
+	/**
+	 * @param replayLog2
+	 */
+	protected void setReplayLog(List<ReplayLog> replayLog) {
+		this.replayLog = replayLog;
 	}
 }
