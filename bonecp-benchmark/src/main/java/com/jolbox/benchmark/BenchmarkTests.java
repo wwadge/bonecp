@@ -151,9 +151,9 @@ public class BenchmarkTests {
 		dsb.setIdleMaxAge(0L);
 		dsb.setIdleConnectionTestPeriod(0L);
 		if (doPreparedStatement){
-			dsb.setPreparedStatementCacheSize(10);
+			dsb.setStatementsCacheSize(10);
 		} else {
-			dsb.setPreparedStatementCacheSize(0);
+			dsb.setStatementsCacheSize(0);
 		}
 		dsb.setMinConnectionsPerPartition(pool_size / partitions);
 		dsb.setMaxConnectionsPerPartition(pool_size / partitions);

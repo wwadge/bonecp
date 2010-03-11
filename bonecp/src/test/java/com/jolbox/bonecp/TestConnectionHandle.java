@@ -398,7 +398,7 @@ public class TestConnectionHandle {
 		field = testClass.getClass().getDeclaredField("connection");
 		field.setAccessible(true);
 		field.set(testClass, mockConnection);
-		assertEquals(mockConnection, testClass.getRawConnection());
+		assertEquals(mockConnection, testClass.getInternalConnection());
 		
 		field = testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);

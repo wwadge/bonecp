@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
 
 
@@ -82,34 +83,26 @@ public class TestSystemTests {
 		
 		
 		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
-		dsb.setPreparedStatementCacheSize(0);
-		dsb.setPartitionCount(1);
-		dsb.setPartitionCount("1");
-		dsb.setPreparedStatementCacheSize("0");
+		dsb.setPartitionCount(1); 
+		dsb.setAcquireRetryDelay(-1);
+		dsb.setAcquireRetryAttempts(0);
 		dsb.setMaxConnectionsPerPartition(100);
-		dsb.setMaxConnectionsPerPartition("100");
 		dsb.setMinConnectionsPerPartition(30);
-		dsb.setMinConnectionsPerPartition("30");
-		dsb.setStatementsCachedPerConnection("30");
+		dsb.setTransactionRecoveryEnabled(true);
+		dsb.setConnectionHook(new CoverageHook());
+		dsb.setLazyInit(true);
 		dsb.setStatementsCachedPerConnection(30);
-		dsb.setStatementCacheSize(30);
-		dsb.setStatementCacheSize("30");
+		dsb.setStatementsCacheSize(30);
 		dsb.setReleaseHelperThreads(0);
-		dsb.setReleaseHelperThreads("0");
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
 		dsb.isWrapperFor(String.class);
 		dsb.setIdleMaxAge(0L);
-		dsb.setIdleMaxAge("0");
 		dsb.setAcquireIncrement(5);
-		dsb.setAcquireIncrement("5");
 		dsb.setIdleConnectionTestPeriod(0L);
-		dsb.setIdleConnectionTestPeriod("0");
 		dsb.setConnectionTestStatement("test");
 		dsb.setInitSQL(CommonTestUtils.TEST_QUERY);
 		dsb.setCloseConnectionWatch(true);
 		dsb.setLogStatementsEnabled(false);
-		dsb.setAcquireRetryDelay(1000);
-		dsb.setAcquireRetryDelay("1000");
 		dsb.getConnection().close();
 		assertNotNull(dsb.getConfig());
 		assertNotNull(dsb.toString());
@@ -153,45 +146,12 @@ public class TestSystemTests {
 			// do nothing
 		}
 		
-		Method method = dsb.getClass().getDeclaredMethod("parseNumber", new Class[]{String.class, int.class});
-		method.setAccessible(true);
-		int result = (Integer) method.invoke(dsb, "badNumber", 123);
-		// should fallback to default number
-		assertEquals(123, result);
 		
 		assertNull(dsb.unwrap(String.class));
-		assertEquals("5", dsb.getAcquireIncrement());
-		assertEquals("30", dsb.getMinConnectionsPerPartition());
-		assertEquals("100", dsb.getMaxConnectionsPerPartition());
-		assertEquals("1", dsb.getPartitions());
-		assertEquals("0", dsb.getIdleConnectionTestPeriod());
-		assertEquals("0", dsb.getIdleMaxAge());
-		assertEquals(CommonTestUtils.url, dsb.getJdbcUrl());
-		assertEquals(CommonTestUtils.username, dsb.getUsername());
-		assertEquals(CommonTestUtils.password, dsb.getPassword());
-		assertEquals("30", dsb.getPreparedStatementCacheSize());
-		assertEquals("0", dsb.getReleaseHelperThreads());
-		assertEquals("30", dsb.getStatementsCachedPerConnection());
-		assertEquals("30", dsb.getStatementCacheSize());
-		assertEquals("test", dsb.getConnectionTestStatement());
 		assertEquals("org.hsqldb.jdbcDriver", dsb.getDriverClass());
-		assertEquals(CommonTestUtils.TEST_QUERY, dsb.getInitSQL());
-		assertEquals(true, dsb.isCloseConnectionWatch());
-		assertEquals(false, dsb.isLogStatementsEnabled());
-		assertEquals("1000", dsb.getAcquireRetryDelay());
 		dsb.setClassLoader(getClass().getClassLoader());
 		dsb.loadClass("java.lang.String");
-		dsb.setLazyInit(true);
-		assertEquals(true, dsb.isLazyInit());
-		dsb.setLazyInit(false);
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
-
-		method = dsb.getClass().getDeclaredMethod("safePrint", new Class[]{String.class});
-		method.setAccessible(true);
-		assertTrue("".equals(method.invoke(dsb, new Object[]{null})));
-		String tmpString = "foo";
-		assertEquals(tmpString, method.invoke(dsb, tmpString));
-
 	}
 	
 	@Test(expected=SQLException.class)

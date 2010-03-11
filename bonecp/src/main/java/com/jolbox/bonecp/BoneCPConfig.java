@@ -87,6 +87,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private boolean lazyInit;
 	/** If set to true, stores all activity on this connection to allow for replaying it again. */
 	private boolean transactionRecoveryEnabled;
+	/** Connection hook class name. */
+	private String connectionHookClassName;
+	/** Classloader to use when loading the JDBC driver. */
+	private ClassLoader classLoader;
 	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
@@ -622,4 +626,57 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.acquireRetryAttempts = acquireRetryAttempts;
 	}
 
+	/** Sets the connection hook class name. Consider using setConnectionHook() instead.
+	 * @param connectionHookClassName the connectionHook class name to set
+	 */
+	public void setConnectionHookClassName(String connectionHookClassName) {
+		this.connectionHookClassName = connectionHookClassName;
+		if (connectionHookClassName != null){
+			Object hookClass;
+			try {
+				hookClass = loadClass(connectionHookClassName).newInstance();
+				this.connectionHook = (ConnectionHook) hookClass;
+			} catch (Exception e) {
+				logger.error("Unable to create an instance of the connection hook class ("+connectionHookClassName+")");
+				this.connectionHook = null;
+			} 
+		}
+	}
+	
+	/** Returns the connection hook class name as passed via the setter
+	 * @return the connectionHookClassName.
+	 */
+	public String getConnectionHookClassName() {
+		return this.connectionHookClassName;
+	}
+
+	/** Loads the given class, respecting the given classloader.
+	 * @param clazz class to load
+	 * @return Loaded class
+	 * @throws ClassNotFoundException
+	 */
+	protected Class<?> loadClass(String clazz) throws ClassNotFoundException {
+		if (this.classLoader == null){
+			return Class.forName(clazz);
+		}
+
+		return Class.forName(clazz, true, this.classLoader);
+
+	}
+	/** Returns the currently active classloader. 
+	 * @return the classLoader
+	 */
+	public ClassLoader getClassLoader() {
+		return this.classLoader;
+	}
+
+	/** Sets the classloader to use to load JDBC driver and hooks (set to null to use default).
+	 * @param classLoader the classLoader to set
+	 */
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+
+
+	
 }
