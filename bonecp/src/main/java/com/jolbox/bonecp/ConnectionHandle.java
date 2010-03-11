@@ -105,7 +105,7 @@ public class ConnectionHandle implements Connection {
 	/** Map of translations + result from last recovery. */
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
-	private final String url;	
+	protected String url;	
 	/** Connection username. */
 	private final String username;
 	/** Connection password. */
@@ -181,7 +181,7 @@ public class ConnectionHandle implements Connection {
 		int acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
 		do{ 
-			try {
+			try { 
 				// keep track of this hook.
 
 				this.connection = DriverManager.getConnection(this.url, this.username, this.password);

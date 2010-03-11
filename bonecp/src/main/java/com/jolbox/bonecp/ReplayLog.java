@@ -70,7 +70,9 @@ public class ReplayLog {
 	 */
 	@Override
 	public String toString() {
-		return this.target.getClass().getName()+"."+this.method.getName() + " with args "+this.args;
+		return (this.target == null ? "" : this.target.getClass().getName())+"."
+		+ (this.method == null ? "" : this.method.getName()) + " with args "
+		+ (this.args == null ? "null" : this.args);
 	}
 	
 	
