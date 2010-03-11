@@ -107,8 +107,10 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	public Object invoke(Object proxy, Method method,
 			Object[] args) throws Throwable {
 
+		try{
+			this.connectionHandle.replayLock.writeLock().lock();
+		
 		Object result;
-
 		if (this.connectionHandle.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
 			return method.invoke(this.target, args);
 		}
@@ -169,9 +171,12 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			} 
 
 			throw t.getCause();
-
+		
 		}
-	}
+		} finally {
+			this.connectionHandle.replayLock.writeLock().unlock();
+		}
+}
 
 	/** Play back a transaction
 	 * @param oldReplayLog 
@@ -233,7 +238,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				try {
 					// run again using the new connection/statement
 					result = replay.getMethod().invoke(replaceTarget.get(replay.getTarget()), replay.getArgs());
-					// remember what we've got
+					// remember what we've got last
 					recoveryResult.setResult(result);
 
 					// if we got a new statement (eg a prepareStatement call), save it, we'll use it for our search/replace

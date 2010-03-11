@@ -207,7 +207,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		}
 		for (int p=0; p < config.getPartitionCount(); p++){
-			
+
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this);
 			this.partitions[p]=connectionPartition;
@@ -265,7 +265,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		}
 		int partition = (int) (Thread.currentThread().getId() % this.partitionCount);
 		ConnectionPartition connectionPartition = this.partitions[partition];
-	
+
 		ConnectionHandle result;
 
 		result = connectionPartition.getFreeConnections().poll();
@@ -283,7 +283,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				}
 			}
 		}
-		
+
 		if (!connectionPartition.isUnableToCreateMoreTransactions()){ // unless we can't create any more connections...   
 			maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
 		}
@@ -308,6 +308,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		if (this.closeConnectionWatch){ // a debugging tool
 			watchConnection(result);
 		}
+
+
 		return result;
 	}
 
@@ -355,7 +357,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				return getConnection();
 			}});
 	}
-	
+
 	/**
 	 * Tests if this partition has hit a threshold and signal to the pool watch thread to create new connections
 	 * @param connectionPartition to test for.
@@ -389,7 +391,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			if (handle.getConnectionHook() != null){
 				handle.getConnectionHook().onCheckIn(handle);
 			}
-  
+
 			// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
 			// close off the connection right away because the helper threads have gone away.
 			if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){
@@ -420,8 +422,20 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			return; // don't place back in queue - connection is broken!
 		}
 
+
 		connectionHandle.setConnectionLastUsed(System.currentTimeMillis());
-		if (!this.poolShuttingDown){ 
+		if (!this.poolShuttingDown){
+
+			if (connectionHandle.getReplayLog() != null){
+				try{
+					connectionHandle.replayLock.writeLock().lock();
+					connectionHandle.getReplayLog().clear();
+					connectionHandle.recoveryResult.getReplaceTarget().clear();
+				} finally {
+					connectionHandle.replayLock.writeLock().unlock();
+				}
+			}
+
 			putConnectionBackInPartition(connectionHandle);
 		} else {
 			connectionHandle.internalClose();

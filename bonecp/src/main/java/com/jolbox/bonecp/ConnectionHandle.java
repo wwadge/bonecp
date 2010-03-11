@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +71,9 @@ public class ConnectionHandle implements Connection {
 	private long connectionLastReset = System.currentTimeMillis();
 	/** Pool handle. */
 	private BoneCP pool;
+	/** Lock for replayLog. */
+	protected ReentrantReadWriteLock replayLock = new ReentrantReadWriteLock();
+
 	/**
 	 * If true, this connection might have failed communicating with the
 	 * database. We assume that exceptions should be rare here i.e. the normal
@@ -339,6 +343,7 @@ public class ConnectionHandle implements Connection {
 		try {
 			if (!this.logicallyClosed) {
 				this.logicallyClosed = true;
+				
 				this.pool.releaseConnection(this);
 
 				if (this.doubleCloseCheck){
