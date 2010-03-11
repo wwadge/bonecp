@@ -20,7 +20,7 @@
 		<url>https://launchpad.net/bonecp</url>
 	</issueManagement>
 
-	<version>0.6.5-rc1</version>
+	<version>0.6.5-SNAPSHOT</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
