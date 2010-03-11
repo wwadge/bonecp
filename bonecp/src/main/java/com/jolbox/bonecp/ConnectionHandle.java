@@ -254,7 +254,7 @@ public class ConnectionHandle implements Connection {
 			// free up resources 
 			if (rs != null){
 				rs.close();
-			}
+			} 
 			stmt.close();
 		}
 	}
