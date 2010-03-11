@@ -79,7 +79,7 @@ public class ConnectionHandle implements Connection {
 	 * database. We assume that exceptions should be rare here i.e. the normal
 	 * case is assumed to succeed.
 	 */
-	private boolean possiblyBroken;
+	protected boolean possiblyBroken;
 	/** If true, we've called close() on this connection. */
 	protected boolean logicallyClosed = false;
 	/** Original partition. */

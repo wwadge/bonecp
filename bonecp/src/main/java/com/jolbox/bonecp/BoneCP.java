@@ -220,11 +220,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){
-				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
+//				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
 			}
 
 			// watch this partition for low no of threads
-			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
+//			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
 
 		initJMX(); 
@@ -428,11 +428,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 			if (connectionHandle.getReplayLog() != null){
 				try{
-					connectionHandle.replayLock.writeLock().lock();
+//					connectionHandle.replayLock.writeLock().lock();
 					connectionHandle.getReplayLog().clear();
 					connectionHandle.recoveryResult.getReplaceTarget().clear();
 				} finally {
-					connectionHandle.replayLock.writeLock().unlock();
+//					connectionHandle.replayLock.writeLock().unlock();
 				}
 			}
 

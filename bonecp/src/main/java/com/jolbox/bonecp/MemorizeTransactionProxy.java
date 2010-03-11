@@ -3,6 +3,7 @@
  */
 package com.jolbox.bonecp;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
@@ -108,7 +109,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			Object[] args) throws Throwable {
 
 		try{
-			this.connectionHandle.replayLock.writeLock().lock();
+//			this.connectionHandle.replayLock.writeLock().lock();
 		
 		Object result;
 		if (this.connectionHandle.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
@@ -132,17 +133,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		}
 
 		try{
-			// swap with proxies to these too.
-			if (method.getName().equals("createStatement")){
-				result = memorize((Statement)method.invoke(this.target, args), this.connectionHandle);
-			}
-			else if (method.getName().equals("prepareStatement")){
-				result = memorize((PreparedStatement)method.invoke(this.target, args), this.connectionHandle);
-			}
-			else if (method.getName().equals("prepareCall")){
-				result = memorize((CallableStatement)method.invoke(this.target, args), this.connectionHandle);
-			}
-			else result = method.invoke(this.target, args);
+			result = proxySwap(method, this.target, args);
 
 			// when we commit/close/rollback, destroy our log
 			if (!this.connectionHandle.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
@@ -164,6 +155,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					this.connectionHandle.setReplayLog(oldReplayLog); // markPossiblyBroken will probably destroy our original connection handle
 					this.connectionHandle.setInReplayMode(false); // start recording again
 					logger.error("Recovery succeeded on Thread #" + Thread.currentThread().getId());
+					this.connectionHandle.possiblyBroken = false;
 					return this.connectionHandle.recoveryResult.getResult();
 				} catch(Throwable t2){
 					throw new SQLException("Could not recover transaction", t2);
@@ -174,9 +166,33 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		
 		}
 		} finally {
-			this.connectionHandle.replayLock.writeLock().unlock();
+//			this.connectionHandle.replayLock.writeLock().unlock();
 		}
 }
+
+	/**
+	 * @param method
+	 * @param args
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	private Object proxySwap(Method method, Object target, Object[] args)
+			throws IllegalAccessException, InvocationTargetException {
+		Object result;
+		// swap with proxies to these too.
+		if (method.getName().equals("createStatement")){
+			result = memorize((Statement)method.invoke(target, args), this.connectionHandle);
+		}
+		else if (method.getName().equals("prepareStatement")){
+			result = memorize((PreparedStatement)method.invoke(target, args), this.connectionHandle);
+		}
+		else if (method.getName().equals("prepareCall")){
+			result = memorize((CallableStatement)method.invoke(target, args), this.connectionHandle);
+		}
+		else result = method.invoke(target, args);
+		return result;
+	}
 
 	/** Play back a transaction
 	 * @param oldReplayLog 
@@ -208,7 +224,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			this.connectionHandle.setInReplayMode(true); // don't go in a loop of saving our saved log!
 			try{
 				this.connectionHandle.clearStatementCaches(true);
-				this.connectionHandle.close();
+				this.connectionHandle.getInternalConnection().close();
 			} catch(Throwable t){
 				// do nothing - also likely to fail here
 			}
@@ -237,7 +253,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 
 				try {
 					// run again using the new connection/statement
-					result = replay.getMethod().invoke(replaceTarget.get(replay.getTarget()), replay.getArgs());
+//					result = replay.getMethod().invoke(, replay.getArgs());
+					result = proxySwap(replay.getMethod(), replaceTarget.get(replay.getTarget()), replay.getArgs());
+
 					// remember what we've got last
 					recoveryResult.setResult(result);
 
