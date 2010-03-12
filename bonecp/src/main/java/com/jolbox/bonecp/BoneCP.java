@@ -220,11 +220,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){
-//				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
+				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
 			}
 
 			// watch this partition for low no of threads
-//			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
+			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
 
 		initJMX(); 
@@ -413,6 +413,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws InterruptedException, SQLException {
 		connectionHandle.clearStatementCaches(false);
 
+		if (connectionHandle.getReplayLog() != null){
+				connectionHandle.getReplayLog().clear();
+				connectionHandle.recoveryResult.getReplaceTarget().clear();
+		}
+
 		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
@@ -425,16 +430,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		connectionHandle.setConnectionLastUsed(System.currentTimeMillis());
 		if (!this.poolShuttingDown){
-
-			if (connectionHandle.getReplayLog() != null){
-				try{
-//					connectionHandle.replayLock.writeLock().lock();
-					connectionHandle.getReplayLog().clear();
-					connectionHandle.recoveryResult.getReplaceTarget().clear();
-				} finally {
-//					connectionHandle.replayLock.writeLock().unlock();
-				}
-			}
 
 			putConnectionBackInPartition(connectionHandle);
 		} else {

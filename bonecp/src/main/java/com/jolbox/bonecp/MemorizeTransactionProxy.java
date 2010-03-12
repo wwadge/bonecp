@@ -228,7 +228,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			} catch(Throwable t){
 				// do nothing - also likely to fail here
 			}
-			this.connectionHandle.setInternalConnection(this.connectionHandle.obtainInternalConnection());
+			this.connectionHandle.setInternalConnection(memorize(this.connectionHandle.obtainInternalConnection(), this.connectionHandle));
 
 
 			for (ReplayLog replay: oldReplayLog){

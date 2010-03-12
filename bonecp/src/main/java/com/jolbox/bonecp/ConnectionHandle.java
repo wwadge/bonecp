@@ -71,8 +71,6 @@ public class ConnectionHandle implements Connection {
 	private long connectionLastReset = System.currentTimeMillis();
 	/** Pool handle. */
 	private BoneCP pool;
-	/** Lock for replayLog. */
-	protected ReentrantReadWriteLock replayLock = new ReentrantReadWriteLock();
 
 	/**
 	 * If true, this connection might have failed communicating with the
