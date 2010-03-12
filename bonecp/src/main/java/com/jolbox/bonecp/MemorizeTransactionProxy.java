@@ -1,4 +1,23 @@
 /**
+ * Copyright 2009 Wallace Wadge
+ *
+ * This file is part of BoneCP.
+ *
+ * BoneCP is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BoneCP is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
  * 
  */
 package com.jolbox.bonecp;
@@ -105,12 +124,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		this.connectionHandle = connectionHandle;
 	}
 
-	public Object invoke(Object proxy, Method method,
-			Object[] args) throws Throwable {
+	@Override
+	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-		try{
-//			this.connectionHandle.replayLock.writeLock().lock();
-		
 		Object result;
 		if (this.connectionHandle.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
 			return method.invoke(this.target, args);
@@ -133,19 +149,24 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		}
 
 		try{
-			result = proxySwap(method, this.target, args);
+			// run and swap with proxies if we encounter prepareStatement calls
+			result = runWithPossibleProxySwap(method, this.target, args); 
 
 			// when we commit/close/rollback, destroy our log
 			if (!this.connectionHandle.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
 				this.connectionHandle.getReplayLog().clear();
 				this.connectionHandle.recoveryResult.getReplaceTarget().clear();
 			}
-			return result;
-		} catch (Throwable t){
+			
+			return result; // normal state
+			
+		} catch (Throwable t){  
+			// if we encounter problems, grab a connection and replay back our log
 			List<ReplayLog> oldReplayLog = this.connectionHandle.getReplayLog();
 			this.connectionHandle.setInReplayMode(true); // stop recording
 
-			this.connectionHandle.markPossiblyBroken(t.getCause()); // this will possibly terminate all connections here
+			// this will possibly terminate all connections here
+			this.connectionHandle.markPossiblyBroken(t.getCause()); 
 
 			if (this.connectionHandle.isPossiblyBroken()){ // connection is possibly recoverable...
 				logger.error("Connection failed. Attempting to recover transaction on Thread #"+ Thread.currentThread().getId());
@@ -156,29 +177,30 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					this.connectionHandle.setInReplayMode(false); // start recording again
 					logger.error("Recovery succeeded on Thread #" + Thread.currentThread().getId());
 					this.connectionHandle.possiblyBroken = false;
+					
+					// return the original result the application was expecting
 					return this.connectionHandle.recoveryResult.getResult();
 				} catch(Throwable t2){
-					throw new SQLException("Could not recover transaction", t2);
+					throw new SQLException("Could not recover transaction. Original exception follows.", t.getCause());
 				}
-			} 
+			}  
 
+			// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
 			throw t.getCause();
-		
-		}
-		} finally {
-//			this.connectionHandle.replayLock.writeLock().unlock();
-		}
-}
 
-	/**
+		}
+	}
+
+	/** Runs the given method with the specified arguments, substituting with proxies where necessary
 	 * @param method
+	 * @param target proxy target 
 	 * @param args
-	 * @return
+	 * @return Proxy-fied result for statements, actual call result otherwise
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	private Object proxySwap(Method method, Object target, Object[] args)
-			throws IllegalAccessException, InvocationTargetException {
+	private Object runWithPossibleProxySwap(Method method, Object target, Object[] args)
+	throws IllegalAccessException, InvocationTargetException {
 		Object result;
 		// swap with proxies to these too.
 		if (method.getName().equals("createStatement")){
@@ -253,8 +275,8 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 
 				try {
 					// run again using the new connection/statement
-//					result = replay.getMethod().invoke(, replay.getArgs());
-					result = proxySwap(replay.getMethod(), replaceTarget.get(replay.getTarget()), replay.getArgs());
+					//					result = replay.getMethod().invoke(, replay.getArgs());
+					result = runWithPossibleProxySwap(replay.getMethod(), replaceTarget.get(replay.getTarget()), replay.getArgs());
 
 					// remember what we've got last
 					recoveryResult.setResult(result);
@@ -273,7 +295,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					if (connectionHook != null){
 						tryAgain = connectionHook.onAcquireFail(t);
 					} else {
-						
+
 						logger.error("Failed to replay transaction. Sleeping for "+acquireRetryDelay+"ms and trying again. Attempts left: "+acquireRetryAttempts+". Exception: "+t.getCause());
 
 						try {
@@ -292,7 +314,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				}
 			}
 		} while (tryAgain);
-		
+
 		// fill last successful results
 		for (Entry<Object, Object> entry: replaceTarget.entrySet()){
 			recoveryResult.getReplaceTarget().put(entry.getKey(), entry.getValue());
@@ -301,9 +323,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		for (ReplayLog replay: oldReplayLog){
 			replay.setTarget(replaceTarget.get(replay.getTarget())); // fix our log
 		}
-
 		return recoveryResult;
 	}
-
 
 } 
