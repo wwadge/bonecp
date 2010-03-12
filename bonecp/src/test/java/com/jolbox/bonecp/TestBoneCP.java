@@ -56,6 +56,7 @@ import javax.management.ObjectName;
 
 import org.easymock.EasyMock;
 import org.hsqldb.jdbc.jdbcResultSet;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,6 +103,7 @@ public class TestBoneCP {
 		Class.forName("org.hsqldb.jdbcDriver");
 	}
 	
+
 	
 	/**
 	 * Reset the mocks.

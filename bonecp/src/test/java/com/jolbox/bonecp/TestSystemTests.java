@@ -90,7 +90,7 @@ public class TestSystemTests {
 		dsb.setMinConnectionsPerPartition(30);
 		dsb.setTransactionRecoveryEnabled(true);
 		dsb.setConnectionHook(new CoverageHook());
-		dsb.setLazyInit(true);
+		dsb.setLazyInit(false);
 		dsb.setStatementsCachedPerConnection(30);
 		dsb.setStatementsCacheSize(30);
 		dsb.setReleaseHelperThreads(0);
@@ -329,7 +329,7 @@ public class TestSystemTests {
 
 		for (int i=0; i < 60; i++) {
 			Thread.yield();
-			Thread.sleep(1000); // give time for pool watch thread to fire up
+			Thread.sleep(2000); // give time for pool watch thread to fire up
 			if (dsb.getTotalCreatedConnections() == 15) {
 				break;
 			}
