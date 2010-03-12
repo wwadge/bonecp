@@ -30,6 +30,11 @@ import java.sql.SQLException;
  *
  */
 public interface MockJDBCAnswer {
+	
+	/** Unit test helper.
+	 * @return Connection handle.
+	 * @throws SQLException
+	 */
 	Connection answer() throws SQLException;
 
 }

@@ -35,7 +35,7 @@ import java.util.Properties;
  */
 public class MockJDBCDriver  implements Driver {
 	/** Connection handle to return. */
-	private Connection connection;
+	private Connection connection = null;
 	/** called to return. */
 	private MockJDBCAnswer mockJDBCAnswer;
 
@@ -49,12 +49,21 @@ public class MockJDBCDriver  implements Driver {
 	}
 	
 	/** Connection handle to return
-	 * @param connection
+	 * @param mockJDBCAnswer answer class
 	 * @throws SQLException 
 	 */
 	public MockJDBCDriver(MockJDBCAnswer mockJDBCAnswer) throws SQLException{
 		this();
 		this.mockJDBCAnswer = mockJDBCAnswer;
+	}
+	
+	/** Return the connection when requested.
+	 * @param connection
+	 * @throws SQLException
+	 */
+	public MockJDBCDriver(Connection connection) throws SQLException{
+		this();
+		this.connection = connection;
 	}
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#acceptsURL(java.lang.String)
@@ -69,6 +78,10 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	@Override
 	public Connection connect(String url, Properties info) throws SQLException {
+		if (this.connection != null){
+			return this.connection;
+		}
+		
 		return this.mockJDBCAnswer.answer();
 	}
 
