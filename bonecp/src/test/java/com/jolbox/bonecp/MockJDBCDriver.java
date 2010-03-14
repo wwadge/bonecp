@@ -34,10 +34,12 @@ import java.util.Properties;
  *
  */
 public class MockJDBCDriver  implements Driver {
+	/** If true, stop responding to connection requests. */
+	private static boolean disabled;
 	/** Connection handle to return. */
-	private Connection connection = null;
+	private static Connection connection = null;
 	/** called to return. */
-	private MockJDBCAnswer mockJDBCAnswer;
+	private static MockJDBCAnswer mockJDBCAnswer;
 
 	/**
 	 * Default constructor
@@ -54,7 +56,7 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	public MockJDBCDriver(MockJDBCAnswer mockJDBCAnswer) throws SQLException{
 		this();
-		this.mockJDBCAnswer = mockJDBCAnswer;
+		MockJDBCDriver.mockJDBCAnswer = mockJDBCAnswer;
 	}
 	
 	/** Return the connection when requested.
@@ -63,14 +65,14 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	public MockJDBCDriver(Connection connection) throws SQLException{
 		this();
-		this.connection = connection;
+		MockJDBCDriver.connection = connection;
 	}
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#acceptsURL(java.lang.String)
 	 */
 	@Override
 	public boolean acceptsURL(String url) throws SQLException {
-		return true; // accept anything
+		return !disabled; // accept anything
 	}
 
 	/** {@inheritDoc}
@@ -78,11 +80,14 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	@Override
 	public Connection connect(String url, Properties info) throws SQLException {
-		if (this.connection != null){
-			return this.connection;
+		if (disabled){
+			return null;
+		}
+		if (connection != null){
+			return connection;
 		}
 		
-		return this.mockJDBCAnswer.answer();
+		return mockJDBCAnswer.answer();
 	}
 
 	/** {@inheritDoc}
@@ -118,4 +123,11 @@ public class MockJDBCDriver  implements Driver {
 		return true;
 	}
 	
+	/**
+	 * Disable everything.
+	 * @param disabled 
+	 */
+	public static void disable(boolean disabled){
+		MockJDBCDriver.disabled = disabled; 
+	}
 }

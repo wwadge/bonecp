@@ -231,7 +231,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		
 		Map<Object, Object> replaceTarget = new HashMap<Object, Object>();
 		do{
-			replaceTarget.clear();
+			replaceTarget.clear(); 
 			// make a copy
 			for (Entry<Object, Object> entry: recoveryResult.getReplaceTarget().entrySet()){
 				replaceTarget.put(entry.getKey(), entry.getValue());

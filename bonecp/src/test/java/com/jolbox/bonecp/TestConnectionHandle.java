@@ -89,6 +89,7 @@ public class TestConnectionHandle {
 	 */
 	@BeforeClass
 	public static void setUp() throws Exception {
+		MockJDBCDriver.disable(false);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockPreparedStatementCache = createNiceMock(IStatementCache.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
@@ -156,6 +157,7 @@ public class TestConnectionHandle {
 		replay(mockPool);
 		testClass.obtainInternalConnection();
 		// get counts on our hooks
+		
 		assertEquals(1, testHook.fail);
 		assertEquals(1, testHook.acquire);
 		

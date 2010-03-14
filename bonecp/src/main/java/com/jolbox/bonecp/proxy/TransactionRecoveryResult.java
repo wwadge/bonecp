@@ -53,10 +53,4 @@ public class TransactionRecoveryResult {
 	public Map<Object, Object> getReplaceTarget() {
 		return this.replaceTarget;
 	}
-	/** Setter for map.
-	 * @param replaceTarget the replaceTarget to set
-	 */
-	public void setReplaceTarget(Map<Object, Object> replaceTarget) {
-		this.replaceTarget = replaceTarget;
-	}
 }
