@@ -27,15 +27,6 @@ import org.junit.Test;
  */
 public class TestMemorizeTransactionProxy {
 	
-	@BeforeClass
-	public static void enableMockDriver(){
-		MockJDBCDriver.disable(false);
-	}
-	
-	@AfterClass
-	public static void disableMockDriver(){
-		MockJDBCDriver.disable(true);
-	}
 
 	/** Tests that the statements and connections are proxified.
 	 * @throws SQLException
@@ -50,7 +41,7 @@ public class TestMemorizeTransactionProxy {
 		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
 		CallableStatement mockCallableStatement = createNiceMock(CallableStatement.class);
 
-		new MockJDBCDriver(mockConnection);
+		MockJDBCDriver mockDriver = new MockJDBCDriver(mockConnection);
 		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
 		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
 		BoneCP pool = new BoneCP(CommonTestUtils.config);
@@ -88,6 +79,7 @@ public class TestMemorizeTransactionProxy {
 
 		handler = java.lang.reflect.Proxy.getInvocationHandler(stmt);
 		assertEquals(MemorizeTransactionProxy.class, handler.getClass());
+		mockDriver.disable();
 	}
 	
 //	public void test

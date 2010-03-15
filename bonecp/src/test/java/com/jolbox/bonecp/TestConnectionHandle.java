@@ -89,7 +89,6 @@ public class TestConnectionHandle {
 	 */
 	@BeforeClass
 	public static void setUp() throws Exception {
-		MockJDBCDriver.disable(false);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockPreparedStatementCache = createNiceMock(IStatementCache.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
