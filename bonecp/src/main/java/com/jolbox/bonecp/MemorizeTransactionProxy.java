@@ -132,6 +132,11 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			return method.invoke(this.target, args);
 		}
 
+		if (method.getName().equals("getProxyTarget")){  // special "fake" method to return our proxy target
+			return this.target;
+		}
+		
+		
 		if (this.connectionHandle.recoveryResult != null){ // if we previously failed, do the mapping to the new connection/statements
 			Object remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.target);
 			if (remap != null){
@@ -147,6 +152,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		if (!this.connectionHandle.isInReplayMode() && !method.getName().equals("hashCode") && !method.getName().equals("equals") && !method.getName().equals("toString")){
 			this.connectionHandle.getReplayLog().add(new ReplayLog(this.target, method, args));
 		}
+		
+	
+		
 
 		try{
 			// run and swap with proxies if we encounter prepareStatement calls

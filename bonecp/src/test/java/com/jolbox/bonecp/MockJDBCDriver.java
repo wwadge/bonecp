@@ -125,4 +125,18 @@ public class MockJDBCDriver  implements Driver {
 	public void disable() throws SQLException{
 		DriverManager.deregisterDriver(this);
 	}
+
+	/**
+	 * @return the connection
+	 */
+	public Connection getConnection() {
+		return this.connection;
+	}
+
+	/**
+	 * @param connection the connection to set
+	 */
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
 }
