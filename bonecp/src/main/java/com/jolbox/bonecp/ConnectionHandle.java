@@ -1164,17 +1164,21 @@ public class ConnectionHandle implements Connection {
 
 	/** {@inheritDoc}
 	 * @see java.lang.Object#finalize()
-	 */
+	 *
 	@Override
 	protected void finalize() throws Throwable {
 		super.finalize();
 		if (!isClosed()){
-			close();
-			logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
-			"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+			try{
+				close();
+				logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
+				"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+			} catch (Throwable t){
+				// exceptions here are dangerous! 
+			}
 		}
 	}
-
+*/
 	/**
 	 * @return the inReplayMode
 	 */

@@ -1003,7 +1003,7 @@ public class StatementHandle implements Statement{
 
 	/** {@inheritDoc}
 	 * @see java.lang.Object#finalize()
-	 */
+	 * Uncomment this only if you're willing to deal with the performance hit!
 	@Override
 	protected void finalize() throws Throwable {
 		super.finalize();
@@ -1016,4 +1016,5 @@ public class StatementHandle implements Statement{
 			}
 		}
 	}
+	*/
 }

@@ -116,7 +116,9 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 */
 	public void close(){
-		this.pool.shutdown();
+		if (this.pool != null){
+			this.pool.shutdown();
+		}
 	}
 
 	/**
