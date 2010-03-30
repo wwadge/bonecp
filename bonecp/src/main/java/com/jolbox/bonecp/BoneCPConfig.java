@@ -73,6 +73,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private ConnectionHook connectionHook;
 	/** Query to send once per connection to the database. */
 	private String initSQL;
+	/** Name of the pool for JMX and thread names. */
+	private String poolName;
 	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to 
 	 * close the connection. FOR DEBUG PURPOSES ONLY!
 	 */
@@ -179,6 +181,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.jdbcUrl = jdbcUrl;
 	}
 
+	
+	public String getPoolName() {
+		return this.poolName;
+	}
+
+	public void setPoolName(String poolName) {
+		this.poolName = poolName;
+	}
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getUsername()
 	 */

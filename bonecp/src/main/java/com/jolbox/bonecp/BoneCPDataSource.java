@@ -72,6 +72,8 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	private String jdbcUrl="JDBC URL NOT SET!";
 	/** Config setting. */
 	private String driverClass=null;
+	/** Name of the pool for JMX and thread names. */
+	private String poolName;
 	/** Config setting. */
 	private String username="USERNAME NOT SET!";
 	/** Config setting. */
@@ -198,6 +200,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				this.config.setAcquireIncrement(acquireIncrement);
 				this.config.setPartitionCount(partitions);
 				this.config.setJdbcUrl(this.jdbcUrl);
+				this.config.setPoolName(this.poolName);
 				this.config.setUsername(this.username);
 				this.config.setPassword(this.password);
 				this.config.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
@@ -908,5 +911,19 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	 */
 	protected void setLazyInit(boolean lazyInit) {
 		this.lazyInit = lazyInit;
+	}
+	
+	/** Getter for pool name.
+	 * @return pool name suffix.
+	 */
+	public String getPoolName() {
+		return this.poolName;
+	}
+	
+	/** Setter for pool name
+	 * @param poolName to set
+	 */
+	public void setPoolName(String poolName) {
+		this.poolName = poolName;
 	}
 }
