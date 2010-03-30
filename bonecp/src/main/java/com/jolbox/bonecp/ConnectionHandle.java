@@ -20,7 +20,6 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Array;
 import java.sql.Blob;
