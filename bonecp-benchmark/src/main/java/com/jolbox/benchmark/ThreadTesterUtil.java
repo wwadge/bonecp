@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.jolbox.benchmark;
 
 import java.sql.Connection;
@@ -67,18 +67,24 @@ public class ThreadTesterUtil implements Callable<Long>{
 		}
 
 		Connection con = null;
+		boolean success = false;
 		boolean error;
-		try {
-			long start = System.nanoTime();
-			con = this.ds.getConnection();
-			time = time + (System.nanoTime() - start);
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-		}
+		long start = System.nanoTime();
+		do{
+			try {
+				con = this.ds.getConnection();
+				System.out.println(con);
+				time = time + (System.nanoTime() - start);
+				success = true;
+			} catch (Throwable e1) {
+				//e1.printStackTrace();
+				success = false;
+			}
+		} while (!success);
 
 		try{
 			if (this.doPreparedStatement){
-				long start = System.nanoTime();
+				start = System.nanoTime();
 				Statement s = con.prepareStatement(TEST_QUERY);
 				s.close();
 				time = time + (System.nanoTime() - start);
@@ -87,7 +93,7 @@ public class ThreadTesterUtil implements Callable<Long>{
 			if (this.workDelay > 0){
 				Thread.sleep(this.workDelay);
 			}
-			long start = System.nanoTime();
+			start = System.nanoTime();
 			con.close();
 			time = time + (System.nanoTime() - start);
 
