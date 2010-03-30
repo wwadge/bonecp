@@ -161,7 +161,9 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	 *
 	 */
 	public void close(){
-		this.pool.shutdown();
+		if (this.pool != null){
+			this.pool.shutdown();
+		}
 	}
 
 	/**
