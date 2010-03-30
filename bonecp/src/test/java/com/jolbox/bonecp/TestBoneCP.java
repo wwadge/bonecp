@@ -127,6 +127,7 @@ public class TestBoneCP {
 		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
+		expect(mockConfig.getPoolName()).andReturn("testpoolname").anyTimes();
 
 		replay(mockConfig);
 		
@@ -811,13 +812,40 @@ public class TestBoneCP {
 		Field field = testClass.getClass().getDeclaredField("mbs");
 		field.setAccessible(true);
 		field.set(testClass, mockMbs);
+		expect(mockConfig.getPoolName()).andReturn(null).anyTimes();
 		ObjectInstance mockInstance = createNiceMock(ObjectInstance.class);
 		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
 		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
-		replay(mockMbs, mockInstance);
+		replay(mockMbs, mockInstance, mockConfig);
 		testClass.initJMX();
 		verify(mockMbs);
 	}
+	
+	/** JMX with name test.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InstanceAlreadyExistsException
+	 * @throws MBeanRegistrationException
+	 * @throws NotCompliantMBeanException
+	 */
+	@Test
+	public void testJMXWithName() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException{
+		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
+		Field field = testClass.getClass().getDeclaredField("mbs");
+		field.setAccessible(true);
+		field.set(testClass, mockMbs);
+		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
+		ObjectInstance mockInstance = createNiceMock(ObjectInstance.class);
+		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
+		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
+		replay(mockMbs, mockInstance, mockConfig);
+	 	testClass.initJMX();
+	 	verify(mockMbs);
+	 	assertEquals("-testpoolname", testClass.getPoolNameSuffix());
+	 }
+
 
 	/**
 	 * @throws SecurityException

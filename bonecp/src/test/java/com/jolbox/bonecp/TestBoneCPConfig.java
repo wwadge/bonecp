@@ -84,11 +84,12 @@ public class TestBoneCPConfig {
 		CommonTestUtils.config.setPartitionCount(1);
 		CommonTestUtils.config.setConnectionTestStatement("test");
 		CommonTestUtils.config.setAcquireIncrement(6);
+		CommonTestUtils.config.setPoolName("testPoolName");
 		CommonTestUtils.config.setStatementsCachedPerConnection(7);
 		CommonTestUtils.config.setPreparedStatementsCacheSize(2);
 		
 
-		
+		assertEquals("testPoolName", CommonTestUtils.config.getPoolName());
 		assertEquals(CommonTestUtils.url, CommonTestUtils.config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, CommonTestUtils.config.getUsername());
 		assertEquals(CommonTestUtils.password, CommonTestUtils.config.getPassword());

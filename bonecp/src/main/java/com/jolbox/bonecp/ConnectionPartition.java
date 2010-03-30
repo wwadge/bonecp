@@ -123,8 +123,8 @@ public class ConnectionPartition implements Serializable{
         /** Create a number of helper threads for connection release. */
         int helperThreads = config.getReleaseHelperThreads();
         if (helperThreads > 0) {
-        	
-            ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread", true));
+
+            ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread"+pool.getPoolNameSuffix(), true));
             pool.setReleaseHelper(releaseHelper); // keep a handle just in case
             
             for (int i = 0; i < helperThreads; i++) { 

@@ -100,8 +100,12 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	private String acquireRetryDelay;
 	/** Classloader to use. */
 	private ClassLoader classLoader;
+	/** Name of the pool for JMX and thread names. */
+	private String poolName;
 	/** Config object built during init. */
 	private BoneCPConfig config;
+	/** Set to true to disable JMX. */
+	private boolean disableJMX; 
 	/**
 	 * Default empty constructor.
 	 *
@@ -126,6 +130,8 @@ public class BoneCPDataSource implements DataSource, Serializable{
 		this.setAcquireIncrement(config.getAcquireIncrement());
 		this.setConnectionTestStatement(config.getConnectionTestStatement());
 		this.setStatementCacheSize(config.getStatementsCacheSize());
+		this.setPoolName(config.getPoolName());
+		this.setDisableJMX(config.isDisableJMX());
 //		this.setStatementsCachedPerConnection(config.getStatementsCachedPerConnection());
 		this.setReleaseHelperThreads(config.getReleaseHelperThreads());
 		this.setConnectionHook(config.getConnectionHook());
@@ -198,6 +204,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				this.config.setAcquireIncrement(acquireIncrement);
 				this.config.setPartitionCount(partitions);
 				this.config.setJdbcUrl(this.jdbcUrl);
+				this.config.setPoolName(this.poolName);
 				this.config.setUsername(this.username);
 				this.config.setPassword(this.password);
 				this.config.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
@@ -212,6 +219,7 @@ public class BoneCPDataSource implements DataSource, Serializable{
 				this.config.setLogStatementsEnabled(this.logStatementsEnabled);
 				this.config.setLazyInit(this.lazyInit);
 				this.config.setAcquireRetryDelay(acquireRetryDelay);
+				this.config.setDisableJMX(this.disableJMX);
 				this.pool = new BoneCP(this.config);
 			}
 
@@ -899,14 +907,39 @@ public class BoneCPDataSource implements DataSource, Serializable{
 	/** Returns true if connection pool is to be initialized lazily.
 	 * @return lazyInit setting 
 	 */
-	protected boolean isLazyInit() {
+	public boolean isLazyInit() {
 		return this.lazyInit;
 	}
 	
 	/** Set to true to force the connection pool to obtain the initial connections lazily.
 	 * @param lazyInit the lazyInit setting to set
 	 */
-	protected void setLazyInit(boolean lazyInit) {
+	public void setLazyInit(boolean lazyInit) {
 		this.lazyInit = lazyInit;
+	}
+	
+	/** Sets the pool name for JMX and thread names.
+	 * @return the poolName to set
+	 */
+	public String getPoolName() {
+		return this.poolName;
+	}
+	/** Returns the pool name for JMX and thread names.
+	 * @param poolName the poolName to set
+	 */
+	public void setPoolName(String poolName) {
+		this.poolName = poolName;
+	}
+	/** Return true if jmx is disabled.
+	 * @return the disableJMX
+	 */
+	public boolean isDisableJMX() {
+		return this.disableJMX;
+	}
+	/** Set to true to disable jmx.
+	 * @param disableJMX the disableJMX to set
+	 */
+	public void setDisableJMX(boolean disableJMX) {
+		this.disableJMX = disableJMX;
 	}
 }

@@ -79,6 +79,7 @@ public class TestSystemTests {
 		CommonTestUtils.config.setMinConnectionsPerPartition(30);
 		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
 		CommonTestUtils.config.setPartitionCount(1);
+		CommonTestUtils.config.setPoolName("testpoolname");
 		
 		
 		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
@@ -111,6 +112,7 @@ public class TestSystemTests {
 		dsb.setAcquireRetryDelay(1000);
 		dsb.setAcquireRetryDelay("1000");
 		dsb.getConnection().close();
+		assertEquals("testpoolname", dsb.getPoolName());
 		assertNotNull(dsb.getConfig());
 		assertNotNull(dsb.toString());
 		dsb.setConnectionHookClassName("bad class name");

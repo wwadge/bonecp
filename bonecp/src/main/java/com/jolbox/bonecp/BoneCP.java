@@ -104,6 +104,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	protected volatile boolean poolShuttingDown;
 	/** Placeholder to give more useful info in case of a double shutdown. */
 	private String shutdownStackTrace;
+	/** Pool name suffix. */
+	private String poolNameSuffix = "";
 
 	/**
 	 * Closes off this connection pool.
@@ -192,18 +194,22 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername()), e);
 			}
 		}
+		
 		this.asyncExecutor = Executors.newCachedThreadPool();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
-		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler", true));
-		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread", true));
+		if (config.getPoolName() != null){
+			this.poolNameSuffix = "-" + config.getPoolName();
+		}
+		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler"+this.poolNameSuffix, true));
+		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread"+this.poolNameSuffix, true));
 		this.partitionCount = config.getPartitionCount();
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 
 		if (this.closeConnectionWatch){
 			logger.warn("Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!");
-			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread", true));
+			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread"+this.poolNameSuffix, true));
 
 		}
 		for (int p=0; p < config.getPartitionCount(); p++){
@@ -227,7 +233,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
 
-		initJMX(); 
+		if (!this.config.isDisableJMX()){
+			initJMX();
+		}
 	}
 
 	/**
@@ -238,8 +246,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.mbs = ManagementFactory.getPlatformMBeanServer();
 		}
 		try {
-			ObjectName name = new ObjectName(MBEAN_BONECP);
-			ObjectName configname = new ObjectName(MBEAN_CONFIG);
+			ObjectName name = new ObjectName(MBEAN_BONECP+this.poolNameSuffix);
+			ObjectName configname = new ObjectName(MBEAN_CONFIG+this.poolNameSuffix);
 
 			if (!this.mbs.isRegistered(name)){
 				this.mbs.registerMBean(this, name); 
@@ -545,6 +553,13 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	protected void setReleaseHelper(ExecutorService releaseHelper) {
 		this.releaseHelper = releaseHelper;
+	}
+	
+	/** Returns a pool name suffix.
+	 * @return pool name suffix.
+	 */
+	public String getPoolNameSuffix(){
+		return this.poolNameSuffix;
 	}
 
 }

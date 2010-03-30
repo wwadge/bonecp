@@ -71,6 +71,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int releaseHelperThreads = 3;
 	/** Hook class (external). */
 	private ConnectionHook connectionHook;
+	/** Name of the pool for JMX and thread names. */
+	private String poolName;
 	/** Query to send once per connection to the database. */
 	private String initSQL;
 	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to 
@@ -83,6 +85,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int acquireRetryDelay;
 	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
 	private boolean lazyInit;
+	/** Set to true to disable JMX. */
+	private boolean disableJMX;
 	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
@@ -582,5 +586,33 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				this.connectionTestStatement, this.idleConnectionTestPeriod, this.idleMaxAge, this.initSQL, this.jdbcUrl, 
 				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
 				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit);
+	}
+
+	/** Return the name of the pool for JMX and thread names.
+	 * @return the poolName to set.
+	 */
+	protected String getPoolName() {
+		return this.poolName;
+	}
+
+	/** Sets the name of the pool for JMX and thread names.
+	 * @param poolName the poolName to set
+	 */
+	protected void setPoolName(String poolName) {
+		this.poolName = poolName;
+	}
+
+	/** Returns true if JMX is disabled.
+	 * @return the disableJMX
+	 */
+	protected boolean isDisableJMX() {
+		return this.disableJMX;
+	}
+
+	/** Set to true to disable JMX.
+	 * @param disableJMX the disableJMX to set
+	 */
+	protected void setDisableJMX(boolean disableJMX) {
+		this.disableJMX = disableJMX;
 	}
 }
