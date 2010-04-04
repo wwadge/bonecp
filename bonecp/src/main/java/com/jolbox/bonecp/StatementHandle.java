@@ -1003,13 +1003,18 @@ public class StatementHandle implements Statement{
 
 	/** {@inheritDoc}
 	 * @see java.lang.Object#finalize()
-	 *
+	 * Uncomment this only if you're willing to deal with the performance hit!
 	@Override
 	protected void finalize() throws Throwable {
 		super.finalize();
 		if (!isClosed()){
-			close();
-			logger.warn("BoneCP detected an unclosed statement and has closed it for you. You should be closing this statement in your application - enable connectionWatch and statement caching for additional debugging assistance.");
+			try{
+				close();
+				logger.warn("BoneCP detected an unclosed statement and has closed it for you. You should be closing this statement in your application - enable connectionWatch and statement caching for additional debugging assistance.");
+			} catch (Throwable t){
+				logger.warn("BoneCP detected an unclosed statement and didn't manage to close it for you. You should be closing this statement in your application - enable connectionWatch and statement caching for additional debugging assistance.");
+			}
 		}
 	} */
+	*/
 }

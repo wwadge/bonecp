@@ -90,7 +90,6 @@ public class TestConnectionHandle {
 	 */
 	@BeforeClass
 	public static void setUp() throws Exception {
-		MockJDBCDriver.disable(false);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockPreparedStatementCache = createNiceMock(IStatementCache.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
@@ -101,6 +100,7 @@ public class TestConnectionHandle {
 		mockPool = createNiceMock(BoneCP.class);
 		mockPool.closeConnectionWatch=true;
 		expect(mockPool.getConfig()).andReturn(CommonTestUtils.config).anyTimes();
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
 		CommonTestUtils.config.setStatementsCacheSize(1);
 		replay(mockPool);
 		testClass = new ConnectionHandle(mockConnection, mockPreparedStatementCache, mockCallableStatementCache, mockPool);
@@ -108,6 +108,7 @@ public class TestConnectionHandle {
 		Field field = testClass.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 		field.set(null, mockLogger);
+		CommonTestUtils.config.setReleaseHelperThreads(0);
 	}
 
 	@AfterClass

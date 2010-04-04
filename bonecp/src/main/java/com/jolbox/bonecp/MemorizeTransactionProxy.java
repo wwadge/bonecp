@@ -124,7 +124,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		this.connectionHandle = connectionHandle;
 	}
 
-	@Override
+	@Override 
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
 		Object result;
@@ -132,10 +132,15 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			return method.invoke(this.target, args);
 		}
 
+		if (method.getName().equals("getProxyTarget")){  // special "fake" method to return our proxy target
+			return this.target;
+		} 
+		
+		
 		if (this.connectionHandle.recoveryResult != null){ // if we previously failed, do the mapping to the new connection/statements
 			Object remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.target);
 			if (remap != null){
-				this.target = remap;
+				this.target = remap; 
 			}
 			remap = this.connectionHandle.recoveryResult.getReplaceTarget().get(this.connectionHandle);
 			if (remap != null){
@@ -147,6 +152,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		if (!this.connectionHandle.isInReplayMode() && !method.getName().equals("hashCode") && !method.getName().equals("equals") && !method.getName().equals("toString")){
 			this.connectionHandle.getReplayLog().add(new ReplayLog(this.target, method, args));
 		}
+		
+	
+		
 
 		try{
 			// run and swap with proxies if we encounter prepareStatement calls
@@ -258,15 +266,15 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				// we got new connections/statement handles so replace what we've got with the new ones
 				if (replay.getTarget() instanceof Connection){
 					replaceTarget.put(replay.getTarget(), this.connectionHandle.getInternalConnection());
+				}  else if (replay.getTarget() instanceof CallableStatement){
+					if (replaceTarget.get(replay.getTarget()) == null){
+						replaceTarget.put(replay.getTarget(), callableStatementTarget.remove(0));
+					}
 				} else if (replay.getTarget() instanceof PreparedStatement){
 					if (replaceTarget.get(replay.getTarget()) == null){
 						replaceTarget.put(replay.getTarget(), prepStatementTarget.remove(0));
 					}
-				} else if (replay.getTarget() instanceof CallableStatement){
-					if (replaceTarget.get(replay.getTarget()) == null){
-						replaceTarget.put(replay.getTarget(), callableStatementTarget.remove(0));
-					}
-				} else if (replay.getTarget() instanceof Statement){
+				}else if (replay.getTarget() instanceof Statement){
 					if (replaceTarget.get(replay.getTarget()) == null){
 						replaceTarget.put(replay.getTarget(), statementTarget.remove(0));
 					}
@@ -277,15 +285,15 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					// run again using the new connection/statement
 					//					result = replay.getMethod().invoke(, replay.getArgs());
 					result = runWithPossibleProxySwap(replay.getMethod(), replaceTarget.get(replay.getTarget()), replay.getArgs());
-
-					// remember what we've got last
+ 
+					// remember what we've got last 
 					recoveryResult.setResult(result);
 
 					// if we got a new statement (eg a prepareStatement call), save it, we'll use it for our search/replace
-					if (result instanceof PreparedStatement){
-						prepStatementTarget.add((PreparedStatement)result);
-					} else if (result instanceof CallableStatement){
+					if (result instanceof CallableStatement){
 						callableStatementTarget.add((CallableStatement)result);
+					} else if (result instanceof PreparedStatement){
+						prepStatementTarget.add((PreparedStatement)result);
 					} else if (result instanceof Statement){
 						statementTarget.add((Statement)result);
 					}  

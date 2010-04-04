@@ -322,11 +322,12 @@ public class TestSystemTests {
 		BoneCP dsb = new BoneCP(CommonTestUtils.config);
 
 		assertEquals(10, dsb.getTotalCreatedConnections());
-
+		assertEquals(0, dsb.getTotalLeased());
 
 		for (int i=0; i < 10; i++){
 			dsb.getConnection();
 		}
+		assertEquals(10, dsb.getTotalLeased());
 
 		for (int i=0; i < 60; i++) {
 			Thread.yield();

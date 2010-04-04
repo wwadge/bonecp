@@ -1,45 +1,35 @@
 /**
- * Copyright 2009 Wallace Wadge
- *
- * This file is part of BoneCP.
- *
- * BoneCP is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * BoneCP is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/**
  * 
  */
 package com.jolbox.bonecp;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertNotNull;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.createStrictMock;
 import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.classextension.EasyMock.verify;
+import static org.easymock.classextension.EasyMock.reset;
+import static org.junit.Assert.fail;
 
+import java.lang.Thread.State;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.AfterClass;
+import org.easymock.classextension.EasyMock;
+import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import com.jolbox.bonecp.hooks.CoverageHook;
 
 /**
  * @author Wallace
@@ -47,16 +37,27 @@ import org.junit.Test;
  */
 public class TestMemorizeTransactionProxy {
 	
-	@BeforeClass
-	public static void enableMockDriver() throws SQLException{
-		MockJDBCDriver.disable(false);
-	}
+	static ConnectionHandle mockConnection;
+	static Connection mockConnection2;
+	static CallableStatement mockCallableStatement;
+	static Statement mockStatement;
+	static PreparedStatement mockPreparedStatement;
+	static Connection mockConnection3; 
 	
-	@AfterClass
-	public static void disableMockDriver() throws SQLException{
-		MockJDBCDriver.disable(true);
+	@BeforeClass
+	public static void beforeClass(){
+		mockConnection = createNiceMock(ConnectionHandle.class);
+		// make it return a new connection when asked for again
+		mockConnection2 = createNiceMock(Connection.class);
+		mockConnection3 = createNiceMock(Connection.class);
+		mockCallableStatement = createNiceMock(CallableStatement.class);
+		mockStatement = createNiceMock(Statement.class);
+		mockPreparedStatement = createNiceMock(PreparedStatement.class);
 	}
-
+	@Before
+	public void before(){
+		reset(mockConnection, mockConnection2, mockConnection3, mockCallableStatement, mockPreparedStatement, mockStatement);
+	}
 	/** Tests that the statements and connections are proxified.
 	 * @throws SQLException
 	 * @throws SecurityException
@@ -67,16 +68,14 @@ public class TestMemorizeTransactionProxy {
 	 */
 	@Test
 	public void testProxies() throws SQLException, SecurityException, IllegalArgumentException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException{
-		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
-		CallableStatement mockCallableStatement = createNiceMock(CallableStatement.class);
-
-		new MockJDBCDriver(mockConnection);
-		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
-		String jdbcDriver = CommonTestUtils.config.getJdbcUrl();
-		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
-		BoneCP pool = new BoneCP(CommonTestUtils.config);
-		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
 		
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(mockConnection);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver2");
+		CommonTestUtils.config.setReleaseHelperThreads(0);
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
 		expect(mockConnection.prepareCall("")).andReturn(mockCallableStatement).anyTimes();
 		replay(mockConnection);
 		Connection con = pool.getConnection();
@@ -109,10 +108,459 @@ public class TestMemorizeTransactionProxy {
 
 		handler = java.lang.reflect.Proxy.getInvocationHandler(stmt);
 		assertEquals(MemorizeTransactionProxy.class, handler.getClass());
-		CommonTestUtils.config.setJdbcUrl(jdbcDriver);
+
+		
+		// fake stuff to test for clear
+		((ConnectionHandle)con).getReplayLog().add(new ReplayLog(null, null, null));
+		((ConnectionHandle)con).recoveryResult.getReplaceTarget().put("test", "test1");
+		con.rollback(); // should clear out log
+		assertTrue(((ConnectionHandle)con).getReplayLog().isEmpty());
+		assertTrue(((ConnectionHandle)con).recoveryResult.getReplaceTarget().isEmpty());
+
+		// fake stuff to test for clear
+		((ConnectionHandle)con).getReplayLog().add(new ReplayLog(null, null, null));
+		((ConnectionHandle)con).recoveryResult.getReplaceTarget().put("test", "test1");
+		con.commit(); // should clear out log
+		assertTrue(((ConnectionHandle)con).getReplayLog().isEmpty());
+		assertTrue(((ConnectionHandle)con).recoveryResult.getReplaceTarget().isEmpty());
+
+		assertNotNull(((ConnectionHandle)con).getProxyTarget());
+		mockDriver.disable();
+	}
+	
+	static int count = 1;
+
+	
+	@Test
+	public void testReplayTransaction() throws IllegalArgumentException, Throwable{
+		
+		count = 1;
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			@Override
+			public Connection answer() throws SQLException {
+				if (count == 1){
+					return TestMemorizeTransactionProxy.this.mockConnection;
+				}
+				return TestMemorizeTransactionProxy.this.mockConnection2;
+			}
+		}); 
+		
+		
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
+		CommonTestUtils.config.setMinConnectionsPerPartition(2);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(2);
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		reset(mockConnection);
 		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+
+		EasyMock.makeThreadSafe(mockConnection, true);
+		String prepCall = "whatever2";
+		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockConnection.prepareCall(prepCall)).andReturn(mockCallableStatement).anyTimes();
+		expect(mockConnection.createStatement()).andReturn(mockStatement).anyTimes();
+		
+		// trigger a replay
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("", "08S01")).once();
+		
+		// This connection should be closed off
+		mockConnection.close(); // remember that this is the internal connection
+		expectLastCall().once();
+//		.andThrow(new SQLException("just a fake exception for code coverage")).once();
+
+		
+		// we should be getting a new connection and everything replayed on it
+		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).anyTimes();
+		mockPreparedStatement2.setInt(1, 1);
+		expectLastCall().once();
+		expect(mockPreparedStatement2.execute()).andReturn(true).once();
+		
+		CallableStatement mockCallableStatement2 = createStrictMock(CallableStatement.class);
+		expect(mockConnection2.prepareCall(prepCall)).andReturn(mockCallableStatement2).anyTimes();
+		mockCallableStatement2.clearWarnings();
+		expectLastCall().once();
+		
+		Statement mockStatement2 = createStrictMock(Statement.class);
+		expect(mockConnection2.createStatement()).andReturn(mockStatement2).anyTimes();
+		mockStatement2.clearWarnings();
+		expectLastCall().once();
+		
+		replay(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockCallableStatement2, mockStatement, mockStatement2);
+		
+		Connection con = pool.getConnection();
+		count=0;
+
+		mockDriver.setConnection(mockConnection2);
+		
+		PreparedStatement ps = con.prepareStatement("whatever");
+		ps.setInt(1, 1);
+		CallableStatement cs = con.prepareCall(prepCall);
+		cs.clearWarnings();
+		Statement stmt = con.createStatement();
+		stmt.clearWarnings();
+		ps.execute();    
+		con.close();
+		
+		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockCallableStatement2, mockStatement, mockStatement2);
+		
+		mockDriver.disable();
 		
 	}
 	
-//	public void test
+	
+	@Test
+	public void testReplayTransactionWithUserError() throws IllegalArgumentException, Throwable{
+		
+		count = 1;
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			@Override
+			public Connection answer() throws SQLException {
+					return TestMemorizeTransactionProxy.this.mockConnection;
+			}
+		}); 
+		
+		
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
+		CommonTestUtils.config.setMinConnectionsPerPartition(2);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(2);
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		reset(mockConnection);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+
+		EasyMock.makeThreadSafe(mockConnection, true);
+		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("Fake user-error", "123")).once();
+		
+		replay(mockConnection, mockPreparedStatement);
+		
+		Connection con = pool.getConnection();
+		count=0;
+
+		PreparedStatement ps = con.prepareStatement("whatever");
+		ps.setInt(999, 1); // should throw an error in real-life
+		try{
+			ps.execute();
+			fail("Should have thrown an error");
+		} catch(SQLException e){
+			// expected
+		}
+		
+		
+		verify(mockConnection, mockPreparedStatement);
+		
+		mockDriver.disable();
+		
+	}
+	
+	/** Fail, then fail again on replay to see that it recovers.
+	 * @throws IllegalArgumentException
+	 * @throws Throwable
+	 */
+	@Test
+	public void testReplayTransactionWithFailuresOnReplay() throws IllegalArgumentException, Throwable{
+		
+		count = 1;
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			@Override
+			public Connection answer() throws SQLException {
+				if (count == 1){
+					return TestMemorizeTransactionProxy.this.mockConnection;
+				}  if (count == 0){
+					count--;
+					return TestMemorizeTransactionProxy.this.mockConnection2;
+				} 
+					return TestMemorizeTransactionProxy.this.mockConnection3;
+			}
+		}); 
+		
+		
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
+		CommonTestUtils.config.setMinConnectionsPerPartition(2);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(2);
+		CommonTestUtils.config.setAcquireRetryDelay(1);
+		CommonTestUtils.config.setAcquireRetryAttempts(2);
+//		CommonTestUtils.config.setConnectionHook(new CoverageHook());
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		reset(mockConnection);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+
+		EasyMock.makeThreadSafe(mockConnection, true);
+		// we should be getting new connections and everything replayed on it
+		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement3 = createStrictMock(PreparedStatement.class);
+		
+		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
+		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
+		expect(mockConnection3.prepareStatement("whatever")).andReturn(mockPreparedStatement3).once();
+		
+		// trigger a replay
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("", "08S01")).once();
+		 
+		// This connection should be closed off
+		mockConnection.close(); // remember that this is the internal connection
+		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		mockConnection2.close(); // remember that this is the internal connection
+		mockConnection3.close(); // remember that this is the internal connection
+		
+
+		
+		
+		mockPreparedStatement2.setInt(1, 1);
+		expect(mockPreparedStatement2.execute()).andThrow(new SQLException("Fake errors to force replaying")).once();
+		
+		mockPreparedStatement3.setInt(1, 1);
+		expect(mockPreparedStatement3.execute()).andReturn(true).once();
+				
+		replay(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockPreparedStatement3, mockConnection3);
+		
+		Connection con = pool.getConnection();
+		count=0;
+
+//		mockDriver.setConnection(mockConnection2);
+		
+		PreparedStatement ps = con.prepareStatement("whatever");
+		ps.setInt(1, 1);
+		ps.execute();               
+		
+		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockPreparedStatement3);
+		
+		mockDriver.disable();
+	}
+	
+	
+	@Test
+	public void testReplayTransactionWithFailuresOnReplayKeepFailing() throws IllegalArgumentException, Throwable{
+		
+		count = 1;
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			@Override
+			public Connection answer() throws SQLException {
+				if (count == 1){
+					return TestMemorizeTransactionProxy.this.mockConnection;
+				}  
+					return TestMemorizeTransactionProxy.this.mockConnection2;
+			}
+		}); 
+		
+		
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
+		CommonTestUtils.config.setMinConnectionsPerPartition(2);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(2);
+		CommonTestUtils.config.setAcquireRetryDelay(1);
+		CommonTestUtils.config.setAcquireRetryAttempts(1);
+//		CommonTestUtils.config.setConnectionHook(new CoverageHook());
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		reset(mockConnection);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+
+		EasyMock.makeThreadSafe(mockConnection, true);
+		// we should be getting new connections and everything replayed on it
+		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		
+		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
+		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
+		
+		// trigger a replay
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("", "08S01")).once();
+		 
+		// This connection should be closed off
+		mockConnection.close(); // remember that this is the internal connection
+		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		
+
+		
+		
+		mockPreparedStatement2.setInt(1, 1);
+		expect(mockPreparedStatement2.execute()).andThrow(new SQLException("Fake errors to force replaying")).once();
+		
+		replay(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
+		
+		Connection con = pool.getConnection();
+		count=0;
+
+//		mockDriver.setConnection(mockConnection2);
+		
+		PreparedStatement ps = con.prepareStatement("whatever");
+		ps.setInt(1, 1);
+		try{
+			ps.execute();
+			fail("Should have thrown exception");
+		} catch (SQLException e){
+			// expected exception
+		}
+		
+		
+		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
+		
+		mockDriver.disable();
+	}
+	
+	@Test
+	public void testReplayTransactionWithFailuresInterruptedException() throws IllegalArgumentException, Throwable{
+		
+		count = 1;
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			@Override
+			public Connection answer() throws SQLException {
+				if (count == 1){
+					return TestMemorizeTransactionProxy.this.mockConnection;
+				}  
+					return TestMemorizeTransactionProxy.this.mockConnection2;
+			}
+		}); 
+		
+		
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
+		CommonTestUtils.config.setMinConnectionsPerPartition(2);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(2);
+		CommonTestUtils.config.setAcquireRetryDelay(10000);
+		CommonTestUtils.config.setAcquireRetryAttempts(2);
+//		CommonTestUtils.config.setConnectionHook(new CoverageHook());
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		reset(mockConnection);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+
+		EasyMock.makeThreadSafe(mockConnection, true);
+		// we should be getting new connections and everything replayed on it
+		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		
+		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
+		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
+		
+		// trigger a replay
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("", "08S01")).once();
+		 
+		// This connection should be closed off
+		mockConnection.close(); // remember that this is the internal connection
+		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		
+
+		
+		
+		mockPreparedStatement2.setInt(1, 1);
+		expect(mockPreparedStatement2.execute()).andThrow(new SQLException("Fake errors to force replaying")).once();
+		
+		replay(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
+		
+		Connection con = pool.getConnection();
+		count=0;
+
+		final Thread currentThread = Thread.currentThread();
+
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					while (!currentThread.getState().equals(State.TIMED_WAITING)){
+						try {
+							Thread.sleep(50);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					currentThread.interrupt();
+				}
+			}).start();
+		
+		
+		PreparedStatement ps = con.prepareStatement("whatever");
+		ps.setInt(1, 1);
+		try{
+			ps.execute();
+			fail("Should have thrown exception");
+		} catch (SQLException e){
+			// expected exception
+		}
+		
+		
+		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
+		
+		mockDriver.disable();
+	}
+	
+	@Test
+	public void testReplayTransactionWithFailuresCustomHook() throws IllegalArgumentException, Throwable{
+		
+		count = 1;
+
+		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			@Override
+			public Connection answer() throws SQLException {
+				if (count == 1){
+					return TestMemorizeTransactionProxy.this.mockConnection;
+				}  
+					return TestMemorizeTransactionProxy.this.mockConnection2;
+			}
+		}); 
+		
+		
+		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
+		CommonTestUtils.config.setMinConnectionsPerPartition(2);
+		CommonTestUtils.config.setMaxConnectionsPerPartition(2);
+		CommonTestUtils.config.setAcquireRetryDelay(1);
+		CommonTestUtils.config.setAcquireRetryAttempts(2);
+		CommonTestUtils.config.setConnectionHook(new CoverageHook());
+		BoneCP pool = new BoneCP(CommonTestUtils.config);
+		reset(mockConnection);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+
+		EasyMock.makeThreadSafe(mockConnection, true);
+		// we should be getting new connections and everything replayed on it
+		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		
+		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
+		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
+		
+		// trigger a replay
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("", "08S01")).once();
+		 
+		// This connection should be closed off
+		mockConnection.close(); // remember that this is the internal connection
+		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		
+
+		
+		
+		mockPreparedStatement2.setInt(1, 1);
+		expect(mockPreparedStatement2.execute()).andThrow(new SQLException("Fake errors to force replaying")).once();
+		
+		replay(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
+		
+		Connection con = pool.getConnection();
+		count=0;
+
+
+		
+		PreparedStatement ps = con.prepareStatement("whatever");
+		ps.setInt(1, 1);
+		try{
+			ps.execute();
+			fail("Should have thrown exception");
+		} catch (SQLException e){
+			// expected exception
+		}
+		
+		
+		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
+		
+		mockDriver.disable();
+	}
+
 }

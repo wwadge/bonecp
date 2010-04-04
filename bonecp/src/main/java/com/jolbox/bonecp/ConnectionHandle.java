@@ -20,6 +20,8 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -1161,7 +1163,7 @@ public class ConnectionHandle implements Connection{
 	}
 
 	/** Check that the connection was closed before the GC reclaimed it.
-	 */
+	 *
 	protected void doFinalize(){
 		try {
 			if (!isClosed()){
@@ -1174,7 +1176,7 @@ public class ConnectionHandle implements Connection{
 		}
 
 	}
-
+*/
 	/**
 	 * @return the inReplayMode
 	 */
@@ -1223,5 +1225,17 @@ public class ConnectionHandle implements Connection{
 	 */
 	protected void setReplayLog(List<ReplayLog> replayLog) {
 		this.replayLog = replayLog;
+	}
+
+	/** This method will be intercepted by the proxy if it is enabled to return the internal target.
+	 * @return the target.
+	 */
+	public Object getProxyTarget(){
+		try {
+			return Proxy.getInvocationHandler(this.connection).invoke(null, this.getClass().getMethod("getProxyTarget"), null);
+		} catch (Throwable t) {
+			logger.error("Internal error - transaction replay log is not turned on?", t);
+		}
+		return null;
 	}
 }
