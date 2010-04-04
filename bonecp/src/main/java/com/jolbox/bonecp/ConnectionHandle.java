@@ -55,7 +55,7 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  * @author wwadge
  * 
  */
-public class ConnectionHandle implements Connection {
+public class ConnectionHandle implements Connection{
 	/** Exception message. */
 	private static final String STATEMENT_NOT_CLOSED = "Stack trace of location where statement was opened follows:\n%s";
 	/** Exception message. */
@@ -340,7 +340,7 @@ public class ConnectionHandle implements Connection {
 		try {
 			if (!this.logicallyClosed) {
 				this.logicallyClosed = true;
-				
+
 				this.pool.releaseConnection(this);
 
 				if (this.doubleCloseCheck){
@@ -1160,17 +1160,19 @@ public class ConnectionHandle implements Connection {
 		this.logStatementsEnabled = logStatementsEnabled;
 	}
 
-	/** {@inheritDoc}
-	 * @see java.lang.Object#finalize()
+	/** Check that the connection was closed before the GC reclaimed it.
 	 */
-	@Override
-	protected void finalize() throws Throwable {
-		super.finalize();
-		if (!isClosed()){
-			close();
-			logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
-			"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+	protected void doFinalize(){
+		try {
+			if (!isClosed()){
+				close();
+				logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
+				"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+			}
+		} catch (Throwable t) {
+			logger.error("An error was detected when trying to close off a connection", t);
 		}
+
 	}
 
 	/**

@@ -53,6 +53,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import junit.framework.Assert;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -109,6 +110,10 @@ public class TestConnectionHandle {
 		field.set(null, mockLogger);
 	}
 
+	@AfterClass
+	public static void disableMockDriver() throws SQLException{
+		MockJDBCDriver.disable(true);
+	}
 	/** Reset everything.
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException

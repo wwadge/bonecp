@@ -31,6 +31,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -47,12 +48,12 @@ import org.junit.Test;
 public class TestMemorizeTransactionProxy {
 	
 	@BeforeClass
-	public static void enableMockDriver(){
+	public static void enableMockDriver() throws SQLException{
 		MockJDBCDriver.disable(false);
 	}
 	
 	@AfterClass
-	public static void disableMockDriver(){
+	public static void disableMockDriver() throws SQLException{
 		MockJDBCDriver.disable(true);
 	}
 
@@ -71,6 +72,7 @@ public class TestMemorizeTransactionProxy {
 
 		new MockJDBCDriver(mockConnection);
 		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
+		String jdbcDriver = CommonTestUtils.config.getJdbcUrl();
 		CommonTestUtils.config.setJdbcUrl("jdbc:mock:driver");
 		BoneCP pool = new BoneCP(CommonTestUtils.config);
 		CommonTestUtils.config.setTransactionRecoveryEnabled(true);
@@ -107,6 +109,9 @@ public class TestMemorizeTransactionProxy {
 
 		handler = java.lang.reflect.Proxy.getInvocationHandler(stmt);
 		assertEquals(MemorizeTransactionProxy.class, handler.getClass());
+		CommonTestUtils.config.setJdbcUrl(jdbcDriver);
+		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
+		
 	}
 	
 //	public void test

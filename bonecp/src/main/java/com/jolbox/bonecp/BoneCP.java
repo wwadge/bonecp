@@ -22,11 +22,17 @@ package com.jolbox.bonecp;
 
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -104,6 +110,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	protected volatile boolean poolShuttingDown;
 	/** Placeholder to give more useful info in case of a double shutdown. */
 	private String shutdownStackTrace;
+	/** Reference of objects that are to be watched. */
+	protected static final Set<Reference<ConnectionHandle>> finalizableRefs	= Collections.synchronizedSet(new HashSet<Reference<ConnectionHandle>>());
+	/** Watch for connections that should have been safely closed but the application forgot. */
+	protected static final ReferenceQueue finalizableRefQueue = new ReferenceQueue<ConnectionHandle>();
+
 
 	/**
 	 * Closes off this connection pool.
@@ -215,8 +226,12 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
-					this.partitions[p].addFreeConnection(new ConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this));
+					final ConnectionHandle handle = new ConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this);
+					this.partitions[p].addFreeConnection(handle);
+					
+//					finalizableRefs.add(new WeakReference<ConnectionHandle>(handle, finalizableRefQueue));
 				}
+
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){
@@ -414,8 +429,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		connectionHandle.clearStatementCaches(false);
 
 		if (connectionHandle.getReplayLog() != null){
-				connectionHandle.getReplayLog().clear();
-				connectionHandle.recoveryResult.getReplaceTarget().clear();
+			connectionHandle.getReplayLog().clear();
+			connectionHandle.recoveryResult.getReplaceTarget().clear();
 		}
 
 		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){

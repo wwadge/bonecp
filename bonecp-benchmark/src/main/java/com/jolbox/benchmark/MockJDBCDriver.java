@@ -20,7 +20,7 @@
 /**
  * 
  */
-package com.jolbox.bonecp;
+package com.jolbox.benchmark;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -36,12 +36,6 @@ import java.util.Properties;
 public class MockJDBCDriver  implements Driver {
 	/** If true, stop responding to connection requests. */
 	private static boolean disabled;
-	/** Connection handle to return. */
-	private static Connection connection = null;
-	/** called to return. */
-	private static MockJDBCAnswer mockJDBCAnswer;
-	/** Instance. */
-	private static MockJDBCDriver driverInstance;
 
 	/**
 	 * Default constructor
@@ -50,26 +44,8 @@ public class MockJDBCDriver  implements Driver {
 	public MockJDBCDriver() throws SQLException{
 		// default constructor
 		DriverManager.registerDriver(this);
-		driverInstance = this;
 	}
 	
-	/** Connection handle to return
-	 * @param mockJDBCAnswer answer class
-	 * @throws SQLException 
-	 */
-	public MockJDBCDriver(MockJDBCAnswer mockJDBCAnswer) throws SQLException{
-		this();
-		MockJDBCDriver.mockJDBCAnswer = mockJDBCAnswer;
-	}
-	
-	/** Return the connection when requested.
-	 * @param connection
-	 * @throws SQLException
-	 */
-	public MockJDBCDriver(Connection connection) throws SQLException{
-		this();
-		MockJDBCDriver.connection = connection;
-	}
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#acceptsURL(java.lang.String)
 	 */
@@ -86,11 +62,8 @@ public class MockJDBCDriver  implements Driver {
 		if (disabled){
 			return null;
 		}
-		if (connection != null){
-			return connection;
-		}
-		
-		return mockJDBCAnswer.answer();
+	
+		return new MockConnection();
 	}
 
 	/** {@inheritDoc}
@@ -126,15 +99,11 @@ public class MockJDBCDriver  implements Driver {
 		return true;
 	}
 	
-	/** 
+	/**
 	 * Disable everything.
 	 * @param disabled 
-	 * @throws SQLException 
 	 */
-	public static void disable(boolean disabled) throws SQLException{
-		MockJDBCDriver.disabled = disabled;
-		if (disabled){
-			DriverManager.deregisterDriver(driverInstance);
-		}
+	public static void disable(boolean disabled){
+		MockJDBCDriver.disabled = disabled; 
 	}
 }

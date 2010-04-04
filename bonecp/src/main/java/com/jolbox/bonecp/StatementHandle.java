@@ -1003,7 +1003,7 @@ public class StatementHandle implements Statement{
 
 	/** {@inheritDoc}
 	 * @see java.lang.Object#finalize()
-	 */
+	 *
 	@Override
 	protected void finalize() throws Throwable {
 		super.finalize();
@@ -1011,5 +1011,5 @@ public class StatementHandle implements Statement{
 			close();
 			logger.warn("BoneCP detected an unclosed statement and has closed it for you. You should be closing this statement in your application - enable connectionWatch and statement caching for additional debugging assistance.");
 		}
-	}
+	} */
 }
