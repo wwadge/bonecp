@@ -37,6 +37,7 @@ import java.sql.Statement;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.CoverageHook;

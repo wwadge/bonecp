@@ -20,7 +20,7 @@
 /**
  * 
  */
-package com.jolbox.bonecp;
+package com.jolbox.benchmark;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -34,12 +34,8 @@ import java.util.Properties;
  *
  */
 public class MockJDBCDriver  implements Driver {
-	/** Connection handle to return. */
-	private Connection connection = null;
-	/** called to return. */
-	private MockJDBCAnswer mockJDBCAnswer;
-	/** Instance. */
-	private static MockJDBCDriver driverInstance;
+	/** If true, stop responding to connection requests. */
+	private static boolean disabled;
 
 	/**
 	 * Default constructor
@@ -48,32 +44,14 @@ public class MockJDBCDriver  implements Driver {
 	public MockJDBCDriver() throws SQLException{
 		// default constructor
 		DriverManager.registerDriver(this);
-		driverInstance = this;
 	}
 	
-	/** Connection handle to return
-	 * @param mockJDBCAnswer answer class
-	 * @throws SQLException 
-	 */
-	public MockJDBCDriver(MockJDBCAnswer mockJDBCAnswer) throws SQLException{
-		this();
-		this.mockJDBCAnswer = mockJDBCAnswer;
-	}
-	
-	/** Return the connection when requested.
-	 * @param connection
-	 * @throws SQLException
-	 */
-	public MockJDBCDriver(Connection connection) throws SQLException{
-		this();
-		this.connection = connection;
-	}
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#acceptsURL(java.lang.String)
 	 */
 	@Override
 	public boolean acceptsURL(String url) throws SQLException {
-		return true; // accept anything
+		return !disabled; // accept anything
 	}
 
 	/** {@inheritDoc}
@@ -81,11 +59,11 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	@Override
 	public Connection connect(String url, Properties info) throws SQLException {
-		if (this.connection != null){
-			return this.connection;
+		if (disabled){
+			return null;
 		}
-		
-		return this.mockJDBCAnswer.answer();
+	
+		return new MockConnection();
 	}
 
 	/** {@inheritDoc}
@@ -121,29 +99,11 @@ public class MockJDBCDriver  implements Driver {
 		return true;
 	}
 	
-	/** 
+	/**
 	 * Disable everything.
-	 * @throws SQLException 
-	 * @throws SQLException 
+	 * @param disabled 
 	 */
-	public static void disable(boolean disabled) throws SQLException{
-		MockJDBCDriver.disabled = disabled;
-		if (disabled){
-			DriverManager.deregisterDriver(driverInstance);
-		}
-	}
-
-	/**
-	 * @return the connection
-	 */
-	public Connection getConnection() {
-		return this.connection;
-	}
-
-	/**
-	 * @param connection the connection to set
-	 */
-	public void setConnection(Connection connection) {
-		this.connection = connection;
+	public static void disable(boolean disabled){
+		MockJDBCDriver.disabled = disabled; 
 	}
 }

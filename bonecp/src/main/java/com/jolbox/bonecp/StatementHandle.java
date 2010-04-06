@@ -1015,6 +1015,6 @@ public class StatementHandle implements Statement{
 				logger.warn("BoneCP detected an unclosed statement and didn't manage to close it for you. You should be closing this statement in your application - enable connectionWatch and statement caching for additional debugging assistance.");
 			}
 		}
-	}
+	} */
 	*/
 }
