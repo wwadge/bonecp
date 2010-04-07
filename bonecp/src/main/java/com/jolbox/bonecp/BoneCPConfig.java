@@ -42,7 +42,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** For toString(). */
 	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d, idle test period = %d";
 	/** Logger class. */
-	private static Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
+	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
 	private int minConnectionsPerPartition;
 	/** Max number of connections per partition. */
