@@ -87,6 +87,9 @@ public class CommonTestUtils {
 
 	}
 	
+	/** Returns a clone of config.
+	 * @return config clone
+	 */
 	public static BoneCPConfig getConfigClone(){
 		try {
 			return config.clone();

@@ -83,6 +83,7 @@ public class TestConnectionHandle {
 	private static Logger mockLogger;
 	/** Mock handle. */
 	private static StatementCache testStatementCache;
+	/** Config clone. */
 	private static BoneCPConfig config;
 
 
@@ -113,6 +114,9 @@ public class TestConnectionHandle {
 		config.setReleaseHelperThreads(0);
 	}
 
+	/** Reset driver state.
+	 * @throws SQLException
+	 */
 	@AfterClass
 	public static void disableMockDriver() throws SQLException{
 		MockJDBCDriver.disable();

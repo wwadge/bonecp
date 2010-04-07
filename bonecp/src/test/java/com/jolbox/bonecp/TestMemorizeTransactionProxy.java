@@ -30,21 +30,31 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.CoverageHook;
+import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
 
 /**
  * @author Wallace
  *
  */
 public class TestMemorizeTransactionProxy {
-	
+	/** Mock handle. */
 	static ConnectionHandle mockConnection;
+	/** Mock handle. */
 	static Connection mockConnection2;
+	/** Mock handle. */
 	static CallableStatement mockCallableStatement;
+	/** Mock handle. */
 	static Statement mockStatement;
+	/** Mock handle. */
 	static PreparedStatement mockPreparedStatement;
+	/** Mock handle. */
 	static Connection mockConnection3;
+	/** Config handle. */
 	private static BoneCPConfig config; 
 	
+	/**
+	 * Test setup.
+	 */
 	@BeforeClass
 	public static void beforeClass(){
 		config = CommonTestUtils.getConfigClone();
@@ -56,6 +66,9 @@ public class TestMemorizeTransactionProxy {
 		mockStatement = createNiceMock(Statement.class);
 		mockPreparedStatement = createNiceMock(PreparedStatement.class);
 	}
+	/**
+	 * Test reset.
+	 */
 	@Before
 	public void before(){
 		reset(mockConnection, mockConnection2, mockConnection3, mockCallableStatement, mockPreparedStatement, mockStatement);
@@ -72,6 +85,7 @@ public class TestMemorizeTransactionProxy {
 	public void testProxies() throws SQLException, SecurityException, IllegalArgumentException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException{
 		
 
+		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(mockConnection);
 		config.setTransactionRecoveryEnabled(true);
 		config.setJdbcUrl("jdbc:mock:driver2");
@@ -136,12 +150,17 @@ public class TestMemorizeTransactionProxy {
 		} catch (Throwable t){
 			// should throw an exception
 		}
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 	}
 	
+	/** Temp. */
 	static int count = 1;
 
 	
+	/** Test of normal replay functionality. 
+	 * @throws IllegalArgumentException
+	 * @throws Throwable
+	 */
 	@Test
 	public void testReplayTransaction() throws IllegalArgumentException, Throwable{
 		
@@ -152,9 +171,9 @@ public class TestMemorizeTransactionProxy {
 			@Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.this.mockConnection;
+					return TestMemorizeTransactionProxy.mockConnection;
 				}
-				return TestMemorizeTransactionProxy.this.mockConnection2;
+				return TestMemorizeTransactionProxy.mockConnection2;
 			}
 		}); 
 		
@@ -202,6 +221,11 @@ public class TestMemorizeTransactionProxy {
 		replay(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockCallableStatement2, mockStatement, mockStatement2);
 		
 		Connection con = pool.getConnection();
+
+		((ConnectionHandle)con).recoveryResult=new TransactionRecoveryResult(); 		// for code coverage
+		((ConnectionHandle)con).recoveryResult.getReplaceTarget().put(mockConnection, mockConnection); 		// for code coverage
+		((ConnectionHandle)con).recoveryResult.getReplaceTarget().put(con, con);		// for code coverage
+
 		count=0;
 
 		mockDriver.setConnection(mockConnection2);
@@ -217,21 +241,26 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockCallableStatement2, mockStatement, mockStatement2);
 		
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 		
 	}
 	
 	
+	/** Make the proxy fail but via a normal (non-recoverable) application error eg bad parameters passed to a preparedStatement.
+	 * @throws IllegalArgumentException
+	 * @throws Throwable
+	 */
 	@Test
 	public void testReplayTransactionWithUserError() throws IllegalArgumentException, Throwable{
 		
 		count = 1;
 
+		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			@Override
 			public Connection answer() throws SQLException {
-					return TestMemorizeTransactionProxy.this.mockConnection;
+					return TestMemorizeTransactionProxy.mockConnection;
 			}
 		}); 
 		
@@ -265,7 +294,7 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement);
 		
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 		
 	}
 	
@@ -278,17 +307,18 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
+		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			@Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.this.mockConnection;
+					return TestMemorizeTransactionProxy.mockConnection;
 				}  if (count == 0){
 					count--;
-					return TestMemorizeTransactionProxy.this.mockConnection2;
+					return TestMemorizeTransactionProxy.mockConnection2;
 				} 
-					return TestMemorizeTransactionProxy.this.mockConnection3;
+					return TestMemorizeTransactionProxy.mockConnection3;
 			}
 		}); 
 		
@@ -344,23 +374,28 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockPreparedStatement3);
 		
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 	}
 	
 	
+	/** Test to see what happens when a replay keeps failing.
+	 * @throws IllegalArgumentException
+	 * @throws Throwable
+	 */
 	@Test
 	public void testReplayTransactionWithFailuresOnReplayKeepFailing() throws IllegalArgumentException, Throwable{
 		
 		count = 1;
 
+		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			@Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.this.mockConnection;
+					return TestMemorizeTransactionProxy.mockConnection;
 				}  
-					return TestMemorizeTransactionProxy.this.mockConnection2;
+					return TestMemorizeTransactionProxy.mockConnection2;
 			}
 		}); 
 		
@@ -415,22 +450,27 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 		
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 	}
 	
+	/** Interrupted
+	 * @throws IllegalArgumentException
+	 * @throws Throwable
+	 */
 	@Test
 	public void testReplayTransactionWithFailuresInterruptedException() throws IllegalArgumentException, Throwable{
 		
 		count = 1;
 
+		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			@Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.this.mockConnection;
+					return TestMemorizeTransactionProxy.mockConnection;
 				}  
-					return TestMemorizeTransactionProxy.this.mockConnection2;
+					return TestMemorizeTransactionProxy.mockConnection2;
 			}
 		}); 
 		
@@ -501,22 +541,27 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 		
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 	}
 	
+	/** Test hooks.
+	 * @throws IllegalArgumentException
+	 * @throws Throwable
+	 */
 	@Test
 	public void testReplayTransactionWithFailuresCustomHook() throws IllegalArgumentException, Throwable{
 		
 		count = 1;
 
+		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			@Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.this.mockConnection;
+					return TestMemorizeTransactionProxy.mockConnection;
 				}  
-					return TestMemorizeTransactionProxy.this.mockConnection2;
+					return TestMemorizeTransactionProxy.mockConnection2;
 			}
 		}); 
 		
@@ -571,6 +616,7 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 		
-		mockDriver.disable();
+		MockJDBCDriver.disable();
 	}
+	
 }

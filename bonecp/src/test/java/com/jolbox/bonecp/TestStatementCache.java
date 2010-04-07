@@ -55,6 +55,7 @@ public class TestStatementCache {
 	private static IStatementCache mockCache;
 	/** Mock handle. */
 	private static Logger mockLogger;
+	/** Config clone. */
 	private static BoneCPConfig config;
 
 	/** Mock setup.

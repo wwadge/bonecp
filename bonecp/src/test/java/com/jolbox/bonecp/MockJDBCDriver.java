@@ -40,7 +40,6 @@ public class MockJDBCDriver  implements Driver {
 	private MockJDBCAnswer mockJDBCAnswer;
 	/** Instance. */
 	private static MockJDBCDriver driverInstance;
-	private static boolean disabled;
 
 	/**
 	 * Default constructor
