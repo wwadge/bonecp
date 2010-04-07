@@ -160,7 +160,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			// run and swap with proxies if we encounter prepareStatement calls
 			result = runWithPossibleProxySwap(method, this.target, args); 
 
-			// when we commit/close/rollback, destroy our log
+			// when we commit/close/rollback, destroy our log. Does this work if we have nested transactions???? Fixme?
 			if (!this.connectionHandle.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
 				this.connectionHandle.getReplayLog().clear();
 				this.connectionHandle.recoveryResult.getReplaceTarget().clear();

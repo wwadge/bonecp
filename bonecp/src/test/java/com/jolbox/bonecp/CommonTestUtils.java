@@ -68,7 +68,7 @@ public class CommonTestUtils {
 	/** hsqldb driver. */
 	static String driver = "org.hsqldb.jdbcDriver";
 	/** Config file handle. */
-	static BoneCPConfig config = new BoneCPConfig();
+	private static BoneCPConfig config = new BoneCPConfig();
 
 	static{
 		instanceMap = new HashMap<Class<?>, Object>();
@@ -85,6 +85,15 @@ public class CommonTestUtils {
 		instanceMap.put(String.class, "test");
 
 
+	}
+	
+	public static BoneCPConfig getConfigClone(){
+		try {
+			return config.clone();
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	/**
 	 * Pretty printing.

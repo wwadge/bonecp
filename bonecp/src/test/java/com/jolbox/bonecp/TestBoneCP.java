@@ -88,6 +88,7 @@ public class TestBoneCP {
 	private static DatabaseMetaData mockDatabaseMetadata;
 	/** Mock handle. */
 	private static jdbcResultSet mockResultSet;
+	private static BoneCPConfig config;
 
 	/** Mock setups.
 	 * @throws SQLException
@@ -96,10 +97,12 @@ public class TestBoneCP {
 	 * @throws NoSuchFieldException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * @throws CloneNotSupportedException 
 	 */
 	@BeforeClass
-	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
 		Class.forName("org.hsqldb.jdbcDriver");
+		config = CommonTestUtils.getConfigClone();
 	}
 	
 

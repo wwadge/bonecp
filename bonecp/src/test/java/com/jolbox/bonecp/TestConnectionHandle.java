@@ -83,6 +83,7 @@ public class TestConnectionHandle {
 	private static Logger mockLogger;
 	/** Mock handle. */
 	private static StatementCache testStatementCache;
+	private static BoneCPConfig config;
 
 
 	/** Mock setup.
@@ -90,6 +91,7 @@ public class TestConnectionHandle {
 	 */
 	@BeforeClass
 	public static void setUp() throws Exception {
+		config = CommonTestUtils.getConfigClone();
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockPreparedStatementCache = createNiceMock(IStatementCache.class);
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
@@ -99,21 +101,21 @@ public class TestConnectionHandle {
 		makeThreadSafe(mockLogger, true);
 		mockPool = createNiceMock(BoneCP.class);
 		mockPool.closeConnectionWatch=true;
-		expect(mockPool.getConfig()).andReturn(CommonTestUtils.config).anyTimes();
-		CommonTestUtils.config.setTransactionRecoveryEnabled(false);
-		CommonTestUtils.config.setStatementsCacheSize(1);
+		expect(mockPool.getConfig()).andReturn(config).anyTimes();
+		config.setTransactionRecoveryEnabled(false);
+		config.setStatementsCacheSize(1);
 		replay(mockPool);
 		testClass = new ConnectionHandle(mockConnection, mockPreparedStatementCache, mockCallableStatementCache, mockPool);
 		testStatementCache = new StatementCache(100);
 		Field field = testClass.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 		field.set(null, mockLogger);
-		CommonTestUtils.config.setReleaseHelperThreads(0);
+		config.setReleaseHelperThreads(0);
 	}
 
 	@AfterClass
 	public static void disableMockDriver() throws SQLException{
-		MockJDBCDriver.disable(true);
+		MockJDBCDriver.disable();
 	}
 	/** Reset everything.
 	 * @throws SecurityException
@@ -141,12 +143,12 @@ public class TestConnectionHandle {
 	 */
 	@Test
 	public void testObtainInternalConnection() throws SQLException, ClassNotFoundException{
-		expect(mockPool.getConfig()).andReturn(CommonTestUtils.config).anyTimes();
+		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 
 		testClass.url = "jdbc:mock:driver";
-		CommonTestUtils.config.setAcquireRetryDelay(1);
+		config.setAcquireRetryDelay(1);
 		CustomHook testHook = new CustomHook();
-		CommonTestUtils.config.setConnectionHook(testHook);
+		config.setConnectionHook(testHook);
 		
 		// make it fail the first time and succeed the second time
 		new MockJDBCDriver(new MockJDBCAnswer() {
@@ -169,12 +171,12 @@ public class TestConnectionHandle {
 		
 		// Test 2: Same thing but without the hooks
 		count=1;
-		CommonTestUtils.config.setConnectionHook(null);
+		config.setConnectionHook(null);
 		assertEquals(mockConnection, testClass.obtainInternalConnection());
 		
 		// Test 3: Keep failing
 		count=99;
-		CommonTestUtils.config.setAcquireRetryAttempts(2);
+		config.setAcquireRetryAttempts(2);
 		try{
 			testClass.obtainInternalConnection();
 			fail("Should have thrown an exception");
@@ -184,8 +186,8 @@ public class TestConnectionHandle {
 		 
 		//	Test 4: Get signalled to interrupt fail delay
 		count=99;
-		CommonTestUtils.config.setAcquireRetryAttempts(2);
-		CommonTestUtils.config.setAcquireRetryDelay(7000);
+		config.setAcquireRetryAttempts(2);
+		config.setAcquireRetryDelay(7000);
 		final Thread currentThread = Thread.currentThread();
 
 		try{
@@ -208,7 +210,7 @@ public class TestConnectionHandle {
 		} catch (SQLException e){
 			// expected behaviour
 		}
-		CommonTestUtils.config.setAcquireRetryDelay(10);
+		config.setAcquireRetryDelay(10);
 		
 		
 	}

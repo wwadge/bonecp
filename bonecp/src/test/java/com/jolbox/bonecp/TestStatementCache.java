@@ -55,6 +55,7 @@ public class TestStatementCache {
 	private static IStatementCache mockCache;
 	/** Mock handle. */
 	private static Logger mockLogger;
+	private static BoneCPConfig config;
 
 	/** Mock setup.
 	 * @throws ClassNotFoundException
@@ -64,6 +65,7 @@ public class TestStatementCache {
 		Class.forName("org.hsqldb.jdbcDriver");
 		mockCache = createNiceMock(IStatementCache.class);
 		mockLogger = createNiceMock(Logger.class);
+		config = CommonTestUtils.getConfigClone();
 
 	
 
@@ -73,13 +75,13 @@ public class TestStatementCache {
 	 */
 	@Before
 	public void beforeTest(){
-		CommonTestUtils.config.setJdbcUrl(CommonTestUtils.url);
-		CommonTestUtils.config.setUsername(CommonTestUtils.username);
-		CommonTestUtils.config.setPassword(CommonTestUtils.password);
-		CommonTestUtils.config.setIdleConnectionTestPeriod(0);
-		CommonTestUtils.config.setIdleMaxAge(0);
-		CommonTestUtils.config.setStatementsCacheSize(0);
-		CommonTestUtils.config.setReleaseHelperThreads(0);
+		config.setJdbcUrl(CommonTestUtils.url);
+		config.setUsername(CommonTestUtils.username);
+		config.setPassword(CommonTestUtils.password);
+		config.setIdleConnectionTestPeriod(0);
+		config.setIdleMaxAge(0);
+		config.setStatementsCacheSize(0);
+		config.setReleaseHelperThreads(0);
 	}
 
 
@@ -95,12 +97,13 @@ public class TestStatementCache {
 	public void testPreparedStatement() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		BoneCP dsb = null ;
 		CommonTestUtils.logTestInfo("Tests that prepared statements are obtained from cache when set.");
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(20);
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setStatementsCacheSize(1);
-		dsb = new BoneCP(CommonTestUtils.config);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(20);
+		config.setAcquireIncrement(5);
+		config.setPartitionCount(1);
+		config.setStatementsCacheSize(1);
+		config.setLogStatementsEnabled(true);
+		dsb = new BoneCP(config);
 
 		ConnectionHandle con = (ConnectionHandle) dsb.getConnection();
 		Field preparedStatement = con.getClass().getDeclaredField("preparedStatementCache");
@@ -159,12 +162,12 @@ public class TestStatementCache {
 		CommonTestUtils.logTestInfo("Tests statement close (put in cache).");
 		String sql = CommonTestUtils.TEST_QUERY;
 		BoneCP dsb = null ;
-		CommonTestUtils.config.setMinConnectionsPerPartition(1);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
-		CommonTestUtils.config.setAcquireIncrement(1);
-		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setStatementsCacheSize(5);
-		dsb = new BoneCP(CommonTestUtils.config);
+		config.setMinConnectionsPerPartition(1);
+		config.setMaxConnectionsPerPartition(5);
+		config.setAcquireIncrement(1);
+		config.setPartitionCount(1);
+		config.setStatementsCacheSize(5);
+		dsb = new BoneCP(config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
 		statement.close();
@@ -195,12 +198,12 @@ public class TestStatementCache {
 		CommonTestUtils.logTestInfo("Tests statement close (put in cache).");
 		String sql = CommonTestUtils.TEST_QUERY;
 		BoneCP dsb = null ;
-		CommonTestUtils.config.setMinConnectionsPerPartition(1);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
-		CommonTestUtils.config.setAcquireIncrement(1);
-		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setStatementsCacheSize(5);
-		dsb = new BoneCP(CommonTestUtils.config);
+		config.setMinConnectionsPerPartition(1);
+		config.setMaxConnectionsPerPartition(5);
+		config.setAcquireIncrement(1);
+		config.setPartitionCount(1);
+		config.setStatementsCacheSize(5);
+		dsb = new BoneCP(config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
 		statement.close();
@@ -241,12 +244,12 @@ public class TestStatementCache {
 		CommonTestUtils.logTestInfo("Tests statement caching module.");
 		String sql = CommonTestUtils.TEST_QUERY;
 		BoneCP dsb = null ;
-		CommonTestUtils.config.setMinConnectionsPerPartition(2);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
-		CommonTestUtils.config.setAcquireIncrement(1);
-		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setStatementsCacheSize(5);
-		dsb = new BoneCP(CommonTestUtils.config);
+		config.setMinConnectionsPerPartition(2);
+		config.setMaxConnectionsPerPartition(5);
+		config.setAcquireIncrement(1);
+		config.setPartitionCount(1);
+		config.setStatementsCacheSize(5);
+		dsb = new BoneCP(config);
 		Connection conn = dsb.getConnection();
 		StatementHandle statement = (StatementHandle)conn.prepareStatement(sql);
 

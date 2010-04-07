@@ -40,6 +40,7 @@ public class MockJDBCDriver  implements Driver {
 	private MockJDBCAnswer mockJDBCAnswer;
 	/** Instance. */
 	private static MockJDBCDriver driverInstance;
+	private static boolean disabled;
 
 	/**
 	 * Default constructor
@@ -126,11 +127,8 @@ public class MockJDBCDriver  implements Driver {
 	 * @throws SQLException 
 	 * @throws SQLException 
 	 */
-	public static void disable(boolean disabled) throws SQLException{
-		MockJDBCDriver.disabled = disabled;
-		if (disabled){
-			DriverManager.deregisterDriver(driverInstance);
-		}
+	public static void disable() throws SQLException{
+		DriverManager.deregisterDriver(driverInstance);
 	}
 
 	/**

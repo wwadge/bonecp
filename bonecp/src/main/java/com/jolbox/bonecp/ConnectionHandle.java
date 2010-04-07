@@ -1233,8 +1233,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			return Proxy.getInvocationHandler(this.connection).invoke(null, this.getClass().getMethod("getProxyTarget"), null);
 		} catch (Throwable t) {
-			logger.error("Internal error - transaction replay log is not turned on?", t);
+			throw new RuntimeException("BoneCP: Internal error - transaction replay log is not turned on?", t);
 		}
-		return null;
 	}
 }
