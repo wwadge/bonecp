@@ -80,6 +80,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_LAZY_INIT = "bonecp.lazyInit";
 	/** Config key. */
+	protected static final String CONFIG_TRANSACTION_REPLAY_LOG = "bonecp.transactionReplayEnabled";
+	/** Config key. */
 	protected static final String CONFIG_ACQUIRE_RETRY_DELAY = "bonecp.acquireRetryDelay";
 	/** Config key. */
 	protected static final String CONFIG_INIT_SQL  = "bonecp.initSQL";
@@ -148,6 +150,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		boolean closeConnectionWatch = configParseBoolean(props, CONFIG_CLOSE_CONNECTION_WATCH, false);
 		boolean logStatementsEnabled = configParseBoolean(props, CONFIG_LOG_STATEMENTS_ENABLED, false);
 		boolean lazyInit = configParseBoolean(props, CONFIG_LAZY_INIT, false);
+		boolean transactionRecoveryEnabled = configParseBoolean(props, CONFIG_TRANSACTION_REPLAY_LOG, false);
 
 
 		// Remember Isolation level
@@ -178,6 +181,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.config.setLogStatementsEnabled(logStatementsEnabled);
 			this.config.setAcquireRetryDelay(acquireRetryDelay);
 			this.config.setLazyInit(lazyInit);
+			this.config.setTransactionRecoveryEnabled(transactionRecoveryEnabled);
 			if (connectionHookClass != null){
 				Object hookClass = loadClass(connectionHookClass).newInstance();
 				this.config.setConnectionHook((ConnectionHook) hookClass);
