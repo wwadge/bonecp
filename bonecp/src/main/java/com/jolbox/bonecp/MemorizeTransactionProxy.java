@@ -128,76 +128,82 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	@Override 
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-		Object result;
+		Object result = null;
 		ConnectionHandle con = this.connectionHandle.get();
-		if (con.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
-			return method.invoke(this.target, args);
-		}
+		if (con != null){ // safety! 
 
-		if (method.getName().equals("getProxyTarget")){  // special "fake" method to return our proxy target
-			return this.target;
-		} 
-		
-		if (con.recoveryResult != null){ // if we previously failed, do the mapping to the new connection/statements
-			Object remap = con.recoveryResult.getReplaceTarget().get(this.target);
-			if (remap != null){
-				this.target = remap; 
+			if (con.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
+				return method.invoke(this.target, args);
 			}
-			remap = con.recoveryResult.getReplaceTarget().get(con);
-			if (remap != null){
-				con = (ConnectionHandle) remap;
-			}
-		}
 
-		// record this invocation
-		if (!con.isInReplayMode() && !method.getName().equals("hashCode") && !method.getName().equals("equals") && !method.getName().equals("toString")){
-			con.getReplayLog().add(new ReplayLog(this.target, method, args));
-		}
-		
-	
-		
+			if (method.getName().equals("getProxyTarget")){  // special "fake" method to return our proxy target
+				return this.target;
+			} 
 
-		try{
-			// run and swap with proxies if we encounter prepareStatement calls
-			result = runWithPossibleProxySwap(method, this.target, args); 
-
-			// when we commit/close/rollback, destroy our log. Does this work if we have nested transactions???? Fixme?
-			if (!con.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
-				con.getReplayLog().clear();
-				con.recoveryResult.getReplaceTarget().clear();
-			}
-			
-			return result; // normal state
-			
-		} catch (Throwable t){  
-			// if we encounter problems, grab a connection and replay back our log
-			List<ReplayLog> oldReplayLog = con.getReplayLog();
-			con.setInReplayMode(true); // stop recording
-
-			// this will possibly terminate all connections here
-			con.markPossiblyBroken(t.getCause()); 
-
-			if (con.isPossiblyBroken()){ // connection is possibly recoverable...
-				logger.error("Connection failed. Attempting to recover transaction on Thread #"+ Thread.currentThread().getId());
-				// let's try and recover
-				try{
-					con.recoveryResult = attemptRecovery(oldReplayLog); // this might also fail
-					con.setReplayLog(oldReplayLog); // markPossiblyBroken will probably destroy our original connection handle
-					con.setInReplayMode(false); // start recording again
-					logger.error("Recovery succeeded on Thread #" + Thread.currentThread().getId());
-					con.possiblyBroken = false;
-					
-					// return the original result the application was expecting
-					return con.recoveryResult.getResult();
-				} catch(Throwable t2){
-					throw new SQLException("Could not recover transaction. Original exception follows.", t.getCause());
+			if (con.recoveryResult != null){ // if we previously failed, do the mapping to the new connection/statements
+				Object remap = con.recoveryResult.getReplaceTarget().get(this.target);
+				if (remap != null){
+					this.target = remap; 
 				}
-			}  
+				remap = con.recoveryResult.getReplaceTarget().get(con);
+				if (remap != null){
+					con = (ConnectionHandle) remap;
+				}
+			}
 
-			// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
-			throw t.getCause();
+			// record this invocation
+			if (!con.isInReplayMode() && !method.getName().equals("hashCode") 
+					&& !method.getName().equals("equals") && !method.getName().equals("toString")){
+				con.getReplayLog().add(new ReplayLog(this.target, method, args));
+			}
+
+
+
+
+			try{
+				// run and swap with proxies if we encounter prepareStatement calls
+				result = runWithPossibleProxySwap(method, this.target, args); 
+
+				// when we commit/close/rollback, destroy our log. Does this work if we have nested transactions???? Fixme?
+				if (!con.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
+					con.getReplayLog().clear();
+					con.recoveryResult.getReplaceTarget().clear();
+				}
+
+
+
+			} catch (Throwable t){  
+				// if we encounter problems, grab a connection and replay back our log
+				List<ReplayLog> oldReplayLog = con.getReplayLog();
+				con.setInReplayMode(true); // stop recording
+
+				// this will possibly terminate all connections here
+				con.markPossiblyBroken(t.getCause()); 
+
+				if (con.isPossiblyBroken()){ // connection is possibly recoverable...
+					logger.error("Connection failed. Attempting to recover transaction on Thread #"+ Thread.currentThread().getId());
+					// let's try and recover
+					try{
+						con.recoveryResult = attemptRecovery(oldReplayLog); // this might also fail
+						con.setReplayLog(oldReplayLog); // markPossiblyBroken will probably destroy our original connection handle
+						con.setInReplayMode(false); // start recording again
+						logger.error("Recovery succeeded on Thread #" + Thread.currentThread().getId());
+						con.possiblyBroken = false;
+
+						// return the original result the application was expecting
+						return con.recoveryResult.getResult();
+					} catch(Throwable t2){
+						throw new SQLException("Could not recover transaction. Original exception follows.", t.getCause());
+					}
+				}  
+
+				// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
+				throw t.getCause();
+
+			}
 
 		}
+		return result; // normal state
 	}
 
 	/** Runs the given method with the specified arguments, substituting with proxies where necessary
@@ -238,7 +244,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		ConnectionHook connectionHook = con.getPool().getConfig().getConnectionHook();
 		int acquireRetryAttempts = con.getPool().getConfig().getAcquireRetryAttempts();
 		int acquireRetryDelay = con.getPool().getConfig().getAcquireRetryDelay();
-		
+
 		Map<Object, Object> replaceTarget = new HashMap<Object, Object>();
 		do{
 			replaceTarget.clear(); 
@@ -287,7 +293,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					// run again using the new connection/statement
 					//					result = replay.getMethod().invoke(, replay.getArgs());
 					result = runWithPossibleProxySwap(replay.getMethod(), replaceTarget.get(replay.getTarget()), replay.getArgs());
- 
+
 					// remember what we've got last 
 					recoveryResult.setResult(result);
 
