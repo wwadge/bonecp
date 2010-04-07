@@ -23,8 +23,6 @@ package com.jolbox.bonecp;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -48,6 +46,8 @@ import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.FinalizableReferenceQueue;
 
 
 
@@ -111,9 +111,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Placeholder to give more useful info in case of a double shutdown. */
 	private String shutdownStackTrace;
 	/** Reference of objects that are to be watched. */
-	protected static final Set<Reference<ConnectionHandle>> finalizableRefs	= Collections.synchronizedSet(new HashSet<Reference<ConnectionHandle>>());
+	protected static final Set<Reference<ConnectionHandle>> finalizableRefs = Collections.synchronizedSet(new HashSet<Reference<ConnectionHandle>>());
 	/** Watch for connections that should have been safely closed but the application forgot. */
-	protected static final ReferenceQueue finalizableRefQueue = new ReferenceQueue<ConnectionHandle>();
+	protected static final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 
 
 	/**
@@ -228,8 +228,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
 					final ConnectionHandle handle = new ConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this);
 					this.partitions[p].addFreeConnection(handle);
-					
-//					finalizableRefs.add(new WeakReference<ConnectionHandle>(handle, finalizableRefQueue));
 				}
 
 			}

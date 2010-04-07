@@ -71,7 +71,6 @@ public class ConnectionHandle implements Connection{
 	private long connectionLastReset = System.currentTimeMillis();
 	/** Pool handle. */
 	private BoneCP pool;
-
 	/**
 	 * If true, this connection might have failed communicating with the
 	 * database. We assume that exceptions should be rare here i.e. the normal
@@ -131,6 +130,7 @@ public class ConnectionHandle implements Connection{
 
 	 */
 	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007"); 
+	
 	/**
 	 * Connection wrapper constructor
 	 * 
@@ -170,6 +170,7 @@ public class ConnectionHandle implements Connection{
 			this.callableStatementCache = new StatementCache(cacheSize);
 			this.statementCachingEnabled = true;
 		}
+		
 	}
 
 	/** Obtains a database connection, retrying if necessary.
@@ -1130,7 +1131,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	@Deprecated
 	public Connection getRawConnection() {
-		return this.connection;
+		return getInternalConnection();
 	}
 
 	/** Returns the internal connection as obtained via the JDBC driver.
@@ -1161,21 +1162,6 @@ public class ConnectionHandle implements Connection{
 		this.logStatementsEnabled = logStatementsEnabled;
 	}
 
-	/** Check that the connection was closed before the GC reclaimed it.
-	 *
-	protected void doFinalize(){
-		try {
-			if (!isClosed()){
-				close();
-				logger.warn("BoneCP detected an unclosed connection and has closed it for you. " +
-				"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
-			}
-		} catch (Throwable t) {
-			logger.error("An error was detected when trying to close off a connection", t);
-		}
-
-	}
-*/
 	/**
 	 * @return the inReplayMode
 	 */

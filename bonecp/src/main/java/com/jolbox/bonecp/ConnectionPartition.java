@@ -21,6 +21,9 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 import java.io.Serializable;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +31,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.FinalizableWeakReference;
 
 /**
  * Connection Partition structure
@@ -37,6 +45,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ConnectionPartition implements Serializable{
 	/** Serialization UID */
 	private static final long serialVersionUID = -7864443421028454573L;
+	/** Logger class. */
+	static final Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
     private ArrayBlockingQueue<ConnectionHandle> freeConnections;
     /** When connections start running out, add these number of new connections. */
@@ -87,9 +97,47 @@ public class ConnectionPartition implements Serializable{
         updateCreatedConnections(1);
         connectionHandle.setOriginatingPartition(this);
         this.freeConnections.add(connectionHandle);
+        trackConnectionFinalizer(connectionHandle);
     }
 
-    /**
+    /** This method is a replacement for finalize() but avoids all the pitfalls of it (see Joshua Bloch et. all).
+     * 
+     * Keeps a handle on the connection. If the application called closed, then it means that the handle gets pushed back to the connection
+     * pool and thus we get a strong reference again. If the application forgot to call close() and subsequently lost the strong reference to it,
+     * the handle becomes eligible to garbage connection and thus the the finalizeReferent method kicks in to safely close off the database
+     * handle. Note that we do not return the connectionHandle back to the pool since that is not possible (for otherwise the GC would not 
+     * have kicked in), but we merely safely release the database internal handle and update our counters instead.
+     * @param connectionHandle handle to watch
+     */
+    protected void trackConnectionFinalizer(ConnectionHandle connectionHandle) {
+    	Connection con = connectionHandle.getInternalConnection();
+    	if (con instanceof Proxy){
+    		try {
+    			// if this is a proxy, get the correct target so that when we call close we're actually calling close on the database
+    			// handle and not a proxy-based close.
+				con = (Connection) Proxy.getInvocationHandler(con).invoke(con, ConnectionHandle.class.getMethod("getProxyTarget"), null);
+			} catch (Throwable t) {
+				logger.error("Error while attempting to track internal db connection", t);
+			}
+    	}
+    	final Connection internalDBConnection = con;
+		BoneCP.finalizableRefs.add(new FinalizableWeakReference<ConnectionHandle>(connectionHandle, BoneCP.finalizableRefQueue) {
+		public void finalizeReferent() {
+			try {
+				if (internalDBConnection != null){ // safety!
+					logger.warn("BoneCP detected an unclosed connection and will now attempt to close it for you. " +
+					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+					internalDBConnection.close();
+					updateCreatedConnections(-1);
+				}
+			} catch (SQLException e) {
+				logger.error("Error while closing off internal db connection", e);
+			}
+		}
+		});
+	}
+
+	/**
      * @return the freeConnections
      */
     protected ArrayBlockingQueue<ConnectionHandle> getFreeConnections() {
