@@ -207,14 +207,21 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
-		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler", true));
-		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread", true));
+		String suffix = "";
+		
+		if (config.getPoolName()!=null) {
+			suffix="-"+config.getPoolName();
+		}
+				
+		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler"+suffix, true));
+		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread"+suffix, true));
+		
 		this.partitionCount = config.getPartitionCount();
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 
 		if (this.closeConnectionWatch){
 			logger.warn("Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!");
-			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread", true));
+			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread"+suffix, true));
 
 		}
 		for (int p=0; p < config.getPartitionCount(); p++){
@@ -240,7 +247,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
 
-		initJMX(); 
+		if (!this.config.isDisableJMX()){
+		      initJMX();
+	    }
 	}
 
 	/**
@@ -251,9 +260,16 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.mbs = ManagementFactory.getPlatformMBeanServer();
 		}
 		try {
-			ObjectName name = new ObjectName(MBEAN_BONECP);
-			ObjectName configname = new ObjectName(MBEAN_CONFIG);
+			String suffix = "";
+			
+			if (this.config.getPoolName()!=null){
+				suffix="-"+this.config.getPoolName();
+			}
+			
+			ObjectName name = new ObjectName(MBEAN_BONECP +suffix);
+			ObjectName configname = new ObjectName(MBEAN_CONFIG + suffix);
 
+			
 			if (!this.mbs.isRegistered(name)){
 				this.mbs.registerMBean(this, name); 
 			}
@@ -463,10 +479,14 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @param connection Connection handle to perform activity on
 	 * @return true if test query worked, false otherwise
 	 */
-	public boolean isConnectionHandleAlive(Connection connection) {
+	public boolean isConnectionHandleAlive(ConnectionHandle connection) {
 		Statement stmt = null;
 		boolean result = false; 
+		boolean logicallyClosed = connection.logicallyClosed;
 		try {
+			if (logicallyClosed){
+				connection.logicallyClosed = false; // avoid checks later on if it's marked as closed.
+			}
 			String testStatement = this.config.getConnectionTestStatement();
 			ResultSet rs = null;
 
@@ -488,6 +508,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			// connection must be broken!
 			result = false;
 		} finally {
+			connection.logicallyClosed = logicallyClosed;
 			result = closeStatement(stmt, result);
 		}
 		return result;

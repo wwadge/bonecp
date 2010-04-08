@@ -68,9 +68,10 @@ public class TestBoneCPConfig {
 		config.setAcquireIncrement(6);
 		config.setStatementsCachedPerConnection(7);
 		config.setPreparedStatementsCacheSize(2);
-		
+		config.setPoolName("foo");
+		config.setDisableJMX(false);
 
-		
+		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, config.getUsername());
 		assertEquals(CommonTestUtils.password, config.getPassword());

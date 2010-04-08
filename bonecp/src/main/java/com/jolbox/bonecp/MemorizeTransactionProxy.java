@@ -66,6 +66,12 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	private static final Logger logger = LoggerFactory.getLogger(MemorizeTransactionProxy.class);
 
 
+	/**
+	 * Default constructor. 
+	 */
+	public MemorizeTransactionProxy(){
+		// not needed
+	}
 	/** Wrap connection with a proxy.
 	 * @param target connection handle
 	 * @param connectionHandle originating bonecp connection
@@ -132,13 +138,14 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		ConnectionHandle con = this.connectionHandle.get();
 		if (con != null){ // safety! 
 
+			if (method.getName().equals("getProxyTarget")){  // special "fake" method to return our proxy target
+				return this.target;
+			} 
+
 			if (con.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
 				return method.invoke(this.target, args);
 			}
 
-			if (method.getName().equals("getProxyTarget")){  // special "fake" method to return our proxy target
-				return this.target;
-			} 
 
 			if (con.recoveryResult != null){ // if we previously failed, do the mapping to the new connection/statements
 				Object remap = con.recoveryResult.getReplaceTarget().get(this.target);

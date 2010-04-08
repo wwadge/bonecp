@@ -91,7 +91,25 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String connectionHookClassName;
 	/** Classloader to use when loading the JDBC driver. */
 	private ClassLoader classLoader;
-
+	/** Name of the pool for JMX and thread names. */
+	private String poolName;
+	 /** Set to true to disable JMX. */
+	private boolean disableJMX;
+	
+	/** Returns the name of the pool for JMX and thread names.
+	 * @return a pool name.
+	 */
+	public String getPoolName() {
+		return this.poolName;
+	}
+	
+	/** Sets the name of the pool for JMX and thread names.
+	 * @param poolName to set.
+	 */
+	public void setPoolName(String poolName) {
+		this.poolName = poolName;
+	}
+		
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
 	 */
@@ -672,9 +690,23 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 	/** Sets the classloader to use to load JDBC driver and hooks (set to null to use default).
 	 * @param classLoader the classLoader to set
-	 */
+	 */ 
 	public void setClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
+	}
+ 
+	/** Return true if JMX is disabled.
+	 * @return the disableJMX.
+	 */
+	public boolean isDisableJMX() {
+		return this.disableJMX;
+	}
+
+	/** Set to true to disable JMX.
+	 * @param disableJMX the disableJMX to set
+	 */
+	public void setDisableJMX(boolean disableJMX) {
+		this.disableJMX = disableJMX;
 	}
 
 

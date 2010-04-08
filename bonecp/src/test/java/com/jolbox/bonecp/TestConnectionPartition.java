@@ -27,6 +27,7 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
@@ -34,17 +35,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.junit.Test;
+import org.slf4j.Logger;
 
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
-import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ConnectionPartition;
+import com.jolbox.bonecp.proxy.ConnectionProxy;
 /**
  * @author wwadge
  *
@@ -60,9 +63,13 @@ public class TestConnectionPartition {
 	
 	/**
 	 * Tests the constructor. Makes sure release helper threads are launched (+ setup other config items).
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testConstructor(){
+	public void testConstructor() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 	    	mockConfig = createNiceMock(BoneCPConfig.class);
 	    	expect(mockConfig.getAcquireIncrement()).andReturn(1).anyTimes();
 	    	expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
@@ -71,6 +78,7 @@ public class TestConnectionPartition {
 	    	expect(mockConfig.getPassword()).andReturn("testpass").anyTimes();
 	    	expect(mockConfig.getJdbcUrl()).andReturn("testurl").anyTimes();
 	    	expect(mockConfig.getReleaseHelperThreads()).andReturn(3).anyTimes();
+	    	expect(mockConfig.getPoolName()).andReturn("Junit test").anyTimes();
 	    	this.mockPool = createNiceMock(BoneCP.class);
 	    	expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 	    	this.mockPool.setReleaseHelper((ExecutorService)anyObject());
@@ -81,6 +89,14 @@ public class TestConnectionPartition {
 	    	expectLastCall().times(3);
 	    	replay(this.mockPool, mockReleaseHelper, mockConfig);
 	    	testClass = new ConnectionPartition(this.mockPool);
+			Logger mockLogger = createNiceMock(Logger.class);
+			Field field = testClass.getClass().getDeclaredField("logger");
+			field.setAccessible(true);
+			field.set(testClass, mockLogger);
+			mockLogger.error((String)anyObject());
+			makeThreadSafe(mockLogger, true);
+			expectLastCall().anyTimes();
+			replay(mockLogger);
 	    	verify(this.mockPool, mockReleaseHelper, mockConfig);
 	    	reset(this.mockPool, mockReleaseHelper, mockConfig);
 	}
@@ -167,5 +183,138 @@ public class TestConnectionPartition {
 	public void testUnableToCreateMoreTransactionsFlag() {
 		testClass.setUnableToCreateMoreTransactions(true);
 		assertEquals(testClass.isUnableToCreateMoreTransactions(), true);
+	}
+
+	
+	/** Test finalizer.
+	 * @throws SQLException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testFinalizer() throws SQLException, InterruptedException{
+		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class); 
+		expect(mockConnectionHandle.isInReplayMode()).andReturn(true).anyTimes();
+		Connection mockConnection = createNiceMock(Connection.class);
+		Connection connection = MemorizeTransactionProxy.memorize(mockConnection, mockConnectionHandle);
+		expect(mockConnectionHandle.getInternalConnection()).andReturn(connection).anyTimes();
+//		replay(mockConnection, mockConnectionHandle);
+//		mockConnection.close();
+//		expectLastCall().once();
+		replay(mockConnection, mockConnectionHandle);
+		testClass.trackConnectionFinalizer(mockConnectionHandle);
+		reset(mockConnectionHandle);
+		mockConnectionHandle = null; // prompt GC to kick in
+		for (int i=0; i < 100; i++){
+			System.gc();System.gc();System.gc();
+			Thread.sleep(20);
+			try{
+				verify(mockConnection);
+				break; // we succeeded
+			} catch (Throwable t){
+				t.printStackTrace();
+				// do nothing, try again
+				Thread.sleep(20);
+			}
+		}
+	}
+
+	/** Test finalizer.
+	 * @throws SQLException
+	 * @throws InterruptedException
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	@Test
+	public void testFinalizerException2() throws SQLException, InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class); 
+		expect(mockConnectionHandle.isInReplayMode()).andReturn(true).anyTimes();
+		Connection mockConnection = createNiceMock(Connection.class);
+		Connection connection = new MemorizeTransactionProxyDummy(null,null).memorizeDummy(mockConnection, mockConnectionHandle);
+		expect(mockConnectionHandle.getInternalConnection()).andReturn(connection).anyTimes();
+//		replay(mockConnection, mockConnectionHandle);
+//		mockConnection.close();
+//		expectLastCall().once();
+		replay(mockConnection, mockConnectionHandle);
+		testClass.trackConnectionFinalizer(mockConnectionHandle);
+		reset(mockConnectionHandle);
+		mockConnectionHandle = null; // prompt GC to kick in
+		for (int i=0; i < 100; i++){
+			System.gc();System.gc();System.gc();
+			Thread.sleep(20);
+			try{
+				verify(mockConnection);
+				break; // we succeeded
+			} catch (Throwable t){
+				t.printStackTrace();
+				// do nothing, try again
+				Thread.sleep(20);
+			}
+		}
+	}
+	
+	/** Test finalizer with error.
+	 * @throws SQLException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testFinalizerCoverageException() throws SQLException, InterruptedException{
+		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
+		Connection mockConnection = createNiceMock(Connection.class);
+		expect(mockConnectionHandle.getInternalConnection()).andReturn(mockConnection).anyTimes();
+		mockConnection.close();
+		expectLastCall().andThrow(new SQLException("fake reason")).once();
+		replay(mockConnectionHandle, mockConnection);
+		testClass.trackConnectionFinalizer(mockConnectionHandle);
+		reset(mockConnectionHandle);
+		mockConnectionHandle = null; // prompt GC to kick in
+		for (int i=0; i < 100; i++){
+			System.gc();System.gc();System.gc();
+			Thread.sleep(20);
+			try{
+				verify(mockConnection);
+				break; // we succeeded
+			} catch (Throwable t){
+				// do nothing, try again
+				Thread.sleep(20);
+			}
+		}
+	}
+	
+	/** Fake proxy
+	 * @author wallacew
+	 *
+	 */
+	class MemorizeTransactionProxyDummy  extends MemorizeTransactionProxy {
+		
+		/** Fake constructor
+		 * @param target
+		 * @param connectionHandle
+		 */
+		public MemorizeTransactionProxyDummy(Connection target,
+				ConnectionHandle connectionHandle) {
+			// do nothing
+		}
+
+		/** Just throw errors for test
+		 * @param target
+		 * @param connectionHandle
+		 * @return proxy
+		 */
+		protected Connection memorizeDummy(final Connection target, final ConnectionHandle connectionHandle) {
+
+			return (Connection) Proxy.newProxyInstance(
+					ConnectionProxy.class.getClassLoader(),
+					new Class[] {ConnectionProxy.class},
+					new MemorizeTransactionProxyDummy(target, connectionHandle));
+		}
+		
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+				throws Throwable {
+			throw new Throwable("fake error");
+		}
+		
 	}
 }

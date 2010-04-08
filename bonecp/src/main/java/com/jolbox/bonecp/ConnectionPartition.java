@@ -23,7 +23,6 @@ package com.jolbox.bonecp;
 import java.io.Serializable;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,7 +45,7 @@ public class ConnectionPartition implements Serializable{
 	/** Serialization UID */
 	private static final long serialVersionUID = -7864443421028454573L;
 	/** Logger class. */
-	static final Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
+	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
     private ArrayBlockingQueue<ConnectionHandle> freeConnections;
     /** When connections start running out, add these number of new connections. */
@@ -108,16 +107,16 @@ public class ConnectionPartition implements Serializable{
      * handle. Note that we do not return the connectionHandle back to the pool since that is not possible (for otherwise the GC would not 
      * have kicked in), but we merely safely release the database internal handle and update our counters instead.
      * @param connectionHandle handle to watch
-     */
+     */ 
     protected void trackConnectionFinalizer(ConnectionHandle connectionHandle) {
     	Connection con = connectionHandle.getInternalConnection();
-    	if (con instanceof Proxy){
+    	if (con != null && con instanceof Proxy && Proxy.getInvocationHandler(con) instanceof MemorizeTransactionProxy){
     		try {
     			// if this is a proxy, get the correct target so that when we call close we're actually calling close on the database
     			// handle and not a proxy-based close.
 				con = (Connection) Proxy.getInvocationHandler(con).invoke(con, ConnectionHandle.class.getMethod("getProxyTarget"), null);
 			} catch (Throwable t) {
-				logger.error("Error while attempting to track internal db connection", t);
+				logger.error("Error while attempting to track internal db connection", t); // should never happen
 			}
     	}
     	final Connection internalDBConnection = con;
@@ -130,8 +129,8 @@ public class ConnectionPartition implements Serializable{
 					internalDBConnection.close();
 					updateCreatedConnections(-1);
 				}
-			} catch (SQLException e) {
-				logger.error("Error while closing off internal db connection", e);
+			} catch (Throwable t) {
+				logger.error("Error while closing off internal db connection", t);
 			}
 		}
 		});
@@ -171,8 +170,13 @@ public class ConnectionPartition implements Serializable{
         /** Create a number of helper threads for connection release. */
         int helperThreads = config.getReleaseHelperThreads();
         if (helperThreads > 0) {
-        	
-            ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread", true));
+    		String suffix = "";
+    		
+    		if (config.getPoolName()!=null) {
+    			suffix="-"+config.getPoolName();
+    		}
+    				
+            ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));
             pool.setReleaseHelper(releaseHelper); // keep a handle just in case
             
             for (int i = 0; i < helperThreads; i++) { 
