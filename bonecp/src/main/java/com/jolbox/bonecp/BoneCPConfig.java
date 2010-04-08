@@ -91,7 +91,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String connectionHookClassName;
 	/** Classloader to use when loading the JDBC driver. */
 	private ClassLoader classLoader;
-	
+
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
 	 */

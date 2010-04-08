@@ -142,9 +142,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), boolean.class);
 						String val = props.getProperty("bonecp."+field.getName());
 						if (val != null) {
-							if (val.toUpperCase().equals("TRUE") || val.toUpperCase().equals("FALSE")){
-								method.invoke(this.config, Boolean.parseBoolean(val));
-							} 
+							method.invoke(this.config, Boolean.parseBoolean(val));
 						}
 					}
 				}

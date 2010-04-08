@@ -236,6 +236,20 @@ public class TestBoneCPConnectionProvider {
 
 		testClass.setClassLoader(this.getClass().getClassLoader());
 		assertEquals(this.getClass().getClassLoader(), testClass.getClassLoader());
+		
+		// coverage stuff
+		reset(mockProperties);
+		expect(mockProperties.getProperty("bonecp.partitionCount")).andReturn("something bad");
+		expect(mockProperties.getProperty("bonecp.logStatementsEnabled")).andReturn("something bad");
+		expect(mockProperties.getProperty("bonecp.idleMaxAge")).andReturn("something bad");
+		replay(mockProperties);
+		try{
+			testClass.configure(mockProperties);
+			fail("Should have failed with exception");
+		} catch (HibernateException e){ 
+			// do nothing
+		}
+		
 	}
 
 	/**

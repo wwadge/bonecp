@@ -20,31 +20,19 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
-import static org.easymock.classextension.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
-
-import java.lang.reflect.Field;
-
+import static org.junit.Assert.assertTrue;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 /** Tests config object.
  * @author wwadge
  *
  */
 public class TestBoneCPConfig {
-	
-	/** Mock handle. */
-	private static Logger mockLogger;
 	/** Config handle. */
 	static BoneCPConfig config;
 	
@@ -58,16 +46,6 @@ public class TestBoneCPConfig {
 	@BeforeClass
 	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
 		config = CommonTestUtils.getConfigClone();
-		mockLogger = createNiceMock(Logger.class);
-		makeThreadSafe(mockLogger, true);
-		Field field = config.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(config, mockLogger);
-		mockLogger.error((String)anyObject(), anyObject());
-		expectLastCall().anyTimes();
-		mockLogger.warn((String)anyObject(), anyObject());
-		expectLastCall().anyTimes();
-		replay(mockLogger);
 	}
 	
 	/**
