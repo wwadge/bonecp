@@ -68,7 +68,7 @@ public class CommonTestUtils {
 	/** hsqldb driver. */
 	static String driver = "org.hsqldb.jdbcDriver";
 	/** Config file handle. */
-	static BoneCPConfig config = new BoneCPConfig();
+	private static BoneCPConfig config = new BoneCPConfig();
 
 	static{
 		instanceMap = new HashMap<Class<?>, Object>();
@@ -85,6 +85,18 @@ public class CommonTestUtils {
 		instanceMap.put(String.class, "test");
 
 
+	}
+	
+	/** Returns a clone of config.
+	 * @return config clone
+	 */
+	public static BoneCPConfig getConfigClone(){
+		try {
+			return config.clone();
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	/**
 	 * Pretty printing.
@@ -147,7 +159,6 @@ public class CommonTestUtils {
 	private static void doTestStatementBounceMethod(ConnectionHandle mockConnection, Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		
-
 		if (method.getReturnType() == void.class){
 			method.invoke(mockClass, args);
 			expectLastCall().once().andThrow(new Error()).once();

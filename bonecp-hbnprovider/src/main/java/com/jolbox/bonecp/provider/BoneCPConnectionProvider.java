@@ -19,16 +19,19 @@
 
 package com.jolbox.bonecp.provider;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.util.PropertiesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
@@ -50,41 +53,13 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Config key. */
 	protected static final String CONFIG_CONNECTION_URL = "hibernate.connection.url";
 	/** Config key. */
-	protected static final String CONFIG_IDLE_MAX_AGE = "bonecp.idleMaxAge";
-	/** Config stuff. */
-	protected static final String CONFIG_CONNECTION_HOOK_CLASS = "bonecp.connectionHookClassName";
+	protected static final String CONFIG_CONNECTION_DRIVER_CLASS_ALTERNATE = "javax.persistence.jdbc.driver";
 	/** Config key. */
-	protected static final String CONFIG_IDLE_CONNECTION_TEST_PERIOD = "bonecp.idleConnectionTestPeriod";
+	protected static final String CONFIG_CONNECTION_PASSWORD_ALTERNATE = "javax.persistence.jdbc.password";
 	/** Config key. */
-	protected static final String CONFIG_RELEASE_HELPER_THREADS = "bonecp.releaseHelperThreads";
+	protected static final String CONFIG_CONNECTION_USERNAME_ALTERNATE = "javax.persistence.jdbc.user";
 	/** Config key. */
-	protected static final String CONFIG_PARTITION_COUNT = "bonecp.partitionCount";
-	/** Config key. */
-	protected static final String CONFIG_ACQUIRE_INCREMENT = "bonecp.acquireIncrement";
-	/** Config key. */
-	protected static final String CONFIG_MAX_CONNECTIONS_PER_PARTITION = "bonecp.maxConnectionsPerPartition";
-	/** Config key. */
-	protected static final String CONFIG_MIN_CONNECTIONS_PER_PARTITION = "bonecp.minConnectionsPerPartition";
-	/** Config key. */
-	protected static final String CONFIG_STATEMENTS_CACHED_PER_CONNECTION = "bonecp.statementsCachedPerConnection";
-	/** Config key. */
-	protected static final String CONFIG_PREPARED_STATEMENT_CACHE_SIZE = "bonecp.preparedStatementCacheSize";
-	/** Config key. */
-	protected static final String CONFIG_STATEMENT_CACHE_SIZE = "bonecp.statementCacheSize";
-	/** Config key. */
-	protected static final String CONFIG_TEST_STATEMENT = "bonecp.connectionTestStatement";
-	/** Config key. */
-	protected static final String CONFIG_CLOSE_CONNECTION_WATCH = "bonecp.closeConnectionWatch";
-	/** Config key. */
-	protected static final String CONFIG_LOG_STATEMENTS_ENABLED = "bonecp.logStatementsEnabled";
-	/** Config key. */
-	protected static final String CONFIG_LAZY_INIT = "bonecp.lazyInit";
-	/** Config key. */
-	protected static final String CONFIG_ACQUIRE_RETRY_DELAY = "bonecp.acquireRetryDelay";
-	/** Config key. */
-	protected static final String CONFIG_INIT_SQL  = "bonecp.initSQL";
-	/** Config stuff. */
-	private static final String CONFIG_STATUS = "Connection pool: URL = %s, username=%s, Min = %d, Max = %d, Acquire Increment = %d, Partitions = %d, idleConnection=%d mins, Max Age=%d mins";
+	protected static final String CONFIG_CONNECTION_URL_ALTERNATE = "javax.persistence.jdbc.url";
 	/** Connection pool handle. */
 	private BoneCP pool;
 	/** Isolation level. */
@@ -97,15 +72,16 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	private BoneCPConfig config;
 	/** Class logger. */
 	private static Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @see org.hibernate.connection.ConnectionProvider#close()
 	 */
-	public void close()
-	throws HibernateException {
-		this.pool.shutdown();
+	public void close() throws HibernateException {
+		if (this.pool != null){
+			this.pool.shutdown();
+		}
 	}
 
 	/**
@@ -113,73 +89,105 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	 *
 	 * @see org.hibernate.connection.ConnectionProvider#closeConnection(java.sql.Connection)
 	 */
-	public void closeConnection(Connection conn)
-	throws SQLException {
+	public void closeConnection(Connection conn) throws SQLException {
 		conn.close();
 	} 
+
+	/** Uppercases the first character.
+	 * @param name
+	 * @return the same string with the first letter in uppercase
+	 */
+	private static String upFirst(String name) {
+		return name.substring(0, 1).toUpperCase()+name.substring(1);
+	}
 
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @see org.hibernate.connection.ConnectionProvider#configure(java.util.Properties)
 	 */
-	public void configure(Properties props)
-	throws HibernateException {
-		String connectionTestStatement = props.getProperty(CONFIG_TEST_STATEMENT);
-
-		int statementCacheSize = configParseNumber(props, CONFIG_PREPARED_STATEMENT_CACHE_SIZE, 50);
-		if (statementCacheSize != 50){
-			statementCacheSize = configParseNumber(props, CONFIG_STATEMENT_CACHE_SIZE, 50);
-		}
-		int minsize = configParseNumber(props, CONFIG_MIN_CONNECTIONS_PER_PARTITION, 20);
-		int maxsize = configParseNumber(props, CONFIG_MAX_CONNECTIONS_PER_PARTITION, 50);
-		int acquireIncrement = configParseNumber(props, CONFIG_ACQUIRE_INCREMENT, 10);
-		int partcount = configParseNumber(props, CONFIG_PARTITION_COUNT, 3);
-		int releaseHelperThreads = configParseNumber(props, CONFIG_RELEASE_HELPER_THREADS, 3);
-		long idleMaxAge = configParseNumber(props, CONFIG_IDLE_MAX_AGE, 240);
-		long idleConnectionTestPeriod = configParseNumber(props, CONFIG_IDLE_CONNECTION_TEST_PERIOD, 60);
-		int acquireRetryDelay = configParseNumber(props, CONFIG_ACQUIRE_RETRY_DELAY, 100);
-
-		String url = props.getProperty(CONFIG_CONNECTION_URL, "JDBC URL NOT SET IN CONFIG");
-		String username = props.getProperty(CONFIG_CONNECTION_USERNAME, "username not set");
-		String password = props.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set");
-		String connectionHookClass = props.getProperty(CONFIG_CONNECTION_HOOK_CLASS);
-		String initSQL = props.getProperty(CONFIG_INIT_SQL);
-		boolean closeConnectionWatch = configParseBoolean(props, CONFIG_CLOSE_CONNECTION_WATCH, false);
-		boolean logStatementsEnabled = configParseBoolean(props, CONFIG_LOG_STATEMENTS_ENABLED, false);
-		boolean lazyInit = configParseBoolean(props, CONFIG_LAZY_INIT, false);
-
-
-		// Remember Isolation level
-		this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
-		this.autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
-
+	public void configure(Properties props) throws HibernateException {
+		this.config = new BoneCPConfig();
 		try {
+			// Use reflection to read in all possible properties of int, String or boolean.
+			for (Field field: BoneCPConfig.class.getDeclaredFields()){
+				if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
+					if (field.getType().equals(int.class)){
+						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), int.class);
+						String val = props.getProperty("bonecp."+field.getName());
+						if (val != null) {
+							try{
+								method.invoke(this.config, Integer.parseInt(val));
+							} catch (NumberFormatException e){
+								// do nothing, use the default value
+							}
+						}
+					} if (field.getType().equals(long.class)){
+						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), long.class);
+						String val = props.getProperty("bonecp."+field.getName());
+						if (val != null) {
+							try{
+								method.invoke(this.config, Long.parseLong(val));
+							} catch (NumberFormatException e){
+								// do nothing, use the default value
+							}
+						}
+					} else if (field.getType().equals(String.class)){
+						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), String.class);
+						String val = props.getProperty("bonecp."+field.getName());
+						if (val != null) {
+							method.invoke(this.config, val);
+						}
+					} else if (field.getType().equals(boolean.class)){
+						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), boolean.class);
+						String val = props.getProperty("bonecp."+field.getName());
+						if (val != null) {
+							method.invoke(this.config, Boolean.parseBoolean(val));
+						}
+					}
+				}
+			}
+
+			// old hibernate config
+			String url = props.getProperty(CONFIG_CONNECTION_URL);
+			String username = props.getProperty(CONFIG_CONNECTION_USERNAME);
+			String password = props.getProperty(CONFIG_CONNECTION_PASSWORD);
 			String driver = props.getProperty(CONFIG_CONNECTION_DRIVER_CLASS);
+			if (url == null){
+				url = props.getProperty(CONFIG_CONNECTION_URL_ALTERNATE);
+			}
+			if (username == null){
+				username = props.getProperty(CONFIG_CONNECTION_USERNAME_ALTERNATE);
+			}
+			if (password == null){
+				password = props.getProperty(CONFIG_CONNECTION_PASSWORD_ALTERNATE);
+			}
+			if (driver == null){
+				driver = props.getProperty(CONFIG_CONNECTION_DRIVER_CLASS_ALTERNATE);
+			}
+
+			if (url != null){
+				this.config.setJdbcUrl(url);
+			}
+			if (username != null){
+				this.config.setUsername(username);
+			}
+			if (password != null){
+				this.config.setPassword(password);
+			}
+
+
+			// Remember Isolation level
+			this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
+			this.autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
+
+			logger.debug(this.config.toString());
+
 			if (driver != null && !driver.trim().equals("")){
 				loadClass(driver);
 			}
-			logger.debug(String.format(CONFIG_STATUS, url, username, minsize, maxsize, acquireIncrement, partcount, idleConnectionTestPeriod, idleMaxAge));
-			this.config = new BoneCPConfig();
-			this.config.setMinConnectionsPerPartition(minsize);
-			this.config.setMaxConnectionsPerPartition(maxsize);
-			this.config.setAcquireIncrement(acquireIncrement);
-			this.config.setPartitionCount(partcount);
-			this.config.setJdbcUrl(url);
-			this.config.setUsername(username);
-			this.config.setPassword(password);
-			this.config.setReleaseHelperThreads(releaseHelperThreads);
-			this.config.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
-			this.config.setIdleMaxAge(idleMaxAge);
-			this.config.setConnectionTestStatement(connectionTestStatement);
-			this.config.setStatementsCacheSize(statementCacheSize);
-			this.config.setInitSQL(initSQL);
-			this.config.setCloseConnectionWatch(closeConnectionWatch);
-			this.config.setLogStatementsEnabled(logStatementsEnabled);
-			this.config.setAcquireRetryDelay(acquireRetryDelay);
-			this.config.setLazyInit(lazyInit);
-			if (connectionHookClass != null){
-				Object hookClass = loadClass(connectionHookClass).newInstance();
+			if (this.config.getConnectionHookClassName() != null){
+				Object hookClass = loadClass(this.config.getConnectionHookClassName()).newInstance();
 				this.config.setConnectionHook((ConnectionHook) hookClass);
 			}
 			// create the connection pool
@@ -198,9 +206,9 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		if (this.classLoader == null){
 			return Class.forName(clazz);
 		}
-		
+
 		return Class.forName(clazz, true, this.classLoader);
-		
+
 	}
 
 	/** Creates the given connection pool with the given configuration. Extracted here to make unit mocking easier.
@@ -213,44 +221,6 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		}  catch (SQLException e) {
 			throw new HibernateException(e);
 		}
-	}
-
-	/** Returns the value of the given property.
-	 * @param props Properties handle
-	 * @param propertyName property to read in
-	 * @param defaultValue value to return on no value being set (or error)
-	 * @return the number read in from the properties, or default value on error/no value set
-	 */
-	private int configParseNumber(Properties props, String propertyName, int defaultValue) {
-		int result = defaultValue;
-		String val = props.getProperty(propertyName);
-		if (val != null) {
-			try{
-				result = Integer.parseInt(val);
-			} catch (NumberFormatException e){
-				// do nothing, use the default value
-			}
-		}
-		return result;
-	}
-
-	/** Returns the value of the given property.
-	 * @param props Properties handle
-	 * @param propertyName property to read in
-	 * @param defaultValue value to return on no value being set (or error)
-	 * @return the boolean read in from the properties, or default value on error/no value set
-	 */
-	private boolean configParseBoolean(Properties props, String propertyName, boolean defaultValue) {
-		boolean result = defaultValue;
-		String val = props.getProperty(propertyName);
-		if (val != null) {
-			if (val.toUpperCase().equals("TRUE") || val.toUpperCase().equals("FALSE")){
-				result = Boolean.parseBoolean(val);
-			} else{ 
-				result = defaultValue;
-			}
-		}
-		return result;
 	}
 
 	/**
@@ -301,7 +271,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 
 	/** Specifies the classloader to use when attempting to load the jdbc driver (if a value is given). Set to null to use the default
 	 * loader.
- 	 * @param classLoader the classLoader to set
+	 * @param classLoader the classLoader to set
 	 */
 	public void setClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;

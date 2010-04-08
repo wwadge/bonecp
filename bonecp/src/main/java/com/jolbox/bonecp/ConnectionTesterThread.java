@@ -65,9 +65,9 @@ public class ConnectionTesterThread implements Runnable {
 	public void run() {
 		ConnectionHandle connection = null;
 	
-		
 		try {
 			int partitionSize= this.partition.getFreeConnections().size();
+			long currentTime = System.currentTimeMillis();
 			for (int i=0; i < partitionSize; i++){
 			 
 				connection = this.partition.getFreeConnections().poll();
@@ -80,9 +80,8 @@ public class ConnectionTesterThread implements Runnable {
 						continue;
 					}
 
-					if (this.idleConnectionTestPeriod > 0 && (System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
-							(System.currentTimeMillis()-connection.getConnectionLastReset() > this.idleConnectionTestPeriod)) {
-					   
+					if (this.idleConnectionTestPeriod > 0 && (currentTime-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
+							(currentTime-connection.getConnectionLastReset() > this.idleConnectionTestPeriod)) {
 					    // send a keep-alive, close off connection if we fail.
 						if (!this.pool.isConnectionHandleAlive(connection)){
 						    closeConnection(connection);

@@ -27,15 +27,15 @@ import com.jolbox.bonecp.ConnectionHandle;
  */
 public class CustomHook extends AbstractConnectionHook{
     /** junit helper.*/
-	int acquire;
+	public int acquire;
 	/** junit helper.*/
-	int checkin;
+	public int checkin;
 	/** junit helper.*/
-	int checkout;
+	public int checkout;
 	/** junit helper.*/
-	int destroy;
+	public int destroy;
 	/** junit helper.*/
-	int fail;
+	public int fail;
 
 	@Override
 	public void onAcquire(ConnectionHandle connection) {

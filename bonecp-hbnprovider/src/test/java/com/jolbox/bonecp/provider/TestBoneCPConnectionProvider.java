@@ -22,24 +22,10 @@
  */
 package com.jolbox.bonecp.provider;
 
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_ACQUIRE_INCREMENT;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_DRIVER_CLASS;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_HOOK_CLASS;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_PASSWORD;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_URL;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_USERNAME;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_IDLE_CONNECTION_TEST_PERIOD;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_IDLE_MAX_AGE;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_INIT_SQL;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_LOG_STATEMENTS_ENABLED;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MAX_CONNECTIONS_PER_PARTITION;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_MIN_CONNECTIONS_PER_PARTITION;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PARTITION_COUNT;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_PREPARED_STATEMENT_CACHE_SIZE;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_STATEMENT_CACHE_SIZE;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_RELEASE_HELPER_THREADS;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_STATEMENTS_CACHED_PER_CONNECTION;
-import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_TEST_STATEMENT;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -52,8 +38,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -159,24 +143,22 @@ public class TestBoneCPConnectionProvider {
 	 */
 	@Test
 	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException {
-		expect(mockProperties.getProperty(CONFIG_TEST_STATEMENT)).andReturn(null).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_PREPARED_STATEMENT_CACHE_SIZE)).andReturn("40").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_STATEMENT_CACHE_SIZE)).andReturn("40").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_STATEMENTS_CACHED_PER_CONNECTION)).andReturn("30").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_MIN_CONNECTIONS_PER_PARTITION)).andReturn("20").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_MAX_CONNECTIONS_PER_PARTITION)).andReturn("50").anyTimes(); 
-		expect(mockProperties.getProperty(CONFIG_ACQUIRE_INCREMENT)).andReturn("5").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_PARTITION_COUNT)).andReturn("5").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_RELEASE_HELPER_THREADS)).andReturn("3").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_IDLE_CONNECTION_TEST_PERIOD)).andReturn("60").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_IDLE_MAX_AGE)).andReturn("240").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_URL, "JDBC URL NOT SET IN CONFIG")).andReturn(URL).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_USERNAME, "username not set")).andReturn(USERNAME).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_PASSWORD, "password not set")).andReturn(PASSWORD).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_DRIVER_CLASS)).andReturn(DRIVER).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_CONNECTION_HOOK_CLASS)).andReturn("com.jolbox.bonecp.provider.CustomHook").anyTimes();
-		expect(mockProperties.getProperty(CONFIG_INIT_SQL)).andReturn(TEST_QUERY).anyTimes();
-		expect(mockProperties.getProperty(CONFIG_LOG_STATEMENTS_ENABLED)).andReturn("true").anyTimes();
+		expect(mockProperties.getProperty("bonecp.statementsCacheSize")).andReturn("40").anyTimes();
+		expect(mockProperties.getProperty("bonecp.minConnectionsPerPartition")).andReturn("20").anyTimes();
+		expect(mockProperties.getProperty("bonecp.maxConnectionsPerPartition")).andReturn("50").anyTimes(); 
+		expect(mockProperties.getProperty("bonecp.acquireIncrement")).andReturn("5").anyTimes();
+		expect(mockProperties.getProperty("bonecp.partitionCount")).andReturn("5").anyTimes();
+		expect(mockProperties.getProperty("bonecp.releaseHelperThreads")).andReturn("3").anyTimes();
+		expect(mockProperties.getProperty("bonecp.idleConnectionTestPeriod")).andReturn("60").anyTimes();
+		expect(mockProperties.getProperty("bonecp.idleMaxAge")).andReturn("240").anyTimes();
+		expect(mockProperties.getProperty("javax.persistence.jdbc.url")).andReturn(URL).anyTimes();
+		expect(mockProperties.getProperty("javax.persistence.jdbc.user")).andReturn(USERNAME).anyTimes();
+		expect(mockProperties.getProperty("javax.persistence.jdbc.password")).andReturn(PASSWORD).anyTimes();
+		expect(mockProperties.getProperty("javax.persistence.jdbc.driver")).andReturn(DRIVER).anyTimes();
+		expect(mockProperties.getProperty("bonecp.connectionHookClassName")).andReturn("com.jolbox.bonecp.provider.CustomHook").anyTimes();
+		expect(mockProperties.getProperty("bonecp.connectionTestStatement")).andReturn(TEST_QUERY).anyTimes();
+		expect(mockProperties.getProperty("bonecp.initSQL")).andReturn(TEST_QUERY).anyTimes();
+		expect(mockProperties.getProperty("bonecp.logStatementsEnabled")).andReturn("true").anyTimes();
 
 
 
@@ -252,6 +234,20 @@ public class TestBoneCPConnectionProvider {
 
 		testClass.setClassLoader(this.getClass().getClassLoader());
 		assertEquals(this.getClass().getClassLoader(), testClass.getClassLoader());
+		
+		// coverage stuff
+		reset(mockProperties);
+		expect(mockProperties.getProperty("bonecp.partitionCount")).andReturn("something bad");
+		expect(mockProperties.getProperty("bonecp.logStatementsEnabled")).andReturn("something bad");
+		expect(mockProperties.getProperty("bonecp.idleMaxAge")).andReturn("something bad");
+		replay(mockProperties);
+		try{
+			testClass.configure(mockProperties);
+			fail("Should have failed with exception");
+		} catch (HibernateException e){ 
+			// do nothing
+		}
+		
 	}
 
 	/**
@@ -301,84 +297,6 @@ public class TestBoneCPConnectionProvider {
 		verify(mockConfig);
 		
 		
-	}
-	/**
-	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#configure(java.util.Properties)}.
-	 * @throws NoSuchMethodException 
-	 * @throws SecurityException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException 
-	 */
-	@Test
-	public void testConfigParseNumber() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-		expect(mockProperties.getProperty("test")).andReturn("99");
-		replay(mockProperties);
-		Method method = testClass.getClass().getDeclaredMethod("configParseNumber", new Class[]{Properties.class, String.class, int.class});
-		method.setAccessible(true);
-
-		int result = (Integer) method.invoke(testClass, mockProperties, "test", 123);
-		assertEquals(99, result);
-		verify(mockProperties);
-
-		reset(mockProperties);
-		expect(mockProperties.getProperty("test")).andReturn("somethingbad");
-		replay(mockProperties);
-
-		result = (Integer) method.invoke(testClass, mockProperties, "test", 123);
-		assertEquals(123, result);
-		verify(mockProperties);
-
-		// test not finding a value
-		reset(mockProperties);
-		expect(mockProperties.getProperty("test")).andReturn(null);
-		replay(mockProperties);
-
-		result = (Integer) method.invoke(testClass, mockProperties, "test", 123);
-		assertEquals(123, result);
-		verify(mockProperties);
-
-
-	}
-
-	
-	/**
-	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#configure(java.util.Properties)}.
-	 * @throws NoSuchMethodException 
-	 * @throws SecurityException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException 
-	 */
-	@Test
-	public void testConfigParseBoolean() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-		expect(mockProperties.getProperty("test")).andReturn("true");
-		replay(mockProperties);
-		Method method = testClass.getClass().getDeclaredMethod("configParseBoolean", new Class[]{Properties.class, String.class, boolean.class});
-		method.setAccessible(true);
-
-		boolean result = (Boolean) method.invoke(testClass, mockProperties, "test", true);
-		assertEquals(true, result);
-		verify(mockProperties);
-
-		reset(mockProperties);
-		expect(mockProperties.getProperty("test")).andReturn("somethingbad");
-		replay(mockProperties);
-
-		result = (Boolean) method.invoke(testClass, mockProperties, "test", false);
-		assertEquals(false, result);
-		verify(mockProperties);
-
-		// test not finding a value
-		reset(mockProperties);
-		expect(mockProperties.getProperty("test")).andReturn(null);
-		replay(mockProperties);
-
-		result = (Boolean) method.invoke(testClass, mockProperties, "test", true);
-		assertEquals(true, result);
-		verify(mockProperties);
-
-
 	}
 
 	/**

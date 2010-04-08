@@ -20,50 +20,32 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
-import static org.easymock.classextension.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
-
-import java.lang.reflect.Field;
-
+import static org.junit.Assert.assertTrue;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 /** Tests config object.
  * @author wwadge
  *
  */
 public class TestBoneCPConfig {
-	
-	/** Mock handle. */
-	private static Logger mockLogger;
+	/** Config handle. */
+	static BoneCPConfig config;
 	
 	/** Stub out any calls to logger.
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * @throws CloneNotSupportedException 
 	 */
 	@BeforeClass
-	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
-		mockLogger = createNiceMock(Logger.class);
-		makeThreadSafe(mockLogger, true);
-		Field field = CommonTestUtils.config.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(CommonTestUtils.config, mockLogger);
-		mockLogger.error((String)anyObject(), anyObject());
-		expectLastCall().anyTimes();
-		mockLogger.warn((String)anyObject(), anyObject());
-		expectLastCall().anyTimes();
-		replay(mockLogger);
+	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
+		config = CommonTestUtils.getConfigClone();
 	}
 	
 	/**
@@ -72,37 +54,40 @@ public class TestBoneCPConfig {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testGettersSetters(){
-		CommonTestUtils.config.setJdbcUrl(CommonTestUtils.url);
-		CommonTestUtils.config.setUsername(CommonTestUtils.username);
-		CommonTestUtils.config.setPassword(CommonTestUtils.password);
-		CommonTestUtils.config.setIdleConnectionTestPeriod(1);
-		CommonTestUtils.config.setIdleMaxAge(1);
-		CommonTestUtils.config.setStatementsCacheSize(2);
-		CommonTestUtils.config.setReleaseHelperThreads(3);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(5);
-		CommonTestUtils.config.setMinConnectionsPerPartition(5);
-		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setConnectionTestStatement("test");
-		CommonTestUtils.config.setAcquireIncrement(6);
-		CommonTestUtils.config.setStatementsCachedPerConnection(7);
-		CommonTestUtils.config.setPreparedStatementsCacheSize(2);
-		
+		config.setJdbcUrl(CommonTestUtils.url);
+		config.setUsername(CommonTestUtils.username);
+		config.setPassword(CommonTestUtils.password);
+		config.setIdleConnectionTestPeriod(1);
+		config.setIdleMaxAge(1);
+		config.setStatementsCacheSize(2);
+		config.setReleaseHelperThreads(3);
+		config.setMaxConnectionsPerPartition(5);
+		config.setMinConnectionsPerPartition(5);
+		config.setPartitionCount(1);
+		config.setConnectionTestStatement("test");
+		config.setAcquireIncrement(6);
+		config.setStatementsCachedPerConnection(7);
+		config.setPreparedStatementsCacheSize(2);
+		config.setStatementCacheSize(2);
+		config.setPoolName("foo");
+		config.setDisableJMX(false);
 
-		
-		assertEquals(CommonTestUtils.url, CommonTestUtils.config.getJdbcUrl());
-		assertEquals(CommonTestUtils.username, CommonTestUtils.config.getUsername());
-		assertEquals(CommonTestUtils.password, CommonTestUtils.config.getPassword());
-		assertEquals(60*1000, CommonTestUtils.config.getIdleConnectionTestPeriod());
-		assertEquals(60*1000, CommonTestUtils.config.getIdleMaxAge());
-		assertEquals(2, CommonTestUtils.config.getStatementsCacheSize());
-		assertEquals(2, CommonTestUtils.config.getPreparedStatementsCacheSize());
-		assertEquals(3, CommonTestUtils.config.getReleaseHelperThreads());
-		assertEquals(5, CommonTestUtils.config.getMaxConnectionsPerPartition());
-		assertEquals(5, CommonTestUtils.config.getMinConnectionsPerPartition());
-		assertEquals(6, CommonTestUtils.config.getAcquireIncrement());
-		assertEquals(7, CommonTestUtils.config.getStatementsCachedPerConnection());
-		assertEquals(1, CommonTestUtils.config.getPartitionCount());
-		assertEquals("test", CommonTestUtils.config.getConnectionTestStatement());
+		assertEquals("foo", config.getPoolName());
+		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
+		assertEquals(CommonTestUtils.username, config.getUsername());
+		assertEquals(CommonTestUtils.password, config.getPassword());
+		assertEquals(60*1000, config.getIdleConnectionTestPeriod());
+		assertEquals(60*1000, config.getIdleMaxAge());
+		assertEquals(2, config.getStatementsCacheSize());
+		assertEquals(2, config.getStatementCacheSize());
+		assertEquals(2, config.getPreparedStatementsCacheSize());
+		assertEquals(3, config.getReleaseHelperThreads());
+		assertEquals(5, config.getMaxConnectionsPerPartition());
+		assertEquals(5, config.getMinConnectionsPerPartition());
+		assertEquals(6, config.getAcquireIncrement());
+		assertEquals(7, config.getStatementsCachedPerConnection());
+		assertEquals(1, config.getPartitionCount());
+		assertEquals("test", config.getConnectionTestStatement());
 				
 
 
@@ -112,30 +97,30 @@ public class TestBoneCPConfig {
 	 */
 	@Test
 	public void testConfigSanitize(){
-		CommonTestUtils.config.setMaxConnectionsPerPartition(-1);
-		CommonTestUtils.config.setMinConnectionsPerPartition(-1);
-		CommonTestUtils.config.setPartitionCount(-1);
-		CommonTestUtils.config.setStatementsCacheSize(-1);
-		CommonTestUtils.config.setConnectionTestStatement("");
-		CommonTestUtils.config.setJdbcUrl(null);
-		CommonTestUtils.config.setUsername(null);
-		CommonTestUtils.config.setAcquireIncrement(0);
-		CommonTestUtils.config.setPassword(null);
+		config.setMaxConnectionsPerPartition(-1);
+		config.setMinConnectionsPerPartition(-1);
+		config.setPartitionCount(-1);
+		config.setStatementsCacheSize(-1);
+		config.setConnectionTestStatement("");
+		config.setJdbcUrl(null);
+		config.setUsername(null);
+		config.setAcquireIncrement(0);
+		config.setPassword(null);
 		
-		CommonTestUtils.config.setReleaseHelperThreads(-1);
-		CommonTestUtils.config.sanitize();
+		config.setReleaseHelperThreads(-1);
+		config.sanitize();
 
-		assertNotNull(CommonTestUtils.config.toString());
-		assertFalse(CommonTestUtils.config.getAcquireIncrement() == 0);
-		assertFalse(CommonTestUtils.config.getReleaseHelperThreads() == -1);
-		assertFalse(CommonTestUtils.config.getMaxConnectionsPerPartition() == -1);
-		assertFalse(CommonTestUtils.config.getMinConnectionsPerPartition() == -1);
-		assertFalse(CommonTestUtils.config.getPartitionCount() == -1);
-		assertFalse(CommonTestUtils.config.getStatementsCacheSize() == -1);
+		assertNotNull(config.toString());
+		assertFalse(config.getAcquireIncrement() == 0);
+		assertFalse(config.getReleaseHelperThreads() == -1);
+		assertFalse(config.getMaxConnectionsPerPartition() == -1);
+		assertFalse(config.getMinConnectionsPerPartition() == -1);
+		assertFalse(config.getPartitionCount() == -1);
+		assertFalse(config.getStatementsCacheSize() == -1);
 
-		CommonTestUtils.config.setMinConnectionsPerPartition(CommonTestUtils.config.getMaxConnectionsPerPartition()+1);
-		CommonTestUtils.config.sanitize();
-		assertEquals(CommonTestUtils.config.getMinConnectionsPerPartition(), CommonTestUtils.config.getMaxConnectionsPerPartition());
+		config.setMinConnectionsPerPartition(config.getMaxConnectionsPerPartition()+1);
+		config.sanitize();
+		assertEquals(config.getMinConnectionsPerPartition(), config.getMaxConnectionsPerPartition());
 
 	}
 	
@@ -145,15 +130,15 @@ public class TestBoneCPConfig {
 	 */
 	@Test
 	public void testCloneEqualsHashCode() throws CloneNotSupportedException{
-		BoneCPConfig clone = CommonTestUtils.config.clone();
-		assertTrue(clone.equals(CommonTestUtils.config));
-		assertEquals(clone.hashCode(), CommonTestUtils.config.hashCode());
+		BoneCPConfig clone = config.clone();
+		assertTrue(clone.equals(config));
+		assertEquals(clone.hashCode(), config.hashCode());
 		
 		assertFalse(clone.equals(null));
 		assertTrue(clone.equals(clone));
 		
 		clone.setJdbcUrl("something else");
-		assertFalse(clone.equals(CommonTestUtils.config));
+		assertFalse(clone.equals(config));
 
 	}
 

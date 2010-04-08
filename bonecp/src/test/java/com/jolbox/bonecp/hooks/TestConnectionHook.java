@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.SQLException;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -73,6 +74,14 @@ public class TestConnectionHook {
 		// once for no release threads, once with release threads....
 		poolClass = new BoneCP(mockConfig);
 	
+	}
+	
+	/**
+	 * Killoff pool
+	 */
+	@AfterClass
+	public static void shutdown(){
+		poolClass.shutdown();
 	}
 	/**
 	 * Test method for {@link com.jolbox.bonecp.hooks.AbstractConnectionHook#onAcquire(com.jolbox.bonecp.ConnectionHandle)}.

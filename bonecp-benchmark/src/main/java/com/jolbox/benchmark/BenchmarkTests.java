@@ -34,6 +34,8 @@ import java.util.concurrent.Executors;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
+import org.logicalcobwebs.proxool.ProxoolDataSource;
 
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
@@ -47,10 +49,11 @@ import com.mchange.v2.c3p0.DataSources;
  * @author wwadge
  * @version $Revision$
  */
+@SuppressWarnings("all")
 public class BenchmarkTests {
 
 
-	/** A dummy query for HSQLDB. */
+	/** A dummy query for DB. */
 	public static final String TEST_QUERY = "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
 
 	/** Constant. */
@@ -58,7 +61,7 @@ public class BenchmarkTests {
 	/** Constant. */
 	private static final String username = "sa";
 	/** Constant. */
-	private static final String url = "jdbc:hsqldb:mem:test";
+	private static final String url = "jdbc:mock";
 	/** Max connections for single. */
 	private static final int MAX_CONNECTIONS = 1000000;
 	/** Placeholder for all the results. */
@@ -82,7 +85,7 @@ public class BenchmarkTests {
 	 */
 	private ComboPooledDataSource multiThreadedC3P0(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
 		ComboPooledDataSource cpds = new ComboPooledDataSource();
-		cpds.setDriverClass("org.hsqldb.jdbcDriver");
+		cpds.setDriverClass("com.jolbox.benchmark.MockJDBCDriver");
 
 		cpds.setJdbcUrl(url);
 		cpds.setUser(username);
@@ -102,6 +105,29 @@ public class BenchmarkTests {
 		return cpds;
 	}
 
+	/** 
+	 *
+	 * @param doPreparedStatement 
+	 * @return time taken
+	 * @throws PropertyVetoException 
+	 * @throws InterruptedException 
+	 * @throws SQLException 
+	 */
+	private ProxoolDataSource multiThreadedProxool(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
+		ProxoolDataSource cpds = new ProxoolDataSource();
+		cpds.setDriver("com.jolbox.benchmark.MockJDBCDriver");
+
+		cpds.setDriverUrl(url);
+		cpds.setUser(username);
+		cpds.setPassword(password);
+		cpds.setMaximumConnectionLifetime(Integer.MAX_VALUE);
+		cpds.setMaximumActiveTime(Long.MAX_VALUE);
+		cpds.setTestBeforeUse(false);
+		cpds.setMinimumConnectionCount(pool_size);
+		cpds.setMaximumConnectionCount(pool_size);
+		return cpds;
+	}
+
 
 	/**
 	 * 
@@ -114,7 +140,7 @@ public class BenchmarkTests {
 	 */
 	private DataSource multiThreadedDBCP(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
 		BasicDataSource cpds = new BasicDataSource();
-		cpds.setDriverClassName("org.hsqldb.jdbcDriver");
+		cpds.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
 		cpds.setUrl(url);
 		cpds.setUsername(username);
 		cpds.setPassword(password);
@@ -130,7 +156,37 @@ public class BenchmarkTests {
 	}
 
 
+	/**
+	 * 
+	 *
+	 * @param doPreparedStatement 
+	 * @return time taken
+	 * @throws PropertyVetoException 
+	 * @throws InterruptedException 
+	 * @throws SQLException 
+	 */
+	private DataSource multiThreadedTomcatJDBC(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
+		PoolProperties config = new PoolProperties();
+		config.setUrl(url);
+		  config.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		config.setUsername(username);
+		config.setPassword(password);
+		config.setMaxIdle(pool_size);
+		config.setMaxAge(0);
+		config.setInitialSize(pool_size);
+		config.setMaxActive(pool_size);
+		org.apache.tomcat.jdbc.pool.DataSource dsb = new org.apache.tomcat.jdbc.pool.DataSource();
+          dsb.setPoolProperties(config); 
+          if (doPreparedStatement){
+        	  // not yet implemented in this version
+          }
 
+return dsb;
+		
+		
+		
+	}
+	
 	/**
 	 * 
 	 *
@@ -144,16 +200,16 @@ public class BenchmarkTests {
 	private BoneCPDataSource multiThreadedBoneCP(boolean doPreparedStatement, int partitions) throws PropertyVetoException, InterruptedException, SQLException {
 
 		BoneCPDataSource dsb = new BoneCPDataSource();
-		dsb.setDriverClass("org.hsqldb.jdbcDriver");
+		dsb.setDriverClass("com.jolbox.benchmark.MockJDBCDriver");
 		dsb.setJdbcUrl(url);
 		dsb.setUsername(username);
 		dsb.setPassword(password);
 		dsb.setIdleMaxAge(0L);
 		dsb.setIdleConnectionTestPeriod(0L);
 		if (doPreparedStatement){
-			dsb.setPreparedStatementCacheSize(10);
+			dsb.setStatementsCacheSize(10);
 		} else {
-			dsb.setPreparedStatementCacheSize(0);
+			dsb.setStatementsCacheSize(0);
 		}
 		dsb.setMinConnectionsPerPartition(pool_size / partitions);
 		dsb.setMaxConnectionsPerPartition(pool_size / partitions);
@@ -200,6 +256,38 @@ public class BenchmarkTests {
 		return end;
 
 	}
+	/**
+	 * 
+	 *
+	 * @return time taken
+	 * @throws SQLException
+	 */
+	private long singleTomcatJDBC() throws SQLException{
+		// Start tomcat JDBC
+		PoolProperties config = new PoolProperties();
+		config.setUrl(url);
+		  config.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		config.setUsername(username);
+		config.setPassword(password);
+		config.setMaxIdle(pool_size);
+		config.setMaxAge(0);
+		config.setInitialSize(pool_size);
+		config.setMaxActive(pool_size);
+		org.apache.tomcat.jdbc.pool.DataSource dsb = new org.apache.tomcat.jdbc.pool.DataSource();
+          dsb.setPoolProperties(config); 
+
+		long start = System.currentTimeMillis();
+		for (int i=0; i < MAX_CONNECTIONS; i++){
+			Connection conn = dsb.getConnection();
+			conn.close();
+		}
+		long end = (System.currentTimeMillis() - start);
+
+
+		dsb.close();
+		return end;
+
+	}
 
 
 	/**
@@ -212,7 +300,7 @@ public class BenchmarkTests {
 		// Start DBCP
 
 		BasicDataSource cpds = new BasicDataSource();
-		cpds.setDriverClassName("org.hsqldb.jdbcDriver");
+		cpds.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
 		cpds.setUrl(url);
 		cpds.setUsername(username);
 		cpds.setPassword(password);
@@ -310,6 +398,8 @@ public class BenchmarkTests {
 				case BONECP_1_PARTITIONS: 		
 					cycleResults[i]=singleBoneCP();
 					break;
+				case TOMCAT_JDBC:
+					cycleResults[i]=singleTomcatJDBC();
 				default: 
 					System.err.println("Unknown");
 				}
@@ -487,8 +577,15 @@ public class BenchmarkTests {
 		case C3P0: 			
 			ds=multiThreadedC3P0(doPreparedStatement);
 			break;
+		case PROXOOL: 			
+			ds=multiThreadedProxool(doPreparedStatement);
+			break;
+
 		case DBCP:
 			ds = multiThreadedDBCP(doPreparedStatement);
+			break;
+		case TOMCAT_JDBC:
+			ds = multiThreadedTomcatJDBC(doPreparedStatement);
 			break;
 		default:
 			break;
@@ -532,7 +629,7 @@ public class BenchmarkTests {
 	private long testPreparedStatementSingleThreadC3P0() throws PropertyVetoException, SQLException{
 		results.add("PreparedStatement (single threaded), time (ms)");
 		ComboPooledDataSource cpds = new ComboPooledDataSource();
-		cpds.setDriverClass("org.hsqldb.jdbcDriver");
+		cpds.setDriverClass("com.jolbox.benchmark.MockJDBCDriver");
 
 		cpds.setJdbcUrl(url);
 		cpds.setUser(username);
@@ -572,7 +669,7 @@ public class BenchmarkTests {
 	 */
 	private long testPreparedStatementSingleThreadDBCP() throws PropertyVetoException, SQLException{
 		BasicDataSource cpds = new BasicDataSource();
-		cpds.setDriverClassName("org.hsqldb.jdbcDriver");
+		cpds.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
 		cpds.setUrl(url);
 		cpds.setUsername(username);
 		cpds.setPassword(password);

@@ -96,12 +96,15 @@ public class TestBoneCP {
 	 * @throws NoSuchFieldException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * @throws CloneNotSupportedException 
 	 */
 	@BeforeClass
-	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
 		Class.forName("org.hsqldb.jdbcDriver");
+//		config = CommonTestUtils.getConfigClone();
 	}
 	
+
 	
 	/**
 	 * Reset the mocks.
@@ -820,6 +823,16 @@ public class TestBoneCP {
 		testClass.initJMX();
 		verify(mockMbs);
 	}
+
+	/** Test for different pool names.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InstanceAlreadyExistsException
+	 * @throws MBeanRegistrationException
+	 * @throws NotCompliantMBeanException
+	 */
 	@Test
 	public void testJMXWithName() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException{
 		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
@@ -834,7 +847,7 @@ public class TestBoneCP {
 		testClass.initJMX();
 		verify(mockMbs);
 	}
-
+	
 	/**
 	 * @throws SecurityException
 	 * @throws NoSuchMethodException

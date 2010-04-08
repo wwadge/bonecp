@@ -62,7 +62,7 @@ public class CloseThreadMonitor implements Runnable {
 		try {
 			// wait for the thread we're monitoring to die off.
 			this.threadToMonitor.join();
-			if (!this.connectionHandle.isLogicallyClosed()){
+			if (!this.connectionHandle.isClosed()){
 				logger.error(this.stackTrace);
 			}
 		} catch (Exception e) {

@@ -37,8 +37,10 @@ import java.sql.Statement;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
 
 
@@ -46,21 +48,24 @@ import com.jolbox.bonecp.hooks.CustomHook;
 @SuppressWarnings("all") 
 public class TestSystemTests {
 
+	private static BoneCPConfig config;
+
 	@BeforeClass
 	public static void setup() throws ClassNotFoundException{
 		Class.forName("org.hsqldb.jdbcDriver");
+		config = CommonTestUtils.getConfigClone();
 	}
 
 	@Before
 	public void beforeTest(){
-		CommonTestUtils.config.setJdbcUrl(CommonTestUtils.url);
-		CommonTestUtils.config.setUsername(CommonTestUtils.username);
-		CommonTestUtils.config.setPassword(CommonTestUtils.password);
-		CommonTestUtils.config.setIdleConnectionTestPeriod(10000);
-		CommonTestUtils.config.setIdleMaxAge(0);
-		CommonTestUtils.config.setStatementsCacheSize(0);
-		CommonTestUtils.config.setReleaseHelperThreads(0);
-		CommonTestUtils.config.setStatementsCachedPerConnection(30);
+		config.setJdbcUrl(CommonTestUtils.url);
+		config.setUsername(CommonTestUtils.username);
+		config.setPassword(CommonTestUtils.password);
+		config.setIdleConnectionTestPeriod(10000);
+		config.setIdleMaxAge(0);
+		config.setStatementsCacheSize(0);
+		config.setReleaseHelperThreads(0);
+		config.setStatementsCachedPerConnection(30);
 	}
 
 
@@ -75,41 +80,33 @@ public class TestSystemTests {
 	 * @throws ClassNotFoundException */
 	@Test
 	public void testDataSource() throws SQLException, IOException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setMinConnectionsPerPartition(30);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
-		CommonTestUtils.config.setPartitionCount(1);
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(30);
+		config.setMaxConnectionsPerPartition(100);
+		config.setPartitionCount(1);
 		
 		
-		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
-		dsb.setPreparedStatementCacheSize(0);
-		dsb.setPartitionCount(1);
-		dsb.setPartitionCount("1");
-		dsb.setPreparedStatementCacheSize("0");
+		BoneCPDataSource dsb = new BoneCPDataSource(config);
+		dsb.setPartitionCount(1); 
+		dsb.setAcquireRetryDelay(-1);
+		dsb.setAcquireRetryAttempts(0);
 		dsb.setMaxConnectionsPerPartition(100);
-		dsb.setMaxConnectionsPerPartition("100");
 		dsb.setMinConnectionsPerPartition(30);
-		dsb.setMinConnectionsPerPartition("30");
-		dsb.setStatementsCachedPerConnection("30");
+		dsb.setTransactionRecoveryEnabled(true);
+		dsb.setConnectionHook(new CoverageHook());
+		dsb.setLazyInit(false);
 		dsb.setStatementsCachedPerConnection(30);
-		dsb.setStatementCacheSize(30);
-		dsb.setStatementCacheSize("30");
+		dsb.setStatementsCacheSize(30);
 		dsb.setReleaseHelperThreads(0);
-		dsb.setReleaseHelperThreads("0");
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
 		dsb.isWrapperFor(String.class);
 		dsb.setIdleMaxAge(0L);
-		dsb.setIdleMaxAge("0");
 		dsb.setAcquireIncrement(5);
-		dsb.setAcquireIncrement("5");
 		dsb.setIdleConnectionTestPeriod(0L);
-		dsb.setIdleConnectionTestPeriod("0");
 		dsb.setConnectionTestStatement("test");
 		dsb.setInitSQL(CommonTestUtils.TEST_QUERY);
 		dsb.setCloseConnectionWatch(true);
 		dsb.setLogStatementsEnabled(false);
-		dsb.setAcquireRetryDelay(1000);
-		dsb.setAcquireRetryDelay("1000");
 		dsb.getConnection().close();
 		assertNotNull(dsb.getConfig());
 		assertNotNull(dsb.toString());
@@ -153,71 +150,38 @@ public class TestSystemTests {
 			// do nothing
 		}
 		
-		Method method = dsb.getClass().getDeclaredMethod("parseNumber", new Class[]{String.class, int.class});
-		method.setAccessible(true);
-		int result = (Integer) method.invoke(dsb, "badNumber", 123);
-		// should fallback to default number
-		assertEquals(123, result);
 		
 		assertNull(dsb.unwrap(String.class));
-		assertEquals("5", dsb.getAcquireIncrement());
-		assertEquals("30", dsb.getMinConnectionsPerPartition());
-		assertEquals("100", dsb.getMaxConnectionsPerPartition());
-		assertEquals("1", dsb.getPartitions());
-		assertEquals("0", dsb.getIdleConnectionTestPeriod());
-		assertEquals("0", dsb.getIdleMaxAge());
-		assertEquals(CommonTestUtils.url, dsb.getJdbcUrl());
-		assertEquals(CommonTestUtils.username, dsb.getUsername());
-		assertEquals(CommonTestUtils.password, dsb.getPassword());
-		assertEquals("30", dsb.getPreparedStatementCacheSize());
-		assertEquals("0", dsb.getReleaseHelperThreads());
-		assertEquals("30", dsb.getStatementsCachedPerConnection());
-		assertEquals("30", dsb.getStatementCacheSize());
-		assertEquals("test", dsb.getConnectionTestStatement());
 		assertEquals("org.hsqldb.jdbcDriver", dsb.getDriverClass());
-		assertEquals(CommonTestUtils.TEST_QUERY, dsb.getInitSQL());
-		assertEquals(true, dsb.isCloseConnectionWatch());
-		assertEquals(false, dsb.isLogStatementsEnabled());
-		assertEquals("1000", dsb.getAcquireRetryDelay());
 		dsb.setClassLoader(getClass().getClassLoader());
 		dsb.loadClass("java.lang.String");
-		dsb.setLazyInit(true);
-		assertEquals(true, dsb.isLazyInit());
-		dsb.setLazyInit(false);
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
-
-		method = dsb.getClass().getDeclaredMethod("safePrint", new Class[]{String.class});
-		method.setAccessible(true);
-		assertTrue("".equals(method.invoke(dsb, new Object[]{null})));
-		String tmpString = "foo";
-		assertEquals(tmpString, method.invoke(dsb, tmpString));
-
 	}
 	
 	@Test(expected=SQLException.class)
 	public void testDBConnectionInvalidJDBCurl() throws SQLException{
 		CommonTestUtils.logTestInfo("Test trying to start up with an invalid URL.");
-		CommonTestUtils.config.setJdbcUrl("invalid JDBC URL");
-		new BoneCP(CommonTestUtils.config);
+		config.setJdbcUrl("invalid JDBC URL");
+		new BoneCP(config);
 		CommonTestUtils.logPass();
 	}
 
 	@Test(expected=SQLException.class)
 	public void testDBConnectionInvalidUsername() throws SQLException{
 		CommonTestUtils.logTestInfo("Test trying to start up with an invalid username/pass combo.");
-		CommonTestUtils.config.setUsername("non existent");
-		new BoneCP(CommonTestUtils.config);
+		config.setUsername("non existent");
+		new BoneCP(config);
 		CommonTestUtils.logPass();
 	}
 
 
 	@Test
 	public void testConnectionGivenButDBLost() throws SQLException{
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setMinConnectionsPerPartition(30);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
-		CommonTestUtils.config.setPartitionCount(1);
-		BoneCP dsb = new BoneCP(CommonTestUtils.config);
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(30);
+		config.setMaxConnectionsPerPartition(100);
+		config.setPartitionCount(1);
+		BoneCP dsb = new BoneCP(config);
 		Connection con = dsb.getConnection();
 		// kill off the db...
 		String sql = "SHUTDOWN"; // hsqldb interprets this as a request to terminate
@@ -242,11 +206,11 @@ public class TestSystemTests {
 	public void testGetReleaseSingleThread() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test simple get/release connection from 1 partition");
 
-		CommonTestUtils.config.setMinConnectionsPerPartition(30);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setPartitionCount(1);
-		BoneCP dsb = new BoneCP(CommonTestUtils.config);
+		config.setMinConnectionsPerPartition(30);
+		config.setMaxConnectionsPerPartition(100);
+		config.setAcquireIncrement(5);
+		config.setPartitionCount(1);
+		BoneCP dsb = new BoneCP(config);
 
 
 		for (int i=0; i<60; i++){
@@ -267,11 +231,11 @@ public class TestSystemTests {
 	public void testPartitionDrain() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test connections obtained from alternate partition");
 
-		CommonTestUtils.config.setAcquireIncrement(1);
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(10);
-		CommonTestUtils.config.setPartitionCount(2);
-		BoneCP dsb = new BoneCP(CommonTestUtils.config);
+		config.setAcquireIncrement(1);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(10);
+		config.setPartitionCount(2);
+		BoneCP dsb = new BoneCP(config);
 		for (int i=0; i < 20; i++){
 			dsb.getConnection();
 		}
@@ -284,12 +248,12 @@ public class TestSystemTests {
 	@Test
 	public void testMultithreadSinglePartition() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test multiple threads hitting a single partition concurrently");
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setMinConnectionsPerPartition(30);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(100);
-		CommonTestUtils.config.setPartitionCount(1);
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(30);
+		config.setMaxConnectionsPerPartition(100);
+		config.setPartitionCount(1);
 
-		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
+		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
 
 		CommonTestUtils.startThreadTest(100, 100, dsb, 0, false);
@@ -301,12 +265,12 @@ public class TestSystemTests {
 	@Test
 	public void testMultithreadMultiPartition() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test multiple threads hitting a multiple partitions concurrently");
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(25);
-		CommonTestUtils.config.setPartitionCount(5);
-		CommonTestUtils.config.setReleaseHelperThreads(0);
-		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(25);
+		config.setPartitionCount(5);
+		config.setReleaseHelperThreads(0);
+		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
 		CommonTestUtils.startThreadTest(100, 1000, dsb, 0, false);
 		assertEquals(0, dsb.getTotalLeased());
@@ -317,12 +281,12 @@ public class TestSystemTests {
 	@Test
 	public void testMultithreadMultiPartitionWithConstantWorkDelay() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test multiple threads hitting a partition and doing some work on each connection");
-		CommonTestUtils.config.setAcquireIncrement(1);
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(10);
-		CommonTestUtils.config.setPartitionCount(1);
+		config.setAcquireIncrement(1);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(10);
+		config.setPartitionCount(1);
 
-		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
+		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
 
 		CommonTestUtils.startThreadTest(15, 10, dsb, 50, false);
@@ -334,12 +298,12 @@ public class TestSystemTests {
 	@Test
 	public void testMultithreadMultiPartitionWithRandomWorkDelay() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test multiple threads hitting a partition and doing some work of random duration on each connection");
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(25);
-		CommonTestUtils.config.setPartitionCount(5);
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(25);
+		config.setPartitionCount(5);
 
-		BoneCPDataSource dsb = new BoneCPDataSource(CommonTestUtils.config);
+		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("org.hsqldb.jdbcDriver");
 
 		CommonTestUtils.startThreadTest(100, 10, dsb, -50, false);
@@ -352,24 +316,25 @@ public class TestSystemTests {
 	@Test
 	public void testConnectionCreate() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Tests that new connections are created on the fly");
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(20);
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setPartitionCount(1);
-		CommonTestUtils.config.setReleaseHelperThreads(0);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(20);
+		config.setAcquireIncrement(5);
+		config.setPartitionCount(1);
+		config.setReleaseHelperThreads(0);
 
-		BoneCP dsb = new BoneCP(CommonTestUtils.config);
+		BoneCP dsb = new BoneCP(config);
 
 		assertEquals(10, dsb.getTotalCreatedConnections());
-
+		assertEquals(0, dsb.getTotalLeased());
 
 		for (int i=0; i < 10; i++){
 			dsb.getConnection();
 		}
+		assertEquals(10, dsb.getTotalLeased());
 
 		for (int i=0; i < 60; i++) {
 			Thread.yield();
-			Thread.sleep(1000); // give time for pool watch thread to fire up
+			Thread.sleep(2000); // give time for pool watch thread to fire up
 			if (dsb.getTotalCreatedConnections() == 15) {
 				break;
 			}
@@ -386,12 +351,12 @@ public class TestSystemTests {
 	public void testClosedConnection() throws InterruptedException, SQLException{
 		BoneCP dsb = null ;
 		CommonTestUtils.logTestInfo("Tests that closed connections trigger exceptions if use is attempted.");
-		CommonTestUtils.config.setMinConnectionsPerPartition(10);
-		CommonTestUtils.config.setMaxConnectionsPerPartition(20);
-		CommonTestUtils.config.setAcquireIncrement(5);
-		CommonTestUtils.config.setPartitionCount(1);
+		config.setMinConnectionsPerPartition(10);
+		config.setMaxConnectionsPerPartition(20);
+		config.setAcquireIncrement(5);
+		config.setPartitionCount(1);
 		try{
-			dsb = new BoneCP(CommonTestUtils.config);
+			dsb = new BoneCP(config);
 			Connection conn = dsb.getConnection();
 			conn.prepareCall(CommonTestUtils.TEST_QUERY);
 			conn.close();

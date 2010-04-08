@@ -42,7 +42,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** For toString(). */
 	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d, idle test period = %d";
 	/** Logger class. */
-	private static Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
+	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
 	private int minConnectionsPerPartition;
 	/** Max number of connections per partition. */
@@ -82,10 +82,36 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If set to true, log SQL statements being executed. */ 
 	private boolean logStatementsEnabled;
 	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
-	private int acquireRetryDelay;
+	private int acquireRetryDelay=7000;
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. */
+	private int acquireRetryAttempts=5;
 	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
 	private boolean lazyInit;
+	/** If set to true, stores all activity on this connection to allow for replaying it again. */
+	private boolean transactionRecoveryEnabled;
+	/** Connection hook class name. */
+	private String connectionHookClassName;
+	/** Classloader to use when loading the JDBC driver. */
+	private ClassLoader classLoader;
+	/** Name of the pool for JMX and thread names. */
+	private String poolName;
+	 /** Set to true to disable JMX. */
+	private boolean disableJMX;
 	
+	/** Returns the name of the pool for JMX and thread names.
+	 * @return a pool name.
+	 */
+	public String getPoolName() {
+		return this.poolName;
+	}
+	
+	/** Sets the name of the pool for JMX and thread names.
+	 * @param poolName to set.
+	 */
+	public void setPoolName(String poolName) {
+		this.poolName = poolName;
+	}
+		
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
 	 */
@@ -292,6 +318,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	@Deprecated
 	public int getPreparedStatementsCacheSize() {
+		logger.info("Please use getStatementsCacheSize in place of getPreparedStatementsCacheSize. This method has been deprecated.");
 		return this.statementsCacheSize;
 	}
 
@@ -304,6 +331,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	@Deprecated
 	public void setPreparedStatementsCacheSize(int preparedStatementsCacheSize) {
+		logger.info("Please use setStatementsCacheSize in place of setPreparedStatementsCacheSize. This method has been deprecated.");
 		this.statementsCacheSize = preparedStatementsCacheSize;
 	}
 
@@ -317,7 +345,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setStatementsCacheSize(int statementsCacheSize) {
 		this.statementsCacheSize = statementsCacheSize;
 	}
-
+	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCacheSize()
 	 */
@@ -325,6 +353,29 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public int getStatementsCacheSize() {
 		return this.statementsCacheSize;
 	}
+	
+	/**
+	 * Deprecated. Use set statementCacheSize instead. 
+	 * 
+	 * The number of statements to cache. 
+	 *
+	 * @param statementsCacheSize to set.
+	 */
+	@Deprecated
+	public void setStatementCacheSize(int statementsCacheSize) {
+		logger.info("Please use setStatementsCacheSize in place of setStatementCacheSize. This method has been deprecated.");
+		this.statementsCacheSize = statementsCacheSize;
+	}
+
+	/** Deprecated. Use getStatementsCacheSize instead
+	 * @return no of cache size. 
+	 */
+	@Deprecated
+	public int getStatementCacheSize() {
+		logger.info("Please use getStatementsCacheSize in place of getStatementCacheSize. This method has been deprecated.");
+		return this.statementsCacheSize;
+	}
+
 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getReleaseHelperThreads()
@@ -503,14 +554,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.logStatementsEnabled = logStatementsEnabled;
 	}
 
-	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure.
+	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @return the acquireRetryDelay
 	 */
 	public int getAcquireRetryDelay() {
 		return this.acquireRetryDelay;
 	}
 
-	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure.
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @param acquireRetryDelay the acquireRetryDelay to set
 	 */
 	public void setAcquireRetryDelay(int acquireRetryDelay) {
@@ -578,6 +629,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				&& Objects.equal(this.username, that.getUsername())
 				&& Objects.equal(this.password, that.getPassword())
 				&& Objects.equal(this.lazyInit, that.isLazyInit())
+				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
+				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
+				
 				
 		){
 			return true;
@@ -591,6 +645,105 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelay, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
 				this.connectionTestStatement, this.idleConnectionTestPeriod, this.idleMaxAge, this.initSQL, this.jdbcUrl, 
 				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
-				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit);
+				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit, this.transactionRecoveryEnabled,
+				this.acquireRetryAttempts);
 	}
+
+	/** Returns true if the pool is configured to record all transaction activity and replay the transaction automatically in case
+	 * of connection failures.
+	 * @return the transactionRecoveryEnabled status
+	 */
+	public boolean isTransactionRecoveryEnabled() {
+		return this.transactionRecoveryEnabled;
+	}
+
+	/** Set to true to enable recording of all transaction activity and replay the transaction automatically in case
+	 * of a connection failure.
+	 * @param transactionRecoveryEnabled the transactionRecoveryEnabled status to set
+	 */
+	public void setTransactionRecoveryEnabled(boolean transactionRecoveryEnabled) {
+		this.transactionRecoveryEnabled = transactionRecoveryEnabled;
+	}
+
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. Default 5. 
+	 * @return the acquireRetryAttempts value
+	 */
+	public int getAcquireRetryAttempts() {
+		return this.acquireRetryAttempts;
+	}
+
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. Default 5. 
+	 * @param acquireRetryAttempts the acquireRetryAttempts to set
+	 */
+	public void setAcquireRetryAttempts(int acquireRetryAttempts) {
+		this.acquireRetryAttempts = acquireRetryAttempts;
+	}
+
+	/** Sets the connection hook class name. Consider using setConnectionHook() instead.
+	 * @param connectionHookClassName the connectionHook class name to set
+	 */
+	public void setConnectionHookClassName(String connectionHookClassName) {
+		this.connectionHookClassName = connectionHookClassName;
+		if (connectionHookClassName != null){
+			Object hookClass;
+			try {
+				hookClass = loadClass(connectionHookClassName).newInstance();
+				this.connectionHook = (ConnectionHook) hookClass;
+			} catch (Exception e) {
+				logger.error("Unable to create an instance of the connection hook class ("+connectionHookClassName+")");
+				this.connectionHook = null;
+			} 
+		}
+	}
+	
+	/** Returns the connection hook class name as passed via the setter
+	 * @return the connectionHookClassName.
+	 */
+	public String getConnectionHookClassName() {
+		return this.connectionHookClassName;
+	}
+
+	/** Loads the given class, respecting the given classloader.
+	 * @param clazz class to load
+	 * @return Loaded class
+	 * @throws ClassNotFoundException
+	 */
+	protected Class<?> loadClass(String clazz) throws ClassNotFoundException {
+		if (this.classLoader == null){
+			return Class.forName(clazz);
+		}
+
+		return Class.forName(clazz, true, this.classLoader);
+
+	}
+	/** Returns the currently active classloader. 
+	 * @return the classLoader
+	 */
+	public ClassLoader getClassLoader() {
+		return this.classLoader;
+	}
+
+	/** Sets the classloader to use to load JDBC driver and hooks (set to null to use default).
+	 * @param classLoader the classLoader to set
+	 */ 
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+ 
+	/** Return true if JMX is disabled.
+	 * @return the disableJMX.
+	 */
+	public boolean isDisableJMX() {
+		return this.disableJMX;
+	}
+
+	/** Set to true to disable JMX.
+	 * @param disableJMX the disableJMX to set
+	 */
+	public void setDisableJMX(boolean disableJMX) {
+		this.disableJMX = disableJMX;
+	}
+
+
+	
 }

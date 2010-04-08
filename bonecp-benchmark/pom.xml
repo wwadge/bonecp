@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.6.5-SNAPSHOT</version>
+		<version>0.6.5-rc2</version>
 	</parent>
 
 
@@ -15,15 +15,37 @@
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
-			<version>0.6.5-SNAPSHOT</version>
+			<version>0.6.5-rc2</version>
 			<scope>compile</scope>
 		</dependency>
-
+ <dependency>
+      <groupId>org.tomcat</groupId>
+      <artifactId>tomcat-jdbc</artifactId>
+      <version>1.0.8.5</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/tomcat-jdbc.jar</systemPath>
+    </dependency>
+     <dependency>
+      <groupId>org.tomcat</groupId>
+      <artifactId>tomcat-juli</artifactId>
+      <version>1.0.8.5</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/tomcat-juli.jar</systemPath>
+    </dependency>
+     <dependency>
+      <groupId>proxool</groupId>
+      <artifactId>proxool</artifactId>
+      <version>0.9.1</version>
+           <scope>system</scope>
+      <systemPath>${basedir}/lib/proxool-0.9.1.jar</systemPath>
+ 
+    </dependency>    
+<!-- 
 		<dependency>
 			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 		</dependency>
-
+ -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>

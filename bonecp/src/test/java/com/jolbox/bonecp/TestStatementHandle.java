@@ -114,6 +114,7 @@ public class TestStatementHandle {
 		StatementHandle handle = new StatementHandle(mockStatement, null, true);
 
 		handle = new StatementHandle(mockStatement, null, mockCache, null, "testSQL", true);
+		
 		handle.setLogicallyOpen();
 		handle.getConnection();
 		
@@ -127,7 +128,6 @@ public class TestStatementHandle {
 		} catch (Throwable e){
 		 // do nothing	
 		}
-		
 		
 		mockStatement.close();
 		expectLastCall();
