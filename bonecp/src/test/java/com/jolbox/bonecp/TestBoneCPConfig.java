@@ -20,6 +20,7 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
