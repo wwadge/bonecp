@@ -68,6 +68,7 @@ public class TestBoneCPConfig {
 		config.setAcquireIncrement(6);
 		config.setStatementsCachedPerConnection(7);
 		config.setPreparedStatementsCacheSize(2);
+		config.setStatementCacheSize(2);
 		config.setPoolName("foo");
 		config.setDisableJMX(false);
 
@@ -78,6 +79,7 @@ public class TestBoneCPConfig {
 		assertEquals(60*1000, config.getIdleConnectionTestPeriod());
 		assertEquals(60*1000, config.getIdleMaxAge());
 		assertEquals(2, config.getStatementsCacheSize());
+		assertEquals(2, config.getStatementCacheSize());
 		assertEquals(2, config.getPreparedStatementsCacheSize());
 		assertEquals(3, config.getReleaseHelperThreads());
 		assertEquals(5, config.getMaxConnectionsPerPartition());

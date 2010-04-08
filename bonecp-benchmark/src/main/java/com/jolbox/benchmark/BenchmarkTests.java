@@ -35,7 +35,6 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
-import org.hibernate.connection.ProxoolConnectionProvider;
 import org.logicalcobwebs.proxool.ProxoolDataSource;
 
 import com.jolbox.bonecp.BoneCP;
@@ -50,6 +49,7 @@ import com.mchange.v2.c3p0.DataSources;
  * @author wwadge
  * @version $Revision$
  */
+@SuppressWarnings("all")
 public class BenchmarkTests {
 
 

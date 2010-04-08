@@ -308,6 +308,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	@Deprecated
 	public int getPreparedStatementsCacheSize() {
+		logger.info("Please use getStatementsCacheSize in place of getPreparedStatementsCacheSize. This method has been deprecated.");
 		return this.statementsCacheSize;
 	}
 
@@ -320,6 +321,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	@Deprecated
 	public void setPreparedStatementsCacheSize(int preparedStatementsCacheSize) {
+		logger.info("Please use setStatementsCacheSize in place of setPreparedStatementsCacheSize. This method has been deprecated.");
 		this.statementsCacheSize = preparedStatementsCacheSize;
 	}
 
@@ -333,7 +335,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setStatementsCacheSize(int statementsCacheSize) {
 		this.statementsCacheSize = statementsCacheSize;
 	}
-
+	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCacheSize()
 	 */
@@ -341,6 +343,29 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public int getStatementsCacheSize() {
 		return this.statementsCacheSize;
 	}
+	
+	/**
+	 * Deprecated. Use set statementCacheSize instead. 
+	 * 
+	 * The number of statements to cache. 
+	 *
+	 * @param statementsCacheSize to set.
+	 */
+	@Deprecated
+	public void setStatementCacheSize(int statementsCacheSize) {
+		logger.info("Please use setStatementsCacheSize in place of setStatementCacheSize. This method has been deprecated.");
+		this.statementsCacheSize = statementsCacheSize;
+	}
+
+	/** Deprecated. Use getStatementsCacheSize instead
+	 * @return no of cache size. 
+	 */
+	@Deprecated
+	public int getStatementCacheSize() {
+		logger.info("Please use getStatementsCacheSize in place of getStatementCacheSize. This method has been deprecated.");
+		return this.statementsCacheSize;
+	}
+
 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getReleaseHelperThreads()

@@ -44,6 +44,7 @@ import java.util.Properties;
  * @author Wallace
  *
  */
+@SuppressWarnings("all")
 public class MockConnection implements Connection {
 
 	/** {@inheritDoc}

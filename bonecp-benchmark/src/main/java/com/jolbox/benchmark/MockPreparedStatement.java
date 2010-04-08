@@ -49,6 +49,7 @@ import java.util.Calendar;
  * @author Wallace
  *
  */
+@SuppressWarnings("all")
 public class MockPreparedStatement implements PreparedStatement {
 
 	/** {@inheritDoc}

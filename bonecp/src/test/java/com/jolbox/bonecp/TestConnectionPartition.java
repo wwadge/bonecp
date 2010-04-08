@@ -56,6 +56,8 @@ public class TestConnectionPartition {
 	/** mock handle. */
 	private BoneCP mockPool;
 	/** mock handle. */
+	private static Logger mockLogger;
+	/** mock handle. */
 	private static BoneCPConfig mockConfig;
 	/** mock handle. */
 	private static ConnectionPartition testClass;
@@ -89,7 +91,8 @@ public class TestConnectionPartition {
 	    	expectLastCall().times(3);
 	    	replay(this.mockPool, mockReleaseHelper, mockConfig);
 	    	testClass = new ConnectionPartition(this.mockPool);
-			Logger mockLogger = createNiceMock(Logger.class);
+			mockLogger = createNiceMock(Logger.class);
+			makeThreadSafe(mockLogger, true);
 			Field field = testClass.getClass().getDeclaredField("logger");
 			field.setAccessible(true);
 			field.set(testClass, mockLogger);
@@ -218,6 +221,41 @@ public class TestConnectionPartition {
 		}
 	}
 
+	
+	
+	/** Test finalizer with error.
+	 * @throws SQLException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testFinalizerCoverageException() throws SQLException, InterruptedException{
+		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
+		Connection mockConnection = createNiceMock(Connection.class);
+		expect(mockConnectionHandle.getInternalConnection()).andReturn(mockConnection).anyTimes();
+		mockConnection.close();
+		expectLastCall().andThrow(new SQLException("fake reason")).once();
+		replay(mockConnectionHandle, mockConnection);
+		testClass.trackConnectionFinalizer(mockConnectionHandle);
+		testClass.statsLock = null; // this makes it blow up.
+		reset(mockLogger);
+		mockLogger.error((String)anyObject());
+		expectLastCall().anyTimes();
+		replay(mockLogger);
+		reset(mockConnectionHandle);
+		mockConnectionHandle = null; // prompt GC to kick in
+		for (int i=0; i < 100; i++){
+			System.gc();System.gc();System.gc();
+			Thread.sleep(20);
+			try{
+				verify(mockLogger);
+				break; // we succeeded
+			} catch (Throwable t){
+				// do nothing, try again
+				Thread.sleep(20);
+			}
+		}
+	}
+	
 	/** Test finalizer.
 	 * @throws SQLException
 	 * @throws InterruptedException
@@ -233,9 +271,10 @@ public class TestConnectionPartition {
 		Connection mockConnection = createNiceMock(Connection.class);
 		Connection connection = new MemorizeTransactionProxyDummy(null,null).memorizeDummy(mockConnection, mockConnectionHandle);
 		expect(mockConnectionHandle.getInternalConnection()).andReturn(connection).anyTimes();
-//		replay(mockConnection, mockConnectionHandle);
-//		mockConnection.close();
-//		expectLastCall().once();
+		makeThreadSafe(mockConnectionHandle, true);
+		makeThreadSafe(mockConnection, true);
+		reset(mockLogger);
+		makeThreadSafe(mockLogger, true);
 		replay(mockConnection, mockConnectionHandle);
 		testClass.trackConnectionFinalizer(mockConnectionHandle);
 		reset(mockConnectionHandle);
@@ -253,35 +292,6 @@ public class TestConnectionPartition {
 			}
 		}
 	}
-	
-	/** Test finalizer with error.
-	 * @throws SQLException
-	 * @throws InterruptedException
-	 */
-	@Test
-	public void testFinalizerCoverageException() throws SQLException, InterruptedException{
-		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
-		Connection mockConnection = createNiceMock(Connection.class);
-		expect(mockConnectionHandle.getInternalConnection()).andReturn(mockConnection).anyTimes();
-		mockConnection.close();
-		expectLastCall().andThrow(new SQLException("fake reason")).once();
-		replay(mockConnectionHandle, mockConnection);
-		testClass.trackConnectionFinalizer(mockConnectionHandle);
-		reset(mockConnectionHandle);
-		mockConnectionHandle = null; // prompt GC to kick in
-		for (int i=0; i < 100; i++){
-			System.gc();System.gc();System.gc();
-			Thread.sleep(20);
-			try{
-				verify(mockConnection);
-				break; // we succeeded
-			} catch (Throwable t){
-				// do nothing, try again
-				Thread.sleep(20);
-			}
-		}
-	}
-	
 	/** Fake proxy
 	 * @author wallacew
 	 *

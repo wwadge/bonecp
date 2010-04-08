@@ -57,7 +57,7 @@ public class ConnectionPartition implements Serializable{
     /** almost full locking. **/
     private Lock almostFullLock = new ReentrantLock();
     /** Statistics lock. */
-    private final ReentrantReadWriteLock statsLock = new ReentrantReadWriteLock();
+    protected ReentrantReadWriteLock statsLock = new ReentrantReadWriteLock();
     /** Signal mechanism. */
     private final Condition almostFull = this.almostFullLock.newCondition(); 
     /** Number of connections that have been created. */
@@ -109,6 +109,7 @@ public class ConnectionPartition implements Serializable{
      * @param connectionHandle handle to watch
      */ 
     protected void trackConnectionFinalizer(ConnectionHandle connectionHandle) {
+    	
     	Connection con = connectionHandle.getInternalConnection();
     	if (con != null && con instanceof Proxy && Proxy.getInvocationHandler(con) instanceof MemorizeTransactionProxy){
     		try {
@@ -126,7 +127,9 @@ public class ConnectionPartition implements Serializable{
 				if (internalDBConnection != null){ // safety!
 					logger.warn("BoneCP detected an unclosed connection and will now attempt to close it for you. " +
 					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
-					internalDBConnection.close();
+					if (!(internalDBConnection instanceof Proxy)){ // this is just a safety against finding EasyMock proxies at this point.
+						internalDBConnection.close();
+					}
 					updateCreatedConnections(-1);
 				}
 			} catch (Throwable t) {
@@ -134,6 +137,7 @@ public class ConnectionPartition implements Serializable{
 			}
 		}
 		});
+		
 	}
 
 	/**
