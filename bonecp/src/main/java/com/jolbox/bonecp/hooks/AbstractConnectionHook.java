@@ -30,7 +30,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onAcquire(com.jolbox.bonecp.ConnectionHandle)
 	 */
-	@Override
+//	@Override
 	public void onAcquire(ConnectionHandle connection) {
 		// do nothing
 	}
@@ -38,7 +38,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onCheckIn(com.jolbox.bonecp.ConnectionHandle)
 	 */
-	@Override
+	// @Override
 	public void onCheckIn(ConnectionHandle connection) {
 		// do nothing
 	}
@@ -46,7 +46,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onCheckOut(com.jolbox.bonecp.ConnectionHandle)
 	 */
-	@Override
+	// @Override
 	public void onCheckOut(ConnectionHandle connection) {
 		// do nothing
 	}
@@ -54,7 +54,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onDestroy(com.jolbox.bonecp.ConnectionHandle)
 	 */
-	@Override
+	// @Override
 	public void onDestroy(ConnectionHandle connection) {
 		// do nothing
 	}
@@ -62,7 +62,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onAcquireFail(Exception)
 	 */
-	@Override
+	// @Override
 	public boolean onAcquireFail(Throwable e) {
 		return false; // by default do not try connecting again.
 	}

@@ -381,7 +381,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		return this.asyncExecutor.submit(new Callable<Connection>() {
 
-			@Override
 			public Connection call() throws Exception {
 				return getConnection();
 			}});

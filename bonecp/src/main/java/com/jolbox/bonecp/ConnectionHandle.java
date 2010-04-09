@@ -596,7 +596,7 @@ public class ConnectionHandle implements Connection{
 	/** Returns true if this connection has been (logically) closed.
 	 * @return the logicallyClosed setting.
 	 */
-	@Override
+//	@Override
 	public boolean isClosed() {
 		return this.logicallyClosed;
 	}

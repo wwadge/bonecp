@@ -57,7 +57,7 @@ public class CloseThreadMonitor implements Runnable {
 	/** {@inheritDoc}
 	 * @see java.lang.Runnable#run()
 	 */
-	@Override
+//	@Override
 	public void run() {
 		try {
 			// wait for the thread we're monitoring to die off.

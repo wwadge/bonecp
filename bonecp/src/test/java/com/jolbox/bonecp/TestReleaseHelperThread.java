@@ -74,7 +74,7 @@ public class TestReleaseHelperThread {
 	public void testNormalCycle() throws InterruptedException, SQLException {
 		expect(mockQueue.take()).andAnswer(new IAnswer<ConnectionHandle>() {
 
-			@Override
+			// @Override
 			public ConnectionHandle answer() throws Throwable {
 				if (first){
 					first = false;

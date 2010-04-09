@@ -157,7 +157,7 @@ public class TestPoolWatchThread {
 		expectLastCall().anyTimes();
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
 
-			@Override
+			// @Override
 			public Integer answer() throws Throwable {
 				if (first) {
 					first=false;
@@ -218,7 +218,7 @@ public class TestPoolWatchThread {
 		
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
 
-			@Override
+			// @Override
 			public Integer answer() throws Throwable {
 				if (first) {
 					first=false;
@@ -240,7 +240,7 @@ public class TestPoolWatchThread {
 
 		expect(mockConfig.getStatementsCacheSize()).andAnswer(new IAnswer<Integer>() {
 			
-			@Override
+			// @Override
 			public Integer answer() throws Throwable {
 				throw new SQLException();
 				

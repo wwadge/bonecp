@@ -340,7 +340,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCacheSize()
 	 */
-	@Override
 	public int getStatementsCacheSize() {
 		return this.statementsCacheSize;
 	}

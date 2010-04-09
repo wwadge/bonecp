@@ -50,28 +50,28 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#clearWarnings()
 	 */
-	@Override
+	// @Override
 	public void clearWarnings() throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#close()
 	 */
-	@Override
+	// @Override
 	public void close() throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#commit()
 	 */
-	@Override
+	// @Override
 	public void commit() throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createArrayOf(java.lang.String, java.lang.Object[])
 	 */
-	@Override
+	// @Override
 	public Array createArrayOf(String typeName, Object[] elements)
 			throws SQLException {
 		return null;
@@ -80,7 +80,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createBlob()
 	 */
-	@Override
+	// @Override
 	public Blob createBlob() throws SQLException {
 		return null;
 	}
@@ -88,7 +88,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createClob()
 	 */
-	@Override
+	// @Override
 	public Clob createClob() throws SQLException {
 		return null;
 	}
@@ -96,7 +96,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createNClob()
 	 */
-	@Override
+	// @Override
 	public NClob createNClob() throws SQLException {
 		return null;
 	}
@@ -104,7 +104,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createSQLXML()
 	 */
-	@Override
+	// @Override
 	public SQLXML createSQLXML() throws SQLException {
 		return null;
 	}
@@ -112,7 +112,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createStatement()
 	 */
-	@Override
+	// @Override
 	public Statement createStatement() throws SQLException {
 		return null;
 	}
@@ -120,7 +120,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createStatement(int, int)
 	 */
-	@Override
+	// @Override
 	public Statement createStatement(int resultSetType, int resultSetConcurrency)
 			throws SQLException {
 		return null;
@@ -129,7 +129,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createStatement(int, int, int)
 	 */
-	@Override
+	// @Override
 	public Statement createStatement(int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
@@ -139,7 +139,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createStruct(java.lang.String, java.lang.Object[])
 	 */
-	@Override
+	// @Override
 	public Struct createStruct(String typeName, Object[] attributes)
 			throws SQLException {
 		return null;
@@ -148,7 +148,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getAutoCommit()
 	 */
-	@Override
+	// @Override
 	public boolean getAutoCommit() throws SQLException {
 		return false;
 	}
@@ -156,7 +156,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getCatalog()
 	 */
-	@Override
+	// @Override
 	public String getCatalog() throws SQLException {
 		return null;
 	}
@@ -164,7 +164,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getClientInfo()
 	 */
-	@Override
+	// @Override
 	public Properties getClientInfo() throws SQLException {
 		return null;
 	}
@@ -172,7 +172,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getClientInfo(java.lang.String)
 	 */
-	@Override
+	// @Override
 	public String getClientInfo(String name) throws SQLException {
 		return null;
 	}
@@ -180,7 +180,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getHoldability()
 	 */
-	@Override
+	// @Override
 	public int getHoldability() throws SQLException {
 		return 0;
 	}
@@ -188,7 +188,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getMetaData()
 	 */
-	@Override
+	// @Override
 	public DatabaseMetaData getMetaData() throws SQLException {
 		return null;
 	}
@@ -196,7 +196,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getTransactionIsolation()
 	 */
-	@Override
+	// @Override
 	public int getTransactionIsolation() throws SQLException {
 		return 0;
 	}
@@ -204,7 +204,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getTypeMap()
 	 */
-	@Override
+	// @Override
 	public Map<String, Class<?>> getTypeMap() throws SQLException {
 		return null;
 	}
@@ -212,7 +212,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#getWarnings()
 	 */
-	@Override
+	// @Override
 	public SQLWarning getWarnings() throws SQLException {
 		return null;
 	}
@@ -220,7 +220,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#isClosed()
 	 */
-	@Override
+	// @Override
 	public boolean isClosed() throws SQLException {
 		return false;
 	}
@@ -228,7 +228,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#isReadOnly()
 	 */
-	@Override
+	// @Override
 	public boolean isReadOnly() throws SQLException {
 		return false;
 	}
@@ -236,7 +236,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#isValid(int)
 	 */
-	@Override
+	// @Override
 	public boolean isValid(int timeout) throws SQLException {
 		return false;
 	}
@@ -244,7 +244,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#nativeSQL(java.lang.String)
 	 */
-	@Override
+	// @Override
 	public String nativeSQL(String sql) throws SQLException {
 		return null;
 	}
@@ -252,7 +252,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareCall(java.lang.String)
 	 */
-	@Override
+	// @Override
 	public CallableStatement prepareCall(String sql) throws SQLException {
 		return null;
 	}
@@ -260,7 +260,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareCall(java.lang.String, int, int)
 	 */
-	@Override
+	// @Override
 	public CallableStatement prepareCall(String sql, int resultSetType,
 			int resultSetConcurrency) throws SQLException {
 		return null;
@@ -269,7 +269,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareCall(java.lang.String, int, int, int)
 	 */
-	@Override
+	// @Override
 	public CallableStatement prepareCall(String sql, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
@@ -279,7 +279,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareStatement(java.lang.String)
 	 */
-	@Override
+	// @Override
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		return new MockPreparedStatement();
 	}
@@ -287,7 +287,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int)
 	 */
-	@Override
+	// @Override
 	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
 			throws SQLException {
 		return null;
@@ -296,7 +296,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int[])
 	 */
-	@Override
+	// @Override
 	public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
 			throws SQLException {
 		return null;
@@ -305,7 +305,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, java.lang.String[])
 	 */
-	@Override
+	// @Override
 	public PreparedStatement prepareStatement(String sql, String[] columnNames)
 			throws SQLException {
 		return null;
@@ -314,7 +314,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
 	 */
-	@Override
+	// @Override
 	public PreparedStatement prepareStatement(String sql, int resultSetType,
 			int resultSetConcurrency) throws SQLException {
 		return null;
@@ -323,7 +323,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int, int, int)
 	 */
-	@Override
+	// @Override
 	public PreparedStatement prepareStatement(String sql, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
@@ -333,42 +333,42 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#releaseSavepoint(java.sql.Savepoint)
 	 */
-	@Override
+	// @Override
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#rollback()
 	 */
-	@Override
+	// @Override
 	public void rollback() throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#rollback(java.sql.Savepoint)
 	 */
-	@Override
+	// @Override
 	public void rollback(Savepoint savepoint) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setAutoCommit(boolean)
 	 */
-	@Override
+	// @Override
 	public void setAutoCommit(boolean autoCommit) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setCatalog(java.lang.String)
 	 */
-	@Override
+	// @Override
 	public void setCatalog(String catalog) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setClientInfo(java.util.Properties)
 	 */
-	@Override
+	// @Override
 	public void setClientInfo(Properties properties)
 			throws SQLClientInfoException {
 	}
@@ -376,7 +376,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setClientInfo(java.lang.String, java.lang.String)
 	 */
-	@Override
+	// @Override
 	public void setClientInfo(String name, String value)
 			throws SQLClientInfoException {
 	}
@@ -384,21 +384,21 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setHoldability(int)
 	 */
-	@Override
+	// @Override
 	public void setHoldability(int holdability) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setReadOnly(boolean)
 	 */
-	@Override
+	// @Override
 	public void setReadOnly(boolean readOnly) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setSavepoint()
 	 */
-	@Override
+	// @Override
 	public Savepoint setSavepoint() throws SQLException {
 		return null;
 	}
@@ -406,7 +406,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setSavepoint(java.lang.String)
 	 */
-	@Override
+	// @Override
 	public Savepoint setSavepoint(String name) throws SQLException {
 		return null;
 	}
@@ -414,21 +414,21 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setTransactionIsolation(int)
 	 */
-	@Override
+	// @Override
 	public void setTransactionIsolation(int level) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setTypeMap(java.util.Map)
 	 */
-	@Override
+	// @Override
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
 	 */
-	@Override
+	// @Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		return false;
 	}
@@ -436,7 +436,7 @@ public class MockConnection implements Connection {
 	/** {@inheritDoc}
 	 * @see java.sql.Wrapper#unwrap(java.lang.Class)
 	 */
-	@Override
+	// @Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return null;
 	}

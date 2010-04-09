@@ -71,7 +71,7 @@ public class MockJDBCDriver  implements Driver {
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#acceptsURL(java.lang.String)
 	 */
-	@Override
+//	@Override
 	public boolean acceptsURL(String url) throws SQLException {
 		return true; // accept anything
 	}
@@ -79,7 +79,7 @@ public class MockJDBCDriver  implements Driver {
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#connect(java.lang.String, java.util.Properties)
 	 */
-	@Override
+	// @Override
 	public Connection connect(String url, Properties info) throws SQLException {
 		if (this.connection != null){
 			return this.connection;
@@ -91,7 +91,7 @@ public class MockJDBCDriver  implements Driver {
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#getMajorVersion()
 	 */
-	@Override
+	// @Override
 	public int getMajorVersion() {
 		return 1;
 	}
@@ -99,7 +99,7 @@ public class MockJDBCDriver  implements Driver {
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#getMinorVersion()
 	 */
-	@Override
+	// @Override
 	public int getMinorVersion() {
 		return 0;
 	}
@@ -107,7 +107,7 @@ public class MockJDBCDriver  implements Driver {
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#getPropertyInfo(java.lang.String, java.util.Properties)
 	 */
-	@Override
+	// @Override
 	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
 			throws SQLException {
 		return new DriverPropertyInfo[0];
@@ -116,7 +116,7 @@ public class MockJDBCDriver  implements Driver {
 	/** {@inheritDoc}
 	 * @see java.sql.Driver#jdbcCompliant()
 	 */
-	@Override
+	// @Override
 	public boolean jdbcCompliant() {
 		return true;
 	}

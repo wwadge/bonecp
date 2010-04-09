@@ -29,7 +29,7 @@ public class MockThread implements Runnable {
 	/** {@inheritDoc}
 	 * @see java.lang.Runnable#run()
 	 */
-	@Override
+//	@Override
 	public void run() {
 		while(!TestCustomThreadFactory.signalled){
 			try {

@@ -131,7 +131,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		this.connectionHandle = new WeakReference<ConnectionHandle>(connectionHandle);
 	}
 
-	@Override 
+	// @Override 
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
 		Object result = null;

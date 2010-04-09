@@ -102,9 +102,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.DataSource#getConnection()
 	 */
-	@Override 
-	public Connection getConnection()
-	throws SQLException {
+	public Connection getConnection() throws SQLException {
 		if (this.pool == null){
 			maybeInit();
 		}
@@ -159,7 +157,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.DataSource#getConnection(java.lang.String, java.lang.String)
 	 */
-	@Override 
 	public Connection getConnection(String username, String password)
 	throws SQLException {
 		throw new UnsupportedOperationException("getConnectionString username, String password) is not supported");
@@ -170,7 +167,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.CommonDataSource#getLogWriter()
 	 */
-	@Override 
 	public PrintWriter getLogWriter()
 	throws SQLException {
 		return this.logWriter;
@@ -181,7 +177,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.CommonDataSource#getLoginTimeout()
 	 */
-	@Override 
 	public int getLoginTimeout()
 	throws SQLException {
 		throw new UnsupportedOperationException("getLoginTimeout is unsupported.");
@@ -192,7 +187,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.CommonDataSource#setLogWriter(java.io.PrintWriter)
 	 */
-	@Override 
 	public void setLogWriter(PrintWriter out)
 	throws SQLException {
 		this.logWriter = out;
@@ -203,7 +197,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.CommonDataSource#setLoginTimeout(int)
 	 */
-	@Override 
 	public void setLoginTimeout(int seconds)
 	throws SQLException {
 		throw new UnsupportedOperationException("setLoginTimeout is unsupported.");
@@ -214,7 +207,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
 	 */
-	@Override 
 	public boolean isWrapperFor(Class<?> arg0)
 	throws SQLException {
 		return false;
@@ -226,7 +218,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 * @see java.sql.Wrapper#unwrap(java.lang.Class)
 	 */
 	@SuppressWarnings("unchecked")
-	@Override 
 	public Object unwrap(Class arg0)
 	throws SQLException {
 		return null;

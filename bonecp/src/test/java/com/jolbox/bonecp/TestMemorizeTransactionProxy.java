@@ -187,7 +187,7 @@ public class TestMemorizeTransactionProxy {
 
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
-			@Override
+			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
 					return TestMemorizeTransactionProxy.mockConnection;
@@ -277,7 +277,7 @@ public class TestMemorizeTransactionProxy {
 		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
-			@Override
+			// @Override
 			public Connection answer() throws SQLException {
 					return TestMemorizeTransactionProxy.mockConnection;
 			}
@@ -329,7 +329,7 @@ public class TestMemorizeTransactionProxy {
 		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
-			@Override
+			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
 					return TestMemorizeTransactionProxy.mockConnection;
@@ -409,7 +409,7 @@ public class TestMemorizeTransactionProxy {
 		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
-			@Override
+			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
 					return TestMemorizeTransactionProxy.mockConnection;
@@ -484,7 +484,7 @@ public class TestMemorizeTransactionProxy {
 		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
-			@Override
+			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
 					return TestMemorizeTransactionProxy.mockConnection;
@@ -534,7 +534,7 @@ public class TestMemorizeTransactionProxy {
 
 			new Thread(new Runnable() {
 				
-				@Override
+				// @Override
 				public void run() {
 					while (!currentThread.getState().equals(State.TIMED_WAITING)){
 						try {
@@ -575,7 +575,7 @@ public class TestMemorizeTransactionProxy {
 		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
-			@Override
+			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
 					return TestMemorizeTransactionProxy.mockConnection;

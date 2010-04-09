@@ -197,7 +197,7 @@ public class TestConnectionHandle {
 		try{
 			new Thread(new Runnable() {
 				
-				@Override
+//				@Override
 				public void run() {
 					while (!currentThread.getState().equals(State.TIMED_WAITING)){
 						try {
