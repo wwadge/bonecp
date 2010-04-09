@@ -252,7 +252,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * This sets the time (in minutes), for a connection to remain idle before sending 
 	 * a test query to the DB. This is useful to prevent a DB from timing out connections 
-	 * on its end. Do not use aggressive values here!
+	 * on its end. Do not use aggressive values here! 
+	 * 
+	 * <p>Note: This value only makes sense when used in conjuction with 
+	 * idleMaxAge. 
 	 * 
 	 * <p>Default: 240 min, set to 0 to disable
 	 *
@@ -273,6 +276,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Sets Idle max age (in min).
 	 * 
 	 * The time (in minutes), for a connection to remain unused before it is closed off. Do not use aggressive values here! 
+	 * 
+	 * <p>Note: This value only makes sense when used in conjuction with idleConnectionTestPeriod. 
+	 * 
 	 * <p>Default: 60 minutes, set to 0 to disable.
 	 *
 	 * @param idleMaxAge to set

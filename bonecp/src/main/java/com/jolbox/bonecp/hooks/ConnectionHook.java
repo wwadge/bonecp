@@ -33,7 +33,8 @@ import com.jolbox.bonecp.ConnectionHandle;
  *  provide a public, no argument constructor.
  *  
  *  Warning: Be careful to make sure that the hook methods are re-entrant and
- *  thread-safe; do not rely on external state without appropriate locking.
+ *  thread-safe; do not rely on external state without appropriate locking, use appropriate 
+ *  synchronization!
  *   
  * @author wallacew
  * 

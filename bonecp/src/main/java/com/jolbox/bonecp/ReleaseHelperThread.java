@@ -29,7 +29,6 @@ import java.util.concurrent.BlockingQueue;
  * connections to the partition queue.
  *
  * @author wallacew
- * @version $Revision$
  */
 public class ReleaseHelperThread
 implements Runnable {

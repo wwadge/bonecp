@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
  * Helper class just for executor service to provide a fancier name for debugging + catch for thread exceptions.
  *
  * @author wallacew
- * @version $Revision$
  */
 public class CustomThreadFactory
         implements ThreadFactory, UncaughtExceptionHandler {

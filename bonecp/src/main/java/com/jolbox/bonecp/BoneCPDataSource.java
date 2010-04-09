@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
  * DataSource for use with LazyConnection Provider etc.
  *
  * @author wallacew
- * @version $Revision$
  */
 public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serializable{
 	/** Serialization UID. */

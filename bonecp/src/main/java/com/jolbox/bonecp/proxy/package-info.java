@@ -18,16 +18,7 @@
  */
 
 /**
+ * For internal use only. 
  * 
  */
 package com.jolbox.bonecp.proxy;
-
-import java.sql.Statement;
-
-/** Just a way to get our proxy to work with driver-specific types.
- * @author Wallace
- *
- */
-public interface StatementProxy extends Statement{
-	// just a way to get our proxy to work with driver-specific types
-}

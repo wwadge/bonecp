@@ -25,7 +25,7 @@ package com.jolbox.bonecp;
 import java.lang.reflect.Method;
 
 /**
- * @author Wallace
+ * @author wallacew
  *
  */
 public class ReplayLog {

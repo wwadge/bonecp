@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
  * Wrapper around JDBC PreparedStatement.
  * 
  * @author wallacew
- * @version $Revision$
  */
 public class PreparedStatementHandle extends StatementHandle implements
 		PreparedStatement {

@@ -260,7 +260,7 @@ public class ConnectionPartition implements Serializable{
      *
      * @return true if we have created all the connections we can
      */
-    public boolean isUnableToCreateMoreTransactions() {
+    protected boolean isUnableToCreateMoreTransactions() {
         return this.unableToCreateMoreTransactions;
     }
 
@@ -270,7 +270,7 @@ public class ConnectionPartition implements Serializable{
      *
      * @param unableToCreateMoreTransactions t/f
      */
-    public void setUnableToCreateMoreTransactions(boolean unableToCreateMoreTransactions) {
+    protected void setUnableToCreateMoreTransactions(boolean unableToCreateMoreTransactions) {
         this.unableToCreateMoreTransactions = unableToCreateMoreTransactions;
     }
 
@@ -280,7 +280,7 @@ public class ConnectionPartition implements Serializable{
      *
      * @return release connection handle queue 
      */
-    public ArrayBlockingQueue<ConnectionHandle> getConnectionsPendingRelease() {
+    protected ArrayBlockingQueue<ConnectionHandle> getConnectionsPendingRelease() {
         return this.connectionsPendingRelease;
     }
 
@@ -302,14 +302,14 @@ public class ConnectionPartition implements Serializable{
 	 * @throws InterruptedException 
 	 * 
 	 */
-	public void almostFullWait() throws InterruptedException {
+	protected void almostFullWait() throws InterruptedException {
 		this.almostFull.await(); // callees must loop for spurious interrupts
 	}
 
 	/**
 	 * signal handle
 	 */
-	public void almostFullSignal() {
+	protected void almostFullSignal() {
 		this.almostFull.signal();
 	}
 
