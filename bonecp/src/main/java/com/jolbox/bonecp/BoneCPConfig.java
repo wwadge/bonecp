@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +97,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String poolName;
 	 /** Set to true to disable JMX. */
 	private boolean disableJMX;
+	/** If set, use datasourceBean.getConnection() to obtain a new connection. **/
+	private DataSource datasourceBean;
 	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -462,11 +466,11 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("JDBC url was not set in config!");
 		}
 
-		if (this.username == null || this.username.trim().equals("")){
+		if (this.datasourceBean == null && (this.username == null || this.username.trim().equals(""))){
 			logger.warn("JDBC username was not set in config!");
 		}
 
-		if (this.password == null){ 
+		if ((this.datasourceBean == null) && (this.password == null)){ 
 			logger.warn("JDBC password was not set in config!");
 		}
 
@@ -738,6 +742,20 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setDisableJMX(boolean disableJMX) {
 		this.disableJMX = disableJMX;
+	}
+
+	/** Returns the bean being used to return a connection.
+	 * @return the datasourceBean that was set.
+	 */
+	public DataSource getDatasourceBean() {
+		return this.datasourceBean;
+	}
+
+	/** If set, use datasourceBean.getConnection() to obtain a new connection instead of Driver.getConnection().
+	 * @param datasourceBean the datasourceBean to set
+	 */
+	public void setDatasourceBean(DataSource datasourceBean) {
+		this.datasourceBean = datasourceBean;
 	}
 
 

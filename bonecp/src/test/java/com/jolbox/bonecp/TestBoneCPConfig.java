@@ -26,6 +26,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import javax.sql.DataSource;
+
+import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,6 +51,7 @@ public class TestBoneCPConfig {
 	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
 		config = CommonTestUtils.getConfigClone();
 	}
+
 	
 	/**
 	 * Property get/set
@@ -55,6 +59,7 @@ public class TestBoneCPConfig {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testGettersSetters(){
+		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
 		config.setPassword(CommonTestUtils.password);
@@ -72,6 +77,7 @@ public class TestBoneCPConfig {
 		config.setStatementCacheSize(2);
 		config.setPoolName("foo");
 		config.setDisableJMX(false);
+		config.setDatasourceBean(mockDataSource);
 
 		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
@@ -89,6 +95,7 @@ public class TestBoneCPConfig {
 		assertEquals(7, config.getStatementsCachedPerConnection());
 		assertEquals(1, config.getPartitionCount());
 		assertEquals("test", config.getConnectionTestStatement());
+		assertEquals(mockDataSource, config.getDatasourceBean());
 				
 
 
