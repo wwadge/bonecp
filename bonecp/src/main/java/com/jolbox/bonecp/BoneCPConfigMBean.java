@@ -101,6 +101,7 @@ public interface BoneCPConfigMBean {
 	 * 
 	 * @return preparedStatementsCacheSize
 	 */
+	@Deprecated
 	int getPreparedStatementsCacheSize();
 
 	/**
