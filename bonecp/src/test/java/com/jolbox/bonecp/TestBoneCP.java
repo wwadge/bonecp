@@ -53,6 +53,7 @@ import javax.management.MBeanServer;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
+import javax.sql.DataSource;
 
 import org.easymock.EasyMock;
 import org.hsqldb.jdbc.jdbcResultSet;
@@ -297,6 +298,49 @@ public class TestBoneCP {
 	}
 
 
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 */
+	@Test
+	public void testGetConnectionViaDataSourceBean() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		DataSource mockDataSource = createNiceMock(DataSource.class);
+		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
+		expect(mockConfig.getJdbcUrl()).andReturn("").once();
+		expect(mockConfig.getUsername()).andReturn(null).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once();
+		replay(mockConfig, mockDataSource);
+		testClass.obtainRawInternalConnection();
+		verify(mockConfig, mockDataSource);
+	}
+
+	
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 */
+	@Test
+	public void testGetConnectionViaDataSourceBeanWithPass() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		DataSource mockDataSource = createNiceMock(DataSource.class);
+		expect(mockDataSource.getConnection((String)anyObject(), (String)anyObject())).andReturn(mockConnection).once();
+		expect(mockConfig.getJdbcUrl()).andReturn("").once();
+		expect(mockConfig.getUsername()).andReturn("username").once();
+		expect(mockConfig.getPassword()).andReturn(null).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once();
+		replay(mockConfig, mockDataSource);
+		testClass.obtainRawInternalConnection();
+		verify(mockConfig, mockDataSource);
+	}
 	/**
 	 * Attempting to fetch a connection from a pool that is marked as being shut down should throw an exception
 	 */
