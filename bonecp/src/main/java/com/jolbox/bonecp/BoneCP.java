@@ -43,6 +43,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,18 +184,37 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		}
 
 	}
+	
+	/** Returns a database connection by using Driver.getConnection() or DataSource.getConnection()
+	 * @return Connection handle
+	 * @throws SQLException on error
+	 */
+	protected Connection obtainRawInternalConnection()
+			throws SQLException {
+		DataSource datasourceBean = this.config.getDatasourceBean();
+		String url = this.config.getJdbcUrl();
+		String username = this.config.getUsername();
+		String password = this.config.getPassword();
+		
+		if (datasourceBean != null){
+			return (username == null ? datasourceBean.getConnection() : datasourceBean.getConnection(username, password));
+		} 
+			
+		return DriverManager.getConnection(url, username, password);
+	}
+
 	/**
 	 * Constructor.
 	 * @param config Configuration for pool
 	 * @throws SQLException on error
 	 */
 	public BoneCP(BoneCPConfig config) throws SQLException {
-
+		this.config = config;
 		config.sanitize();
 
 		if (!config.isLazyInit()){
 			try{
-				Connection sanityConnection = DriverManager.getConnection(config.getJdbcUrl(), config.getUsername(), config.getPassword());
+				Connection sanityConnection = obtainRawInternalConnection();
 				sanityConnection.close();
 			} catch (Exception e){
 				if (config.getConnectionHook() != null){

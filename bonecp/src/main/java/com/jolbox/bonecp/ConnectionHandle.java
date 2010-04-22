@@ -27,7 +27,6 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -107,10 +106,6 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;	
-	/** Connection username. */
-	private final String username;
-	/** Connection password. */
-	private final String password;
 
 
 	/**
@@ -151,8 +146,6 @@ public class ConnectionHandle implements Connection{
 
 		this.pool = pool;
 		this.url = url;
-		this.username = username;
-		this.password = password;
 		this.connection = obtainInternalConnection();
 
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
@@ -180,14 +173,14 @@ public class ConnectionHandle implements Connection{
 	protected Connection obtainInternalConnection() throws SQLException {
 		boolean tryAgain = false;
 		Connection result = null;
+		
 		int acquireRetryAttempts = this.pool.getConfig().getAcquireRetryAttempts();
 		int acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
 		do{ 
 			try { 
 				// keep track of this hook.
-
-				this.connection = DriverManager.getConnection(this.url, this.username, this.password);
+				this.connection = this.pool.obtainRawInternalConnection();
 				tryAgain = false;
 
 				if (acquireRetryAttempts != this.pool.getConfig().getAcquireRetryAttempts()){
@@ -237,8 +230,6 @@ public class ConnectionHandle implements Connection{
 		this.callableStatementCache = callableStatementCache;
 		this.pool = pool;
 		this.url=null;
-		this.username=null;
-		this.password=null;
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
 		if (cacheSize > 0) {
 			this.statementCachingEnabled = true;

@@ -153,19 +153,8 @@ public class TestConnectionHandle {
 		config.setAcquireRetryDelay(1);
 		CustomHook testHook = new CustomHook();
 		config.setConnectionHook(testHook);
-		
 		// make it fail the first time and succeed the second time
-		new MockJDBCDriver(new MockJDBCAnswer() {
-			
-			@SuppressWarnings("synthetic-access")
-			public Connection answer() throws SQLException {
-				if (count-- > 0){
-					throw new SQLException();
-				} 
-				return mockConnection;
-			}
-		});
-		
+		expect(mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(mockConnection).once();
 		replay(mockPool);
 		testClass.obtainInternalConnection();
 		// get counts on our hooks
@@ -174,11 +163,19 @@ public class TestConnectionHandle {
 		assertEquals(1, testHook.acquire);
 		
 		// Test 2: Same thing but without the hooks
+		reset(mockPool);
+		expect(mockPool.getConfig()).andReturn(config).anyTimes();
+		expect(mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(mockConnection).once();
 		count=1;
 		config.setConnectionHook(null);
+		replay(mockPool);
 		assertEquals(mockConnection, testClass.obtainInternalConnection());
 		
 		// Test 3: Keep failing
+		reset(mockPool);
+		expect(mockPool.getConfig()).andReturn(config).anyTimes();
+		expect(mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).anyTimes();
+		replay(mockPool);
 		count=99;
 		config.setAcquireRetryAttempts(2);
 		try{
