@@ -66,9 +66,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** SQL statement to use for keep-alive/test of connection. */
 	private String connectionTestStatement;
 	/** Min no of prepared statements to cache. */
-	private int statementsCacheSize = 100;
+	private int statementsCacheSize = 0;
 	/** No of statements that can be cached per connection. Deprecated. */
-	private int statementsCachedPerConnection = 30;
+	private int statementsCachedPerConnection = 0;
 	/** Number of release-connection helper threads to create per partition. */
 	private int releaseHelperThreads = 3;
 	/** Hook class (external). */
@@ -444,8 +444,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.acquireIncrement = 1;
 		}
 		if (this.partitionCount < 1) {
-			logger.warn("partitions < 1! Setting to 3");
-			this.partitionCount = 3;
+			logger.warn("partitions < 1! Setting to 1");
+			this.partitionCount = 1;
 		}
 
 		if (this.releaseHelperThreads < 0){
@@ -487,7 +487,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public String toString() {
 		return String.format(CONFIG_TOSTRING, this.jdbcUrl,
 				this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-				this.releaseHelperThreads, this.idleMaxAge, this.idleConnectionTestPeriod);
+				this.releaseHelperThreads, TimeUnit.MINUTES.convert(this.idleMaxAge, TimeUnit.MILLISECONDS), TimeUnit.MINUTES.convert(this.idleConnectionTestPeriod, TimeUnit.MILLISECONDS));
 	}
 
 	/** {@inheritDoc}
