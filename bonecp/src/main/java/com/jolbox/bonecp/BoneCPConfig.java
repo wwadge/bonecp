@@ -801,8 +801,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 			// get the default settings
 			Properties settings = parseXML(doc, null);
-			// override with custom settings
-			settings.putAll(parseXML(doc, sectionName));
+			if (sectionName != null){
+				// override with custom settings
+				settings.putAll(parseXML(doc, sectionName));
+			}
 			// set the properties
 			setProperties(settings);
 
