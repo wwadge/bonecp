@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Wallace Wadge
+    * Copyright 2009 Wallace Wadge
  *
  * This file is part of BoneCP.
  *

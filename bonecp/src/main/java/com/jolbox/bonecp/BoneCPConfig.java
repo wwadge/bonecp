@@ -20,14 +20,25 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.google.common.base.Objects;
 import com.jolbox.bonecp.hooks.ConnectionHook;
@@ -92,28 +103,28 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Connection hook class name. */
 	private String connectionHookClassName;
 	/** Classloader to use when loading the JDBC driver. */
-	private ClassLoader classLoader;
+	private ClassLoader classLoader = this.getClassLoader();
 	/** Name of the pool for JMX and thread names. */
 	private String poolName;
-	 /** Set to true to disable JMX. */
+	/** Set to true to disable JMX. */
 	private boolean disableJMX;
 	/** If set, use datasourceBean.getConnection() to obtain a new connection. **/
 	private DataSource datasourceBean;
-	
+
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
 	public String getPoolName() {
 		return this.poolName;
 	}
-	
+
 	/** Sets the name of the pool for JMX and thread names.
 	 * @param poolName to set.
 	 */
 	public void setPoolName(String poolName) {
 		this.poolName = poolName;
 	}
-		
+
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getMinConnectionsPerPartition()
 	 */
@@ -209,7 +220,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.jdbcUrl = jdbcUrl;
 	}
 
-	
+
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getUsername()
 	 */
@@ -346,14 +357,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setStatementsCacheSize(int statementsCacheSize) {
 		this.statementsCacheSize = statementsCacheSize;
 	}
-	
+
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getStatementsCacheSize()
 	 */
 	public int getStatementsCacheSize() {
 		return this.statementsCacheSize;
 	}
-	
+
 	/**
 	 * Deprecated. Use set statementCacheSize instead. 
 	 * 
@@ -585,7 +596,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 	@Override
 	public BoneCPConfig clone() throws CloneNotSupportedException {
-		
+
 		BoneCPConfig clone = (BoneCPConfig)super.clone();
 		Field[] fields = this.getClass().getDeclaredFields();
 		for (Field field: fields){
@@ -631,8 +642,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				&& Objects.equal(this.lazyInit, that.isLazyInit())
 				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
 				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
-				
-				
+
+
 		){
 			return true;
 		} 
@@ -695,7 +706,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			} 
 		}
 	}
-	
+
 	/** Returns the connection hook class name as passed via the setter
 	 * @return the connectionHookClassName.
 	 */
@@ -729,7 +740,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
- 
+
 	/** Return true if JMX is disabled.
 	 * @return the disableJMX.
 	 */
@@ -759,5 +770,175 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 
+	/**
+	 * Default constructor.
+	 */
+	public BoneCPConfig(){
+		// do nothing (default constructor)
+	}
+
+	/** Initialize the configuration by loading bonecp-config.xml containing the settings. 
+	 * @param sectionName section to load
+	 * @throws Exception on parse errors
+	 */
+	public BoneCPConfig(String sectionName) throws Exception{
+		this(BoneCPConfig.class.getResourceAsStream("/bonecp-config.xml"), sectionName);
+	}
+
+	/** Initialise the configuration by loading an XML file containing the settings. 
+	 * @param xmlConfigFile file to load
+	 * @param sectionName section to load
+	 * @throws Exception 
+	 */
+	public BoneCPConfig(InputStream xmlConfigFile, String sectionName) throws Exception{
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db;
+		// ugly XML parsing, but this is built-in the JDK.
+		try {
+			db = dbf.newDocumentBuilder();
+			Document doc = db.parse(xmlConfigFile);
+			doc.getDocumentElement().normalize();
+
+			// get the default settings
+			Properties settings = parseXML(doc, null);
+			// override with custom settings
+			settings.putAll(parseXML(doc, sectionName));
+			// set the properties
+			setProperties(settings);
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	/** Creates a new config using the given properties.
+	 * @param props properties to set.
+	 * @throws Exception on error
+	 */
+	public BoneCPConfig(Properties props) throws Exception {
+		this.setProperties(props);
+	}
+
+	/** Uppercases the first character.
+	 * @param name
+	 * @return the same string with the first letter in uppercase
+	 */
+	private static String upFirst(String name) {
+		return name.substring(0, 1).toUpperCase()+name.substring(1);
+	}
+
+
+	/**
+	 * Sets the properties by reading off entries in the given parameter (where each key is equivalent to the field name) 
+	 * @param props Parameter list to set
+	 * @throws Exception on error
+	 */
+	public void setProperties(Properties props) throws Exception {
+		// Use reflection to read in all possible properties of int, String or boolean.
+		for (Field field: BoneCPConfig.class.getDeclaredFields()){
+			if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
+				if (field.getType().equals(int.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), int.class);
+					String val = props.getProperty(field.getName());
+					if (val == null){
+						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+					}
+					if (val != null) {
+						try{
+							method.invoke(this, Integer.parseInt(val));
+						} catch (NumberFormatException e){
+							// do nothing, use the default value
+						}
+					}
+				} if (field.getType().equals(long.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), long.class);
+					String val = props.getProperty(field.getName());
+					if (val == null){
+						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+					}
+					if (val != null) {
+						try{
+							method.invoke(this, Long.parseLong(val));
+						} catch (NumberFormatException e){
+							// do nothing, use the default value
+						}
+					}
+				} else if (field.getType().equals(String.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), String.class);
+					String val = props.getProperty(field.getName());
+					if (val == null){
+						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+					}
+					if (val != null) {
+						method.invoke(this, val);
+					}
+				} else if (field.getType().equals(boolean.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), boolean.class);
+					String val = props.getProperty(field.getName());
+					if (val == null){
+						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+					}
+					if (val != null) {
+						method.invoke(this, Boolean.parseBoolean(val));
+					}
+				}
+			}
+		}
+	}
 	
+	/** Parses the given XML doc to extract the properties and return them into a java.util.Properties.
+	 * @param doc to parse
+	 * @param sectionName which section to extract
+	 * @return Properties map
+	 */
+	private Properties parseXML(Document doc, String sectionName) {
+		Properties results = new Properties();
+		NodeList config = null;
+		if (sectionName == null){
+			config = doc.getElementsByTagName("default-config");
+		} else {
+			boolean found = false;
+			config = doc.getElementsByTagName("named-config");
+			if(config != null && config.getLength() > 0) {
+				for (int i = 0; i < config.getLength(); i++) {
+					Node node = config.item(i);
+					if(node.getNodeType() == Node.ELEMENT_NODE ){
+						NamedNodeMap attributes = node.getAttributes();
+						if (attributes != null && attributes.getLength() > 0){
+							Node name = attributes.getNamedItem("name");
+							if (name.getNodeValue().equalsIgnoreCase(sectionName)){
+								found = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			
+			if (!found){
+				config = null;
+				logger.warn("Did not find "+sectionName+" section in config file. Reverting to defaults.");
+			}
+		}
+
+		if(config != null && config.getLength() > 0) {
+			Node node = config.item(0);
+			if(node.getNodeType() == Node.ELEMENT_NODE){
+				Element elementEntry = (Element)node;
+				NodeList childNodeList = elementEntry.getChildNodes();
+				for (int j = 0; j < childNodeList.getLength(); j++) {
+					Node node_j = childNodeList.item(j);
+					if (node_j.getNodeType() == Node.ELEMENT_NODE) {
+						Element piece = (Element) node_j;
+						NamedNodeMap attributes = piece.getAttributes();
+						if (attributes != null && attributes.getLength() > 0){
+							results.put(attributes.item(0).getNodeValue(), piece.getTextContent());
+						}
+					}
+				}
+			}
+		}
+
+		return results;
+	}
 }

@@ -93,60 +93,14 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		conn.close();
 	} 
 
-	/** Uppercases the first character.
-	 * @param name
-	 * @return the same string with the first letter in uppercase
-	 */
-	private static String upFirst(String name) {
-		return name.substring(0, 1).toUpperCase()+name.substring(1);
-	}
-
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @see org.hibernate.connection.ConnectionProvider#configure(java.util.Properties)
 	 */
 	public void configure(Properties props) throws HibernateException {
-		this.config = new BoneCPConfig();
 		try {
-			// Use reflection to read in all possible properties of int, String or boolean.
-			for (Field field: BoneCPConfig.class.getDeclaredFields()){
-				if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
-					if (field.getType().equals(int.class)){
-						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), int.class);
-						String val = props.getProperty("bonecp."+field.getName());
-						if (val != null) {
-							try{
-								method.invoke(this.config, Integer.parseInt(val));
-							} catch (NumberFormatException e){
-								// do nothing, use the default value
-							}
-						}
-					} if (field.getType().equals(long.class)){
-						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), long.class);
-						String val = props.getProperty("bonecp."+field.getName());
-						if (val != null) {
-							try{
-								method.invoke(this.config, Long.parseLong(val));
-							} catch (NumberFormatException e){
-								// do nothing, use the default value
-							}
-						}
-					} else if (field.getType().equals(String.class)){
-						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), String.class);
-						String val = props.getProperty("bonecp."+field.getName());
-						if (val != null) {
-							method.invoke(this.config, val);
-						}
-					} else if (field.getType().equals(boolean.class)){
-						Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), boolean.class);
-						String val = props.getProperty("bonecp."+field.getName());
-						if (val != null) {
-							method.invoke(this.config, Boolean.parseBoolean(val));
-						}
-					}
-				}
-			}
+			this.config = new BoneCPConfig(props);
 
 			// old hibernate config
 			String url = props.getProperty(CONFIG_CONNECTION_URL);

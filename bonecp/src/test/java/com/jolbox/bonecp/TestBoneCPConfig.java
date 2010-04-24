@@ -52,6 +52,14 @@ public class TestBoneCPConfig {
 		config = CommonTestUtils.getConfigClone();
 	}
 
+	/** Tests configs using xml setups
+	 * @throws Exception
+	 */
+	@Test
+	public void testXMLConfig() throws Exception{
+		
+		new BoneCPConfig("specialApp");
+	}
 	
 	/**
 	 * Property get/set
