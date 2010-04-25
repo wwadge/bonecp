@@ -25,6 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -52,14 +55,66 @@ public class TestBoneCPConfig {
 		config = CommonTestUtils.getConfigClone();
 	}
 
-	/** Tests configs using xml setups
+	/** Tests configs using xml setups.
 	 * @throws Exception
 	 */
 	@Test
 	public void testXMLConfig() throws Exception{
-		
-		new BoneCPConfig("specialApp");
+		// read off from the default bonecp-config.xml
+		BoneCPConfig config = new BoneCPConfig("specialApp");
+		assertEquals(99, config.getMinConnectionsPerPartition());
 	}
+	
+	/**
+	 * Load properties via a given stream.
+	 * @throws Exception
+	 */
+	@Test
+	public void testXmlConfigViaInputStream() throws Exception{
+		// read off from an input stream
+		BoneCPConfig config = new BoneCPConfig(this.getClass().getResourceAsStream("/bonecp-config.xml"), "specialApp");
+		assertEquals(99, config.getMinConnectionsPerPartition());
+	}
+	
+	/** XML based config.
+	 * @throws Exception
+	 */
+	@Test
+	public void testXMLConfigWithUnfoundSection() throws Exception{
+		BoneCPConfig config = new BoneCPConfig("non-existant");
+		assertEquals(20, config.getMinConnectionsPerPartition());
+	}
+	/**
+	 * Test error condition for xml config.
+	 */
+	@Test
+	public void testXmlConfigWithInvalidStream(){
+		// throw errors
+		try{
+			new BoneCPConfig(null, "specialApp");
+			fail("Should have thrown an exception");
+		}catch (Exception e){
+			// do nothing
+		}
+	}
+	
+	/** Tests configs using xml setups.
+	 * @throws Exception
+	 */
+	@Test
+	public void testPropertyBasedConfig() throws Exception{
+		Properties props = new Properties();
+		props.setProperty("minConnectionsPerPartition", "123");
+		props.setProperty("bonecp.maxConnectionsPerPartition", "456");
+		props.setProperty("idleConnectionTestPeriod", "999");
+		props.setProperty("username", "test");
+		props.setProperty("partitionCount", "an int which is invalid");
+		props.setProperty("idleMaxAge", "a long which is invalid");
+		BoneCPConfig config = new BoneCPConfig(props);
+		assertEquals(123, config.getMinConnectionsPerPartition());
+		assertEquals(456, config.getMaxConnectionsPerPartition());
+	}
+
 	
 	/**
 	 * Property get/set

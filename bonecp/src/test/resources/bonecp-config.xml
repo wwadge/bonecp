@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bonecp-config>
   <default-config>
-  	<property name="minConnectionsPerPartition2">20</property>
+  	<property name="minConnectionsPerPartition">20</property>
   	<property name="maxConnectionsPerPartition">30</property>
   </default-config>
   
