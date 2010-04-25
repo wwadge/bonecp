@@ -140,7 +140,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			if (this.logStatementsEnabled){
 				logger.debug(fillLogParams(this.sql));
 			}
-			return this.internalPreparedStatement.execute();
+			long queryStartTime = (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+			boolean result = this.internalPreparedStatement.execute();
+			queryTimerEnd(this.sql, queryStartTime);
+			
+			return result;
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -176,7 +180,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			if (this.logStatementsEnabled){
 				logger.debug(fillLogParams(this.sql));
 			}
-			return this.internalPreparedStatement.executeQuery();
+			long queryStartTime = (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+			ResultSet result = this.internalPreparedStatement.executeQuery();
+			queryTimerEnd(this.sql, queryStartTime);
+			
+			return result;
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
@@ -196,7 +204,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			if (this.logStatementsEnabled){
 				logger.debug(fillLogParams(this.sql));
 			}
-			return this.internalPreparedStatement.executeUpdate();
+			long queryStartTime = (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+			int result = this.internalPreparedStatement.executeUpdate();
+			queryTimerEnd(this.sql, queryStartTime);
+			
+			return result;
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
 			

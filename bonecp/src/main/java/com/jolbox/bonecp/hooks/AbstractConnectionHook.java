@@ -19,6 +19,12 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.jolbox.bonecp.ConnectionHandle;
 
 /** A no-op implementation of the ConnectionHook interface.
@@ -26,6 +32,8 @@ import com.jolbox.bonecp.ConnectionHandle;
  *
  */
 public abstract class AbstractConnectionHook implements ConnectionHook {
+	/** Class logger. */
+	private static final Logger logger = LoggerFactory.getLogger(AbstractConnectionHook.class);
 
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.hooks.ConnectionHook#onAcquire(com.jolbox.bonecp.ConnectionHandle)
@@ -65,6 +73,34 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	// @Override
 	public boolean onAcquireFail(Throwable e) {
 		return false; // by default do not try connecting again.
+	}
+
+	/** Helper method. FIXME: Move to somewhere common.
+	 * @param o items to print
+	 * @return String for safe printing.
+	 */
+	private String safePrint(Object... o){
+		StringBuilder sb = new StringBuilder();
+		for (Object obj: o){
+			sb.append(obj != null ? obj : "null");
+		}
+		return sb.toString();
+	}
+
+	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
+		StringBuilder sb = new StringBuilder("Query execute time limit exceeded. Query: ");
+		sb.append(sql+"\n");
+		for (Entry<Object, Object> entry: logParams.entrySet()){
+			sb.append("[Param #");
+			sb.append(entry.getKey());
+			sb.append("] ");
+			sb.append(safePrint(entry.getValue()));
+			sb.append("\n");
+		}
+		
+		if (logger.isWarnEnabled()){
+			logger.warn(sb.toString());
+		}
 	}
 
 }

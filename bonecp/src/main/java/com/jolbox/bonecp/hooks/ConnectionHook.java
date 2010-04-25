@@ -20,6 +20,8 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp.hooks;
 
+import java.util.Map;
+
 import com.jolbox.bonecp.ConnectionHandle;
 
 /**
@@ -74,6 +76,11 @@ public interface ConnectionHook {
 	 */
 	boolean onAcquireFail(Throwable t);
 	
-	
+	/** Called when a query execute time limit has been set and an executing query took longer
+	 * to than the limit to return control to the application.
+	 * @param sql SQL statement that was used.
+	 * @param logParams Parameters used in this statement.
+	 */
+	void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams);
 	 
 }

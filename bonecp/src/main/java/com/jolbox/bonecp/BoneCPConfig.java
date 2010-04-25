@@ -108,8 +108,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String poolName;
 	/** Set to true to disable JMX. */
 	private boolean disableJMX;
-	/** If set, use datasourceBean.getConnection() to obtain a new connection. **/
+	/** If set, use datasourceBean.getConnection() to obtain a new connection. */
 	private DataSource datasourceBean;
+	/** Queries taking longer than this limit to execute are logged. */ 
+	private int queryExecuteTimeLimit = 0;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -942,5 +944,19 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 
 		return results;
+	}
+
+	/** Return the query execute time limit.
+	 * @return the queryTimeLimit
+	 */
+	public int getQueryExecuteTimeLimit() {
+		return this.queryExecuteTimeLimit;
+	}
+
+	/** Queries taking longer than this limit to execute are logged.  
+	 * @param queryExecuteTimeLimit the limit to set in milliseconds.
+	 */
+	public void setQueryExecuteTimeLimit(int queryExecuteTimeLimit) {
+		this.queryExecuteTimeLimit = queryExecuteTimeLimit;
 	}
 }

@@ -19,6 +19,8 @@
 
 package com.jolbox.bonecp.provider;
 
+import java.util.Map;
+
 import com.jolbox.bonecp.ConnectionHandle;
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;
 
@@ -35,25 +37,30 @@ public class CustomHook extends AbstractConnectionHook{
 	int checkout;
 	/** junit helper.*/
 	int destroy;
+	/** junit helper.*/
+	private int queryTimeout;
 
-	@Override
+//	@Override
 	public void onAcquire(ConnectionHandle connection) {
 		this.acquire++;
 	}
 
-	@Override
+//	@Override
 	public void onCheckIn(ConnectionHandle connection) {
 		this.checkin++;
 	}
 
-	@Override
+//	@Override
 	public void onCheckOut(ConnectionHandle connection) {
 		this.checkout++;
 	}
 	
-	@Override
+//	@Override
 	public void onDestroy(ConnectionHandle connection) {
 		this.destroy++;
 	}
 
+	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
+		this.queryTimeout++;
+	}
 }
