@@ -140,7 +140,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			if (this.logStatementsEnabled){
 				logger.debug(fillLogParams(this.sql));
 			}
-			long queryStartTime = (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+			long queryStartTime = queryTimerStart();
 			boolean result = this.internalPreparedStatement.execute();
 			queryTimerEnd(this.sql, queryStartTime);
 			
@@ -180,7 +180,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			if (this.logStatementsEnabled){
 				logger.debug(fillLogParams(this.sql));
 			}
-			long queryStartTime = (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+			long queryStartTime = queryTimerStart();
 			ResultSet result = this.internalPreparedStatement.executeQuery();
 			queryTimerEnd(this.sql, queryStartTime);
 			
@@ -204,7 +204,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			if (this.logStatementsEnabled){
 				logger.debug(fillLogParams(this.sql));
 			}
-			long queryStartTime = (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+			long queryStartTime = queryTimerStart();
 			int result = this.internalPreparedStatement.executeUpdate();
 			queryTimerEnd(this.sql, queryStartTime);
 			
