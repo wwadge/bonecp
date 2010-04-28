@@ -112,6 +112,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private DataSource datasourceBean;
 	/** Queries taking longer than this limit to execute are logged. */ 
 	private int queryExecuteTimeLimit = 0;
+	/** Create more connections when we hit x% of our possible number of connections. */
+	private int poolAvailabilityThreshold = 20;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -401,6 +403,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/**
 	 * Sets number of helper threads to create that will handle releasing a connection.
 	 *
+	 * When this value is set to zero, the application thread is blocked until the pool is able to perform all the necessary cleanup to
+	 * recycle the connection and make it available for another thread. 
+	 * 
+	 * When a non-zero value is set, the pool will create threads that will take care of recycling a connection when it is closed (the 
+	 * application dumps the connection into a temporary queue to be processed asychronously to the application via the release helper 
+	 * threads).
+	 * 
 	 * Useful when your application is doing lots of work on each connection 
 	 * (i.e. perform an SQL query, do lots of non-DB stuff and perform another query), 
 	 * otherwise will probably slow things down.
@@ -439,6 +448,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 *
 	 */
 	public void sanitize(){
+		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
+			this.poolAvailabilityThreshold = 20;
+		}
+		
 		if (this.maxConnectionsPerPartition < 2) {
 			logger.warn("Max Connections < 2. Setting to 50");
 			this.maxConnectionsPerPartition = 50;
@@ -958,5 +971,30 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setQueryExecuteTimeLimit(int queryExecuteTimeLimit) {
 		this.queryExecuteTimeLimit = queryExecuteTimeLimit;
+	}
+
+	/** Returns the pool watch connection threshold value.
+	 * @return the poolAvailabilityThreshold currently set.
+	 */
+	public int getPoolAvailabilityThreshold() {
+		return this.poolAvailabilityThreshold;
+	}
+
+	/** Sets the Pool Watch thread threshold.
+	 * 
+	 * The pool watch thread attempts to maintain a number of connections always available (between minConnections and maxConnections). This
+	 * value sets the percentage value to maintain. For example, setting it to 20 means that if the following condition holds:
+	 * Free Connections / MaxConnections < poolAvailabilityThreshold
+	 * 
+	 * new connections will be created. In other words, it tries to keep at least 20% of the pool full of connections. Setting the value
+	 * to zero will make the pool create new connections when it needs them but it also means your application may have to wait for new
+	 * connections to be obtained at times.
+	 * 
+	 * Default: 10.
+	 *  
+	 * @param poolAvailabilityThreshold the poolAvailabilityThreshold to set
+	 */
+	public void setPoolAvailabilityThreshold(int poolAvailabilityThreshold) {
+		this.poolAvailabilityThreshold = poolAvailabilityThreshold;
 	}
 }

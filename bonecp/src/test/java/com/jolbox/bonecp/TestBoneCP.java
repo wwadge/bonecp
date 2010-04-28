@@ -132,6 +132,7 @@ public class TestBoneCP {
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
+		expect(mockConfig.getPoolAvailabilityThreshold()).andReturn(20).anyTimes();
 
 		replay(mockConfig);
 		

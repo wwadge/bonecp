@@ -41,6 +41,8 @@ public class PoolWatchThread implements Runnable {
 	private long acquireRetryDelay = 1000L;
 	/** Start off lazily. */
 	private boolean lazyInit;
+	/** Occupancy% threshold. */
+	private int poolAvailabilityThreshold;
 	/** Logger handle. */
 	private static Logger logger = LoggerFactory.getLogger(PoolWatchThread.class);
 
@@ -54,6 +56,7 @@ public class PoolWatchThread implements Runnable {
 		this.pool = pool;
 		this.lazyInit = this.pool.getConfig().isLazyInit();
 		this.acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
+		this.poolAvailabilityThreshold = this.pool.getConfig().getPoolAvailabilityThreshold();
 	}
 
 
@@ -72,7 +75,7 @@ public class PoolWatchThread implements Runnable {
 
 				maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				// loop for spurious interrupt
-				while (maxNewConnections == 0 || (this.partition.getFreeConnections().size()*100/this.partition.getMaxConnections() > BoneCP.HIT_THRESHOLD)){
+				while (maxNewConnections == 0 || (this.partition.getFreeConnections().size()*100/this.partition.getMaxConnections() > this.poolAvailabilityThreshold)){
 					if (maxNewConnections == 0){
 						this.partition.setUnableToCreateMoreTransactions(true);
 					}

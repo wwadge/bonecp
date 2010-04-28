@@ -74,8 +74,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private static final String[] METADATATABLE = new String[] {"TABLE"};
 	/** Constant for keep-alive test */
 	private static final String KEEPALIVEMETADATA = "BONECPKEEPALIVE";
-	/** Create more threads when we hit x% of our possible number of connections. */
-	protected static final int HIT_THRESHOLD = 20;
+	/** Create more connections when we hit x% of our possible number of connections. */
+	protected final int poolAvailabilityThreshold;
 	/** Number of partitions passed in constructor. **/
 	private int partitionCount;
 	/** Partitions handle. */
@@ -211,7 +211,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	public BoneCP(BoneCPConfig config) throws SQLException {
 		this.config = config;
 		config.sanitize();
-
+		
+		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
+		
 		if (!config.isLazyInit()){
 			try{
 				Connection sanityConnection = obtainRawInternalConnection();
@@ -412,7 +414,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
-		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < HIT_THRESHOLD){
+		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < this.poolAvailabilityThreshold){
 			try{
 				connectionPartition.lockAlmostFullLock();
 				connectionPartition.almostFullSignal();
