@@ -58,7 +58,9 @@ public class TestStatementHandle {
 	private static IStatementCache mockCallableStatementCache;
 	/** Mock handles. */
 	private static ConnectionHandle mockConnection;
+	/** Mock handle. */
 	private static BoneCPConfig mockConfig;
+	/** Mock handle. */
 	private static BoneCP mockPool;
 
 	/**
@@ -175,7 +177,12 @@ public class TestStatementHandle {
 		assertNotNull(handle.toString());
 	}
 	
+	/** temp */
 	boolean firstTime = true;
+	
+	/** Tests query time limit.
+	 * @throws SQLException
+	 */
 	@Test
 	public void testQueryTimeLimit() throws SQLException{
 		Statement mockStatement = createNiceMock(Statement.class);

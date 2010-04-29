@@ -40,7 +40,6 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,17 +79,8 @@ public class PreparedStatementHandle extends StatementHandle implements
 		this.cache = cache;
 	}
 
-	/** Helper method
-	 * @param o items to print
-	 * @return String for safe printing.
-	 */
-	protected String safePrint(Object... o){
-		StringBuilder sb = new StringBuilder();
-		for (Object obj: o){
-			sb.append(obj != null ? obj : "null");
-		}
-		return sb.toString();
-	}
+	
+
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -138,7 +128,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled){
-				logger.debug(fillLogParams(this.sql));
+				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 			boolean result = this.internalPreparedStatement.execute();
@@ -152,21 +142,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	/** Returns sql statement used in this prepared statement together with the parameters.
-	 * @param sql base sql statement
-	 * @return returns printable statement 
-	 */
-	private String fillLogParams(String sql) {
-		StringBuilder sb = new StringBuilder(sql+"\n");
-		for (Entry<Object, Object> entry: this.logParams.entrySet()){
-			sb.append("[Param #");
-			sb.append(entry.getKey());
-			sb.append("] ");
-			sb.append(safePrint(entry.getValue()));
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -178,7 +153,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled){
-				logger.debug(fillLogParams(this.sql));
+				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 			ResultSet result = this.internalPreparedStatement.executeQuery();
@@ -202,7 +177,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled){
-				logger.debug(fillLogParams(this.sql));
+				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 			int result = this.internalPreparedStatement.executeUpdate();
@@ -704,7 +679,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -951,7 +926,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType, typeName);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -1157,7 +1132,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -1200,7 +1175,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);

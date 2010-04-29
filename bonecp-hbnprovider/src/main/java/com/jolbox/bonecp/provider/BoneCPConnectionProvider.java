@@ -19,9 +19,6 @@
 
 package com.jolbox.bonecp.provider;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;

@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.PoolUtil;
 
 /** A no-op implementation of the ConnectionHook interface.
  * @author wallacew
@@ -75,28 +76,10 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 		return false; // by default do not try connecting again.
 	}
 
-	/** Helper method. FIXME: Move to somewhere common.
-	 * @param o items to print
-	 * @return String for safe printing.
-	 */
-	private String safePrint(Object... o){
-		StringBuilder sb = new StringBuilder();
-		for (Object obj: o){
-			sb.append(obj != null ? obj : "null");
-		}
-		return sb.toString();
-	}
 
 	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
 		StringBuilder sb = new StringBuilder("Query execute time limit exceeded. Query: ");
-		sb.append(sql+"\n");
-		for (Entry<Object, Object> entry: logParams.entrySet()){
-			sb.append("[Param #");
-			sb.append(entry.getKey());
-			sb.append("] ");
-			sb.append(safePrint(entry.getValue()));
-			sb.append("\n");
-		}
+		sb.append(PoolUtil.fillLogParams(sql, logParams));
 		
 		if (logger.isWarnEnabled()){
 			logger.warn(sb.toString());

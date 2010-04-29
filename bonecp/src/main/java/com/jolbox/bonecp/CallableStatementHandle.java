@@ -1629,7 +1629,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setDate(parameterName, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -1849,7 +1849,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNull(parameterName, sqlType);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, safePrint("[SQL NULL type ", sqlType, "]"));
+				this.logParams.put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, "]"));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -1870,7 +1870,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNull(parameterName, sqlType, typeName);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, safePrint("[SQL NULL type ", sqlType, ", type=", typeName+"]"));
+				this.logParams.put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, ", type=", typeName+"]"));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -2053,7 +2053,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setTime(parameterName, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -2095,7 +2095,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setTimestamp(parameterName, x, cal);
 			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);

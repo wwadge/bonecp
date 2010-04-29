@@ -179,6 +179,7 @@ public class TestBoneCPConfig {
 		config.setUsername(null);
 		config.setAcquireIncrement(0);
 		config.setPassword(null);
+		config.setPoolAvailabilityThreshold(-50);
 		
 		config.setReleaseHelperThreads(-1);
 		config.sanitize();
@@ -194,6 +195,7 @@ public class TestBoneCPConfig {
 		config.setMinConnectionsPerPartition(config.getMaxConnectionsPerPartition()+1);
 		config.sanitize();
 		assertEquals(config.getMinConnectionsPerPartition(), config.getMaxConnectionsPerPartition());
+		assertEquals(20, config.getPoolAvailabilityThreshold());
 
 	}
 	
