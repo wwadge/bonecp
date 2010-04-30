@@ -31,7 +31,6 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +43,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
+
+import jsr166y.LinkedTransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -251,7 +252,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this);
 			this.partitions[p]=connectionPartition;
-			this.partitions[p].setFreeConnections(new ArrayBlockingQueue<ConnectionHandle>(config.getMaxConnectionsPerPartition()));
+			this.partitions[p].setFreeConnections(new LinkedTransferQueue<ConnectionHandle>());
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
@@ -492,7 +493,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @throws InterruptedException on interrupt
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws InterruptedException {
-		connectionHandle.getOriginatingPartition().getFreeConnections().put(connectionHandle);
+		LinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+		
+		if (!queue.tryTransfer(connectionHandle)){
+			queue.put(connectionHandle);
+		}
 	}
 
 

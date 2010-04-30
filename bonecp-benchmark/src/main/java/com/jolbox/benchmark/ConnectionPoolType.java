@@ -30,12 +30,12 @@ public enum ConnectionPoolType {
 	/** pool type. */
 	C3P0(false), 
 	/** pool type. */
-	PROXOOL(true),
+	PROXOOL(false),
 //	NANOPOOL,
 	/** pool type. */
 	DBCP(false),
 	/** pool type. */
-	TOMCAT_JDBC(true),
+	TOMCAT_JDBC(false),
 	/** pool type. */
 	BONECP_1_PARTITIONS(true, false),
 	/** pool type. */

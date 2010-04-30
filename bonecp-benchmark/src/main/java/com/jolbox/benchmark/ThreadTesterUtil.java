@@ -73,7 +73,7 @@ public class ThreadTesterUtil implements Callable<Long>{
 		do{
 			try {
 				con = this.ds.getConnection();
-				System.out.println(con);
+//				System.out.println(con);
 				time = time + (System.nanoTime() - start);
 				success = true;
 			} catch (Throwable e1) {
