@@ -92,6 +92,7 @@ public class TestBoneCP {
 	private static DatabaseMetaData mockDatabaseMetadata;
 	/** Mock handle. */
 	private static MockResultSet mockResultSet;
+	/** Fake database driver. */
 	private static MockJDBCDriver driver;
 
 	/** Mock setups.
@@ -115,6 +116,9 @@ public class TestBoneCP {
 	}
 	
 
+	/**
+	 * @throws SQLException
+	 */
 	@AfterClass
 	public static void teardown() throws SQLException{
 		driver.disable();
@@ -699,7 +703,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testIsConnectionHandleAlive() throws SQLException {
-		// Test 1: Normal case (+ without connection test statement)
+		// Test 1: Normal case (+ without connection test statement) 
 		expect(mockConfig.getConnectionTestStatement()).andReturn(null).once();
 		expect(mockConnection.getMetaData()).andReturn(mockDatabaseMetadata).once();
 		expect(mockDatabaseMetadata.getTables((String)anyObject(), (String)anyObject(), (String)anyObject(), (String[])anyObject())).andReturn(mockResultSet).once();
@@ -746,6 +750,7 @@ public class TestBoneCP {
 		replay(mockConfig, mockConnection, mockDatabaseMetadata,mockStatement, mockResultSet);
 //		assertFalse(testClass.isConnectionHandleAlive(mockConnection));
 		try{
+			mockConnection.logicallyClosed=true;// (code coverage)
 			testClass.isConnectionHandleAlive(mockConnection);
 			fail("Should have thrown an exception");
 		} catch (RuntimeException e){

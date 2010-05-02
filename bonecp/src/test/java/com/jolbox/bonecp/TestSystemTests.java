@@ -189,34 +189,6 @@ public class TestSystemTests {
 
 
 	@Test
-	@Ignore
-	public void testConnectionGivenButDBLost() throws SQLException{
-		config.setAcquireIncrement(5);
-		config.setMinConnectionsPerPartition(30);
-		config.setMaxConnectionsPerPartition(100);
-		config.setPartitionCount(1);
-		BoneCP dsb = new BoneCP(config);
-		
-		Connection mockConnection = EasyMock.createNiceMock(Connection.class);
-		Connection con = mockConnection;
-		Statement mockStatement = EasyMock.createNiceMock(Statement.class);
-		EasyMock.expect(mockConnection.createStatement()).andReturn(mockStatement ).anyTimes();
-		EasyMock.expect(mockStatement.execute((String)EasyMock.anyObject())).andThrow(new SQLException("08S01")).anyTimes();
-		
-		Statement stmt = mockConnection.createStatement();
-		try{
-			stmt.execute(CommonTestUtils.TEST_QUERY);
-			fail("Connection should have been marked as broken");
-		} catch (Exception e){
-			assertTrue(((ConnectionHandle)con).isPossiblyBroken());
-		}
-
-		con.close();
-
-	}
-
-
-	@Test
 	public void testGetReleaseSingleThread() throws InterruptedException, SQLException{
 		CommonTestUtils.logTestInfo("Test simple get/release connection from 1 partition");
 

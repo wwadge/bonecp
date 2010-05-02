@@ -155,12 +155,11 @@ public class TestConnectionPartition {
 		
 		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
 		expect(freeConnections.add(mockConnectionHandle)).andReturn(true);
-//		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
 		replay(mockConnectionHandle, freeConnections);
 		testClass.addFreeConnection(mockConnectionHandle);
 		verify(mockConnectionHandle, freeConnections);
 		assertEquals(count+1, testClass.getCreatedConnections());
-//		assertEquals(1, testClass.getRemainingCapacity());
+		assertEquals(0, testClass.getRemainingCapacity());
 		 
 	}
 

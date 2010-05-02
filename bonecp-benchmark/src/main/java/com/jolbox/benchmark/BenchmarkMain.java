@@ -87,10 +87,22 @@ public class BenchmarkMain {
 			System.exit(1);
 		}
 			
+		Class.forName("com.jolbox.benchmark.MockJDBCDriver" );
+		new MockJDBCDriver();
+		BenchmarkTests tests = new BenchmarkTests();
 		
+		BenchmarkTests.threads=100;
+		BenchmarkTests.stepping=100;
+		BenchmarkTests.pool_size=100;
+
+		// warm up
+		System.out.println("JIT warm up");
+		tests.testMultiThreadedConstantDelay(0);
+
 		BenchmarkTests.threads=400;
 		BenchmarkTests.stepping=5;
 		BenchmarkTests.pool_size=200;
+
 		if (cmd.hasOption("t")){
 			BenchmarkTests.threads=Integer.parseInt(cmd.getOptionValue("t", "400"));
 		} 
@@ -105,12 +117,9 @@ public class BenchmarkMain {
 				+ BenchmarkTests.threads + " threads (stepping "
 				+ BenchmarkTests.stepping+ ") using pool size of "+BenchmarkTests.pool_size+" connections");
 		
-		Class.forName("com.jolbox.benchmark.MockJDBCDriver" );
-		new MockJDBCDriver();
-		BenchmarkTests tests = new BenchmarkTests();
-
 
 		
+		System.out.println("Starting tests");
 		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
