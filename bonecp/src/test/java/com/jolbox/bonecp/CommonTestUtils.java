@@ -60,13 +60,13 @@ public class CommonTestUtils {
 	/** A dummy query for HSQLDB. */
 	public static final String TEST_QUERY = "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
 	/** A Sample test query for use with HSQLDB*/
-	public static String url="jdbc:hsqldb:mem:test";
+	public static String url="jdbc:mock";
 	/** hsqldb username. */
 	public static String username="sa";
 	/** hsqldb password. */
 	public static String password="";
 	/** hsqldb driver. */
-	static String driver = "org.hsqldb.jdbcDriver";
+	static String driver = "com.jolbox.bonecp.MockJDBCDriver";
 	/** Config file handle. */
 	private static BoneCPConfig config = new BoneCPConfig();
 

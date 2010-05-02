@@ -23,9 +23,9 @@ package com.jolbox.bonecp;
 import java.io.Serializable;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -64,6 +64,8 @@ public class ConnectionPartition implements Serializable{
     private final Condition almostFull = this.almostFullLock.newCondition(); 
     /** Number of connections that have been created. */
     private int createdConnections=0;
+    /** TransferQueue.size() is O(n) so we have to maintain the size as we go along for good performance :-( */ 
+    private AtomicInteger availableConnections = new AtomicInteger();
     /** DB details. */
     private final String url;
     /** DB details. */
@@ -75,7 +77,7 @@ public class ConnectionPartition implements Serializable{
      */
     private volatile boolean unableToCreateMoreTransactions=false;
     /** Scratch queue of connections awaiting to be placed back in queue. */
-    private ArrayBlockingQueue<ConnectionHandle> connectionsPendingRelease;
+    private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
     /** Updates leased connections statistics
      * @param increment value to add/subtract
      */
@@ -96,12 +98,13 @@ public class ConnectionPartition implements Serializable{
      */
     protected void addFreeConnection(ConnectionHandle connectionHandle){
         updateCreatedConnections(1);
+        this.availableConnections.incrementAndGet(); 
         connectionHandle.setOriginatingPartition(this);
         this.freeConnections.add(connectionHandle);
         trackConnectionFinalizer(connectionHandle);
     }
 
-    /** This method is a replacement for finalize() but avoids all the pitfalls of it (see Joshua Bloch et. all).
+    /** This method is a replacement for finalize() but avoids all its pitfalls (see Joshua Bloch et. all).
      * 
      * Keeps a handle on the connection. If the application called closed, then it means that the handle gets pushed back to the connection
      * pool and thus we get a strong reference again. If the application forgot to call close() and subsequently lost the strong reference to it,
@@ -171,7 +174,7 @@ public class ConnectionPartition implements Serializable{
         this.url = config.getJdbcUrl();
         this.username = config.getUsername();
         this.password = config.getPassword();
-        this.connectionsPendingRelease = new ArrayBlockingQueue<ConnectionHandle>(this.maxConnections);
+        this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 
         /** Create a number of helper threads for connection release. */
         int helperThreads = config.getReleaseHelperThreads();
@@ -230,7 +233,7 @@ public class ConnectionPartition implements Serializable{
      * @return number of free slots.
      */
     protected int getRemainingCapacity(){
-        return this.freeConnections.remainingCapacity();
+        return this.maxConnections-this.availableConnections.get();
     }
 
     /**
@@ -282,7 +285,7 @@ public class ConnectionPartition implements Serializable{
      *
      * @return release connection handle queue 
      */
-    protected ArrayBlockingQueue<ConnectionHandle> getConnectionsPendingRelease() {
+    protected LinkedTransferQueue<ConnectionHandle> getConnectionsPendingRelease() {
         return this.connectionsPendingRelease;
     }
 
@@ -313,6 +316,13 @@ public class ConnectionPartition implements Serializable{
 	 */
 	protected void almostFullSignal() {
 		this.almostFull.signal();
+	}
+
+	/**
+	 * @return the availableConnections
+	 */
+	protected AtomicInteger getAvailableConnections() {
+		return this.availableConnections;
 	}
 
 }

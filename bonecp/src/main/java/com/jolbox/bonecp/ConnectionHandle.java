@@ -72,7 +72,7 @@ public class ConnectionHandle implements Connection{
 	private BoneCP pool;
 	/**
 	 * If true, this connection might have failed communicating with the
-	 * database. We assume that exceptions should be rare here i.e. the normal
+	 * database. We assume that exceptions should be rare here i.e. the normal 
 	 * case is assumed to succeed.
 	 */
 	protected boolean possiblyBroken;

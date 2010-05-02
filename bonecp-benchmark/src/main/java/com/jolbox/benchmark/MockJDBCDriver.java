@@ -29,6 +29,8 @@ import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import com.jolbox.bonecp.MockConnection;
+
 /** A Fake jdbc driver for mocking purposes.
  * @author Wallace
  *
@@ -36,6 +38,8 @@ import java.util.Properties;
 public class MockJDBCDriver  implements Driver {
 	/** If true, stop responding to connection requests. */
 	private static boolean disabled;
+	/** Last instance. */
+	private static MockJDBCDriver instance;
 
 	/**
 	 * Default constructor
@@ -44,6 +48,7 @@ public class MockJDBCDriver  implements Driver {
 	public MockJDBCDriver() throws SQLException{
 		// default constructor
 		DriverManager.registerDriver(this);
+		instance = this;
 	}
 	
 	/** {@inheritDoc}
@@ -104,6 +109,11 @@ public class MockJDBCDriver  implements Driver {
 	 * @param disabled 
 	 */
 	public static void disable(boolean disabled){
-		MockJDBCDriver.disabled = disabled; 
+		MockJDBCDriver.disabled = disabled;
+		try {
+			DriverManager.deregisterDriver(instance);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 }

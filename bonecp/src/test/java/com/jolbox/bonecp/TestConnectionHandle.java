@@ -114,13 +114,6 @@ public class TestConnectionHandle {
 		config.setReleaseHelperThreads(0);
 	}
 
-	/** Reset driver state.
-	 * @throws SQLException
-	 */
-	@AfterClass
-	public static void disableMockDriver() throws SQLException{
-		MockJDBCDriver.disable();
-	}
 	/** Reset everything.
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException

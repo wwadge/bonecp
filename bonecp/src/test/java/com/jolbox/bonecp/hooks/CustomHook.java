@@ -43,27 +43,27 @@ public class CustomHook extends AbstractConnectionHook{
 
 
 //	@Override
-	public void onAcquire(ConnectionHandle connection) {
+	public synchronized void onAcquire(ConnectionHandle connection) {
 		this.acquire++;
 	}
 
 //	@Override
-	public void onCheckIn(ConnectionHandle connection) {
+	public synchronized void onCheckIn(ConnectionHandle connection) {
 		this.checkin++;
 	}
 
 //	@Override
-	public void onCheckOut(ConnectionHandle connection) {
+	public synchronized void onCheckOut(ConnectionHandle connection) {
 		this.checkout++;
 	}
 	
 //	@Override
-	public void onDestroy(ConnectionHandle connection) {
+	public synchronized void onDestroy(ConnectionHandle connection) {
 		this.destroy++;
 	}
 
 //	@Override
-	public boolean onAcquireFail(Throwable t) {
+	public synchronized boolean onAcquireFail(Throwable t) {
 		this.fail++;
 		if (this.fail < 3){
 			return true; // try 3 times
@@ -73,7 +73,7 @@ public class CustomHook extends AbstractConnectionHook{
 
 	}
 	
-	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
+	public synchronized void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
 		this.queryTimeout++;
 	}
 }

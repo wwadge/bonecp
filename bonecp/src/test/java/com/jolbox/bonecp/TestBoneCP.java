@@ -38,13 +38,14 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -55,8 +56,10 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
+import jsr166y.LinkedTransferQueue;
+
 import org.easymock.EasyMock;
-import org.hsqldb.jdbc.jdbcResultSet;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -78,7 +81,7 @@ public class TestBoneCP {
 	/** Mock handle. */
 	private static ExecutorService mockConnectionsScheduler;
 	/** Mock handle. */
-	private static ArrayBlockingQueue<ConnectionHandle> mockConnectionHandles;
+	private static LinkedTransferQueue<ConnectionHandle> mockConnectionHandles;
 	/** Mock handle. */
 	private static ConnectionHandle mockConnection;
 	/** Mock handle. */
@@ -88,7 +91,8 @@ public class TestBoneCP {
 	/** Mock handle. */
 	private static DatabaseMetaData mockDatabaseMetadata;
 	/** Mock handle. */
-	private static jdbcResultSet mockResultSet;
+	private static MockResultSet mockResultSet;
+	private static MockJDBCDriver driver;
 
 	/** Mock setups.
 	 * @throws SQLException
@@ -101,12 +105,20 @@ public class TestBoneCP {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
-		Class.forName("org.hsqldb.jdbcDriver");
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
 //		config = CommonTestUtils.getConfigClone();
 	}
 	
 
-	
+	@AfterClass
+	public static void teardown() throws SQLException{
+		driver.disable();
+	}
 	/**
 	 * Reset the mocks.
 	 * @throws IllegalAccessException 
@@ -162,7 +174,7 @@ public class TestBoneCP {
 		mockConnectionsScheduler = createNiceMock(ExecutorService.class);
 		field.set(testClass, mockConnectionsScheduler);
 		
-		mockConnectionHandles = createNiceMock(ArrayBlockingQueue.class);
+		mockConnectionHandles = createNiceMock(LinkedTransferQueue.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockLock = createNiceMock(Lock.class);
 		mockLogger = createNiceMock(Logger.class);
@@ -171,7 +183,7 @@ public class TestBoneCP {
 		field.setAccessible(true);
 		field.set(testClass, mockLogger);
 		mockDatabaseMetadata = createNiceMock(DatabaseMetaData.class);
-		mockResultSet = createNiceMock(jdbcResultSet.class);
+		mockResultSet = createNiceMock(MockResultSet.class);
 			
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
@@ -287,6 +299,7 @@ public class TestBoneCP {
 		
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
 		mockConnection.setOriginatingPartition(mockPartition);
 		expectLastCall().once();
@@ -386,9 +399,12 @@ public class TestBoneCP {
 	@Test
 	public void testGetConnectionLimitsHit() throws SQLException {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockConfig.getPoolAvailabilityThreshold()).andReturn(0).anyTimes();
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockPartition.getMaxConnections()).andReturn(1).anyTimes();
+		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+
 
 		mockPartition.almostFullSignal();
 		expectLastCall().once();
@@ -418,6 +434,8 @@ public class TestBoneCP {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		
 		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
 
 		mockConnection.setOriginatingPartition(mockPartition);
@@ -469,6 +487,8 @@ public class TestBoneCP {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.getMaxConnections()).andReturn(100).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+
 		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
 		
 		replay(mockPartition, mockConnectionHandles, mockConnection);
@@ -493,6 +513,7 @@ public class TestBoneCP {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
 		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
 		
@@ -514,6 +535,7 @@ public class TestBoneCP {
 	public void testGetAsyncConnection() throws InterruptedException, ExecutionException{
 			expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 			expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+			expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
 			expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
 			mockConnection.setOriginatingPartition(mockPartition);
 			expectLastCall().once();
@@ -546,6 +568,8 @@ public class TestBoneCP {
 		expect(mockConnection.isPossiblyBroken()).andReturn(false).once();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
 		mockConnectionHandles.put(mockConnection);
 		expectLastCall().once();
@@ -564,6 +588,7 @@ public class TestBoneCP {
 		field.setAccessible(true);
 		field.setBoolean(testClass, false);
 
+		/*
 		expect(mockConnection.isPossiblyBroken()).andReturn(false).once();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
@@ -582,7 +607,7 @@ public class TestBoneCP {
 			// do nothing
 		}
 		verify(mockConnection, mockPartition, mockConnectionHandles);
-
+*/
 		
 		reset(mockConnection, mockPartition, mockConnectionHandles);
 
@@ -591,7 +616,7 @@ public class TestBoneCP {
 		field.setAccessible(true);
 		field.setBoolean(testClass, true);
 
-		ArrayBlockingQueue<ConnectionHandle> mockPendingRelease = createNiceMock(ArrayBlockingQueue.class);
+		LinkedTransferQueue<ConnectionHandle> mockPendingRelease = createNiceMock(LinkedTransferQueue.class);
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getConnectionsPendingRelease()).andReturn(mockPendingRelease).anyTimes();
 		mockPendingRelease.put(mockConnection);
@@ -616,6 +641,9 @@ public class TestBoneCP {
 		expectLastCall().once();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		AtomicInteger ai = new AtomicInteger(1);
+		expect(mockPartition.getAvailableConnections()).andReturn(ai).anyTimes();
+		
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
 		mockConnectionHandles.put(mockConnection);
 		expectLastCall().once();
@@ -651,11 +679,16 @@ public class TestBoneCP {
 	@Test
 	public void testPutConnectionBackInPartition() throws InterruptedException {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		AtomicInteger ai = new AtomicInteger(1);
+		expect(mockPartition.getAvailableConnections()).andReturn(ai).anyTimes();
+		
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
 		mockConnectionHandles.put(mockConnection);
 		expectLastCall().once();
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		testClass.putConnectionBackInPartition(mockConnection);
+		assertEquals(2, ai.get());
 		verify(mockPartition, mockConnectionHandles);
 		
 	}
@@ -752,7 +785,8 @@ public class TestBoneCP {
 	public void testMaybeSignalForMoreConnections() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
+//		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
 		mockPartition.lockAlmostFullLock();
 		expectLastCall().once();
@@ -772,6 +806,8 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+
 		mockPartition.lockAlmostFullLock();
 		expectLastCall().once();
 		mockPartition.almostFullSignal();
@@ -795,7 +831,7 @@ public class TestBoneCP {
 	public void testGetTotalLeased() {
 		expect(mockPartition.getCreatedConnections()).andReturn(5).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.size()).andReturn(3).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(3)).anyTimes();
 		replay(mockPartition, mockConnectionHandles);
 		assertEquals(4, testClass.getTotalLeased());
 		verify(mockPartition, mockConnectionHandles);
@@ -808,7 +844,9 @@ public class TestBoneCP {
 	@Test
 	public void testGetTotalFree() {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.size()).andReturn(3).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(3)).anyTimes();
+		
+		// expect(mockConnectionHandles.size()).andReturn(3).anyTimes();
 		replay(mockPartition, mockConnectionHandles);
 		assertEquals(6, testClass.getTotalFree());
 		verify(mockPartition, mockConnectionHandles);

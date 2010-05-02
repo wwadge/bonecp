@@ -38,8 +38,6 @@ public class MockJDBCDriver  implements Driver {
 	private Connection connection = null;
 	/** called to return. */
 	private MockJDBCAnswer mockJDBCAnswer;
-	/** Instance. */
-	private static MockJDBCDriver driverInstance;
 
 	/**
 	 * Default constructor
@@ -48,7 +46,6 @@ public class MockJDBCDriver  implements Driver {
 	public MockJDBCDriver() throws SQLException{
 		// default constructor
 		DriverManager.registerDriver(this);
-		driverInstance = this;
 	}
 	
 	/** Connection handle to return
@@ -73,7 +70,7 @@ public class MockJDBCDriver  implements Driver {
 	 */
 //	@Override
 	public boolean acceptsURL(String url) throws SQLException {
-		return true; // accept anything
+		return url.startsWith("jdbc:mock"); // accept anything
 	}
 
 	/** {@inheritDoc}
@@ -81,6 +78,9 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	// @Override
 	public Connection connect(String url, Properties info) throws SQLException {
+		if (url.startsWith("invalid")){
+			throw new SQLException("Mock Driver rejecting invalid URL");
+		}
 		if (this.connection != null){
 			return this.connection;
 		}
@@ -126,8 +126,8 @@ public class MockJDBCDriver  implements Driver {
 	 * @throws SQLException 
 	 * @throws SQLException 
 	 */
-	public static void disable() throws SQLException{
-		DriverManager.deregisterDriver(driverInstance);
+	public void disable() throws SQLException{
+		DriverManager.deregisterDriver(this);
 	}
 
 	/**
@@ -142,5 +142,19 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	public void setConnection(Connection connection) {
 		this.connection = connection;
+	}
+
+	/**
+	 * @return the mockJDBCAnswer
+	 */
+	public MockJDBCAnswer getMockJDBCAnswer() {
+		return this.mockJDBCAnswer;
+	}
+
+	/**
+	 * @param mockJDBCAnswer the mockJDBCAnswer to set
+	 */
+	public void setMockJDBCAnswer(MockJDBCAnswer mockJDBCAnswer) {
+		this.mockJDBCAnswer = mockJDBCAnswer;
 	}
 }

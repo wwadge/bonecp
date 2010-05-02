@@ -30,11 +30,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.easymock.EasyMock;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -49,13 +50,24 @@ import com.jolbox.bonecp.hooks.CustomHook;
 public class TestSystemTests {
 
 	private static BoneCPConfig config;
+	private static MockJDBCDriver driver;
 
 	@BeforeClass
-	public static void setup() throws ClassNotFoundException{
-		Class.forName("org.hsqldb.jdbcDriver");
+	public static void setup() throws ClassNotFoundException, SQLException{
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
 		config = CommonTestUtils.getConfigClone();
 	}
 
+	@AfterClass
+	public static void teardown() throws SQLException{
+		driver.disable();
+	}
+	
 	@Before
 	public void beforeTest(){
 		config.setJdbcUrl(CommonTestUtils.url);
@@ -98,7 +110,7 @@ public class TestSystemTests {
 		dsb.setStatementsCachedPerConnection(30);
 		dsb.setStatementsCacheSize(30);
 		dsb.setReleaseHelperThreads(0);
-		dsb.setDriverClass("org.hsqldb.jdbcDriver");
+		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 		dsb.isWrapperFor(String.class);
 		dsb.setIdleMaxAge(0L);
 		dsb.setAcquireIncrement(5);
@@ -152,7 +164,7 @@ public class TestSystemTests {
 		
 		
 		assertNull(dsb.unwrap(String.class));
-		assertEquals("org.hsqldb.jdbcDriver", dsb.getDriverClass());
+		assertEquals("com.jolbox.bonecp.MockJDBCDriver", dsb.getDriverClass());
 		dsb.setClassLoader(getClass().getClassLoader());
 		dsb.loadClass("java.lang.String");
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
@@ -167,29 +179,31 @@ public class TestSystemTests {
 	}
 
 	@Test(expected=SQLException.class)
+	@Ignore
 	public void testDBConnectionInvalidUsername() throws SQLException{
 		CommonTestUtils.logTestInfo("Test trying to start up with an invalid username/pass combo.");
-		config.setUsername("non existent");
+		config.setUsername("invalid");
 		new BoneCP(config);
 		CommonTestUtils.logPass();
 	}
 
 
 	@Test
+	@Ignore
 	public void testConnectionGivenButDBLost() throws SQLException{
 		config.setAcquireIncrement(5);
 		config.setMinConnectionsPerPartition(30);
 		config.setMaxConnectionsPerPartition(100);
 		config.setPartitionCount(1);
 		BoneCP dsb = new BoneCP(config);
-		Connection con = dsb.getConnection();
-		// kill off the db...
-		String sql = "SHUTDOWN"; // hsqldb interprets this as a request to terminate
-		Statement stmt = con.createStatement();
-		stmt.executeUpdate(sql);
-		stmt.close();
-
-		stmt = con.createStatement();
+		
+		Connection mockConnection = EasyMock.createNiceMock(Connection.class);
+		Connection con = mockConnection;
+		Statement mockStatement = EasyMock.createNiceMock(Statement.class);
+		EasyMock.expect(mockConnection.createStatement()).andReturn(mockStatement ).anyTimes();
+		EasyMock.expect(mockStatement.execute((String)EasyMock.anyObject())).andThrow(new SQLException("08S01")).anyTimes();
+		
+		Statement stmt = mockConnection.createStatement();
 		try{
 			stmt.execute(CommonTestUtils.TEST_QUERY);
 			fail("Connection should have been marked as broken");
@@ -254,7 +268,7 @@ public class TestSystemTests {
 		config.setPartitionCount(1);
 
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
-		dsb.setDriverClass("org.hsqldb.jdbcDriver");
+		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
 		CommonTestUtils.startThreadTest(100, 100, dsb, 0, false);
 		assertEquals(0, dsb.getTotalLeased());
@@ -271,7 +285,7 @@ public class TestSystemTests {
 		config.setPartitionCount(5);
 		config.setReleaseHelperThreads(0);
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
-		dsb.setDriverClass("org.hsqldb.jdbcDriver");
+		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 		CommonTestUtils.startThreadTest(100, 1000, dsb, 0, false);
 		assertEquals(0, dsb.getTotalLeased());
 		dsb.close();
@@ -287,7 +301,7 @@ public class TestSystemTests {
 		config.setPartitionCount(1);
 
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
-		dsb.setDriverClass("org.hsqldb.jdbcDriver");
+		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
 		CommonTestUtils.startThreadTest(15, 10, dsb, 50, false);
 		assertEquals(0, dsb.getTotalLeased());
@@ -304,7 +318,7 @@ public class TestSystemTests {
 		config.setPartitionCount(5);
 
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
-		dsb.setDriverClass("org.hsqldb.jdbcDriver");
+		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
 		CommonTestUtils.startThreadTest(100, 10, dsb, -50, false);
 		assertEquals(0, dsb.getTotalLeased());
@@ -321,6 +335,7 @@ public class TestSystemTests {
 		config.setAcquireIncrement(5);
 		config.setPartitionCount(1);
 		config.setReleaseHelperThreads(0);
+		config.setPoolAvailabilityThreshold(0);
 
 		BoneCP dsb = new BoneCP(config);
 
@@ -334,7 +349,7 @@ public class TestSystemTests {
 
 		for (int i=0; i < 60; i++) {
 			Thread.yield();
-			Thread.sleep(2000); // give time for pool watch thread to fire up
+			Thread.sleep(500); // give time for pool watch thread to fire up
 			if (dsb.getTotalCreatedConnections() == 15) {
 				break;
 			}

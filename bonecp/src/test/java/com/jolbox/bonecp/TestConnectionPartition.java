@@ -39,10 +39,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
+import jsr166y.LinkedTransferQueue;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -148,19 +149,19 @@ public class TestConnectionPartition {
 	public void testFreeConnection()  {
 		int count = testClass.getCreatedConnections();
 
-		ArrayBlockingQueue<ConnectionHandle> freeConnections = createNiceMock(ArrayBlockingQueue.class);
+		LinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedTransferQueue.class);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
 		
 		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
 		expect(freeConnections.add(mockConnectionHandle)).andReturn(true);
-		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
+//		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
 		replay(mockConnectionHandle, freeConnections);
 		testClass.addFreeConnection(mockConnectionHandle);
 		verify(mockConnectionHandle, freeConnections);
 		assertEquals(count+1, testClass.getCreatedConnections());
-		assertEquals(1, testClass.getRemainingCapacity());
-		
+//		assertEquals(1, testClass.getRemainingCapacity());
+		 
 	}
 
 

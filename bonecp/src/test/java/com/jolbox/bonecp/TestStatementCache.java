@@ -40,8 +40,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -57,20 +59,30 @@ public class TestStatementCache {
 	private static Logger mockLogger;
 	/** Config clone. */
 	private static BoneCPConfig config;
+	private static MockJDBCDriver driver;
 
 	/** Mock setup.
 	 * @throws ClassNotFoundException
+	 * @throws SQLException 
 	 */
 	@BeforeClass
-	public static void setup() throws ClassNotFoundException{
-		Class.forName("org.hsqldb.jdbcDriver");
+	public static void setup() throws ClassNotFoundException, SQLException{
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
 		mockCache = createNiceMock(IStatementCache.class);
 		mockLogger = createNiceMock(Logger.class);
 		config = CommonTestUtils.getConfigClone();
-
-	
-
 	}
+	
+	@AfterClass
+	public static void teardown() throws SQLException{
+		driver.disable();
+	}
+	
 	/**
 	 * Init.
 	 */
