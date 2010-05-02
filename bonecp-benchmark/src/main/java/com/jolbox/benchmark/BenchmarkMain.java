@@ -105,24 +105,27 @@ public class BenchmarkMain {
 				+ BenchmarkTests.threads + " threads (stepping "
 				+ BenchmarkTests.stepping+ ") using pool size of "+BenchmarkTests.pool_size+" connections");
 		
-		Class.forName("org.hsqldb.jdbcDriver" );
+	//	Class.forName("org.hsqldb.jdbcDriver" );
+		Class.forName("com.jolbox.benchmark.MockJDBCDriver" );
+		new MockJDBCDriver();
+	
 		BenchmarkTests tests = new BenchmarkTests();
 
 
 		
 		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
-		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
-		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
-		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
-		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
-		
-		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
-		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
+//		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
+//		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
+//		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
+//		
+//		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
+//		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);
 
 	}
 
