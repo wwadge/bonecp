@@ -29,6 +29,7 @@ import java.util.Map;
  * @author Wallace
  *
  */
+@SuppressWarnings("all")
 public class MockResultSet implements ResultSet {
 
 	/** {@inheritDoc}

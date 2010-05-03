@@ -62,7 +62,6 @@ public class TestConnectionThreadTester {
 	private static BoneCPConfig config;
 	/** Mock handle. */
 	private static Logger mockLogger;
-	private static AtomicInteger mockAtomic;
 
 	/** Mock setup.
 	 * @throws ClassNotFoundException
@@ -74,7 +73,6 @@ public class TestConnectionThreadTester {
 		mockExecutor = createNiceMock(ScheduledExecutorService.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockLogger = createNiceMock(Logger.class);
-		mockAtomic = createNiceMock(AtomicInteger.class);
 		
 		makeThreadSafe(mockLogger, true);
 		config = new BoneCPConfig();

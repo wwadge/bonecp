@@ -85,6 +85,10 @@ public class MockJDBCDriver  implements Driver {
 			return this.connection;
 		}
 		
+		if (this.mockJDBCAnswer == null){
+			return new MockConnection();
+		}
+		
 		return this.mockJDBCAnswer.answer();
 	}
 

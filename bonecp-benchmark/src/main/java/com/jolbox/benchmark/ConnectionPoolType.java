@@ -28,20 +28,20 @@ package com.jolbox.benchmark;
  */
 public enum ConnectionPoolType {
 	/** pool type. */
-	C3P0(false), 
+	C3P0(true), 
 	/** pool type. */
 	PROXOOL(false),
 //	NANOPOOL,
 	/** pool type. */
-	DBCP(false),
+	DBCP(true),
 	/** pool type. */
-	TOMCAT_JDBC(false),
+	TOMCAT_JDBC(true),
 	/** pool type. */
 	BONECP_1_PARTITIONS(true, false),
 	/** pool type. */
-	BONECP_2_PARTITIONS(false, true),
+	BONECP_2_PARTITIONS(true, true),
 	/** pool type. */
-	BONECP_4_PARTITIONS(false, true),
+	BONECP_4_PARTITIONS(true, true),
 	/** pool type. */
 	BONECP_5_PARTITIONS(false, true),
 	/** pool type. */

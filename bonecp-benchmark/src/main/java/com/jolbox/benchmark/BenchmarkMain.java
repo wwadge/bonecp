@@ -89,17 +89,21 @@ public class BenchmarkMain {
 			System.exit(1);
 		}
 			
-		Class.forName("com.jolbox.benchmark.MockJDBCDriver" );
+		Class.forName("com.jolbox.bonecp.MockJDBCDriver" );
 		new MockJDBCDriver();
 		BenchmarkTests tests = new BenchmarkTests();
 		
 
 		BenchmarkTests.threads=400;
-		BenchmarkTests.stepping=5;
+		BenchmarkTests.stepping=20;
 		BenchmarkTests.pool_size=200;
 		// warm up
 		System.out.println("JIT warm up");
 		tests.testMultiThreadedConstantDelay(0);
+
+		BenchmarkTests.threads=400;
+		BenchmarkTests.stepping=5;
+		BenchmarkTests.pool_size=200;
 
 
 		if (cmd.hasOption("t")){
@@ -120,15 +124,15 @@ public class BenchmarkMain {
 		
 		System.out.println("Starting tests");
 		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
-//		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
+		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
-		
-//		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
-//		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
+//		
+		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
+		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);

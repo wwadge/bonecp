@@ -31,6 +31,7 @@ import java.util.Map;
  * @author Wallace
  *
  */
+@SuppressWarnings("all")
 public class MockCallableStatement implements CallableStatement {
 
 	/** {@inheritDoc}

@@ -271,7 +271,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -322,7 +321,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -402,7 +400,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -478,7 +475,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -569,7 +565,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override

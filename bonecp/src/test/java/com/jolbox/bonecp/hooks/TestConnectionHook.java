@@ -54,6 +54,7 @@ public class TestConnectionHook {
 	private static BoneCP poolClass;
 	/** Helper class. */
 	private static CustomHook hookClass;
+	/** Mock handle. */
 	private static MockJDBCDriver driver;
 
 	/** Setups all mocks.

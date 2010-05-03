@@ -85,7 +85,7 @@ public class BenchmarkTests {
 	 */
 	private ComboPooledDataSource multiThreadedC3P0(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
 		ComboPooledDataSource cpds = new ComboPooledDataSource();
-		cpds.setDriverClass("com.jolbox.benchmark.MockJDBCDriver");
+		cpds.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
 		cpds.setJdbcUrl(url);
 		cpds.setUser(username);
@@ -115,7 +115,7 @@ public class BenchmarkTests {
 	 */
 	private ProxoolDataSource multiThreadedProxool(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
 		ProxoolDataSource cpds = new ProxoolDataSource();
-		cpds.setDriver("com.jolbox.benchmark.MockJDBCDriver");
+		cpds.setDriver("com.jolbox.bonecp.MockJDBCDriver");
 
 		cpds.setDriverUrl(url);
 		cpds.setUser(username);
@@ -140,7 +140,7 @@ public class BenchmarkTests {
 	 */
 	private DataSource multiThreadedDBCP(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
 		BasicDataSource cpds = new BasicDataSource();
-		cpds.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		cpds.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
 		cpds.setUrl(url);
 		cpds.setUsername(username);
 		cpds.setPassword(password);
@@ -168,7 +168,7 @@ public class BenchmarkTests {
 	private DataSource multiThreadedTomcatJDBC(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
 		PoolProperties config = new PoolProperties();
 		config.setUrl(url);
-		  config.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		  config.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
 		config.setUsername(username);
 		config.setPassword(password);
 		config.setMaxIdle(pool_size);
@@ -200,7 +200,7 @@ return dsb;
 	private BoneCPDataSource multiThreadedBoneCP(boolean doPreparedStatement, int partitions) throws PropertyVetoException, InterruptedException, SQLException {
 
 		BoneCPDataSource dsb = new BoneCPDataSource();
-		dsb.setDriverClass("com.jolbox.benchmark.MockJDBCDriver");
+		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 		dsb.setJdbcUrl(url);
 		dsb.setUsername(username);
 		dsb.setPassword(password);
@@ -266,7 +266,7 @@ return dsb;
 		// Start tomcat JDBC
 		PoolProperties config = new PoolProperties();
 		config.setUrl(url);
-		  config.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		  config.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
 		config.setUsername(username);
 		config.setPassword(password);
 		config.setMaxIdle(pool_size);
@@ -300,7 +300,7 @@ return dsb;
 		// Start DBCP
 
 		BasicDataSource cpds = new BasicDataSource();
-		cpds.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		cpds.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
 		cpds.setUrl(url);
 		cpds.setUsername(username);
 		cpds.setPassword(password);
@@ -629,7 +629,7 @@ return dsb;
 	private long testPreparedStatementSingleThreadC3P0() throws PropertyVetoException, SQLException{
 		results.add("PreparedStatement (single threaded), time (ms)");
 		ComboPooledDataSource cpds = new ComboPooledDataSource();
-		cpds.setDriverClass("com.jolbox.benchmark.MockJDBCDriver");
+		cpds.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
 		cpds.setJdbcUrl(url);
 		cpds.setUser(username);
@@ -669,7 +669,7 @@ return dsb;
 	 */
 	private long testPreparedStatementSingleThreadDBCP() throws PropertyVetoException, SQLException{
 		BasicDataSource cpds = new BasicDataSource();
-		cpds.setDriverClassName("com.jolbox.benchmark.MockJDBCDriver");
+		cpds.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
 		cpds.setUrl(url);
 		cpds.setUsername(username);
 		cpds.setPassword(password);

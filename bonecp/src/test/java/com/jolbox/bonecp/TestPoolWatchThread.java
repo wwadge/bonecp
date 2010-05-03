@@ -64,6 +64,7 @@ public class TestPoolWatchThread {
 	static boolean first = true;
 	/** Mock handle. */
 	private static BoneCPConfig mockConfig;
+	/** Mock handle. */
 	private static MockJDBCDriver driver;
 
 	/** Test class setup.
@@ -110,6 +111,9 @@ public class TestPoolWatchThread {
 
 	}
 
+	/** AfterClass cleanup.
+	 * @throws SQLException
+	 */
 	@AfterClass
 	public static void teardown() throws SQLException{
 		driver.disable();

@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -59,6 +58,7 @@ public class TestStatementCache {
 	private static Logger mockLogger;
 	/** Config clone. */
 	private static BoneCPConfig config;
+	/** Mock handle. */
 	private static MockJDBCDriver driver;
 
 	/** Mock setup.
@@ -77,7 +77,10 @@ public class TestStatementCache {
 		mockLogger = createNiceMock(Logger.class);
 		config = CommonTestUtils.getConfigClone();
 	}
-	
+
+	/** AfterClass cleanup.
+	 * @throws SQLException
+	 */
 	@AfterClass
 	public static void teardown() throws SQLException{
 		driver.disable();

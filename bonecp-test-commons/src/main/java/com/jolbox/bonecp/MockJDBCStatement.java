@@ -13,24 +13,28 @@ import java.sql.Statement;
  * @author Wallace
  *
  */
+@SuppressWarnings("all")
 public class MockJDBCStatement implements Statement {
 
 	/** {@inheritDoc}
 	 * @see java.sql.Statement#addBatch(java.lang.String)
 	 */
 	public void addBatch(String sql) throws SQLException {
+		//do nothing
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Statement#cancel()
 	 */
 	public void cancel() throws SQLException {
+		//do nothing
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Statement#clearBatch()
 	 */
 	public void clearBatch() throws SQLException {
+		//do nothing
 	}
 
 	/** {@inheritDoc}
@@ -44,6 +48,7 @@ public class MockJDBCStatement implements Statement {
 	 * @see java.sql.Statement#close()
 	 */
 	public void close() throws SQLException {
+		//do nothing
 	}
 
 	/** {@inheritDoc}
@@ -286,6 +291,7 @@ public class MockJDBCStatement implements Statement {
 	 * @see java.sql.Statement#setQueryTimeout(int)
 	 */
 	public void setQueryTimeout(int seconds) throws SQLException {
+		//do nothing
 	}
 
 	/** {@inheritDoc}
