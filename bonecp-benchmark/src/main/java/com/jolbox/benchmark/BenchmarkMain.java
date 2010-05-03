@@ -47,6 +47,8 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import com.jolbox.bonecp.MockJDBCDriver;
+
 
 /**
  * @author Wallace
@@ -91,17 +93,14 @@ public class BenchmarkMain {
 		new MockJDBCDriver();
 		BenchmarkTests tests = new BenchmarkTests();
 		
-		BenchmarkTests.threads=100;
-		BenchmarkTests.stepping=100;
-		BenchmarkTests.pool_size=100;
-
-		// warm up
-		System.out.println("JIT warm up");
-		tests.testMultiThreadedConstantDelay(0);
 
 		BenchmarkTests.threads=400;
 		BenchmarkTests.stepping=5;
 		BenchmarkTests.pool_size=200;
+		// warm up
+		System.out.println("JIT warm up");
+		tests.testMultiThreadedConstantDelay(0);
+
 
 		if (cmd.hasOption("t")){
 			BenchmarkTests.threads=Integer.parseInt(cmd.getOptionValue("t", "400"));

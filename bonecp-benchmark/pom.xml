@@ -16,7 +16,7 @@
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
 			<version>0.6.6-SNAPSHOT</version>
-			<scope>compile</scope>
+			<scope>runtime</scope>
 		</dependency>
  <dependency>
       <groupId>org.tomcat</groupId>

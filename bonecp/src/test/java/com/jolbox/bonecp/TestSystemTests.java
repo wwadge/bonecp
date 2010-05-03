@@ -178,15 +178,6 @@ public class TestSystemTests {
 		CommonTestUtils.logPass();
 	}
 
-	@Test(expected=SQLException.class)
-	@Ignore
-	public void testDBConnectionInvalidUsername() throws SQLException{
-		CommonTestUtils.logTestInfo("Test trying to start up with an invalid username/pass combo.");
-		config.setUsername("invalid");
-		new BoneCP(config);
-		CommonTestUtils.logPass();
-	}
-
 
 	@Test
 	public void testGetReleaseSingleThread() throws InterruptedException, SQLException{
