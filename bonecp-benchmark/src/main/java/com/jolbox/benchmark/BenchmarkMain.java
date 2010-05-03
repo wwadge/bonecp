@@ -124,7 +124,7 @@ public class BenchmarkMain {
 		
 		System.out.println("Starting tests");
 		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
-		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
+//		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
@@ -146,7 +146,7 @@ public class BenchmarkMain {
 	 * @param statementBenchmark
 	 */
 	private static void plotLineGraph(long[][] results, int delay, boolean statementBenchmark) {
-		doPlotLineGraph(results, delay, statementBenchmark, true);
+//		doPlotLineGraph(results, delay, statementBenchmark, true);
 		doPlotLineGraph(results, delay, statementBenchmark, false);
 	}
 	/**
@@ -168,6 +168,7 @@ public class BenchmarkMain {
 			}
 			dataset.addSeries(series);
 		}
+		
         
         //         Generate the graph
 		String title = "Multi-Thread test ("+delay+"ms delay)";
@@ -208,7 +209,7 @@ public class BenchmarkMain {
         		fname+="-noC3P0";
         	}
         	 fname += ".png";
-            ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024, 768);
+            ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024*4, 768*4);
             System.out.println("******* Saved chart to: " + fname);
         } catch (IOException e) {
             System.err.println("Problem occurred creating chart.");

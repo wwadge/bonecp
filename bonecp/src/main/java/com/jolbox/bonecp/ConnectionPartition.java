@@ -129,7 +129,7 @@ public class ConnectionPartition implements Serializable{
 		BoneCP.finalizableRefs.add(new FinalizableWeakReference<ConnectionHandle>(connectionHandle, BoneCP.finalizableRefQueue) {
 		public void finalizeReferent() {
 			try {
-				if (internalDBConnection != null){ // safety!
+				if (internalDBConnection != null  && !internalDBConnection.isClosed() ){ // safety!
 					logger.warn("BoneCP detected an unclosed connection and will now attempt to close it for you. " +
 					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
 					if (!(internalDBConnection instanceof Proxy)){ // this is just a safety against finding EasyMock proxies at this point.
