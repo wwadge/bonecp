@@ -20,7 +20,6 @@
 package com.jolbox.bonecp.hooks;
 
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -28,11 +28,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -87,7 +86,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Executor for threads watching each partition to dynamically create new threads/kill off excess ones.
 	 */
 	private ExecutorService connectionsScheduler;
-	/** Configuration object used in constructor. */
+	/** Configuration object used in constructor. */ 
 	private BoneCPConfig config;
 	/** If set to true, config has specified the use of helper threads. */
 	private boolean releaseHelperThreadsConfigured;
@@ -112,15 +111,15 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Placeholder to give more useful info in case of a double shutdown. */
 	private String shutdownStackTrace;
 	/** Reference of objects that are to be watched. */
-	protected static final Set<Reference<ConnectionHandle>> finalizableRefs = Collections.synchronizedSet(new HashSet<Reference<ConnectionHandle>>());
+	protected final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
 	/** Watch for connections that should have been safely closed but the application forgot. */
-	protected static final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
-
+	protected final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 
 	/**
 	 * Closes off this connection pool.
 	 */
-	public void shutdown(){
+	public synchronized void shutdown(){
+
 		if (!this.poolShuttingDown){
 			logger.info("Shutting down connection pool...");
 			this.poolShuttingDown = true;
@@ -149,7 +148,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 	/** Closes off all connections in all partitions. */
 	protected void terminateAllConnections(){
-		if (this.terminationLock.tryLock()){
+		this.terminationLock.lock();
 			try{
 				// close off all connections.
 				for (int i=0; i < this.partitionCount; i++) {
@@ -163,11 +162,11 @@ public class BoneCP implements BoneCPMBean, Serializable {
 							logger.error("Error in attempting to close connection", e);
 						}
 					}
+					
 				}
 			} finally {
 				this.terminationLock.unlock();
 			}
-		}
 	}
 
 	/** Update counters and call hooks.
