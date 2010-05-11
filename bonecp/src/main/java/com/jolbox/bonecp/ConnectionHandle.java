@@ -360,6 +360,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			clearStatementCaches(true);
 			this.connection.close();
+			this.pool.finalizableRefs.remove(this.connection);
 			this.logicallyClosed = true;
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
