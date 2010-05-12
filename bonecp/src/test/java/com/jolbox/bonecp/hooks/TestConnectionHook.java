@@ -28,8 +28,11 @@ import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.junit.Assert.assertEquals;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.easymock.IAnswer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,6 +40,8 @@ import org.junit.Test;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.CommonTestUtils;
+import com.jolbox.bonecp.MockJDBCAnswer;
+import com.jolbox.bonecp.MockJDBCDriver;
 
 /** Tests the connection hooks. 
  * @author wallacew
@@ -50,6 +55,10 @@ public class TestConnectionHook {
 	private static BoneCP poolClass;
 	/** Helper class. */
 	private static CustomHook hookClass;
+	/** Driver class. */
+	private static MockJDBCDriver driver;
+	/** Mock connection. */
+	private static Connection mockConnection;
 
 	/** Setups all mocks.
 	 * @throws SQLException
@@ -58,7 +67,8 @@ public class TestConnectionHook {
 	@BeforeClass
 	public static void setup() throws SQLException, ClassNotFoundException{
 		hookClass = new CustomHook();
-		Class.forName("org.hsqldb.jdbcDriver");
+		mockConnection = createNiceMock(Connection.class);
+		driver = new MockJDBCDriver(mockConnection); // load the driver
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
@@ -66,7 +76,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
-		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		replay(mockConfig);
@@ -76,6 +86,14 @@ public class TestConnectionHook {
 	
 	}
 	
+	/** Unload the driver.
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("static-access")
+	@AfterClass
+	public static void destroy() throws SQLException{
+		driver.disable();
+	}
 	/**
 	 * Killoff pool
 	 */
@@ -83,6 +101,8 @@ public class TestConnectionHook {
 	public static void shutdown(){
 		poolClass.shutdown();
 	}
+
+	
 	/**
 	 * Test method for {@link com.jolbox.bonecp.hooks.AbstractConnectionHook#onAcquire(com.jolbox.bonecp.ConnectionHandle)}.
 	 */
@@ -165,13 +185,20 @@ public class TestConnectionHook {
 	public void testOnAcquireFail() throws SQLException {
 		hookClass = new CustomHook();
 		reset(mockConfig);
+		driver.setConnection(null);
+		driver.setMockJDBCAnswer(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				throw new SQLException("Dummy error");
+			}
+		});
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
-		expect(mockConfig.getJdbcUrl()).andReturn("somethingbad").anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		replay(mockConfig);
@@ -184,5 +211,85 @@ public class TestConnectionHook {
 		}
 		assertEquals(1, hookClass.fail);
 		
+	}
+	
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testonQueryExecuteTimeLimitExceeded() throws SQLException {
+		hookClass = new CustomHook();
+		reset(mockConfig);
+		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
+		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
+		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200).anyTimes();
+		
+		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
+		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockPreparedStatement.execute()).andAnswer(new IAnswer<Boolean>() {
+			
+			public Boolean answer() throws Throwable {
+				Thread.sleep(300); // something that exceeds our limit
+				return false;
+			}
+		}).once();
+		driver.setConnection(mockConnection);
+		replay(mockConfig, mockPreparedStatement, mockConnection);
+		
+			poolClass = new BoneCP(mockConfig);	
+			Connection con = poolClass.getConnection();
+			con.prepareStatement("").execute();
+			
+		
+		assertEquals(1, hookClass.queryTimeout);
+		reset(mockConfig, mockPreparedStatement, mockConnection);
+	}
+	
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testonQueryExecuteTimeLimitExceededCoverage() throws SQLException {
+		reset(mockConfig, mockConnection);
+		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
+		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
+		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn( new CoverageHook()).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200).anyTimes();
+		
+		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
+		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockPreparedStatement.execute()).andAnswer(new IAnswer<Boolean>() {
+			
+			public Boolean answer() throws Throwable {
+				Thread.sleep(300); // something that exceeds our limit
+				return false;
+			}
+		}).once();
+		driver.setConnection(mockConnection);
+		replay(mockConfig, mockPreparedStatement, mockConnection);
+		
+			poolClass = new BoneCP(mockConfig);	
+			Connection con = poolClass.getConnection();
+			con.prepareStatement("").execute();
+			
+		
+		assertEquals(1, hookClass.queryTimeout);
 	}
 }

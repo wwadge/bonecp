@@ -37,6 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.State;
+import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,7 +47,9 @@ import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -59,6 +62,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.google.common.base.FinalizableReferenceQueue;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
@@ -393,9 +397,19 @@ public class TestConnectionHandle {
 	public void testInternalClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException{
 		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
 		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
+		
 		mockConnection.close();
 		expectLastCall().once().andThrow(new SQLException()).once();
-		replay(mockStatement, mockConnection, mockStatementHandles);
+		
+		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
+    	expect(mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
+    	FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
+
+    	expect(mockPool.getFinalizableRefQueue()).andReturn(finalizableRefQueue).anyTimes();
+    	expect(mockConnection.getPool()).andReturn(mockPool).anyTimes();
+
+    	
+		replay(mockStatement, mockConnection, mockStatementHandles, mockPool);
 		testClass.internalClose();
 		try{
 			testClass.internalClose(); //2nd time should throw exception

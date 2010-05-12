@@ -114,6 +114,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int queryExecuteTimeLimit = 0;
 	/** Create more connections when we hit x% of our possible number of connections. */
 	private int poolAvailabilityThreshold = 20;
+	/** Disable connection tracking. */
+	private boolean disableConnectionTracking;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -318,9 +320,11 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 *
 	 *The query to send to the DB to maintain keep-alives and test for dead connections. 
 	 *This is database specific and should be set to a query that consumes the minimal amount of load on the server. 
-	 *Examples: MySQL: "SELECT 1", PostgreSQL: "SELECT NOW()". 
+	 *Examples: MySQL: "/* ping *\/ SELECT 1", PostgreSQL: "SELECT NOW()". 
 	 *If you do not set this, then BoneCP will issue a metadata request instead that should work on all databases but is probably slower.
 	 *
+	 * (Note: In MySQL, prefixing the statement by /* ping *\/ makes the driver issue 1 fast packet instead. See 
+	 * http://blogs.sun.com/SDNChannel/entry/mysql_tips_for_java_developers )
 	 *<p>Default: Use metadata request
 	 *
 	 * @param connectionTestStatement to set.
@@ -996,5 +1000,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setPoolAvailabilityThreshold(int poolAvailabilityThreshold) {
 		this.poolAvailabilityThreshold = poolAvailabilityThreshold;
+	}
+
+	/** Returns true if connection tracking has been disabled.
+	 * @return the disableConnectionTracking
+	 */
+	public boolean isDisableConnectionTracking() {
+		return this.disableConnectionTracking;
+	}
+
+	/** If set to true, the pool will not monitor connections for proper closure. Enable this option if you only ever obtain
+	 * your connections via a mechanism that is guaranteed to release the connection back to the pool (eg Spring's jdbcTemplate, 
+	 * some kind of transaction manager, etc).
+	 * 
+	 * @param disableConnectionTracking set to true to disable. Default: false.
+	 */
+	public void setDisableConnectionTracking(boolean disableConnectionTracking) {
+		this.disableConnectionTracking = disableConnectionTracking;
 	}
 }

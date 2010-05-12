@@ -74,6 +74,8 @@ public class ConnectionPartition implements Serializable{
     private volatile boolean unableToCreateMoreTransactions=false;
     /** Scratch queue of connections awaiting to be placed back in queue. */
     private ArrayBlockingQueue<ConnectionHandle> connectionsPendingRelease;
+    /** Config setting. */
+	private boolean disableTracking;
     /** Updates leased connections statistics
      * @param increment value to add/subtract
      */
@@ -96,7 +98,9 @@ public class ConnectionPartition implements Serializable{
         updateCreatedConnections(1);
         connectionHandle.setOriginatingPartition(this);
         this.freeConnections.add(connectionHandle);
-        trackConnectionFinalizer(connectionHandle);
+        if (!this.disableTracking){
+        	trackConnectionFinalizer(connectionHandle);
+        }
     }
 
     /** This method is a replacement for finalize() but avoids all the pitfalls of it (see Joshua Bloch et. all).
@@ -122,16 +126,16 @@ public class ConnectionPartition implements Serializable{
     	}
     	final Connection internalDBConnection = con;
     	final BoneCP pool = connectionHandle.getPool();
-    	connectionHandle.getPool().finalizableRefs.put(con, new FinalizableWeakReference<ConnectionHandle>(connectionHandle, connectionHandle.getPool().finalizableRefQueue) {
+    	connectionHandle.getPool().getFinalizableRefs().put(con, new FinalizableWeakReference<ConnectionHandle>(connectionHandle, connectionHandle.getPool().getFinalizableRefQueue()) {
 		public void finalizeReferent() {
 			try {
-				pool.finalizableRefs.remove(internalDBConnection);
+				pool.getFinalizableRefs().remove(internalDBConnection);
 				if (internalDBConnection != null && !internalDBConnection.isClosed()){ // safety!
 					logger.warn("BoneCP detected an unclosed connection and will now attempt to close it for you. " +
 					"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
-					if (!(internalDBConnection instanceof Proxy)){ // this is just a safety against finding EasyMock proxies at this point.
+				//	if (!(internalDBConnection instanceof Proxy)){ // this is just a safety against finding EasyMock proxies at this point.
 						internalDBConnection.close();
-					}
+					//}
 					updateCreatedConnections(-1);
 				}
 			} catch (Throwable t) {
@@ -172,7 +176,8 @@ public class ConnectionPartition implements Serializable{
         this.username = config.getUsername();
         this.password = config.getPassword();
         this.connectionsPendingRelease = new ArrayBlockingQueue<ConnectionHandle>(this.maxConnections);
-
+        this.disableTracking = config.isDisableConnectionTracking();
+        
         /** Create a number of helper threads for connection release. */
         int helperThreads = config.getReleaseHelperThreads();
         if (helperThreads > 0) {

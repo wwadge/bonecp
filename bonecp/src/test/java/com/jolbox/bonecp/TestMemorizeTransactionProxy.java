@@ -77,6 +77,7 @@ public class TestMemorizeTransactionProxy {
 	@BeforeClass
 	public static void beforeClass(){
 		config = CommonTestUtils.getConfigClone();
+		config.setDisableConnectionTracking(true);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		// make it return a new connection when asked for again
 		mockConnection2 = createNiceMock(Connection.class);

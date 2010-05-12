@@ -111,9 +111,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Placeholder to give more useful info in case of a double shutdown. */
 	private String shutdownStackTrace;
 	/** Reference of objects that are to be watched. */
-	protected final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
+	private final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
 	/** Watch for connections that should have been safely closed but the application forgot. */
-	protected final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
+	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 
 	/**
 	 * Closes off this connection pool.
@@ -608,6 +608,20 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	protected void setReleaseHelper(ExecutorService releaseHelper) {
 		this.releaseHelper = releaseHelper;
+	}
+
+	/** Return the finalizable refs handle.
+	 * @return the finalizableRefs value.
+	 */
+	protected Map<Connection, Reference<ConnectionHandle>> getFinalizableRefs() {
+		return this.finalizableRefs;
+	}
+
+	/** Watch for connections that should have been safely closed but the application forgot.
+	 * @return the finalizableRefQueue
+	 */
+	protected FinalizableReferenceQueue getFinalizableRefQueue() {
+		return this.finalizableRefQueue;
 	}
 
 }

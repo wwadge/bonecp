@@ -83,6 +83,7 @@ public class TestStatementCache {
 		config.setIdleMaxAge(0);
 		config.setStatementsCacheSize(0);
 		config.setReleaseHelperThreads(0);
+		config.setDisableConnectionTracking(true);
 	}
 
 

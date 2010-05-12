@@ -359,8 +359,10 @@ public class ConnectionHandle implements Connection{
 	protected void internalClose() throws SQLException {
 		try {
 			clearStatementCaches(true);
-			this.connection.close();
-			this.pool.finalizableRefs.remove(this.connection);
+			if (this.connection != null){ // safety!
+				this.connection.close();
+				this.pool.getFinalizableRefs().remove(this.connection);
+			}
 			this.logicallyClosed = true;
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);

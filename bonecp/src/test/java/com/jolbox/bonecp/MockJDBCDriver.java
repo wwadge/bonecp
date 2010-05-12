@@ -143,4 +143,18 @@ public class MockJDBCDriver  implements Driver {
 	public void setConnection(Connection connection) {
 		this.connection = connection;
 	}
+
+	/** Return the jdbc answer class
+	 * @return the mockJDBCAnswer
+	 */
+	public MockJDBCAnswer getMockJDBCAnswer() {
+		return this.mockJDBCAnswer;
+	}
+
+	/** Sets the jdbc mock answer.
+	 * @param mockJDBCAnswer the mockJDBCAnswer to set
+	 */
+	public void setMockJDBCAnswer(MockJDBCAnswer mockJDBCAnswer) {
+		this.mockJDBCAnswer = mockJDBCAnswer;
+	}
 }

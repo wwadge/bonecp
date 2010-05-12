@@ -79,10 +79,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
 		StringBuilder sb = new StringBuilder("Query execute time limit exceeded. Query: ");
 		sb.append(PoolUtil.fillLogParams(sql, logParams));
-		
-		if (logger.isWarnEnabled()){
-			logger.warn(sb.toString());
-		}
+		logger.warn(sb.toString());
 	}
 
 }

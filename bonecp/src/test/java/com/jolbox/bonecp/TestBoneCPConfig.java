@@ -142,6 +142,7 @@ public class TestBoneCPConfig {
 		config.setDisableJMX(false);
 		config.setDatasourceBean(mockDataSource);
 		config.setQueryExecuteTimeLimit(123);
+		config.setDisableConnectionTracking(true);
 
 		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
@@ -156,6 +157,7 @@ public class TestBoneCPConfig {
 		assertEquals(5, config.getMaxConnectionsPerPartition());
 		assertEquals(5, config.getMinConnectionsPerPartition());
 		assertEquals(6, config.getAcquireIncrement());
+		assertEquals(true, config.isDisableConnectionTracking());
 		assertEquals(7, config.getStatementsCachedPerConnection());
 		assertEquals(123, config.getQueryExecuteTimeLimit());
 		assertEquals(1, config.getPartitionCount());
