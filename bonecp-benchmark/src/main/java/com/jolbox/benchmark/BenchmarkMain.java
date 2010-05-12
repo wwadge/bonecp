@@ -212,6 +212,7 @@ public class BenchmarkMain {
 	 * @param filename 
 	 * @param results 
 	 */
+	@SuppressWarnings("unused")
 	private static void plotBarGraph(String title, String filename, long[] results) {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		for (ConnectionPoolType poolType: ConnectionPoolType.values()){

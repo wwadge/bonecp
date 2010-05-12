@@ -57,7 +57,7 @@
 				<groupId>hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>
 				<version>1.8.0.10</version>
-				<scope>test</version>
+				<scope>test</scope>
 			</dependency>
 
 			<dependency>
@@ -76,7 +76,6 @@
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
 				<version>1.2.14</version>
-				<scope>test</scope>
 			</dependency>
 			
 			<dependency>

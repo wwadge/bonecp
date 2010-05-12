@@ -250,7 +250,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 * 
 	 * @see java.sql.PreparedStatement#setAsciiStream(int, java.io.InputStream)
 	 */
-	// @Override
+	 @Override
 	public void setAsciiStream(int parameterIndex, InputStream x)
 			throws SQLException {
 		checkClosed();
@@ -263,7 +263,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
 		}
-
 	}
 
 	/**
