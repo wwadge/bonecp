@@ -26,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
@@ -53,7 +52,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Serialization UID. */
 	private static final long serialVersionUID = 6090570773474131622L;
 	/** For toString(). */
-	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d, idle test period = %d";
+	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min";
 	/** Logger class. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
@@ -71,9 +70,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Password to use. */
 	private String password;
 	/** Connections older than this are sent a keep-alive statement. In milliseconds. */
-	private long idleConnectionTestPeriod = TimeUnit.MILLISECONDS.convert(240, TimeUnit.MINUTES);
+	private long idleConnectionTestPeriod = 240*60*1000; // TimeUnit.MILLISECONDS.convert(240, TimeUnit.MINUTES);
 	/** Maximum age of an unused connection before it is closed off. In milliseconds. */ 
-	private long idleMaxAge = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
+	private long idleMaxAge =  60*60*1000; // JDK6: TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
 	/** SQL statement to use for keep-alive/test of connection. */
 	private String connectionTestStatement;
 	/** Min no of prepared statements to cache. */
@@ -283,7 +282,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleConnectionTestPeriod to set 
 	 */
 	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod) {
-		this.idleConnectionTestPeriod = TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		this.idleConnectionTestPeriod = 1000*60*idleConnectionTestPeriod; // TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
 	}
 
 	/** {@inheritDoc}
@@ -305,7 +304,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleMaxAge to set
 	 */
 	public void setIdleMaxAge(long idleMaxAge) {
-		this.idleMaxAge = TimeUnit.MILLISECONDS.convert(idleMaxAge, TimeUnit.MINUTES);
+		this.idleMaxAge = 1000*60*idleMaxAge; // TimeUnit.MILLISECONDS.convert(idleMaxAge, TimeUnit.MINUTES);
 	}
 
 	/** {@inheritDoc}
@@ -517,7 +516,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public String toString() {
 		return String.format(CONFIG_TOSTRING, this.jdbcUrl,
 				this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-				this.releaseHelperThreads, TimeUnit.MINUTES.convert(this.idleMaxAge, TimeUnit.MILLISECONDS), TimeUnit.MINUTES.convert(this.idleConnectionTestPeriod, TimeUnit.MILLISECONDS));
+				this.releaseHelperThreads, this.idleMaxAge / (60*1000), /* TimeUnit.MINUTES.convert(this.idleMaxAge, TimeUnit.MILLISECONDS)*/
+				this.idleConnectionTestPeriod / (60*1000) /*, TimeUnit.MINUTES.convert(this.idleConnectionTestPeriod, TimeUnit.MILLISECONDS)*/);
 	}
 
 	/** {@inheritDoc}

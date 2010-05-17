@@ -12,6 +12,6 @@
 	<classpathentry kind="src" output="bonecp-benchmark/target/classes" path="bonecp-benchmark/src/main/java"/>
 	<classpathentry excluding="**" kind="src" output="bonecp-benchmark/target/test-classes" path="bonecp-benchmark/src/test/resources"/>
 	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.5.0_08"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

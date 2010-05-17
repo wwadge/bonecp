@@ -20,19 +20,24 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.MapMaker;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
 
@@ -71,7 +76,23 @@ public class StatementHandle implements Statement{
 	protected long queryExecuteTimeLimit;
 	/** Config setting. */
 	private ConnectionHook connectionHook;
+	/** JDK 6 compatibility. */
+	private ConcurrentMap<Object[], Method> jdk6Compat = new MapMaker().makeComputingMap(new Function<Object[], Method>() { 
+		@Override
+        public Method apply(Object[] methodSignature) {
+            try {
+            	
+				return StatementHandle.class.Method((String)methodSignature[0], (Class[])methodSignature.);
+			} catch (Exception e) {
+				return null;
+			}
+        }
+    });
 
+	static{
+		StatementHandle.class.getMethod("").getTypeParameters()
+	}
+	
 	/**
 	 * Constructor to statement handle wrapper. 
 	 *
@@ -997,6 +1018,7 @@ public class StatementHandle implements Statement{
 	throws SQLException {
 		T result = null;
 		try{
+			
 			result = this.internalStatement.unwrap(iface);
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);

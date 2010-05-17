@@ -19,6 +19,9 @@
 
 package com.jolbox.bonecp;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -162,4 +165,24 @@ public class PoolUtil {
 		}
 		return result;
 	}
+	
+	/** For backwards compatibility with JDK1.5 (SQLException doesn't accept the original exception).
+	 * @param t exception
+	 * @return printStackTrace converted to a string
+	 */
+	public static String stringifyException(Throwable t) {
+		    StringWriter sw = new StringWriter();
+		    PrintWriter pw = new PrintWriter(sw);
+		    t.printStackTrace(pw);
+		    String result = "";
+		    
+		    try {
+		    	result = "------\r\n" + sw.toString() + "------\r\n";
+				sw.close();
+			} catch (IOException e1) {
+				result = "<error generating exception "+e1.getMessage()+">";
+			}
+			
+			return result;
+	}		  
 }

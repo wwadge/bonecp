@@ -28,12 +28,9 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.NClob;
 import java.sql.PreparedStatement;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
@@ -369,16 +366,14 @@ public class MockConnection implements Connection {
 	 * @see java.sql.Connection#setClientInfo(java.util.Properties)
 	 */
 	// @Override
-	public void setClientInfo(Properties properties)
-			throws SQLClientInfoException {
+	public void setClientInfo(Properties properties) {
 	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#setClientInfo(java.lang.String, java.lang.String)
 	 */
 	// @Override
-	public void setClientInfo(String name, String value)
-			throws SQLClientInfoException {
+	public void setClientInfo(String name, String value) {
 	}
 
 	/** {@inheritDoc}

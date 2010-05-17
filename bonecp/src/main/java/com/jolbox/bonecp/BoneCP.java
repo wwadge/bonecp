@@ -60,7 +60,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Serialization UID */
 	private static final long serialVersionUID = -8386816681977604817L;
 	/** Exception message. */
-	private static final String ERROR_TEST_CONNECTION = "Unable to open a test connection to the given database. JDBC url = %s, username = %s. Terminating connection pool.";
+	private static final String ERROR_TEST_CONNECTION = "Unable to open a test connection to the given database. JDBC url = %s, username = %s. Terminating connection pool. Original Exception: %s";
 	/** Exception message. */
 	private static final String SHUTDOWN_LOCATION_TRACE = "Attempting to obtain a connection from a pool that has already been shutdown. \nStack trace of location where pool was shutdown follows:\n";
 	/** Exception message. */
@@ -221,7 +221,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				if (config.getConnectionHook() != null){
 					config.getConnectionHook().onAcquireFail(e);
 				}
-				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername()), e);
+				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
 			}
 		}
 		this.asyncExecutor = Executors.newCachedThreadPool();
@@ -344,7 +344,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				result = connectionPartition.getFreeConnections().take();
 			}
 			catch (InterruptedException e) {
-				throw new SQLException(e);
+				throw new SQLException(e.getMessage());
 			}
 		}
 		result.setOriginatingPartition(connectionPartition); // track the winning partition to keep partitions balanced
@@ -450,7 +450,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 		}
 		catch (InterruptedException e) {
-			throw new SQLException(e);
+			throw new SQLException(e.getMessage());
 		}
 	}
 

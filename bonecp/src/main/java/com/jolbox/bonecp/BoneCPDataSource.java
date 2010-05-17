@@ -135,7 +135,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 					}
 				}
 				catch (ClassNotFoundException e) {
-					throw new SQLException(e);
+					throw new SQLException(PoolUtil.stringifyException(e));
 				}
 
 

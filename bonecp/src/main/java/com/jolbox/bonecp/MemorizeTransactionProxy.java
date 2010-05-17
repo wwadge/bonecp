@@ -200,7 +200,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						// return the original result the application was expecting
 						return con.recoveryResult.getResult();
 					} catch(Throwable t2){
-						throw new SQLException("Could not recover transaction. Original exception follows.", t.getCause());
+						throw new SQLException("Could not recover transaction. Original exception follows." + t.getCause());
 					}
 				}  
 
@@ -331,7 +331,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						}
 					}
 					if (!tryAgain){
-						throw new SQLException(t.getCause());
+						throw new SQLException(PoolUtil.stringifyException(t));
 					}
 					break;
 				}
