@@ -95,10 +95,9 @@ public class ConnectionPartition implements Serializable{
      * @param connectionHandle
      */
     protected void addFreeConnection(ConnectionHandle connectionHandle){
-        updateCreatedConnections(1);
         connectionHandle.setOriginatingPartition(this);
-        this.freeConnections.add(connectionHandle);
-        if (!this.disableTracking){
+        if (this.freeConnections.offer(connectionHandle)){
+        	updateCreatedConnections(1);
         	trackConnectionFinalizer(connectionHandle);
         }
     }
