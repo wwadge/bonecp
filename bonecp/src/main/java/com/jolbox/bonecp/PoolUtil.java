@@ -176,13 +176,8 @@ public class PoolUtil {
 		    t.printStackTrace(pw);
 		    String result = "";
 		    
-		    try {
-		    	result = "------\r\n" + sw.toString() + "------\r\n";
-				sw.close();
-			} catch (IOException e1) {
-				result = "<error generating exception "+e1.getMessage()+">";
-			}
-			
+		    result = "------\r\n" + sw.toString() + "------\r\n";
+			// closing a stringwriter has no effect.
 			return result;
 	}		  
 }

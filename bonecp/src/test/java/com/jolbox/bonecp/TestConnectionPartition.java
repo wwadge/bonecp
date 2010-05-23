@@ -179,6 +179,38 @@ public class TestConnectionPartition {
 		
 	}
 
+	/** fail to offer a new connection.
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFreeConnectionFailing() throws SQLException  {
+		int count = testClass.getCreatedConnections();
+
+		ArrayBlockingQueue<ConnectionHandle> freeConnections = createNiceMock(ArrayBlockingQueue.class);
+		testClass.setFreeConnections(freeConnections);
+		assertEquals(freeConnections, testClass.getFreeConnections());
+		this.mockPool = createNiceMock(BoneCP.class);
+		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
+    	expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
+    	FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
+    	expect(this.mockPool.getFinalizableRefQueue()).andReturn(finalizableRefQueue).anyTimes();
+
+    	ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
+    	expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
+		expect(freeConnections.offer(mockConnectionHandle)).andReturn(false);
+		mockConnectionHandle.internalClose();
+		expectLastCall().once();
+		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
+		
+		replay(mockConnectionHandle, freeConnections, this.mockPool);
+		testClass.addFreeConnection(mockConnectionHandle);
+		verify(mockConnectionHandle, freeConnections);
+		assertEquals(count, testClass.getCreatedConnections());
+		assertEquals(1, testClass.getRemainingCapacity());
+		
+	}
+
 
 	/**
 	 * Test method for config related stuff.
