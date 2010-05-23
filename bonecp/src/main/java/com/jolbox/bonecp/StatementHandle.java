@@ -76,22 +76,6 @@ public class StatementHandle implements Statement{
 	protected long queryExecuteTimeLimit;
 	/** Config setting. */
 	private ConnectionHook connectionHook;
-	/** JDK 6 compatibility. */
-	private ConcurrentMap<Object[], Method> jdk6Compat = new MapMaker().makeComputingMap(new Function<Object[], Method>() { 
-		@Override
-        public Method apply(Object[] methodSignature) {
-            try {
-            	
-				return StatementHandle.class.Method((String)methodSignature[0], (Class[])methodSignature.);
-			} catch (Exception e) {
-				return null;
-			}
-        }
-    });
-
-	static{
-		StatementHandle.class.getMethod("").getTypeParameters()
-	}
 	
 	/**
 	 * Constructor to statement handle wrapper. 
