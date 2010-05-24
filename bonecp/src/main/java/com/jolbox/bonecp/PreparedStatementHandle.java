@@ -1225,6 +1225,23 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
+
+
+	/** Returns the wrapped internal statement.
+	 * @return the internalPreparedStatement that this wrapper is using.
+	 */
+	public PreparedStatement getInternalPreparedStatement() {
+		return this.internalPreparedStatement;
+	}
+
+
+	/** Sets the internal statement that this wrapper wraps. 
+	 * @param internalPreparedStatement the internalPreparedStatement to set
+	 */
+	public void setInternalPreparedStatement(PreparedStatement internalPreparedStatement) {
+		this.internalPreparedStatement = internalPreparedStatement;
+	}
+
 	/** {@inheritDoc}
 	 * @see java.lang.Object#finalize()
 	 *

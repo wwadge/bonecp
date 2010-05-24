@@ -20,24 +20,19 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
 
@@ -1066,6 +1061,22 @@ public class StatementHandle implements Statement{
 	 */
 	public void setOpenStackTrace(String openStackTrace) {
 		this.openStackTrace = openStackTrace;
+	}
+
+
+	/** Returns the statement being wrapped around by this wrapper.
+	 * @return the internalStatement being used.
+	 */
+	public Statement getInternalStatement() {
+		return this.internalStatement;
+	}
+
+
+	/** Sets the internal statement used by this wrapper. 
+	 * @param internalStatement the internalStatement to set
+	 */
+	public void setInternalStatement(Statement internalStatement) {
+		this.internalStatement = internalStatement;
 	}
 
 }

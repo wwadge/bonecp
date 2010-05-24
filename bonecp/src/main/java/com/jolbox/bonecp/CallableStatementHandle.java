@@ -2137,4 +2137,19 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			
 		}
 	}
+
+	/** Returns the callable statement that this wrapper wraps.
+	 * @return the internalCallableStatement currently being used.
+	 */
+	public CallableStatement getInternalCallableStatement() {
+		return this.internalCallableStatement;
+	}
+
+	/** Sets the callable statement used by this wrapper.
+	 * @param internalCallableStatement the internalCallableStatement to set
+	 */
+	public void setInternalCallableStatement(
+			CallableStatement internalCallableStatement) {
+		this.internalCallableStatement = internalCallableStatement;
+	}
 }
