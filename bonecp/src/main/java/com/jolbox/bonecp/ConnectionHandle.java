@@ -21,26 +21,18 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 import java.lang.reflect.Proxy;
-import java.sql.Array;
-import java.sql.Blob;
 import java.sql.CallableStatement;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
-import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +40,16 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
+// #ifdef JDK6
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Struct;
+import java.util.Properties;
+import java.sql.NClob;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLXML;
+// #endif JDK6
 
 /**
  * Connection handle wrapper around a JDBC connection.
@@ -377,7 +379,74 @@ public class ConnectionHandle implements Connection{
 			throw markPossiblyBroken(t);
 		}
 	}
+// #ifdef JDK6
+	public Properties getClientInfo() throws SQLException {
+		Properties result = null;
+		checkClosed();
+		try {
+			result = this.connection.getClientInfo();
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
+		}
+		return result;
+	}
 
+	public String getClientInfo(String name) throws SQLException {
+		String result = null;
+		checkClosed();
+		try {
+			result = this.connection.getClientInfo(name);
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
+		}
+		return result;
+	}
+
+	public boolean isValid(int timeout) throws SQLException {
+		boolean result = false;
+		checkClosed();
+		try {
+			result = this.connection.isValid(timeout);
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
+		}
+		return result;
+	}
+
+	@Override
+	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+		return this.connection.isWrapperFor(iface);
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> iface) throws SQLException {
+		return this.connection.unwrap(iface);
+	}
+
+	@Override
+	public void setClientInfo(Properties properties) throws SQLClientInfoException {
+		this.connection.setClientInfo(properties);
+	}
+
+	@Override
+	public void setClientInfo(String name, String value) throws SQLClientInfoException {
+		this.connection.setClientInfo(name, value);
+	}
+
+	@Override
+	public Struct createStruct(String typeName, Object[] attributes)
+	throws SQLException {
+		Struct result = null;
+		checkClosed();
+		try {
+			result = this.connection.createStruct(typeName, attributes);
+		} catch (Throwable t) {
+			throw markPossiblyBroken(t);
+		}
+		return result;
+	}
+
+	@Override	
 	public Array createArrayOf(String typeName, Object[] elements)
 	throws SQLException {
 		Array result = null;
@@ -390,7 +459,7 @@ public class ConnectionHandle implements Connection{
 
 		return result;
 	}
-
+	@Override
 	public Blob createBlob() throws SQLException {
 		Blob result = null;
 		checkClosed();
@@ -401,7 +470,8 @@ public class ConnectionHandle implements Connection{
 		}
 		return result;
 	}
-
+	
+	@Override
 	public Clob createClob() throws SQLException {
 		Clob result = null;
 		checkClosed();
@@ -436,6 +506,7 @@ public class ConnectionHandle implements Connection{
 		}
 		return result;
 	}
+	// #endif JDK6
 
 	public Statement createStatement() throws SQLException {
 		Statement result = null;
@@ -474,17 +545,6 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-	public Struct createStruct(String typeName, Object[] attributes)
-	throws SQLException {
-		Struct result = null;
-		checkClosed();
-		try {
-			result = this.connection.createStruct(typeName, attributes);
-		} catch (Throwable t) {
-			throw markPossiblyBroken(t);
-		}
-		return result;
-	}
 
 	public boolean getAutoCommit() throws SQLException {
 		boolean result = false;
@@ -508,27 +568,6 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-	public Properties getClientInfo() throws SQLException {
-		Properties result = null;
-		checkClosed();
-		try {
-			result = this.connection.getClientInfo();
-		} catch (Throwable t) {
-			throw markPossiblyBroken(t);
-		}
-		return result;
-	}
-
-	public String getClientInfo(String name) throws SQLException {
-		String result = null;
-		checkClosed();
-		try {
-			result = this.connection.getClientInfo(name);
-		} catch (Throwable t) {
-			throw markPossiblyBroken(t);
-		}
-		return result;
-	}
 
 	public int getHoldability() throws SQLException {
 		int result = 0;
@@ -600,17 +639,6 @@ public class ConnectionHandle implements Connection{
 		checkClosed();
 		try {
 			result = this.connection.isReadOnly();
-		} catch (Throwable t) {
-			throw markPossiblyBroken(t);
-		}
-		return result;
-	}
-
-	public boolean isValid(int timeout) throws SQLException {
-		boolean result = false;
-		checkClosed();
-		try {
-			result = this.connection.isValid(timeout);
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
@@ -938,15 +966,6 @@ public class ConnectionHandle implements Connection{
 		}
 	}
 
-	public void setClientInfo(Properties properties)
-	throws SQLClientInfoException {
-		this.connection.setClientInfo(properties);
-	}
-
-	public void setClientInfo(String name, String value)
-	throws SQLClientInfoException {
-		this.connection.setClientInfo(name, value);
-	}
 
 	public void setHoldability(int holdability) throws SQLException {
 		checkClosed();
@@ -1004,14 +1023,6 @@ public class ConnectionHandle implements Connection{
 		} catch (Throwable t) {
 			throw markPossiblyBroken(t);
 		}
-	}
-
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		return this.connection.isWrapperFor(iface);
-	}
-
-	public <T> T unwrap(Class<T> iface) throws SQLException {
-		return this.connection.unwrap(iface);
 	}
 
 	/**

@@ -795,22 +795,57 @@ public class StatementHandle implements Statement{
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Statement#isClosed()
+	//@Override
+	/** Returns true if statement is logically closed
+	 * @return True if handle is closed
 	 */
-	// @Override
 	public boolean isClosed() {
 		return this.logicallyClosed.get();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Statement#isPoolable()
-	 */
-	// @Override
+	// #ifdef JDK6
+	@Override
+	public void setPoolable(boolean poolable)
+	throws SQLException {
+		checkClosed();
+		try{
+			this.internalStatement.setPoolable(poolable);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+	
+	@Override
+	public boolean isWrapperFor(Class<?> iface)
+	throws SQLException {
+		boolean result = false;
+		try{
+			result = this.internalStatement.isWrapperFor(iface);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+		return result;
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> iface)
+	throws SQLException {
+		T result = null;
+		try{
+			
+			result = this.internalStatement.unwrap(iface);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+		return result;
+
+	}
+
+	@Override
 	public boolean isPoolable()
 	throws SQLException {
 		boolean result = false;
@@ -824,13 +859,10 @@ public class StatementHandle implements Statement{
 		return result; 
 
 	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Statement#setCursorName(java.lang.String)
-	 */
-	// @Override
+	// #endif JDK6
+	
+	
+	@Override
 	public void setCursorName(String name)
 	throws SQLException {
 		checkClosed();
@@ -933,24 +965,7 @@ public class StatementHandle implements Statement{
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Statement#setPoolable(boolean)
-	 */
-	// @Override
-	public void setPoolable(boolean poolable)
-	throws SQLException {
-		checkClosed();
-		try{
-			this.internalStatement.setPoolable(poolable);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-
-		}
-
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 *
@@ -966,44 +981,6 @@ public class StatementHandle implements Statement{
 			throw this.connectionHandle.markPossiblyBroken(t);
 
 		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
-	 */
-	// @Override
-	public boolean isWrapperFor(Class<?> iface)
-	throws SQLException {
-		boolean result = false;
-		try{
-			result = this.internalStatement.isWrapperFor(iface);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-
-		}
-		return result;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Wrapper#unwrap(java.lang.Class)
-	 */
-	// @Override
-	public <T> T unwrap(Class<T> iface)
-	throws SQLException {
-		T result = null;
-		try{
-			
-			result = this.internalStatement.unwrap(iface);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-
-		}
-		return result;
 
 	}
 

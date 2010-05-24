@@ -29,16 +29,17 @@ import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Date;
-import java.sql.NClob;
 import java.sql.Ref;
-import java.sql.RowId;
 import java.sql.SQLException;
-import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
-
+// #ifdef JDK6
+import java.sql.NClob;
+import java.sql.RowId;
+import java.sql.SQLXML;
+// #endif JDK6 
 /**
  * Wrapper around CallableStatement.
  * 
@@ -291,12 +292,8 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getCharacterStream(int)
-	 */
-	// @Override
+	// #ifdef JDK6
+	@Override
 	public Reader getCharacterStream(int parameterIndex) throws SQLException {
 		checkClosed();
 		try {
@@ -307,13 +304,8 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		}
 
 	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getCharacterStream(java.lang.String)
-	 */
-	// @Override
+	
+	@Override
 	public Reader getCharacterStream(String parameterName) throws SQLException {
 		checkClosed();
 		try {
@@ -322,8 +314,432 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			throw this.connectionHandle.markPossiblyBroken(t);
 			
 		}
+	}
+	
+	@Override
+	public Reader getNCharacterStream(int parameterIndex) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement
+					.getNCharacterStream(parameterIndex);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
 
 	}
+
+	@Override
+	public Reader getNCharacterStream(String parameterName) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement
+					.getNCharacterStream(parameterName);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public NClob getNClob(int parameterIndex) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getNClob(parameterIndex);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public NClob getNClob(String parameterName) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getNClob(parameterName);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public String getNString(int parameterIndex) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getNString(parameterIndex);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public String getNString(String parameterName) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getNString(parameterName);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+@Override
+	public RowId getRowId(int parameterIndex) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getRowId(parameterIndex);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public RowId getRowId(String parameterName) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getRowId(parameterName);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public SQLXML getSQLXML(int parameterIndex) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getSQLXML(parameterIndex);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public SQLXML getSQLXML(String parameterName) throws SQLException {
+		checkClosed();
+		try {
+			return this.internalCallableStatement.getSQLXML(parameterName);
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+
+	@Override
+	public void setAsciiStream(String parameterName, InputStream x)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setAsciiStream(parameterName, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+	@Override
+	public void setAsciiStream(String parameterName, InputStream x, long length)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public void setBinaryStream(String parameterName, InputStream x)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setBinaryStream(parameterName, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+	
+		@Override
+		public void setBinaryStream(String parameterName, InputStream x, long length)
+				throws SQLException {
+			checkClosed();
+			try {
+				this.internalCallableStatement.setBinaryStream(parameterName, x, length);
+				if (this.logStatementsEnabled){
+					this.logParams.put(parameterName, x);
+				}
+			} catch (Throwable t) {
+				throw this.connectionHandle.markPossiblyBroken(t);
+				
+			}
+
+		}
+
+		@Override
+		public void setBlob(String parameterName, Blob x) throws SQLException {
+			checkClosed();
+			try {
+				this.internalCallableStatement.setBlob(parameterName, x);
+				if (this.logStatementsEnabled){
+					this.logParams.put(parameterName, x);
+				}
+			} catch (Throwable t) {
+				throw this.connectionHandle.markPossiblyBroken(t);
+				
+			}
+
+		}
+
+		@Override
+		public void setBlob(String parameterName, InputStream inputStream)
+				throws SQLException {
+			checkClosed();
+			try {
+				this.internalCallableStatement.setBlob(parameterName, inputStream);
+				if (this.logStatementsEnabled){
+					this.logParams.put(parameterName, inputStream);
+				}
+			} catch (Throwable t) {
+				throw this.connectionHandle.markPossiblyBroken(t);
+				
+			}
+
+		}
+
+		@Override
+		public void setBlob(String parameterName, InputStream inputStream,
+				long length) throws SQLException {
+			checkClosed();
+			try {
+				this.internalCallableStatement.setBlob(parameterName, inputStream, length);
+				if (this.logStatementsEnabled){
+					this.logParams.put(parameterName, inputStream);
+				}
+			} catch (Throwable t) {
+				throw this.connectionHandle.markPossiblyBroken(t);
+				
+			}
+
+		}
+
+
+	@Override
+	public void setCharacterStream(String parameterName, Reader reader)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setCharacterStream(parameterName, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setCharacterStream(String parameterName, Reader reader,
+			long length) throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setCharacterStream(parameterName, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setClob(String parameterName, Clob x) throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setClob(parameterName, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setClob(String parameterName, Reader reader)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setClob(parameterName, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setClob(String parameterName, Reader reader, long length)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setClob(parameterName, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+	@Override
+	public void setNCharacterStream(String parameterName, Reader value)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setNCharacterStream(parameterName, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setNCharacterStream(String parameterName, Reader value,
+			long length) throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setNCharacterStream(parameterName, value, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setNClob(String parameterName, NClob value) throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setNClob(parameterName, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setNClob(String parameterName, Reader reader)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setNClob(parameterName, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setNClob(String parameterName, Reader reader, long length)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setNClob(parameterName, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+	@Override
+	public void setNString(String parameterName, String value)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setNString(parameterName, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+	
+	@Override
+	public void setRowId(String parameterName, RowId x) throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setRowId(parameterName, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+
+	}
+
+	@Override
+	public void setSQLXML(String parameterName, SQLXML xmlObject)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalCallableStatement.setSQLXML(parameterName, xmlObject);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterName, xmlObject);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+			
+		}
+	}
+
+ 	// #endif JDK6 
 
 	/**
 	 * {@inheritDoc}
@@ -564,109 +980,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getNCharacterStream(int)
-	 */
-	// @Override
-	public Reader getNCharacterStream(int parameterIndex) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement
-					.getNCharacterStream(parameterIndex);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getNCharacterStream(java.lang.String)
-	 */
-	// @Override
-	public Reader getNCharacterStream(String parameterName) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement
-					.getNCharacterStream(parameterName);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getNClob(int)
-	 */
-	// @Override
-	public NClob getNClob(int parameterIndex) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getNClob(parameterIndex);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getNClob(java.lang.String)
-	 */
-	// @Override
-	public NClob getNClob(String parameterName) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getNClob(parameterName);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getNString(int)
-	 */
-	// @Override
-	public String getNString(int parameterIndex) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getNString(parameterIndex);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getNString(java.lang.String)
-	 */
-	// @Override
-	public String getNString(String parameterName) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getNString(parameterName);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -773,73 +1086,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getRowId(int)
-	 */
-	// @Override
-	public RowId getRowId(int parameterIndex) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getRowId(parameterIndex);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getRowId(java.lang.String)
-	 */
-	// @Override
-	public RowId getRowId(String parameterName) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getRowId(parameterName);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getSQLXML(int)
-	 */
-	// @Override
-	public SQLXML getSQLXML(int parameterIndex) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getSQLXML(parameterIndex);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#getSQLXML(java.lang.String)
-	 */
-	// @Override
-	public SQLXML getSQLXML(String parameterName) throws SQLException {
-		checkClosed();
-		try {
-			return this.internalCallableStatement.getSQLXML(parameterName);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -1200,28 +1447,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	 * {@inheritDoc}
 	 * 
 	 * @see java.sql.CallableStatement#setAsciiStream(java.lang.String,
-	 *      java.io.InputStream)
-	 */
-	// @Override
-	public void setAsciiStream(String parameterName, InputStream x)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setAsciiStream(parameterName, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setAsciiStream(java.lang.String,
 	 *      java.io.InputStream, int)
 	 */
 	// @Override
@@ -1240,28 +1465,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setAsciiStream(java.lang.String,
-	 *      java.io.InputStream, long)
-	 */
-	// @Override
-	public void setAsciiStream(String parameterName, InputStream x, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -1284,28 +1488,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setBinaryStream(java.lang.String,
-	 *      java.io.InputStream)
-	 */
-	// @Override
-	public void setBinaryStream(String parameterName, InputStream x)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setBinaryStream(parameterName, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -1327,98 +1510,13 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setBinaryStream(java.lang.String,
-	 *      java.io.InputStream, long)
-	 */
-	// @Override
-	public void setBinaryStream(String parameterName, InputStream x, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setBinaryStream(parameterName, x, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setBlob(java.lang.String, java.sql.Blob)
-	 */
-	// @Override
-	public void setBlob(String parameterName, Blob x) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setBlob(parameterName, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setBlob(java.lang.String,
-	 *      java.io.InputStream)
-	 */
-	// @Override
-	public void setBlob(String parameterName, InputStream inputStream)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setBlob(parameterName, inputStream);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, inputStream);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setBlob(java.lang.String,
-	 *      java.io.InputStream, long)
-	 */
-	// @Override
-	public void setBlob(String parameterName, InputStream inputStream,
-			long length) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setBlob(parameterName, inputStream, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, inputStream);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * @see java.sql.CallableStatement#setBoolean(java.lang.String, boolean)
 	 */
-	// @Override
+	@Override
 	public void setBoolean(String parameterName, boolean x) throws SQLException {
 		checkClosed();
 		try {
@@ -1473,27 +1571,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setCharacterStream(java.lang.String,
-	 *      java.io.Reader)
-	 */
-	// @Override
-	public void setCharacterStream(String parameterName, Reader reader)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setCharacterStream(parameterName, reader);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -1514,87 +1592,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			
 		}
 
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setCharacterStream(java.lang.String,
-	 *      java.io.Reader, long)
-	 */
-	// @Override
-	public void setCharacterStream(String parameterName, Reader reader,
-			long length) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setCharacterStream(parameterName, reader, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setClob(java.lang.String, java.sql.Clob)
-	 */
-	// @Override
-	public void setClob(String parameterName, Clob x) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setClob(parameterName, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setClob(java.lang.String, java.io.Reader)
-	 */
-	// @Override
-	public void setClob(String parameterName, Reader reader)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setClob(parameterName, reader);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setClob(java.lang.String, java.io.Reader,
-	 *      long)
-	 */
-	// @Override
-	public void setClob(String parameterName, Reader reader, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setClob(parameterName, reader, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
 	}
 
 	/**
@@ -1713,137 +1710,13 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setNCharacterStream(java.lang.String,
-	 *      java.io.Reader)
-	 */
-	// @Override
-	public void setNCharacterStream(String parameterName, Reader value)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setNCharacterStream(parameterName, value);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setNCharacterStream(java.lang.String,
-	 *      java.io.Reader, long)
-	 */
-	// @Override
-	public void setNCharacterStream(String parameterName, Reader value,
-			long length) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setNCharacterStream(parameterName, value, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setNClob(java.lang.String,
-	 *      java.sql.NClob)
-	 */
-	// @Override
-	public void setNClob(String parameterName, NClob value) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setNClob(parameterName, value);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setNClob(java.lang.String,
-	 *      java.io.Reader)
-	 */
-	// @Override
-	public void setNClob(String parameterName, Reader reader)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setNClob(parameterName, reader);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setNClob(java.lang.String,
-	 *      java.io.Reader, long)
-	 */
-	// @Override
-	public void setNClob(String parameterName, Reader reader, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setNClob(parameterName, reader, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setNString(java.lang.String,
-	 *      java.lang.String)
-	 */
-	// @Override
-	public void setNString(String parameterName, String value)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setNString(parameterName, value);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
 
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * @see java.sql.CallableStatement#setNull(java.lang.String, int)
 	 */
-	// @Override
+	@Override
 	public void setNull(String parameterName, int sqlType) throws SQLException {
 		checkClosed();
 		try {
@@ -1940,54 +1813,8 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setRowId(java.lang.String,
-	 *      java.sql.RowId)
-	 */
-	// @Override
-	public void setRowId(String parameterName, RowId x) throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setRowId(parameterName, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setSQLXML(java.lang.String,
-	 *      java.sql.SQLXML)
-	 */
-	// @Override
-	public void setSQLXML(String parameterName, SQLXML xmlObject)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalCallableStatement.setSQLXML(parameterName, xmlObject);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterName, xmlObject);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.CallableStatement#setShort(java.lang.String, short)
-	 */
-	// @Override
+	
+	@Override
 	public void setShort(String parameterName, short x) throws SQLException {
 		checkClosed();
 		try {

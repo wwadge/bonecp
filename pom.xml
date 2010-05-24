@@ -77,7 +77,7 @@
 				<artifactId>log4j</artifactId>
 				<version>1.2.14</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>com.google.collections</groupId>
 				<artifactId>google-collections</artifactId>
@@ -224,6 +224,13 @@
 
 
 	<pluginRepositories>
+		<pluginRepository>
+			<id>maven-replacer-plugin reposoitory</id>
+			<url>
+            http://maven-replacer-plugin.googlecode.com/svn/release-repo
+        </url>
+		</pluginRepository>
+
 		<pluginRepository>
 			<releases>
 				<enabled>true</enabled>

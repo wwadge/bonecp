@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.jolbox.bonecp;
 
@@ -28,15 +28,17 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
-import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+// #ifdef JDK6
+import java.sql.NClob;
 import java.sql.RowId;
-import java.sql.SQLException;
 import java.sql.SQLXML;
+// #endif JDK6
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -50,14 +52,14 @@ import org.slf4j.LoggerFactory;
  * @author wallacew
  */
 public class PreparedStatementHandle extends StatementHandle implements
-		PreparedStatement {
-	
+PreparedStatement {
+
 	/** Handle to the real prepared statement. */
 	private PreparedStatement internalPreparedStatement;
 	/** Class logger. */
-    private static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
-    
-	
+	private static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
+
+
 	/**
 	 * PreparedStatement Wrapper constructor.
 	 * 
@@ -79,7 +81,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 		this.cache = cache;
 	}
 
-	
+
 
 	/**
 	 * {@inheritDoc}
@@ -93,7 +95,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			this.internalPreparedStatement.addBatch();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -113,7 +115,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -133,11 +135,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			long queryStartTime = queryTimerStart();
 			boolean result = this.internalPreparedStatement.execute();
 			queryTimerEnd(this.sql, queryStartTime);
-			
+
 			return result;
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -158,11 +160,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			long queryStartTime = queryTimerStart();
 			ResultSet result = this.internalPreparedStatement.executeQuery();
 			queryTimerEnd(this.sql, queryStartTime);
-			
+
 			return result;
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -182,11 +184,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			long queryStartTime = queryTimerStart();
 			int result = this.internalPreparedStatement.executeUpdate();
 			queryTimerEnd(this.sql, queryStartTime);
-			
+
 			return result;
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -203,7 +205,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			return this.internalPreparedStatement.getMetaData();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -220,7 +222,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			return this.internalPreparedStatement.getParameterMetaData();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -240,60 +242,61 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setAsciiStream(int, java.io.InputStream)
-	 */
-	 @Override
-	public void setAsciiStream(int parameterIndex, InputStream x)
+	// #ifdef JDK6
+	@Override
+	public void setBinaryStream(int parameterIndex, InputStream x)
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
+			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
 			if (this.logStatementsEnabled){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
+
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setAsciiStream(int, java.io.InputStream,
-	 *      int)
-	 */
-	// @Override
-	public void setAsciiStream(int parameterIndex, InputStream x, int length)
+	@Override
+	public void setBinaryStream(int parameterIndex, InputStream x, long length)
 			throws SQLException {
 		checkClosed();
 		try {
-			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
+			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
 			if (this.logStatementsEnabled){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setAsciiStream(int, java.io.InputStream,
-	 *      long)
-	 */
-	// @Override
+	@Override
+	public void setBlob(int parameterIndex, InputStream inputStream)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, inputStream);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
 	public void setAsciiStream(int parameterIndex, InputStream x, long length)
 			throws SQLException {
 		checkClosed();
@@ -304,7 +307,252 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
+		}
+
+	}
+
+	@Override
+	public void setClob(int parameterIndex, Reader reader) throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setClob(parameterIndex, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setRowId(int parameterIndex, RowId x) throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setRowId(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
+	throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setSQLXML(parameterIndex, xmlObject);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, xmlObject);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setClob(int parameterIndex, Reader reader, long length)
+	throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setClob(parameterIndex, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setNCharacterStream(int parameterIndex, Reader value)
+	throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
+
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setNCharacterStream(int parameterIndex, Reader value,
+			long length) throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setNClob(int parameterIndex, NClob value) throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setNClob(parameterIndex, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setNClob(parameterIndex, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setNClob(int parameterIndex, Reader reader, long length)
+	throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setNClob(parameterIndex, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setNString(int parameterIndex, String value)
+	throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setNString(parameterIndex, value);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, value);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setAsciiStream(int parameterIndex, InputStream x)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+	}
+
+	@Override
+	public void setCharacterStream(int parameterIndex, Reader reader,
+			long length) throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	@Override
+	public void setBlob(int parameterIndex, InputStream inputStream, long length)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setBlob(parameterIndex, inputStream, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, inputStream);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+ 	@Override
+	public void setCharacterStream(int parameterIndex, Reader reader)
+			throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, reader);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
+		}
+
+	}
+
+	 // #endif JDK6
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see java.sql.PreparedStatement#setAsciiStream(int, java.io.InputStream,
+	 *      int)
+	 */
+	// @Override
+	public void setAsciiStream(int parameterIndex, InputStream x, int length)
+	throws SQLException {
+		checkClosed();
+		try {
+			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
+			if (this.logStatementsEnabled){
+				this.logParams.put(parameterIndex, x);
+			}
+		} catch (Throwable t) {
+			throw this.connectionHandle.markPossiblyBroken(t);
+
 		}
 
 	}
@@ -316,7 +564,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setBigDecimal(int parameterIndex, BigDecimal x)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBigDecimal(parameterIndex, x);
@@ -325,31 +573,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setBinaryStream(int, java.io.InputStream)
-	 */
-	// @Override
-	public void setBinaryStream(int parameterIndex, InputStream x)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -359,7 +587,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setBinaryStream(int parameterIndex, InputStream x, int length)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
@@ -368,29 +596,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
 
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setBinaryStream(int, java.io.InputStream,
-	 *      long)
-	 */
-	// @Override
-	public void setBinaryStream(int parameterIndex, InputStream x, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
 		}
 
 	}
@@ -410,52 +616,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setBlob(int, java.io.InputStream)
-	 */
-	// @Override
-	public void setBlob(int parameterIndex, InputStream inputStream)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, inputStream);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setBlob(int, java.io.InputStream, long)
-	 */
-	// @Override
-	public void setBlob(int parameterIndex, InputStream inputStream, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setBlob(parameterIndex, inputStream, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, inputStream);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -472,7 +637,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -492,7 +657,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -512,31 +677,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setCharacterStream(int, java.io.Reader)
-	 */
-	// @Override
-	public void setCharacterStream(int parameterIndex, Reader reader)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -546,7 +691,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setCharacterStream(int parameterIndex, Reader reader, int length)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
@@ -556,32 +701,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setCharacterStream(int, java.io.Reader,
-	 *      long)
-	 */
-	// @Override
-	public void setCharacterStream(int parameterIndex, Reader reader,
-			long length) throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -598,52 +722,11 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setClob(int, java.io.Reader)
-	 */
-	// @Override
-	public void setClob(int parameterIndex, Reader reader) throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setClob(parameterIndex, reader);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setClob(int, java.io.Reader, long)
-	 */
-	// @Override
-	public void setClob(int parameterIndex, Reader reader, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setClob(parameterIndex, reader, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, reader);
-			}
-
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -660,7 +743,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -673,7 +756,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setDate(int parameterIndex, Date x, Calendar cal)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
@@ -682,7 +765,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -702,7 +785,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -722,7 +805,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -742,7 +825,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -762,133 +845,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
 
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setNCharacterStream(int, java.io.Reader)
-	 */
-	// @Override
-	public void setNCharacterStream(int parameterIndex, Reader value)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, value);
-			}
-
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setNCharacterStream(int, java.io.Reader,
-	 *      long)
-	 */
-	// @Override
-	public void setNCharacterStream(int parameterIndex, Reader value,
-			long length) throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setNClob(int, java.sql.NClob)
-	 */
-	// @Override
-	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setNClob(parameterIndex, value);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setNClob(int, java.io.Reader)
-	 */
-	// @Override
-	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setNClob(parameterIndex, reader);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setNClob(int, java.io.Reader, long)
-	 */
-	// @Override
-	public void setNClob(int parameterIndex, Reader reader, long length)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setNClob(parameterIndex, reader, length);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, reader);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setNString(int, java.lang.String)
-	 */
-	// @Override
-	public void setNString(int parameterIndex, String value)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setNString(parameterIndex, value);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, value);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
 		}
 
 	}
@@ -908,7 +865,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -920,7 +877,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setNull(int parameterIndex, int sqlType, String typeName)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType, typeName);
@@ -929,7 +886,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -949,7 +906,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -961,7 +918,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setObject(int parameterIndex, Object x, int targetSqlType)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType);
@@ -970,7 +927,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -992,7 +949,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1012,52 +969,12 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setRowId(int, java.sql.RowId)
-	 */
-	// @Override
-	public void setRowId(int parameterIndex, RowId x) throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setRowId(parameterIndex, x);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, x);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.sql.PreparedStatement#setSQLXML(int, java.sql.SQLXML)
-	 */
-	// @Override
-	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
-			throws SQLException {
-		checkClosed();
-		try {
-			this.internalPreparedStatement.setSQLXML(parameterIndex, xmlObject);
-			if (this.logStatementsEnabled){
-				this.logParams.put(parameterIndex, xmlObject);
-			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
-			
-		}
-
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -1073,7 +990,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1093,7 +1010,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1113,7 +1030,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1126,7 +1043,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setTime(int parameterIndex, Time x, Calendar cal)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
@@ -1135,7 +1052,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1147,7 +1064,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setTimestamp(int parameterIndex, Timestamp x)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x);
@@ -1156,7 +1073,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1169,7 +1086,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	 */
 	// @Override
 	public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
@@ -1178,7 +1095,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1198,7 +1115,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 			}
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
-			
+
 		}
 
 	}
@@ -1212,7 +1129,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	// @Override
 	@Deprecated
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setUnicodeStream(parameterIndex, x, length);
@@ -1253,5 +1170,5 @@ public class PreparedStatementHandle extends StatementHandle implements
 			  logger.warn("BoneCP detected an unclosed statement and has closed it for you. You should be closing this statement in your application - enable connectionWatch config setting for additional debugging assistance.");
 		   }
 	}
-	*/
+	 */
 }
