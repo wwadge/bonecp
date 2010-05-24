@@ -32,8 +32,21 @@ import java.text.ParseException;
 
 import javax.naming.NamingException;
 
-import sun.net.dns.ResolverConfiguration.Options;
-import sun.tools.jar.CommandLine;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 
 
 /**
@@ -57,8 +70,9 @@ public class BenchmarkMain {
 	 * @throws IllegalArgumentException 
 	 * @throws NamingException 
 	 * @throws ParseException 
+	 * @throws org.apache.commons.cli.ParseException 
 	 */
-	public static void main(String[] args) throws ClassNotFoundException, SQLException, PropertyVetoException, IllegalArgumentException, SecurityException, InterruptedException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NamingException, ParseException {
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, PropertyVetoException, IllegalArgumentException, SecurityException, InterruptedException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NamingException, ParseException, org.apache.commons.cli.ParseException {
 
 		Options options = new Options();
 		options.addOption("t", "threads",true, "Max number of threads");

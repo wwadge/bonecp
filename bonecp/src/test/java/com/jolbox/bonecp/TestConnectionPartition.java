@@ -47,7 +47,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
