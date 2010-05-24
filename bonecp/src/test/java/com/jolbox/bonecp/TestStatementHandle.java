@@ -212,4 +212,13 @@ public class TestStatementHandle {
 		assertEquals(1, hook.queryTimeout);
 	}
 
+	/**
+	 * Coverage.
+	 */
+	@Test
+	public void testGetterSetter(){
+		Statement mockStatement = createNiceMock(Statement.class); 
+		testClass.setInternalStatement(mockStatement);
+		Assert.assertEquals(mockStatement, testClass.getInternalStatement());
+	}
 }

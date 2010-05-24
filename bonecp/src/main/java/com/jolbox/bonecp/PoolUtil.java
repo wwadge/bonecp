@@ -19,7 +19,6 @@
 
 package com.jolbox.bonecp;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Array;

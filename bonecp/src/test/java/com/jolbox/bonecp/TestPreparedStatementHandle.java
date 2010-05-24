@@ -25,10 +25,12 @@ import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.reset;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.PreparedStatement;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.easymock.classextension.EasyMock;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -79,6 +81,15 @@ public class TestPreparedStatementHandle {
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
-		
+	}
+	
+	/**
+	 * Coverage.
+	 */
+	@Test
+	public void testGetterSetter(){
+		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class); 
+		testClass.setInternalPreparedStatement(mockPreparedStatement);
+		Assert.assertEquals(mockPreparedStatement, testClass.getInternalPreparedStatement());
 	}
 }

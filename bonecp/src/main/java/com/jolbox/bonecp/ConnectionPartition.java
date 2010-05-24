@@ -20,9 +20,8 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.expect;
-
 import java.io.Serializable;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -31,8 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import net.sf.cglib.proxy.Proxy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
