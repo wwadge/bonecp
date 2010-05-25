@@ -82,4 +82,8 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 		logger.warn(sb.toString());
 	}
 
+	public boolean onConnectionException(ConnectionHandle connection, String state, Throwable t) {
+		return true; // keep the default behaviour
+	}
+
 }

@@ -83,4 +83,31 @@ public interface ConnectionHook {
 	 */
 	void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams);
 	 
+	/** Called whenever an exception on a connection occurs. This exception may be a connection failure, a DB failure or a 
+	 * non-fatal logical failure (eg Duplicate key exception).
+	 * 
+	 * 	<p>SQLSTATE Value	  
+	 *	<p>Value	Meaning
+	 *	<p>08001	The application requester is unable to establish the connection.
+	 *	<p>08002	The connection already exists.
+	 *	<p>08003	The connection does not exist.
+	 *	<p>08004	The application server rejected establishment of the connection.
+	 *	<p>08007	Transaction resolution unknown.
+	 *	<p>08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
+	 *	<p>08504	An error was encountered while processing the specified path rename configuration file.
+	 * <p>SQL Failure codes 08001 & 08007 indicate that the database is broken/died (and thus all remaining connections are killed off). 
+	 * <p>Anything else will be taken as the connection (not the db) being broken. 
+	 * <p>
+	 * 
+	 * Note: You may use pool.isConnectionHandleAlive(connection) to verify if the connection is in a usable state again.
+	 * Note 2: As in all interceptor hooks, this method may be called concurrently so any implementation must be thread-safe.
+	 * 
+	 * @param connection The handle that triggered this error
+	 * @param state the SQLState error code. 
+	 * @param t Exception that caused this failure.
+	 * @return Returning true means: when you eventually close off this connection, test to see if the connection is still
+	 * alive and discard it if not (this is the normal behaviour). Returning false pretends that the connection is still ok 
+	 * when the connection is closed (your application will still receive the original exception that was thrown).
+	 */
+	boolean onConnectionException(ConnectionHandle connection, String state, Throwable t);
 }

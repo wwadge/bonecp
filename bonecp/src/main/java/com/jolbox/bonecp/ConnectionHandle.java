@@ -108,9 +108,7 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;	
-
-
-	/**
+	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
 		SQLSTATE Value	  
@@ -122,9 +120,9 @@ public class ConnectionHandle implements Connection{
 		08007	Transaction resolution unknown.
 		08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
 		08504	An error was encountered while processing the specified path rename configuration file.
-	 SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
+	  */
+	 /** SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
 	  Anything else will be taken as the *connection* (not the db) being broken. 
-
 	 */
 	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007"); 
 	
@@ -297,6 +295,11 @@ public class ConnectionHandle implements Connection{
 		char firstChar = state.charAt(0);
 		if (state.equals("40001") || state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
 			this.possiblyBroken = true;
+		}
+
+		// Notify anyone who's interested
+		if (this.getConnectionHook() != null){
+			this.getConnectionHook().onConnectionException(this, state, t);
 		}
 
 		return e;
