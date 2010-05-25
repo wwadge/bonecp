@@ -862,7 +862,6 @@ public class StatementHandle implements Statement{
 	// #endif JDK6
 	
 	
-	@Override
 	public void setCursorName(String name)
 	throws SQLException {
 		checkClosed();

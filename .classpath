@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" output="bonecp/target/classes" path="bonecp/src/main/java"/>
 	<classpathentry kind="src" output="bonecp/target/test-classes" path="bonecp/src/test/java"/>
-	<classpathentry excluding="**" kind="src" path="bonecp/src/test/resources"/>
+	<classpathentry excluding="**" kind="src" output="bonecp/target/test-classes" path="bonecp/src/test/resources"/>
 	<classpathentry kind="src" output="bonecp-hbnprovider/target/classes" path="bonecp-hbnprovider/src/main/java"/>
 	<classpathentry kind="src" output="bonecp-hbnprovider/target/test-classes" path="bonecp-hbnprovider/src/test/java"/>
 	<classpathentry excluding="**" kind="src" output="bonecp-hbnprovider/target/test-classes" path="bonecp-hbnprovider/src/test/resources"/>
@@ -11,7 +11,7 @@
 	<classpathentry excluding="**" kind="src" output="bonecp-spring/target/test-classes" path="bonecp-spring/src/test/resources"/>
 	<classpathentry kind="src" output="bonecp-benchmark/target/classes" path="bonecp-benchmark/src/main/java"/>
 	<classpathentry excluding="**" kind="src" output="bonecp-benchmark/target/test-classes" path="bonecp-benchmark/src/test/resources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
 	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.5.0_22"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

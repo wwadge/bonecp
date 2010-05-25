@@ -31,19 +31,21 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+/* #ifdef JDK6
+import java.sql.NClob;
+import java.sql.RowId;
+import java.sql.SQLXML;
+// #endif
 
 /**
  * @author Wallace
@@ -318,12 +320,17 @@ public class MockPreparedStatement implements PreparedStatement {
 			long length) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setNClob(int, java.sql.NClob)
-	 */
-	// @Override
+	/* #ifdef JDK6
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
 	}
+	public void setRowId(int parameterIndex, RowId x) throws SQLException {
+	}
+
+	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
+			throws SQLException {
+	}
+
+	#endif JDK6 */
 
 	/** {@inheritDoc}
 	 * @see java.sql.PreparedStatement#setNClob(int, java.io.Reader)
@@ -393,20 +400,6 @@ public class MockPreparedStatement implements PreparedStatement {
 	public void setRef(int parameterIndex, Ref x) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setRowId(int, java.sql.RowId)
-	 */
-	// @Override
-	public void setRowId(int parameterIndex, RowId x) throws SQLException {
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setSQLXML(int, java.sql.SQLXML)
-	 */
-	// @Override
-	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
-			throws SQLException {
-	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.PreparedStatement#setShort(int, short)

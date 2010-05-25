@@ -1,5 +1,5 @@
 /**
-    * Copyright 2009 Wallace Wadge
+ * Copyright 2009 Wallace Wadge
  *
  * This file is part of BoneCP.
  *
@@ -15,26 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
-
-Copyright 2009 Wallace Wadge
-
-This file is part of BoneCP.
-
-BoneCP is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-BoneCP is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General @Override public License for more details.
-
-You should have received a copy of the GNU General @Override public License
-along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jolbox.bonecp;
@@ -166,8 +146,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see javax.sql.CommonDataSource#getLogWriter()
 	 */
-	public PrintWriter getLogWriter()
-	throws SQLException {
+	public PrintWriter getLogWriter() throws SQLException {
 		return this.logWriter;
 	}
 
@@ -206,8 +185,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 *
 	 * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
 	 */
-	public boolean isWrapperFor(Class<?> arg0)
-	throws SQLException {
+	public boolean isWrapperFor(Class<?> arg0) throws SQLException {
 		return false;
 	}
 
@@ -217,8 +195,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	 * @see java.sql.Wrapper#unwrap(java.lang.Class)
 	 */
 	@SuppressWarnings("unchecked")
-	public Object unwrap(Class arg0)
-	throws SQLException {
+	public Object unwrap(Class arg0) throws SQLException {
 		return null;
 	}
 

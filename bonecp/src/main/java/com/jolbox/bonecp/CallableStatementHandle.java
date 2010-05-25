@@ -1516,7 +1516,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	 * 
 	 * @see java.sql.CallableStatement#setBoolean(java.lang.String, boolean)
 	 */
-	@Override
 	public void setBoolean(String parameterName, boolean x) throws SQLException {
 		checkClosed();
 		try {
@@ -1716,7 +1715,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	 * 
 	 * @see java.sql.CallableStatement#setNull(java.lang.String, int)
 	 */
-	@Override
 	public void setNull(String parameterName, int sqlType) throws SQLException {
 		checkClosed();
 		try {
@@ -1814,7 +1812,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	}
 
 	
-	@Override
 	public void setShort(String parameterName, short x) throws SQLException {
 		checkClosed();
 		try {
