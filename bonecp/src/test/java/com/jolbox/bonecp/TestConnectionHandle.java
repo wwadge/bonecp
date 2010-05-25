@@ -790,11 +790,14 @@ public class TestConnectionHandle {
 
 	}
 
+	/**
+	 */
 	// #ifdef JDK6
 	@Test
-	public void testSetClientInfo() throws SQLClientInfoException {
+	public void testSetClientInfo() {
 		Properties prop = new Properties();
-		mockConnection.setClientInfo(prop);
+		try {
+			mockConnection.setClientInfo(prop);
 		replay(mockConnection);
 		testClass.setClientInfo(prop);
 		verify(mockConnection);
@@ -807,6 +810,9 @@ public class TestConnectionHandle {
 		replay(mockConnection);
 		testClass.setClientInfo(name, value);
 		verify(mockConnection);
+		} catch (SQLClientInfoException e) {
+			throw new RuntimeException(e);
+		}
 
 	}
 	// #endif JDK6

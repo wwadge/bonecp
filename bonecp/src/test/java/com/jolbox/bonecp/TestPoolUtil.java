@@ -103,7 +103,6 @@ public class TestPoolUtil {
 					return new Object[]{};
 				}
 				
-				@SuppressWarnings("unused")
 				public void free() throws SQLException {
 					// do nothing
 				}
