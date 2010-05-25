@@ -298,8 +298,8 @@ public class ConnectionHandle implements Connection{
 		}
 
 		// Notify anyone who's interested
-		if (this.getConnectionHook() != null){
-			this.getConnectionHook().onConnectionException(this, state, t);
+		if (this.possiblyBroken  && (this.getConnectionHook() != null)){
+			this.possiblyBroken = this.getConnectionHook().onConnectionException(this, state, t);
 		}
 
 		return e;
