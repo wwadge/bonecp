@@ -133,8 +133,8 @@
 		<profile>
 			<id>JDK5</id>
 			<build>
-				<plugins>
 
+				<plugins>
 					<plugin>
 						<artifactId>maven-jar-plugin</artifactId>
 						<configuration>
@@ -278,7 +278,16 @@
 					<inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
 				</configuration>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<inherited>true</inherited>
+				<configuration>
+					<forkMode>once</forkMode>
+					<reportFormat>html</reportFormat>
+					<classesDirectory>${project.build.directory}/generated-classes/emma/classes</classesDirectory>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>com.mycila.maven-license-plugin</groupId>
 				<artifactId>maven-license-plugin</artifactId>
@@ -308,6 +317,7 @@
 			</extension>
 		</extensions>
 	</build>
+
 	<reporting>
 		<plugins>
 			<plugin>
@@ -319,6 +329,18 @@
 					<excludePackageNames>com.jolbox.bonecp.benchmark.*</excludePackageNames>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>emma-maven-plugin</artifactId>
+				<version>1.0-alpha-2</version>
+				<inherited>true</inherited>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>surefire-report-maven-plugin</artifactId>
+				<inherited>true</inherited>
+			</plugin>
+
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.4.2</version>
