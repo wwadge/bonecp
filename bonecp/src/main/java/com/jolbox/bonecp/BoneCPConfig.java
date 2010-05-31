@@ -115,7 +115,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int poolAvailabilityThreshold = 20;
 	/** Disable connection tracking. */
 	private boolean disableConnectionTracking;
-
+	/** Time to wait before a call to getConnection() times out and returns an error. */ 
+	private long connectionTimeout = Long.MAX_VALUE;
+	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
@@ -1017,5 +1019,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setDisableConnectionTracking(boolean disableConnectionTracking) {
 		this.disableConnectionTracking = disableConnectionTracking;
+	}
+
+	/** Returns the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
+	 * @return the connectionTimeout
+	 */
+	protected long getConnectionTimeout() {
+		return this.connectionTimeout;
+	}
+
+	/** Sets the maximum time (in milliseconds) to wait before a call to getConnection is timed out. 
+	 * 
+	 * Default: Long.MAX_VALUE ( = wait forever )
+	 * 
+	 * @param connectionTimeout the connectionTimeout to set
+	 */
+	protected void setConnectionTimeout(long connectionTimeout) {
+		this.connectionTimeout = connectionTimeout;
 	}
 }

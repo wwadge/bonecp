@@ -114,6 +114,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
 	/** Watch for connections that should have been safely closed but the application forgot. */
 	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
+	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
+	private long connectionTimeout;
 
 	/**
 	 * Closes off this connection pool.
@@ -212,6 +214,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		config.sanitize();
 		
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
+		this.connectionTimeout = config.getConnectionTimeout();
 		
 		if (!config.isLazyInit()){
 			try{
@@ -338,10 +341,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
 		}
 
-		// we still didn't find an empty one, wait forever until our partition is free
+		// we still didn't find an empty one, wait forever (or as per config) until our partition is free
 		if (result == null) {
 			try {
-				result = connectionPartition.getFreeConnections().take();
+				result = connectionPartition.getFreeConnections().poll(this.connectionTimeout, TimeUnit.MILLISECONDS);
 			}
 			catch (InterruptedException e) {
 				throw new SQLException(e.getMessage());

@@ -130,10 +130,9 @@
 	</dependencyManagement>
 
 	<profiles>
-		<profile>
+ 		<profile>
 			<id>JDK5</id>
 			<build>
-
 				<plugins>
 					<plugin>
 						<artifactId>maven-compiler-plugin</artifactId>
@@ -190,7 +189,6 @@
 				</plugins>
 			</build>
 		</profile>
-
 		<profile>
 			<id>JDK6</id>
 			<activation>

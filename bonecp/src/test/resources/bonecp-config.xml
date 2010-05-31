@@ -9,4 +9,4 @@
      	<property name="minConnectionsPerPartition">99</property>
 	    <property name="lazyInit">true</property>
    </named-config>
-</bonecp-config>
+</bonecp-config> 
