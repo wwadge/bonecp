@@ -9,7 +9,7 @@
 	<classpathentry kind="src" output="bonecp-spring/target/classes" path="bonecp-spring/src/main/java"/>
 	<classpathentry kind="src" output="bonecp-spring/target/test-classes" path="bonecp-spring/src/test/java"/>
 	<classpathentry excluding="**" kind="src" output="bonecp-spring/target/test-classes" path="bonecp-spring/src/test/resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
 	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

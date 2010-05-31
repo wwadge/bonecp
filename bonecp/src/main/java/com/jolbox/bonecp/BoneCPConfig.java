@@ -1024,7 +1024,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Returns the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
 	 * @return the connectionTimeout
 	 */
-	protected long getConnectionTimeout() {
+	public long getConnectionTimeout() {
 		return this.connectionTimeout;
 	}
 
@@ -1034,7 +1034,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * @param connectionTimeout the connectionTimeout to set
 	 */
-	protected void setConnectionTimeout(long connectionTimeout) {
+	public void setConnectionTimeout(long connectionTimeout) {
 		this.connectionTimeout = connectionTimeout;
 	}
 }
