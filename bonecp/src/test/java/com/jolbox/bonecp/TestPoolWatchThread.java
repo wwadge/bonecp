@@ -32,6 +32,7 @@ import static org.easymock.classextension.EasyMock.verify;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.easymock.IAnswer;
 import org.junit.Assert;
@@ -118,22 +119,27 @@ public class TestPoolWatchThread {
 	/** Tests the case where we cannot create more transactions.
 	 * @throws InterruptedException
 	 */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testRunFullConnections() throws InterruptedException{
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().once();
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().anyTimes();
-
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().anyTimes();
+		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
+		bq.add(new Object());
+		expect(mockPool.getPoolWatchThreadSignalQueue()).andReturn(bq);
 		expect(mockPartition.getMaxConnections()).andReturn(5).once();
 		expect(mockPartition.getCreatedConnections()).andReturn(5).once();
 		mockPartition.setUnableToCreateMoreTransactions(true);
 		expectLastCall().once();
-		mockPartition.almostFullWait();
-		// just to break out of the loop
-		expectLastCall().once().andThrow(new InterruptedException());
 
-		replay(mockPartition, mockPool, mockLogger);
+		// just to break out of the loop
+		BlockingQueue<?> mockQueue = createNiceMock(BlockingQueue.class);
+		expect(mockPool.getPoolWatchThreadSignalQueue()).andReturn((BlockingQueue) mockQueue);
+		expect(mockQueue.take()).andThrow(new InterruptedException());
+
+		replay(mockPartition, mockPool, mockLogger, mockQueue);
 		testClass.run();
 		verify(mockPartition);
 
@@ -154,8 +160,8 @@ public class TestPoolWatchThread {
 		expect(mockLogger.isDebugEnabled()).andReturn(true).anyTimes();
 
 		ArrayBlockingQueue<ConnectionHandle> fakeConnections = new ArrayBlockingQueue<ConnectionHandle>(5);
-		mockPartition.almostFullWait();
-		expectLastCall().anyTimes();
+//		mockPartition.almostFullWait();
+//		expectLastCall().anyTimes();
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
 
 			// @Override
@@ -194,11 +200,11 @@ public class TestPoolWatchThread {
 
 
 		first = true;
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().once();
 		
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().andThrow(new RuntimeException());
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().andThrow(new RuntimeException());
 		replay(mockPartition, mockLogger);
 		try{
 			testClass.run();
@@ -233,11 +239,11 @@ public class TestPoolWatchThread {
 			}
 		}).anyTimes();
 		
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().once();
 		
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().once();
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().once();
 
 		expect(mockConfig.getStatementsCacheSize()).andAnswer(new IAnswer<Integer>() {
 			

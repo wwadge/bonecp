@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -116,8 +117,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
 	private long connectionTimeout;
-	/** If true, pool watch thread has been signalled (avoid lost signals). */
-	protected volatile boolean poolWatchThreadWasSignalled = false;
+	/** Signal trigger to pool watch thread. */
+	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
 
 	/**
 	 * Closes off this connection pool.
@@ -419,16 +420,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
 		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < this.poolAvailabilityThreshold){
-			try{
-				this.poolWatchThreadWasSignalled  = true;
-				connectionPartition.lockAlmostFullLock();
-				connectionPartition.almostFullSignal();
-			} finally {
-				connectionPartition.unlockAlmostFullLock(); 
-			}
+			this.poolWatchThreadSignalQueue.offer(new Object()); // item being pushed is not important.
 		}
-
-
 	}
 
 	/**
@@ -628,6 +621,13 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	protected FinalizableReferenceQueue getFinalizableRefQueue() {
 		return this.finalizableRefQueue;
+	}
+
+	/** Returns a handle to the poolWatchThreadSignalQueue
+	 * @return the poolWatchThreadSignal
+	 */
+	protected BlockingQueue<Object> getPoolWatchThreadSignalQueue() {
+		return this.poolWatchThreadSignalQueue;
 	}
 
 }

@@ -27,8 +27,6 @@ import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
@@ -54,12 +52,8 @@ public class ConnectionPartition implements Serializable{
 	private final int minConnections;
 	/** Maximum number of connections that will ever be created. */
 	private final int maxConnections;
-	/** almost full locking. **/
-	private ReentrantLock almostFullLock = new ReentrantLock();
 	/** Statistics lock. */
 	protected ReentrantReadWriteLock statsLock = new ReentrantReadWriteLock();
-	/** Signal mechanism. */
-	private final Condition almostFull = this.almostFullLock.newCondition(); 
 	/** Number of connections that have been created. */
 	private int createdConnections=0;
 	/** DB details. */
@@ -293,34 +287,4 @@ public class ConnectionPartition implements Serializable{
 	protected ArrayBlockingQueue<ConnectionHandle> getConnectionsPendingRelease() {
 		return this.connectionsPendingRelease;
 	}
-
-	/**
-	 * Locks the almost full lock
-	 */
-	protected void lockAlmostFullLock() {
-		this.almostFullLock.lock();
-	}
-
-	/**
-	 * Unlocks the almost full lock
-	 */
-	protected void unlockAlmostFullLock() {
-		this.almostFullLock.unlock();
-	}
-
-	/** Does _not_ loop for spurious interrupts etc
-	 * @throws InterruptedException 
-	 * 
-	 */
-	protected void almostFullWait() throws InterruptedException {
-		this.almostFull.await(); // callees must loop for spurious interrupts
-	}
-
-	/**
-	 * signal handle
-	 */
-	protected void almostFullSignal() {
-		this.almostFull.signal();
-	}
-
 }

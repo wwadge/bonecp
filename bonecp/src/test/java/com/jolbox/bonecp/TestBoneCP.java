@@ -393,8 +393,8 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(1).anyTimes();
 
-		mockPartition.almostFullSignal();
-		expectLastCall().once();
+//		mockPartition.almostFullSignal();
+//		expectLastCall().once();
 
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
 		mockConnection.setOriginatingPartition(mockPartition);
@@ -757,12 +757,12 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().once();
-		mockPartition.almostFullSignal();
-		expectLastCall().once();
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().once();
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().once();
+//		mockPartition.almostFullSignal();
+//		expectLastCall().once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().once();
 		replay(mockPartition, mockConnectionHandles);
 		Method method = testClass.getClass().getDeclaredMethod("maybeSignalForMoreConnections", ConnectionPartition.class);
 		method.setAccessible(true);
@@ -775,12 +775,12 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().once();
-		mockPartition.almostFullSignal();
-		expectLastCall().andThrow(new RuntimeException()).once();
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().once(); 
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().once();
+//		mockPartition.almostFullSignal();
+//		expectLastCall().andThrow(new RuntimeException()).once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().once(); 
 		replay(mockPartition, mockConnectionHandles);
 		try{
 			method.invoke(testClass, new Object[]{mockPartition});
