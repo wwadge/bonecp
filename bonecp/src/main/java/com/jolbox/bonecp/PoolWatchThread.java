@@ -68,10 +68,12 @@ public class PoolWatchThread implements Runnable {
 
 			try{
 				this.partition.lockAlmostFullLock();
-				if (this.lazyInit){ // block the first time if this is on.
+				if (this.lazyInit && !this.pool.poolWatchThreadWasSignalled){ // block the first time if this is on.
 					this.lazyInit = false; 
 					this.partition.almostFullWait();
 				}
+
+				this.pool.poolWatchThreadWasSignalled = false;
 
 				maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				// loop for spurious interrupt
@@ -79,11 +81,13 @@ public class PoolWatchThread implements Runnable {
 					if (maxNewConnections == 0){
 						this.partition.setUnableToCreateMoreTransactions(true);
 					}
-
-					this.partition.almostFullWait();
+					if (!this.pool.poolWatchThreadWasSignalled){
+						this.partition.almostFullWait();
+					}
+					this.pool.poolWatchThreadWasSignalled = false;
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				}
-				
+
 				if (maxNewConnections > 0 && !this.lazyInit){
 					fillConnections(Math.min(maxNewConnections, this.partition.getAcquireIncrement()));
 				}
@@ -94,7 +98,7 @@ public class PoolWatchThread implements Runnable {
 			} finally {
 				this.partition.unlockAlmostFullLock();
 			}
-			
+
 		} 
 	}
 
@@ -114,6 +118,6 @@ public class PoolWatchThread implements Runnable {
 			Thread.sleep(this.acquireRetryDelay);
 		}
 
-}
+	}
 
 }

@@ -116,6 +116,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
 	private long connectionTimeout;
+	/** If true, pool watch thread has been signalled (avoid lost signals). */
+	protected volatile boolean poolWatchThreadWasSignalled = false;
 
 	/**
 	 * Closes off this connection pool.
@@ -418,6 +420,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < this.poolAvailabilityThreshold){
 			try{
+				this.poolWatchThreadWasSignalled  = true;
 				connectionPartition.lockAlmostFullLock();
 				connectionPartition.almostFullSignal();
 			} finally {
