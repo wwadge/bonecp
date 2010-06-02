@@ -142,18 +142,17 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @see javax.sql.CommonDataSource#getLogWriter()
+	 * Retrieves the log writer for this DataSource object.
+	 * 
 	 */
 	public PrintWriter getLogWriter() throws SQLException {
 		return this.logWriter;
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @see javax.sql.CommonDataSource#getLoginTimeout()
+	 * Gets the maximum time in seconds that this data source can wait while attempting to connect to a database. 
+	 * A value of zero means that the timeout is the default system timeout if there is one; otherwise, it means that there is no timeout. When a DataSource object is created, the login timeout is initially zero.
+	 * 
 	 */
 	public int getLoginTimeout()
 	throws SQLException {
@@ -161,9 +160,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @see javax.sql.CommonDataSource#setLogWriter(java.io.PrintWriter)
+	* Sets the log writer for this DataSource object to the given java.io.PrintWriter object.
 	 */
 	public void setLogWriter(PrintWriter out)
 	throws SQLException {
@@ -171,9 +168,9 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @see javax.sql.CommonDataSource#setLoginTimeout(int)
+	* Sets the maximum time in seconds that this data source will wait while 
+	* attempting to connect to a database. A value of zero specifies that the timeout is the default 
+	* system timeout if there is one; otherwise, it specifies that there is no timeout. When a DataSource object is created, the login timeout is initially zero.
 	 */
 	public void setLoginTimeout(int seconds)
 	throws SQLException {
@@ -181,18 +178,22 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Returns true if this either implements the interface argument or is directly or indirectly a wrapper for an object that does.
+	 * @param arg0 class
+	 * @return t/f
+	 * @throws SQLException on error
 	 *
-	 * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
 	 */
 	public boolean isWrapperFor(Class<?> arg0) throws SQLException {
 		return false;
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @see java.sql.Wrapper#unwrap(java.lang.Class)
+	 * Returns an object that implements the given interface to allow access to non-standard methods, 
+	 * or standard methods not exposed by the proxy.
+	 * @param arg0 obj
+	 * @return unwrapped object
+	 * @throws SQLException 
 	 */
 	@SuppressWarnings("unchecked")
 	public Object unwrap(Class arg0) throws SQLException {

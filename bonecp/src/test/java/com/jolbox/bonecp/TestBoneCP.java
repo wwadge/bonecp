@@ -45,6 +45,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -130,6 +131,8 @@ public class TestBoneCP {
 		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
 		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
+
 		expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
 		expect(mockConfig.getPoolAvailabilityThreshold()).andReturn(20).anyTimes();
@@ -390,8 +393,8 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(1).anyTimes();
 
-		mockPartition.almostFullSignal();
-		expectLastCall().once();
+//		mockPartition.almostFullSignal();
+//		expectLastCall().once();
 
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
 		mockConnection.setOriginatingPartition(mockPartition);
@@ -418,7 +421,7 @@ public class TestBoneCP {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
+		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andReturn(mockConnection).once();
 
 		mockConnection.setOriginatingPartition(mockPartition);
 		expectLastCall().once();
@@ -444,7 +447,7 @@ public class TestBoneCP {
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
-		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
+		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andThrow(new InterruptedException()).once();
 		
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		try{
@@ -469,7 +472,7 @@ public class TestBoneCP {
 		reset(mockPartition, mockConnectionHandles, mockConnection);
 		expect(mockPartition.getMaxConnections()).andReturn(100).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnectionHandles.take()).andThrow(new InterruptedException()).once();
+		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andThrow(new InterruptedException()).once();
 		
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		try{ 
@@ -494,7 +497,7 @@ public class TestBoneCP {
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
-		expect(mockConnectionHandles.take()).andReturn(mockConnection).once();
+		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andReturn(mockConnection).once();
 		
 		mockConnection.setOriginatingPartition(mockPartition);
 		expectLastCall().once();
@@ -754,12 +757,12 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().once();
-		mockPartition.almostFullSignal();
-		expectLastCall().once();
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().once();
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().once();
+//		mockPartition.almostFullSignal();
+//		expectLastCall().once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().once();
 		replay(mockPartition, mockConnectionHandles);
 		Method method = testClass.getClass().getDeclaredMethod("maybeSignalForMoreConnections", ConnectionPartition.class);
 		method.setAccessible(true);
@@ -772,12 +775,12 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
-		mockPartition.lockAlmostFullLock();
-		expectLastCall().once();
-		mockPartition.almostFullSignal();
-		expectLastCall().andThrow(new RuntimeException()).once();
-		mockPartition.unlockAlmostFullLock();
-		expectLastCall().once(); 
+//		mockPartition.lockAlmostFullLock();
+//		expectLastCall().once();
+//		mockPartition.almostFullSignal();
+//		expectLastCall().andThrow(new RuntimeException()).once();
+//		mockPartition.unlockAlmostFullLock();
+//		expectLastCall().once(); 
 		replay(mockPartition, mockConnectionHandles);
 		try{
 			method.invoke(testClass, new Object[]{mockPartition});

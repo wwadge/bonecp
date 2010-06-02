@@ -232,6 +232,7 @@ public class TestConnectionHook {
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200).anyTimes();
+		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();

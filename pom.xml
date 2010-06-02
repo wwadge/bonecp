@@ -133,13 +133,26 @@
 		<profile>
 			<id>JDK5</id>
 			<build>
-
 				<plugins>
 					<plugin>
 						<artifactId>maven-jar-plugin</artifactId>
 						<configuration>
 							<classifier>jdk5</classifier>
 						</configuration>
+					</plugin>
+					<plugin>
+						<artifactId>maven-jar-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<classifier>jdk5</classifier>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 					<plugin>
 						<groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -188,7 +201,6 @@
 				</plugins>
 			</build>
 		</profile>
-
 		<profile>
 			<id>JDK6</id>
 			<activation>
@@ -200,6 +212,7 @@
 						<artifactId>maven-compiler-plugin</artifactId>
 						<version>2.0.1</version>
 						<configuration>
+							<verbose>true</verbose>
 							<source>1.5</source>
 							<target>1.5</target>
 						</configuration>
@@ -241,7 +254,6 @@
 
 	</profiles>
 
-
 	<build>
 		<plugins>
 
@@ -275,17 +287,19 @@
 				<artifactId>maven-site-plugin</artifactId>
 				<version>2.0-beta-7</version>
 				<configuration>
-					<inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
+					<inputDirectory>${project.reporting.outputDirectory}/apidocs
+					</inputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<inherited>true</inherited>
+				<inherited>false</inherited>
 				<configuration>
 					<forkMode>once</forkMode>
 					<reportFormat>html</reportFormat>
-					<classesDirectory>${project.build.directory}/generated-classes/emma/classes</classesDirectory>
+					<classesDirectory>${project.build.directory}/generated-classes/emma/classes
+					</classesDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -326,9 +340,11 @@
 				<version>2.6.1</version>
 				<configuration>
 					<show>public</show>
-					<excludePackageNames>com.jolbox.bonecp.benchmark.*</excludePackageNames>
+					<excludePackageNames>com.jolbox.bonecp.benchmark.*
+					</excludePackageNames>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>emma-maven-plugin</artifactId>

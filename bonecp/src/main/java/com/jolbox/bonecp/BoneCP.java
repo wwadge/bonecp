@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -114,6 +115,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
 	/** Watch for connections that should have been safely closed but the application forgot. */
 	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
+	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
+	private long connectionTimeout;
+	/** Signal trigger to pool watch thread. */
+	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
 
 	/**
 	 * Closes off this connection pool.
@@ -212,6 +217,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		config.sanitize();
 		
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
+		this.connectionTimeout = config.getConnectionTimeout();
 		
 		if (!config.isLazyInit()){
 			try{
@@ -338,10 +344,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
 		}
 
-		// we still didn't find an empty one, wait forever until our partition is free
+		// we still didn't find an empty one, wait forever (or as per config) until our partition is free
 		if (result == null) {
 			try {
-				result = connectionPartition.getFreeConnections().take();
+				result = connectionPartition.getFreeConnections().poll(this.connectionTimeout, TimeUnit.MILLISECONDS);
 			}
 			catch (InterruptedException e) {
 				throw new SQLException(e.getMessage());
@@ -414,15 +420,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
 		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < this.poolAvailabilityThreshold){
-			try{
-				connectionPartition.lockAlmostFullLock();
-				connectionPartition.almostFullSignal();
-			} finally {
-				connectionPartition.unlockAlmostFullLock(); 
-			}
+			this.poolWatchThreadSignalQueue.offer(new Object()); // item being pushed is not important.
 		}
-
-
 	}
 
 	/**
@@ -622,6 +621,13 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	protected FinalizableReferenceQueue getFinalizableRefQueue() {
 		return this.finalizableRefQueue;
+	}
+
+	/** Returns a handle to the poolWatchThreadSignalQueue
+	 * @return the poolWatchThreadSignal
+	 */
+	protected BlockingQueue<Object> getPoolWatchThreadSignalQueue() {
+		return this.poolWatchThreadSignalQueue;
 	}
 
 }
