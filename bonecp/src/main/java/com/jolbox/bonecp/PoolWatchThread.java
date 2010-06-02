@@ -69,7 +69,7 @@ public class PoolWatchThread implements Runnable {
 			try{
 				if (this.lazyInit){ // block the first time if this is on.
 					this.lazyInit = false; 
-					this.pool.getPoolWatchThreadSignalQueue().take();
+					this.partition.getPoolWatchThreadSignalQueue().take();
 				}
  
 
@@ -79,7 +79,7 @@ public class PoolWatchThread implements Runnable {
 					if (maxNewConnections == 0){
 						this.partition.setUnableToCreateMoreTransactions(true);
 					}
-					this.pool.getPoolWatchThreadSignalQueue().take();
+					this.partition.getPoolWatchThreadSignalQueue().take();
 
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				}
