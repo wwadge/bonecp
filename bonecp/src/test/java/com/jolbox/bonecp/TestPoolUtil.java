@@ -102,7 +102,7 @@ public class TestPoolUtil {
 				public Object getArray() throws SQLException {
 					return new Object[]{};
 				}
-				@SuppressWarnings("unused")
+				@SuppressWarnings("all")
 				public void free() throws SQLException {
 					// do nothing
 				}
