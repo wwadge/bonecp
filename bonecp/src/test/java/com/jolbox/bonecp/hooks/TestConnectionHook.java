@@ -28,18 +28,15 @@ import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.easymock.EasyMock;
 import org.easymock.IAnswer;
-import org.hibernate.cfg.ExtendsQueueEntry;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,7 +44,6 @@ import org.junit.Test;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.CommonTestUtils;
-import com.jolbox.bonecp.ConnectionHandle;
 import com.jolbox.bonecp.MockJDBCAnswer;
 import com.jolbox.bonecp.MockJDBCDriver;
 
