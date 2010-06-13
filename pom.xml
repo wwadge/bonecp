@@ -135,14 +135,9 @@
 			<build>
 				<plugins>
 					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<version>2.0.1</version>
+						<artifactId>maven-jar-plugin</artifactId>
 						<configuration>
-							<verbose>false</verbose>
-							<fork>true</fork>
-							<executable>${jdk5home}/bin/javac</executable>
-							<source>1.5</source>
-							<target>1.5</target>
+							<classifier>jdk5</classifier>
 						</configuration>
 					</plugin>
 					<plugin>
@@ -195,6 +190,9 @@
 						<artifactId>maven-compiler-plugin</artifactId>
 						<version>2.0.1</version>
 						<configuration>
+							<verbose>false</verbose>
+							<fork>true</fork>
+							<executable>${jdk5home}/bin/javac</executable>
 							<source>1.5</source>
 							<target>1.5</target>
 						</configuration>
@@ -262,6 +260,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.2</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -371,7 +370,7 @@
 		<pluginRepository>
 			<id>maven-replacer-plugin reposoitory</id>
 			<url>
-				http://maven-replacer-plugin.googlecode.com/svn/release-repo
+            http://maven-replacer-plugin.googlecode.com/svn/release-repo
         </url>
 		</pluginRepository>
 

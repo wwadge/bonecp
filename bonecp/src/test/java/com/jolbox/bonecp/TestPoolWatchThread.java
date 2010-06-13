@@ -128,7 +128,7 @@ public class TestPoolWatchThread {
 //		expectLastCall().anyTimes();
 		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
 		bq.add(new Object());
-		expect(mockPool.getPoolWatchThreadSignalQueue()).andReturn(bq);
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq);
 		expect(mockPartition.getMaxConnections()).andReturn(5).once();
 		expect(mockPartition.getCreatedConnections()).andReturn(5).once();
 		mockPartition.setUnableToCreateMoreTransactions(true);
@@ -136,7 +136,7 @@ public class TestPoolWatchThread {
 
 		// just to break out of the loop
 		BlockingQueue<?> mockQueue = createNiceMock(BlockingQueue.class);
-		expect(mockPool.getPoolWatchThreadSignalQueue()).andReturn((BlockingQueue) mockQueue);
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn((BlockingQueue) mockQueue);
 		expect(mockQueue.take()).andThrow(new InterruptedException());
 
 		replay(mockPartition, mockPool, mockLogger, mockQueue);

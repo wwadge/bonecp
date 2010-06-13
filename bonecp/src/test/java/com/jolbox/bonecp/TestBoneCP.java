@@ -42,6 +42,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -392,6 +393,10 @@ public class TestBoneCP {
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(1).anyTimes();
+		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
+		bq.add(new Object());
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq);
+		
 
 //		mockPartition.almostFullSignal();
 //		expectLastCall().once();
@@ -473,7 +478,9 @@ public class TestBoneCP {
 		expect(mockPartition.getMaxConnections()).andReturn(100).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andThrow(new InterruptedException()).once();
-		
+		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
+		bq.add(new Object());
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq);
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		try{ 
 			testClass.getConnection();
@@ -757,6 +764,8 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();
 		expect(mockPartition.getMaxConnections()).andReturn(10).anyTimes();
+		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq).anyTimes();
 //		mockPartition.lockAlmostFullLock();
 //		expectLastCall().once();
 //		mockPartition.almostFullSignal();
@@ -771,6 +780,7 @@ public class TestBoneCP {
 		
 		// Test 2, same test but fake an exception
 		reset(mockPartition, mockConnectionHandles);
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq).anyTimes();
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(false).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.size()).andReturn(1).anyTimes();

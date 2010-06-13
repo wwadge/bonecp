@@ -25,6 +25,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -70,6 +71,17 @@ public class ConnectionPartition implements Serializable{
 	private ArrayBlockingQueue<ConnectionHandle> connectionsPendingRelease;
 	/** Config setting. */
 	private boolean disableTracking;
+	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
+	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
+	
+
+	/** Returns a handle to the poolWatchThreadSignalQueue
+	 * @return the poolWatchThreadSignal
+	 */
+	protected BlockingQueue<Object> getPoolWatchThreadSignalQueue() {
+		return this.poolWatchThreadSignalQueue;
+	}
+	
 	/** Updates leased connections statistics
 	 * @param increment value to add/subtract
 	 */
