@@ -36,11 +36,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
+import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.proxy.CallableStatementProxy;
 import com.jolbox.bonecp.proxy.ConnectionProxy;
@@ -249,9 +251,14 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		ConnectionHandle con = this.connectionHandle.get();
 		TransactionRecoveryResult recoveryResult = con.recoveryResult;
 		ConnectionHook connectionHook = con.getPool().getConfig().getConnectionHook();
+		
 		int acquireRetryAttempts = con.getPool().getConfig().getAcquireRetryAttempts();
 		int acquireRetryDelay = con.getPool().getConfig().getAcquireRetryDelay();
-
+		AcquireFailConfig acquireConfig = new AcquireFailConfig();
+		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
+		acquireConfig.setAcquireRetryDelay(acquireRetryDelay);
+		acquireConfig.setLogMessage("Failed to replay transaction");
+		
 		Map<Object, Object> replaceTarget = new HashMap<Object, Object>();
 		do{
 			replaceTarget.clear(); 
@@ -316,7 +323,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					// It blew up again, let's try a couple more times before giving up...
 					// call the hook, if available.
 					if (connectionHook != null){
-						tryAgain = connectionHook.onAcquireFail(t);
+						tryAgain = connectionHook.onAcquireFail(t, acquireConfig);
 					} else {
 
 						logger.error("Failed to replay transaction. Sleeping for "+acquireRetryDelay+"ms and trying again. Attempts left: "+acquireRetryAttempts+". Exception: "+t.getCause());

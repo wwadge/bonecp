@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -49,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.FinalizableReferenceQueue;
+import com.jolbox.bonecp.hooks.AcquireFailConfig;
 
 
 
@@ -218,14 +220,18 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeout = config.getConnectionTimeout();
-		
+		AcquireFailConfig acquireConfig = new AcquireFailConfig();
+		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
+		acquireConfig.setAcquireRetryDelay(0);
+		acquireConfig.setLogMessage("Failed to obtain initial connection");
+
 		if (!config.isLazyInit()){
 			try{
 				Connection sanityConnection = obtainRawInternalConnection();
 				sanityConnection.close();
 			} catch (Exception e){
 				if (config.getConnectionHook() != null){
-					config.getConnectionHook().onAcquireFail(e);
+					config.getConnectionHook().onAcquireFail(e, acquireConfig);
 				}
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
 			}

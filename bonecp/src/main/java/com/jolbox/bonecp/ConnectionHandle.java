@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
+import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
 // #ifdef JDK6
@@ -46,6 +47,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Struct;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.sql.NClob;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLXML;
@@ -176,6 +178,11 @@ public class ConnectionHandle implements Connection{
 		
 		int acquireRetryAttempts = this.pool.getConfig().getAcquireRetryAttempts();
 		int acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
+		AcquireFailConfig acquireConfig = new AcquireFailConfig();
+		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
+		acquireConfig.setAcquireRetryDelay(acquireRetryDelay);
+		acquireConfig.setLogMessage("Failed to acquire connection");
+
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
 		do{ 
 			try { 
@@ -196,7 +203,7 @@ public class ConnectionHandle implements Connection{
 			} catch (Throwable t) {
 				// call the hook, if available.
 				if (this.connectionHook != null){
-					tryAgain = this.connectionHook.onAcquireFail(t);
+					tryAgain = this.connectionHook.onAcquireFail(t, acquireConfig);
 				} else {
 					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelay+"ms. Attempts left: "+acquireRetryAttempts);
 

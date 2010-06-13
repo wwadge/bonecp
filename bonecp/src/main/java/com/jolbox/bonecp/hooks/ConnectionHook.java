@@ -72,9 +72,10 @@ public interface ConnectionHook {
 	/** Called on attempting (and failing) to acquire a connection. Note that implementing this means that acquireRetry/delay logic
 	 * will be overridden by this code.
 	 * @param t Exception that occurred.
+	 * @param acquireConfig handle containing retry delay, retry attempts etc.
 	 * @return Return true to attempt the connection again.
 	 */
-	boolean onAcquireFail(Throwable t);
+	boolean onAcquireFail(Throwable t, AcquireFailConfig acquireConfig);
 	
 	/** Called when a query execute time limit has been set and an executing query took longer
 	 * to than the limit to return control to the application.

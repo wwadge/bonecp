@@ -61,6 +61,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import com.google.common.base.FinalizableReferenceQueue;
+import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
@@ -826,7 +827,7 @@ public class TestConnectionHandle {
 		ConnectionHook mockConnectionHook = createNiceMock(CoverageHook.class);
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(mockConnectionHook).once();
-		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject())).andReturn(false).once();
+		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
 		replay(mockPool, mockConfig, mockConnectionHook);
 		try{
 			new ConnectionHandle("", "", "", mockPool);
