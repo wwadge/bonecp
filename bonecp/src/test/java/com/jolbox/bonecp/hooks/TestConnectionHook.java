@@ -23,14 +23,18 @@
 package com.jolbox.bonecp.hooks;
 
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
@@ -141,6 +145,9 @@ public class TestConnectionHook {
 	public void dummyCoverage() throws SQLException{
 		CoverageHook hook = new CoverageHook();
 		reset(mockConfig);
+		mockConfig.sanitize();
+		expectLastCall().anyTimes();
+
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
@@ -185,6 +192,9 @@ public class TestConnectionHook {
 	public void testOnAcquireFail() throws SQLException {
 		hookClass = new CustomHook();
 		reset(mockConfig);
+		mockConfig.sanitize();
+		expectLastCall().anyTimes();
+
 		driver.setConnection(null);
 		driver.setMockJDBCAnswer(new MockJDBCAnswer() {
 			
@@ -212,14 +222,31 @@ public class TestConnectionHook {
 		assertEquals(1, hookClass.fail);
 		
 	}
-	
+
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	public void testOnAcquireFailDefault() throws SQLException {
+		ConnectionHook hook = new AbstractConnectionHook() {
+			// do nothing
+		};
+		AcquireFailConfig fail = createNiceMock(AcquireFailConfig.class);
+		expect(fail.getAcquireRetryDelay()).andReturn(0).times(5).andThrow(new RuntimeException()).once();
+		expect(fail.getAcquireRetryAttempts()).andReturn(new AtomicInteger(2)).times(3).andReturn(new AtomicInteger(1)).times(3);
+		replay(fail);
+		assertTrue(hook.onAcquireFail(new SQLException(), fail));
+		assertFalse(hook.onAcquireFail(new SQLException(), fail));
+		assertFalse(hook.onAcquireFail(new SQLException(), fail));
+		
+	}
+
 	/**
 	 * Test method.
 	 * @throws SQLException 
 	 */
 	@Test
 	public void testonQueryExecuteTimeLimitExceeded() throws SQLException {
-		hookClass = new CustomHook();
 		reset(mockConfig);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();

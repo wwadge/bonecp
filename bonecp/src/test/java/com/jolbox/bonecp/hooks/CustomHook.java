@@ -63,7 +63,7 @@ public class CustomHook extends AbstractConnectionHook{
 	}
 
 	@Override
-	public boolean onAcquireFail(Throwable t) {
+	public boolean onAcquireFail(Throwable t, AcquireFailConfig acquireConfig) {
 		this.fail++;
 		if (this.fail < 3){
 			return true; // try 3 times

@@ -6,11 +6,11 @@
 	<name>BoneCP Core Library</name>
 	<packaging>jar</packaging>
 	<description>Lightweight connection pool.</description>
-	<version>0.6.6-rc1</version>
+	<version>0.6.6-rc2</version>
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.6.6-rc1</version>
+		<version>0.6.6-rc2</version>
 	</parent>
 	<organization>
 		<name>JolBox</name>
