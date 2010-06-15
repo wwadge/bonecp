@@ -81,7 +81,7 @@ public class PoolUtil {
 		}
 		return sb.toString();
 	}
-	
+
 	/** Helper method
 	 * @param obj item to print
 	 * @return String for pretty printing.
@@ -90,23 +90,18 @@ public class PoolUtil {
 		StringBuilder sb = new StringBuilder();
 		if (obj == null){
 			sb.append("NULL");
+		} else 	if (obj instanceof Blob){
+			sb.append(formatLogParam((Blob)obj));
+		} else if (obj instanceof Clob){
+			sb.append(formatLogParam((Clob)obj));
+		} else if (obj instanceof Ref){
+			sb.append(formatLogParam((Ref)obj));
+		} else if (obj instanceof Array){
+			sb.append(formatLogParam((Array)obj));
+		} else if (obj instanceof String){
+			sb.append("\"" + obj.toString()+"\"");
 		} else {
-			if (obj instanceof Blob){
-				sb.append(formatLogParam((Blob)obj));
-			} else
-				if (obj instanceof Clob){
-					sb.append(formatLogParam((Clob)obj));
-				} else
-					if (obj instanceof Ref){
-						sb.append(formatLogParam((Ref)obj));
-					} else
-						if (obj instanceof Array){
-							sb.append(formatLogParam((Array)obj));
-						} if (obj instanceof String){
-							sb.append("\"" + obj.toString()+"\"");
-						} else {
-							sb.append(obj.toString());
-						}
+			sb.append(obj.toString());
 		}
 		return sb.toString();
 	}
@@ -166,19 +161,19 @@ public class PoolUtil {
 		}
 		return result;
 	}
-	
+
 	/** For backwards compatibility with JDK1.5 (SQLException doesn't accept the original exception).
 	 * @param t exception
 	 * @return printStackTrace converted to a string
 	 */
 	public static String stringifyException(Throwable t) {
-		    StringWriter sw = new StringWriter();
-		    PrintWriter pw = new PrintWriter(sw);
-		    t.printStackTrace(pw);
-		    String result = "";
-		    
-		    result = "------\r\n" + sw.toString() + "------\r\n";
-			// closing a stringwriter has no effect.
-			return result;
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		t.printStackTrace(pw);
+		String result = "";
+
+		result = "------\r\n" + sw.toString() + "------\r\n";
+		// closing a stringwriter has no effect.
+		return result;
 	}		  
 }

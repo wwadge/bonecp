@@ -24,6 +24,10 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.replay;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -60,79 +64,234 @@ public class TestPoolUtil {
 		
 			logParams.put("1", "123");
 			logParams.put("2", "456");
-			logParams.put("3", new jdbcBlob("Hello".getBytes()));
-			logParams.put("4", new jdbcClob("Hello"));
-			logParams.put("5", new SerialArray(new Array() {
+			logParams.put("3", new Blob() {
 				
-				public ResultSet getResultSet(long index, int count,
-						Map<String, Class<?>> map) throws SQLException {
+				@Override
+				public void truncate(long len) throws SQLException {
+				}
+				
+				@Override
+				public int setBytes(long pos, byte[] bytes, int offset, int len)
+						throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public int setBytes(long pos, byte[] bytes) throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public OutputStream setBinaryStream(long pos) throws SQLException {
 					return null;
 				}
 				
-				public ResultSet getResultSet(long index, int count) throws SQLException {
+				@Override
+				public long position(Blob pattern, long start) throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public long position(byte[] pattern, long start) throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public long length() throws SQLException {
+					return 5;
+				}
+				
+				@Override
+				public byte[] getBytes(long pos, int length) throws SQLException {
 					return null;
 				}
 				
-				public ResultSet getResultSet(Map<String, Class<?>> map)
+				@Override
+				public InputStream getBinaryStream(long pos, long length)
 						throws SQLException {
 					return null;
 				}
 				
-				public ResultSet getResultSet() throws SQLException {
+				@Override
+				public InputStream getBinaryStream() throws SQLException {
 					return null;
 				}
 				
+				@Override
+				public void free() throws SQLException {
+				}
+			});
+			logParams.put("4", new Clob() {
+				
+				@Override
+				public void truncate(long len) throws SQLException {
+					
+				}
+				
+				@Override
+				public int setString(long pos, String str, int offset, int len)
+						throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public int setString(long pos, String str) throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public Writer setCharacterStream(long pos) throws SQLException {
+					return null;
+				}
+				
+				@Override
+				public OutputStream setAsciiStream(long pos) throws SQLException {
+					return null;
+				}
+				
+				@Override
+				public long position(Clob searchstr, long start) throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public long position(String searchstr, long start) throws SQLException {
+					return 0;
+				}
+				
+				@Override
+				public long length() throws SQLException {
+					return 5;
+				}
+				
+				@Override
+				public String getSubString(long pos, int length) throws SQLException {
+					return null;
+				}
+				
+				@Override
+				public Reader getCharacterStream(long pos, long length) throws SQLException {
+					return null;
+				}
+				
+				@Override
+				public Reader getCharacterStream() throws SQLException {
+					return null;
+				}
+				
+				@Override
+				public InputStream getAsciiStream() throws SQLException {
+					return null;
+				}
+				
+				@Override
+				public void free() throws SQLException {
+					
+				}
+			});
+			logParams.put("5", new Array() {
+				
+				@Override
+				public ResultSet getResultSet(long index, int count,
+						Map<String, Class<?>> map) throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
+				public ResultSet getResultSet(long index, int count) throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
+				public ResultSet getResultSet(Map<String, Class<?>> map)
+						throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
+				public ResultSet getResultSet() throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
 				public String getBaseTypeName() throws SQLException {
 					return "Base type name";
 				}
 				
+				@Override
 				public int getBaseType() throws SQLException {
-					return 0;
+					// TODO Auto-generated method stub
+					return 14;
 				}
 				
+				@Override
 				public Object getArray(long index, int count, Map<String, Class<?>> map)
 						throws SQLException {
-					return new Object[]{};
-				}
-				
-				public Object getArray(long index, int count) throws SQLException {
-					return new Object[]{};
-				}
-				
-				public Object getArray(Map<String, Class<?>> map) throws SQLException {
+					// TODO Auto-generated method stub
 					return null;
 				}
 				
+				@Override
+				public Object getArray(long index, int count) throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
+				public Object getArray(Map<String, Class<?>> map) throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
 				public Object getArray() throws SQLException {
-					return new Object[]{};
+					// TODO Auto-generated method stub
+					return null;
 				}
-				@SuppressWarnings("all")
+				
+				@Override
 				public void free() throws SQLException {
-					// do nothing
+					// TODO Auto-generated method stub
+					
 				}
-			}));
-			logParams.put("6", new SerialRef(new Ref() {
+			});
 				
-				public void setObject(Object value) throws SQLException {
-					// do nothing
-				}
-				
-				public Object getObject(Map<String, Class<?>> map) throws SQLException {
-					return new Object();
-				}
-				
-				public Object getObject() throws SQLException {
-					return new Object();
-				}
-				
-				public String getBaseTypeName() throws SQLException {
-					return "base type name";
-				}
-			}));
 			
+			logParams.put("6", new Ref() {
+				
+				@Override
+				public void setObject(Object value) throws SQLException {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public Object getObject(Map<String, Class<?>> map) throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
+				public Object getObject() throws SQLException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+				
+				@Override
+				public String getBaseTypeName() throws SQLException {
+					// TODO Auto-generated method stub
+					return "type";
+				}
+			});
+				
+				
 			
 			// test proper replacement/escaping
-			assertEquals("ID=123 AND FOO='?' and LALA=\"BOO\" 456 (blob of length 5) (cblob of length 5) (array of type14) (ref of type14) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
+			assertEquals("ID=\"123\" AND FOO='?' and LALA=\"BOO\" \"456\" (blob of length 5) (cblob of length 5) (array of type14) (ref of type4) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
 		}
 	
 	/**
@@ -172,7 +331,7 @@ public class TestPoolUtil {
 			logParams.put("6", mockSerialRef);
 			
 			// test proper replacement/escaping
-			assertEquals("ID=123 AND FOO='?' and LALA=\"BOO\" NULL (blob of unknown length) (cblob of unknown length) (array of unknown type) (ref of unknown type) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
+			assertEquals("ID=\"123\" AND FOO='?' and LALA=\"BOO\" NULL (blob of unknown length) (cblob of unknown length) (array of unknown type) (ref of unknown type) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
 		}
 	
 	/**
