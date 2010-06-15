@@ -102,6 +102,8 @@ public class PoolUtil {
 					} else
 						if (obj instanceof Array){
 							sb.append(formatLogParam((Array)obj));
+						} if (obj instanceof String){
+							sb.append("\"" + obj.toString()+"\"");
 						} else {
 							sb.append(obj.toString());
 						}

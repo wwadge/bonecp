@@ -31,6 +31,7 @@ import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.rowset.serial.SerialArray;
@@ -40,18 +41,21 @@ import org.hsqldb.jdbc.jdbcBlob;
 import org.hsqldb.jdbc.jdbcClob;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
+
 /** Tests util routines.
  * @author wallacew
  *
  */
 public class TestPoolUtil {
-
 	/**
 	 * Tests formatting stuff.
 	 * @throws SQLException 
 	 */
 	@Test
 	public void testPoolUtil() throws SQLException{
+		Maps.newHashMap();
+		
 			Map<Object, Object> logParams = new LinkedHashMap<Object, Object>();
 		
 			logParams.put("1", "123");
@@ -124,6 +128,7 @@ public class TestPoolUtil {
 					return "base type name";
 				}
 			}));
+			
 			
 			// test proper replacement/escaping
 			assertEquals("ID=123 AND FOO='?' and LALA=\"BOO\" 456 (blob of length 5) (cblob of length 5) (array of type14) (ref of type14) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
