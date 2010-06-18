@@ -41,6 +41,7 @@ import java.lang.reflect.Method;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -324,6 +325,26 @@ public class TestBoneCP {
 		verify(mockConfig, mockDataSource);
 	}
 
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 */
+	@Test
+	public void testGetConnectionViaDriverProperties() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+//		DataSource mockDataSource = createNiceMock(DataSource.class);
+//		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
+		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
+		replay(mockConfig);
+		testClass.obtainRawInternalConnection();
+		verify(mockConfig);
+	}
 	
 	/**
 	 * Test method.

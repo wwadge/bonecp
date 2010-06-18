@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -194,16 +195,25 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	protected Connection obtainRawInternalConnection()
 			throws SQLException {
+		Connection result = null;
+
 		DataSource datasourceBean = this.config.getDatasourceBean();
 		String url = this.config.getJdbcUrl();
 		String username = this.config.getUsername();
 		String password = this.config.getPassword();
+		Properties props = this.config.getDriverProperties();
 		
 		if (datasourceBean != null){
 			return (username == null ? datasourceBean.getConnection() : datasourceBean.getConnection(username, password));
 		} 
-			
-		return DriverManager.getConnection(url, username, password);
+		
+		if (props != null){
+			result = DriverManager.getConnection(url, props);
+		} else {
+			result = DriverManager.getConnection(url, username, password);
+		}
+		
+		return result;
 	}
 
 	/**

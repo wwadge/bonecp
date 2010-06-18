@@ -122,6 +122,7 @@ public class TestBoneCPConfig {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testGettersSetters(){
+		Properties driverProperties = new Properties();
 		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
@@ -144,6 +145,7 @@ public class TestBoneCPConfig {
 		config.setQueryExecuteTimeLimit(123);
 		config.setDisableConnectionTracking(true);
 		config.setConnectionTimeout(9999);
+		config.setDriverProperties(driverProperties);
 
 		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
@@ -165,9 +167,7 @@ public class TestBoneCPConfig {
 		assertEquals(1, config.getPartitionCount());
 		assertEquals("test", config.getConnectionTestStatement());
 		assertEquals(mockDataSource, config.getDatasourceBean());
-				
-
-
+		assertEquals(driverProperties, config.getDriverProperties());
 	}
 	/**
 	 * Config file scrubbing
@@ -200,7 +200,50 @@ public class TestBoneCPConfig {
 		config.sanitize();
 		assertEquals(config.getMinConnectionsPerPartition(), config.getMaxConnectionsPerPartition());
 		assertEquals(20, config.getPoolAvailabilityThreshold());
+	}
+	
+	/**
+	 * Tests that setting driver properties handles username/password correctly.
+	 */
+	@Test
+	public void testDriverPropertiesConfigSanitize(){
+		config.setDatasourceBean(null);
+		config.setUsername("foo");
+		config.setPassword("bar");
+		config.setMaxConnectionsPerPartition(2);
+		config.setMinConnectionsPerPartition(2);
+		config.setJdbcUrl("test");
+		
+		config.sanitize();
+		
+		Properties props = new Properties();
+		props.setProperty("user", "something different");
+		props.setProperty("password", "something different");
+		config.setDriverProperties(props);
+		config.sanitize();
+		
+		// if they don't match, the pool config wins
+		assertEquals("foo", config.getDriverProperties().getProperty("user"));
+		assertEquals("bar", config.getDriverProperties().getProperty("password"));
 
+		
+		
+		config.setDriverProperties(new Properties());
+		config.sanitize();
+		
+		// if not found, copied over from pool config
+		assertEquals("foo", config.getDriverProperties().getProperty("user"));
+		assertEquals("bar", config.getDriverProperties().getProperty("password"));
+		
+		
+		config.setUsername(null);
+		config.setPassword(null);
+		config.setDriverProperties(new Properties());
+		config.sanitize();
+		
+		// if not set, should be blanked out
+		assertEquals("", config.getUsername());
+		assertEquals("", config.getPassword());
 	}
 	
 	/**

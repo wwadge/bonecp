@@ -287,11 +287,11 @@ public class TestPoolUtil {
 					return "type";
 				}
 			});
-				
+			logParams.put("7", new Integer(999));
 				
 			
 			// test proper replacement/escaping
-			assertEquals("ID=\"123\" AND FOO='?' and LALA=\"BOO\" \"456\" (blob of length 5) (cblob of length 5) (array of type14) (ref of type4) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
+			assertEquals("ID=\"123\" AND FOO='?' and LALA=\"BOO\" \"456\" (blob of length 5) (cblob of length 5) (array of type14) (ref of type4) 999 ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ? ?", logParams));
 		}
 	
 	/**

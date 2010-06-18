@@ -115,6 +115,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int poolAvailabilityThreshold = 20;
 	/** Disable connection tracking. */
 	private boolean disableConnectionTracking;
+	/** Used when the alternate way of obtaining a connection is required */
+	private Properties driverProperties;
 	/** Time to wait before a call to getConnection() times out and returns an error. */ 
 	private long connectionTimeout = Long.MAX_VALUE;
 	
@@ -497,15 +499,45 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("JDBC url was not set in config!");
 		}
 
-		if (this.datasourceBean == null && (this.username == null || this.username.trim().equals(""))){
+		if (this.datasourceBean == null && this.driverProperties == null && 
+				(this.username == null || this.username.trim().equals(""))){
 			logger.warn("JDBC username was not set in config!");
 		}
 
-		if ((this.datasourceBean == null) && (this.password == null)){ 
+		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
 			logger.warn("JDBC password was not set in config!");
 		}
-
-
+		
+		// if no datasource and we have driver properties set...
+		if (this.datasourceBean == null && this.driverProperties != null){
+			if ((this.driverProperties.get("user") == null) && this.username == null){
+				logger.warn("JDBC username not set in driver properties and not set in pool config either");
+			} else if ((this.driverProperties.get("user") == null) && this.username != null){
+				logger.warn("JDBC username not set in driver properties, copying it from pool config");
+				this.driverProperties.setProperty("user", this.username);
+			} else if (this.username != null && !this.driverProperties.get("user").equals(this.username)){
+				logger.warn("JDBC username set in driver properties does not match the one set in the pool config.  Overriding it with pool config.");
+				this.driverProperties.setProperty("user", this.username);
+			}  
+		}
+		
+		// if no datasource and we have driver properties set...
+		if (this.datasourceBean == null && this.driverProperties != null){
+			if ((this.driverProperties.get("password") == null) && this.password == null){
+				logger.warn("JDBC password not set in driver properties and not set in pool config either");
+			} else if ((this.driverProperties.get("password") == null) && this.password != null){
+				logger.warn("JDBC password not set in driver properties, copying it from pool config");
+				this.driverProperties.setProperty("password", this.password);
+			} else if (this.password != null && !this.driverProperties.get("password").equals(this.password)){
+				logger.warn("JDBC password set in driver properties does not match the one set in the pool config. Overriding it with pool config.");
+				this.driverProperties.setProperty("password", this.password);
+			}
+			
+			// maintain sanity between the two states 
+			this.username = this.driverProperties.getProperty("user");
+			this.password = this.driverProperties.getProperty("password");
+		}
+		
 		this.username = this.username == null ? "" : this.username.trim();
 		this.jdbcUrl = this.jdbcUrl == null ? "" : this.jdbcUrl.trim();
 		this.password = this.password == null ? "" : this.password.trim();
@@ -1036,5 +1068,33 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setConnectionTimeout(long connectionTimeout) {
 		this.connectionTimeout = connectionTimeout;
+	}
+
+	/** Returns the currently configured driver properties.
+	 * @return the driverProperties handle
+	 */
+	public Properties getDriverProperties() {
+		return this.driverProperties;
+	}
+
+	/** Sets properties that will be passed on to the driver. 
+	 * 
+	 * The properties handle should contain a list of arbitrary string tag/value pairs 
+	 * as connection arguments; normally at least a "user" and "password" property 
+	 * should be included. Failure to include the user or password properties will make the 
+	 * pool copy the values given in config.setUsername(..) and config.setPassword(..).  
+	 * 
+	 * Note that the pool will make a copy of these properties so as not to risk attempting to
+	 * create a connection later on with different settings.
+	 * 
+	 * @param driverProperties the driverProperties to set
+	 */
+	public void setDriverProperties(Properties driverProperties) {
+		if (driverProperties != null){
+			// make a copy of the properties so that we don't attempt to create more connections
+			// later on and are possibly surprised by having different urls/usernames/etc
+			this.driverProperties = new Properties();
+			this.driverProperties.putAll(driverProperties);
+		}
 	}
 }
