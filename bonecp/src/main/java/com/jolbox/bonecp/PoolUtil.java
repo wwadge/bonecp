@@ -99,7 +99,7 @@ public class PoolUtil {
 		} else if (obj instanceof Array){
 			sb.append(formatLogParam((Array)obj));
 		} else if (obj instanceof String){
-			sb.append("\"" + obj.toString()+"\"");
+			sb.append("'" + obj.toString()+"'");
 		} else {
 			sb.append(obj.toString());
 		}

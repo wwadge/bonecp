@@ -92,6 +92,9 @@ PreparedStatement {
 	public void addBatch() throws SQLException {
 		checkClosed();
 		try {
+			if (this.logStatementsEnabled){
+				this.batchSQL.append(this.sql);
+			}
 			this.internalPreparedStatement.addBatch();
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);

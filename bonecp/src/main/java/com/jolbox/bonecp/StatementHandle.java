@@ -60,7 +60,7 @@ public class StatementHandle implements Statement{
 	/** If enabled, log all statements being executed. */
 	protected boolean logStatementsEnabled;
 	/** for logging of addBatch. */
-	private StringBuffer batchSQL = new StringBuffer();
+	protected StringBuffer batchSQL = new StringBuffer();
 	/** If true, this statement is in the cache. */
 	public volatile boolean inCache = false;
 	/** Stack trace capture of where this statement was opened. */ 

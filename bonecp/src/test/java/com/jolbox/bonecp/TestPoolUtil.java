@@ -35,14 +35,8 @@ import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.sql.rowset.serial.SerialArray;
-import javax.sql.rowset.serial.SerialRef;
-
-import org.hsqldb.jdbc.jdbcBlob;
-import org.hsqldb.jdbc.jdbcClob;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -68,6 +62,7 @@ public class TestPoolUtil {
 				
 				@Override
 				public void truncate(long len) throws SQLException {
+					// do nothing
 				}
 				
 				@Override
@@ -119,13 +114,14 @@ public class TestPoolUtil {
 				
 				@Override
 				public void free() throws SQLException {
+					//do nothing
 				}
 			});
 			logParams.put("4", new Clob() {
 				
 				@Override
 				public void truncate(long len) throws SQLException {
-					
+					//do nothing
 				}
 				
 				@Override
@@ -186,7 +182,7 @@ public class TestPoolUtil {
 				
 				@Override
 				public void free() throws SQLException {
-					
+					//do nothing
 				}
 			});
 			logParams.put("5", new Array() {
