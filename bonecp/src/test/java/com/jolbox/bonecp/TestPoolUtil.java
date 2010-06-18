@@ -287,7 +287,7 @@ public class TestPoolUtil {
 				
 			
 			// test proper replacement/escaping
-			assertEquals("ID=\"123\" AND FOO='?' and LALA=\"BOO\" \"456\" (blob of length 5) (cblob of length 5) (array of type14) (ref of type4) 999 ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ? ?", logParams));
+			assertEquals("ID='123' AND FOO='?' and LALA=\"BOO\" '456' (blob of length 5) (cblob of length 5) (array of type14) (ref of type4) 999 ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ? ?", logParams));
 		}
 	
 	/**
@@ -327,7 +327,7 @@ public class TestPoolUtil {
 			logParams.put("6", mockSerialRef);
 			
 			// test proper replacement/escaping
-			assertEquals("ID=\"123\" AND FOO='?' and LALA=\"BOO\" NULL (blob of unknown length) (cblob of unknown length) (array of unknown type) (ref of unknown type) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
+			assertEquals("ID='123' AND FOO='?' and LALA=\"BOO\" NULL (blob of unknown length) (cblob of unknown length) (array of unknown type) (ref of unknown type) ?", PoolUtil.fillLogParams("ID=? AND FOO='?' and LALA=\"BOO\" ? ? ? ? ? ?", logParams));
 		}
 	
 	/**
