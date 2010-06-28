@@ -213,8 +213,8 @@
 						<version>2.0.1</version>
 						<configuration>
 							<verbose>true</verbose>
-							<source>1.5</source>
-							<target>1.5</target>
+							<source>1.6</source>
+							<target>1.6</target>
 						</configuration>
 					</plugin>
 
