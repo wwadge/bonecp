@@ -255,21 +255,16 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 		Reference ref = (Reference) object;
 		Enumeration<RefAddr> addrs = ref.getAll();
 		Properties props = new Properties();
-		String driverClassName = null;
 		while (addrs.hasMoreElements()) {
 			RefAddr addr = addrs.nextElement();
-			if (addr.getType().equals("driverClassName"))
-				driverClassName = (String) addr.getContent();
-			else
+			if (addr.getType().equals("driverClassName")){
+				Class.forName((String) addr.getContent());
+			} else {
 				props.put(addr.getType(), addr.getContent());
+			}
 		}		
 		BoneCPConfig config = new BoneCPConfig(props);
 
-		if (driverClassName != null){
-			Class.forName(driverClassName);
-		} else {
-			logger.warn("Driver class name is null!");
-		}
 		return new BoneCPDataSource(config);
 }
 
