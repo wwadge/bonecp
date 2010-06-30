@@ -24,21 +24,28 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * DataSource for use with LazyConnection Provider etc.
  *
  * @author wallacew
  */
-public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serializable{
+public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serializable, ObjectFactory {
 	/** Serialization UID. */
 	private static final long serialVersionUID = -1561804548443209469L;
 	/** Config setting. */
@@ -160,7 +167,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	}
 
 	/**
-	* Sets the log writer for this DataSource object to the given java.io.PrintWriter object.
+	 * Sets the log writer for this DataSource object to the given java.io.PrintWriter object.
 	 */
 	public void setLogWriter(PrintWriter out)
 	throws SQLException {
@@ -168,9 +175,9 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	}
 
 	/**
-	* Sets the maximum time in seconds that this data source will wait while 
-	* attempting to connect to a database. A value of zero specifies that the timeout is the default 
-	* system timeout if there is one; otherwise, it specifies that there is no timeout. When a DataSource object is created, the login timeout is initially zero.
+	 * Sets the maximum time in seconds that this data source will wait while 
+	 * attempting to connect to a database. A value of zero specifies that the timeout is the default 
+	 * system timeout if there is one; otherwise, it specifies that there is no timeout. When a DataSource object is created, the login timeout is initially zero.
 	 */
 	public void setLoginTimeout(int seconds)
 	throws SQLException {
@@ -237,5 +244,33 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 	public BoneCPConfig getConfig() {
 		return this;
 	}
-	
+
+
+
+	/* (non-Javadoc)
+	 * @see javax.naming.spi.ObjectFactory#getObjectInstance(java.lang.Object, javax.naming.Name, javax.naming.Context, java.util.Hashtable)
+	 */
+	public Object getObjectInstance(Object object, Name name, Context context, Hashtable<?, ?> table) throws Exception {
+
+		Reference ref = (Reference) object;
+		Enumeration<RefAddr> addrs = ref.getAll();
+		Properties props = new Properties();
+		String driverClassName = null;
+		while (addrs.hasMoreElements()) {
+			RefAddr addr = addrs.nextElement();
+			if (addr.getType().equals("driverClassName"))
+				driverClassName = (String) addr.getContent();
+			else
+				props.put(addr.getType(), addr.getContent());
+		}		
+		BoneCPConfig config = new BoneCPConfig(props);
+
+		if (driverClassName != null){
+			Class.forName(driverClassName);
+		} else {
+			logger.warn("Driver class name is null!");
+		}
+		return new BoneCPDataSource(config);
+}
+
 }
