@@ -66,7 +66,7 @@ public class TestCloseThreadMonitor {
 		mockLogger = createStrictMock(Logger.class);
 		mockThread = createNiceMock(Thread.class);
 		
-		testClass = new CloseThreadMonitor(mockThread, mockConnection, "fakeexception");
+		testClass = new CloseThreadMonitor(mockThread, mockConnection, "fakeexception", 0);
 		Field field = testClass.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 		field.set(testClass, mockLogger);

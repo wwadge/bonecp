@@ -119,6 +119,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
 	private long connectionTimeout;
+	/** No of ms to wait for thread.join() in connection watch thread. */
+	private long closeConnectionWatchTimeout;
 
 	/**
 	 * Closes off this connection pool.
@@ -225,6 +227,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.config = config;
 		config.sanitize();
 		
+		this.closeConnectionWatchTimeout = config.getCloseConnectionWatchTimeout();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeout = config.getConnectionTimeout();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
@@ -388,7 +391,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	private void watchConnection(ConnectionHandle connectionHandle) {
 		String message = captureStackTrace(UNCLOSED_EXCEPTION_MESSAGE);
-		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message));
+		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message, this.closeConnectionWatchTimeout));
 	}
 
 	/** Throw an exception to capture it so as to be able to print it out later on

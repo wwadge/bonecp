@@ -39,6 +39,8 @@ public class CloseThreadMonitor implements Runnable {
 	private String stackTrace;
 	/** Thread to wait for termination. */
 	private Thread threadToMonitor;
+	/** ms to wait for thread.join() */
+	private long closeConnectionWatchTimeout;
 	/** Logger class. */
 	private static Logger logger = LoggerFactory.getLogger(CloseThreadMonitor.class);
 
@@ -47,11 +49,13 @@ public class CloseThreadMonitor implements Runnable {
 	 * @param threadToMonitor Thread to wait for termination
 	 * @param connectionHandle connection handle that we are monitoring
 	 * @param stackTrace where the getConnection() request started off.
+	 * @param closeConnectionWatchTimeout no of ms to wait in thread.join(). 0 = wait forever
 	 */
-	public CloseThreadMonitor(Thread threadToMonitor, ConnectionHandle connectionHandle, String stackTrace) {
+	public CloseThreadMonitor(Thread threadToMonitor, ConnectionHandle connectionHandle, String stackTrace, long closeConnectionWatchTimeout) {
 		this.connectionHandle = connectionHandle;
 		this.stackTrace = stackTrace;
 		this.threadToMonitor = threadToMonitor;
+		this.closeConnectionWatchTimeout = closeConnectionWatchTimeout;
 	}
 
 	/** {@inheritDoc}
@@ -61,7 +65,7 @@ public class CloseThreadMonitor implements Runnable {
 	public void run() {
 		try {
 			// wait for the thread we're monitoring to die off.
-			this.threadToMonitor.join();
+			this.threadToMonitor.join(this.closeConnectionWatchTimeout);
 			if (!this.connectionHandle.isClosed()){
 				logger.error(this.stackTrace);
 			}

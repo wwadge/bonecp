@@ -146,7 +146,9 @@ public class TestBoneCPConfig {
 		config.setDisableConnectionTracking(true);
 		config.setConnectionTimeout(9999);
 		config.setDriverProperties(driverProperties);
+		config.setCloseConnectionWatchTimeout(Long.MAX_VALUE);
 
+		assertEquals(Long.MAX_VALUE, config.getCloseConnectionWatchTimeout());
 		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, config.getUsername());
