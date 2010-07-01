@@ -268,4 +268,13 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serial
 		return new BoneCPDataSource(config);
 }
 
+	@Override
+	public boolean equals(Object obj) {
+		return super.equals(obj);
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode();
+	}
 }

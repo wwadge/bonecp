@@ -60,6 +60,8 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
  *
  */
 public class BoneCP implements BoneCPMBean, Serializable {
+	/** Warning message. */
+	private static final String THREAD_CLOSE_CONNECTION_WARNING = "Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!";
 	/** Serialization UID */
 	private static final long serialVersionUID = -8386816681977604817L;
 	/** Exception message. */
@@ -263,7 +265,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 
 		if (this.closeConnectionWatch){
-			logger.warn("Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!");
+			logger.warn(THREAD_CLOSE_CONNECTION_WARNING);
 			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread"+suffix, true));
 
 		}
@@ -283,7 +285,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){
-				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
+				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), 
+						config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
 			}
 
 			// watch this partition for low no of threads
@@ -482,7 +485,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			connectionHandle.recoveryResult.getReplaceTarget().clear();
 		}
 
-		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
+		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() 
+				&& !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			maybeSignalForMoreConnections(connectionPartition);
