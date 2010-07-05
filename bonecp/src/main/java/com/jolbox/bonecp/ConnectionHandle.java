@@ -300,7 +300,9 @@ public class ConnectionHandle implements Connection{
 		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
 		char firstChar = state.charAt(0);
-		if (state.equals("40001") || state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
+		if (state.equals("40001") || 
+				state.equals("HY000") ||
+				state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
 			this.possiblyBroken = true;
 		}
 
