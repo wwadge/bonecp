@@ -299,6 +299,7 @@ public class ConnectionHandle implements Connection{
 		//		char firstChar = state.charAt(0);
 		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
+		// state == HY000 is firebird specific triggered when a connection is broken
 		char firstChar = state.charAt(0);
 		if (state.equals("40001") || 
 				state.equals("HY000") ||
