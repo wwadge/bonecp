@@ -110,6 +110,8 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;	
+	/** Keep track of the thread that's using this connection for connection watch. */
+	private Thread threadUsingConnection;
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -348,7 +350,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			if (!this.logicallyClosed) {
 				this.logicallyClosed = true;
-
+				this.threadUsingConnection = null;
 				this.pool.releaseConnection(this);
 
 				if (this.doubleCloseCheck){
@@ -1103,6 +1105,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	protected void renewConnection() {
 		this.logicallyClosed = false;
+		this.threadUsingConnection = Thread.currentThread();
 		if (this.doubleCloseCheck){
 			this.doubleCloseException = null;
 		}
@@ -1240,4 +1243,12 @@ public class ConnectionHandle implements Connection{
 			throw new RuntimeException("BoneCP: Internal error - transaction replay log is not turned on?", t);
 		}
 	}
+
+	/** Returns the thread that is currently utilizing this connection.
+	 * @return the threadUsingConnection
+	 */
+	public Thread getThreadUsingConnection() {
+		return this.threadUsingConnection;
+	}
+
 }
