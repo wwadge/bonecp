@@ -347,7 +347,15 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return this.statementsCacheSize;
 	}
 
-
+	/** Deprecated. Use getStatementsCacheSize() instead
+	 * @return statementsCacheSize
+	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getPreparedStatementsCacheSize()
+	 */
+	@Deprecated
+	public int getPreparedStatementCacheSize() {
+		logger.info("Please use getStatementsCacheSize in place of getPreparedStatementCacheSize. This method has been deprecated.");
+		return this.statementsCacheSize;
+	}
 
 	/**
 	 * Deprecated. Use setStatementsCacheSize() instead. 
