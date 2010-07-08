@@ -44,6 +44,7 @@ import org.junit.Test;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.CommonTestUtils;
+import com.jolbox.bonecp.MockConnection;
 import com.jolbox.bonecp.MockJDBCAnswer;
 import com.jolbox.bonecp.MockJDBCDriver;
 
@@ -70,9 +71,14 @@ public class TestConnectionHook {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException, ClassNotFoundException{
+	driver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
 		hookClass = new CustomHook();
-		mockConnection = createNiceMock(Connection.class);
-		driver = new MockJDBCDriver(mockConnection); // load the driver
+		Class.forName("com.jolbox.bonecp.MockJDBCDriver");
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
@@ -100,9 +106,11 @@ public class TestConnectionHook {
 	}
 	/**
 	 * Killoff pool
+	 * @throws SQLException 
 	 */
 	@AfterClass
-	public static void shutdown(){
+	public static void shutdown() throws SQLException{
+		driver.disable();
 		poolClass.shutdown();
 	}
 
@@ -208,7 +216,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
-		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("invalid").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		replay(mockConfig);

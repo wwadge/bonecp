@@ -25,6 +25,8 @@
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
 		<module>bonecp-spring</module>
+		<module>bonecp-test-commons</module>
+		
 		<!-- 	<module>bonecp-benchmark</module>  -->
 	</modules>
 
@@ -53,13 +55,14 @@
 				<version>2.5.6</version>
 			</dependency>
 
+<!-- 
 			<dependency>
 				<groupId>hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>
 				<version>1.8.0.10</version>
 				<scope>test</scope>
 			</dependency>
-
+ -->
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>

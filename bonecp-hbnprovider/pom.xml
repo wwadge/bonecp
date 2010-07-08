@@ -29,13 +29,13 @@
 			<version>2.4</version>
 			<scope>test</scope>
 		</dependency>
-
+<!-- 
 		<dependency>
 			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+ -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

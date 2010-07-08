@@ -33,8 +33,12 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import jsr166y.LinkedTransferQueue;
 
 import org.easymock.IAnswer;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -62,6 +66,8 @@ public class TestPoolWatchThread {
 	static boolean first = true;
 	/** Mock handle. */
 	private static BoneCPConfig mockConfig;
+	/** Mock handle. */
+	private static MockJDBCDriver driver;
 
 	/** Test class setup.
 	 * @throws IllegalArgumentException
@@ -69,10 +75,11 @@ public class TestPoolWatchThread {
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException
 	 * @throws ClassNotFoundException
+	 * @throws SQLException 
 	 */
 	@BeforeClass
-	public static void setup() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, ClassNotFoundException{
-		Class.forName("org.hsqldb.jdbcDriver");
+	public static void setup() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, ClassNotFoundException, SQLException{
+		driver = new MockJDBCDriver();
 		mockPartition = createNiceMock(ConnectionPartition.class);
 
 
@@ -106,6 +113,13 @@ public class TestPoolWatchThread {
 
 	}
 
+	/** AfterClass cleanup.
+	 * @throws SQLException
+	 */
+	@AfterClass
+	public static void teardown() throws SQLException{
+		driver.disable();
+	}
 
 
 	/**
@@ -159,7 +173,7 @@ public class TestPoolWatchThread {
 	public void testRunCreateConnections() throws InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
 		expect(mockLogger.isDebugEnabled()).andReturn(true).anyTimes();
 
-		ArrayBlockingQueue<ConnectionHandle> fakeConnections = new ArrayBlockingQueue<ConnectionHandle>(5);
+		LinkedTransferQueue<ConnectionHandle> fakeConnections = new LinkedTransferQueue<ConnectionHandle>();
 //		mockPartition.almostFullWait();
 //		expectLastCall().anyTimes();
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
@@ -187,6 +201,8 @@ public class TestPoolWatchThread {
 		expect(mockPartition.getUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(mockPartition.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockPartition.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(fakeConnections.size())).anyTimes();
+
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
@@ -254,6 +270,7 @@ public class TestPoolWatchThread {
 			} 
 		}).once();
 		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(fakeConnections.size())).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 
 		expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();

@@ -20,7 +20,7 @@
 /**
  * 
  */
-package com.jolbox.benchmark;
+package com.jolbox.bonecp;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -31,13 +31,16 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -787,6 +790,25 @@ public class MockPreparedStatement implements PreparedStatement {
 	// @Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return null;
+	}
+
+	@Override
+	public void setNClob(int parameterIndex, NClob value) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setRowId(int parameterIndex, RowId x) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
+			throws SQLException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

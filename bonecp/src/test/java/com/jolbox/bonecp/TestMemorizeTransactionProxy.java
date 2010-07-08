@@ -70,7 +70,6 @@ public class TestMemorizeTransactionProxy {
 	static Connection mockConnection3;
 	/** Config handle. */
 	private static BoneCPConfig config; 
-	
 	/**
 	 * Test setup.
 	 */
@@ -105,7 +104,6 @@ public class TestMemorizeTransactionProxy {
 	public void testProxies() throws SQLException, SecurityException, IllegalArgumentException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException{
 		
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(mockConnection);
 		config.setTransactionRecoveryEnabled(true);
 		config.setJdbcUrl("jdbc:mock:driver2");
@@ -170,7 +168,7 @@ public class TestMemorizeTransactionProxy {
 		} catch (Throwable t){
 			// should throw an exception
 		}
-		MockJDBCDriver.disable();
+		mockDriver.disable();
 	}
 	
 	/** Temp. */
@@ -261,8 +259,7 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockCallableStatement2, mockStatement, mockStatement2);
 		
-		MockJDBCDriver.disable();
-		
+		mockDriver.disable();
 	}
 	
 	
@@ -275,7 +272,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -313,8 +309,7 @@ public class TestMemorizeTransactionProxy {
 		
 		
 		verify(mockConnection, mockPreparedStatement);
-		
-		MockJDBCDriver.disable();
+		mockDriver.disable();
 		
 	}
 	
@@ -327,7 +322,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -394,7 +388,7 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockPreparedStatement3);
 		
-		MockJDBCDriver.disable();
+		mockDriver.disable();
 	}
 	
 	
@@ -407,7 +401,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -464,13 +457,14 @@ public class TestMemorizeTransactionProxy {
 			ps.execute();
 			fail("Should have thrown exception");
 		} catch (SQLException e){
+//			e.printStackTrace();
 			// expected exception
 		}
 		
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 		
-		MockJDBCDriver.disable();
+		mockDriver.disable();
 	}
 	
 	/** Interrupted
@@ -482,7 +476,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -561,7 +554,7 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 		
-		MockJDBCDriver.disable();
+		mockDriver.disable();
 	}
 	
 	/** Test hooks.
@@ -573,7 +566,6 @@ public class TestMemorizeTransactionProxy {
 		
 		count = 1;
 
-		@SuppressWarnings("unused")
 		MockJDBCDriver mockDriver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			// @Override
@@ -636,7 +628,7 @@ public class TestMemorizeTransactionProxy {
 		
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 		
-		MockJDBCDriver.disable();
+		mockDriver.disable();
 	}
 	
 }

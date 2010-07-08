@@ -66,7 +66,8 @@ public class ConnectionTesterThread implements Runnable {
 		ConnectionHandle connection = null;
 	
 		try {
-			int partitionSize= this.partition.getFreeConnections().size();
+			//FIXME: size is O(n) with LinkedTransferQueue!
+			int partitionSize= this.partition.getAvailableConnections().get();
 			long currentTime = System.currentTimeMillis();
 			for (int i=0; i < partitionSize; i++){
 			 
@@ -74,7 +75,7 @@ public class ConnectionTesterThread implements Runnable {
 				if (connection != null){
 					connection.setOriginatingPartition(this.partition);
 					if (connection.isPossiblyBroken() || 
-							((this.idleMaxAge > 0) && (this.partition.getFreeConnections().size() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
+							((this.idleMaxAge > 0) && (this.partition.getAvailableConnections().get() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
 						// kill off this connection
 						closeConnection(connection);
 						continue;
@@ -96,7 +97,7 @@ public class ConnectionTesterThread implements Runnable {
 				}
 
 			} // throw it back on the queue
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
 			    logger.debug("Shutting down connection tester thread.");
 				closeConnection(connection);

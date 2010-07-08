@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +44,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
+
+import jsr166y.LinkedTransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,24 +159,24 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Closes off all connections in all partitions. */
 	protected void terminateAllConnections(){
 		this.terminationLock.lock();
-			try{
-				// close off all connections.
-				for (int i=0; i < this.partitionCount; i++) {
-					ConnectionHandle conn;
-					while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
-						postDestroyConnection(conn);
+		try{
+			// close off all connections.
+			for (int i=0; i < this.partitionCount; i++) {
+				ConnectionHandle conn;
+				while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
+					postDestroyConnection(conn);
 
-						try {
-							conn.internalClose();
-						} catch (SQLException e) {
-							logger.error("Error in attempting to close connection", e);
-						}
+					try {
+						conn.internalClose();
+					} catch (SQLException e) {
+						logger.error("Error in attempting to close connection", e);
 					}
-					
 				}
-			} finally {
-				this.terminationLock.unlock();
+
 			}
+		} finally {
+			this.terminationLock.unlock();
+		}
 	}
 
 	/** Update counters and call hooks.
@@ -192,13 +193,13 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		}
 
 	}
-	
+
 	/** Returns a database connection by using Driver.getConnection() or DataSource.getConnection()
 	 * @return Connection handle
 	 * @throws SQLException on error
 	 */
 	protected Connection obtainRawInternalConnection()
-			throws SQLException {
+	throws SQLException {
 		Connection result = null;
 
 		DataSource datasourceBean = this.config.getDatasourceBean();
@@ -206,17 +207,17 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		String username = this.config.getUsername();
 		String password = this.config.getPassword();
 		Properties props = this.config.getDriverProperties();
-		
+
 		if (datasourceBean != null){
 			return (username == null ? datasourceBean.getConnection() : datasourceBean.getConnection(username, password));
 		} 
-		
+
 		if (props != null){
 			result = DriverManager.getConnection(url, props);
 		} else {
 			result = DriverManager.getConnection(url, username, password);
 		}
-		
+
 		return result;
 	}
 
@@ -228,7 +229,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	public BoneCP(BoneCPConfig config) throws SQLException {
 		this.config = config;
 		config.sanitize();
-		
+
 		this.closeConnectionWatchTimeout = config.getCloseConnectionWatchTimeout();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeout = config.getConnectionTimeout();
@@ -253,14 +254,14 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
 		String suffix = "";
-		
+
 		if (config.getPoolName()!=null) {
 			suffix="-"+config.getPoolName();
 		}
-				
+
 		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler"+suffix, true));
 		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread"+suffix, true));
-		
+
 		this.partitionCount = config.getPartitionCount();
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 
@@ -274,7 +275,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this);
 			this.partitions[p]=connectionPartition;
-			this.partitions[p].setFreeConnections(new ArrayBlockingQueue<ConnectionHandle>(config.getMaxConnectionsPerPartition()));
+			this.partitions[p].setFreeConnections(new LinkedTransferQueue<ConnectionHandle>());
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
@@ -294,8 +295,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		}
 
 		if (!this.config.isDisableJMX()){
-		      initJMX();
-	    }
+			initJMX();
+		}
 	}
 
 	/**
@@ -307,15 +308,15 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		}
 		try {
 			String suffix = "";
-			
+
 			if (this.config.getPoolName()!=null){
 				suffix="-"+this.config.getPoolName();
 			}
-			
+
 			ObjectName name = new ObjectName(MBEAN_BONECP +suffix);
 			ObjectName configname = new ObjectName(MBEAN_CONFIG + suffix);
 
-			
+
 			if (!this.mbs.isRegistered(name)){
 				this.mbs.registerMBean(this, name); 
 			}
@@ -384,7 +385,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			watchConnection(result);
 		}
 
-
+		connectionPartition.getAvailableConnections().decrementAndGet();
 		return result;
 	}
 
@@ -438,7 +439,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
-		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && connectionPartition.getFreeConnections().size()*100/connectionPartition.getMaxConnections() < this.poolAvailabilityThreshold){
+		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && 
+				connectionPartition.getAvailableConnections().get()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
 			connectionPartition.getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 		}
 	}
@@ -450,34 +452,27 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @throws SQLException
 	 */
 	protected void releaseConnection(Connection connection) throws SQLException {
+		ConnectionHandle handle = (ConnectionHandle)connection;
 
-		try {
-			ConnectionHandle handle = (ConnectionHandle)connection;
-
-			// hook calls
-			if (handle.getConnectionHook() != null){
-				handle.getConnectionHook().onCheckIn(handle);
-			}
-
-			// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
-			// close off the connection right away because the helper threads have gone away.
-			if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){
-				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
-			} else {
-				internalReleaseConnection(handle);
-			}
+		// hook calls
+		if (handle.getConnectionHook() != null){
+			handle.getConnectionHook().onCheckIn(handle);
 		}
-		catch (InterruptedException e) {
-			throw new SQLException(e.getMessage());
+
+		// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
+		// close off the connection right away because the helper threads have gone away.
+		if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){
+			handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
+		} else {
+			internalReleaseConnection(handle);
 		}
 	}
 
 	/** Release a connection by placing the connection back in the pool.
 	 * @param connectionHandle Connection being released.
-	 * @throws InterruptedException 
 	 * @throws SQLException 
 	 **/
-	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws InterruptedException, SQLException {
+	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws SQLException {
 		connectionHandle.clearStatementCaches(false);
 
 		if (connectionHandle.getReplayLog() != null){
@@ -507,10 +502,16 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 	/** Places a connection back in the originating partition.
 	 * @param connectionHandle to place back
-	 * @throws InterruptedException on interrupt
 	 */
-	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws InterruptedException {
-		connectionHandle.getOriginatingPartition().getFreeConnections().put(connectionHandle);
+	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) {
+		LinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+
+		if (!queue.tryTransfer(connectionHandle)){
+			queue.put(connectionHandle);
+		}
+
+		connectionHandle.getOriginatingPartition().getAvailableConnections().incrementAndGet();
+
 	}
 
 
@@ -575,7 +576,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	public int getTotalLeased(){
 		int total=0;
 		for (int i=0; i < this.partitionCount; i++){
-			total+=this.partitions[i].getCreatedConnections()-this.partitions[i].getFreeConnections().size();
+			total+=this.partitions[i].getCreatedConnections()-this.partitions[i].getAvailableConnections().get();
 		}
 		return total;
 	}
@@ -587,7 +588,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	public int getTotalFree(){
 		int total=0;
 		for (int i=0; i < this.partitionCount; i++){
-			total+=this.partitions[i].getFreeConnections().size();
+			total+=this.partitions[i].getAvailableConnections().get();
 		}
 		return total;
 	}

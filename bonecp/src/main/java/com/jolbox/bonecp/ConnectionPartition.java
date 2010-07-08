@@ -28,7 +28,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import jsr166y.LinkedTransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +49,7 @@ public class ConnectionPartition implements Serializable{
 	/** Logger class. */
 	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
-	private ArrayBlockingQueue<ConnectionHandle> freeConnections;
+    private LinkedTransferQueue<ConnectionHandle> freeConnections;
 	/** When connections start running out, add these number of new connections. */
 	private final int acquireIncrement;
 	/** Minimum number of connections to start off with. */
@@ -57,6 +60,8 @@ public class ConnectionPartition implements Serializable{
 	protected ReentrantReadWriteLock statsLock = new ReentrantReadWriteLock();
 	/** Number of connections that have been created. */
 	private int createdConnections=0;
+    /** TransferQueue.size() is O(n) so we have to maintain the size as we go along for good performance :-( */ 
+    private AtomicInteger availableConnections = new AtomicInteger();
 	/** DB details. */
 	private final String url;
 	/** DB details. */
@@ -68,7 +73,7 @@ public class ConnectionPartition implements Serializable{
 	 */
 	private volatile boolean unableToCreateMoreTransactions=false;
 	/** Scratch queue of connections awaiting to be placed back in queue. */
-	private ArrayBlockingQueue<ConnectionHandle> connectionsPendingRelease;
+    private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
 	/** Config setting. */
 	private boolean disableTracking;
 	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
@@ -102,6 +107,7 @@ public class ConnectionPartition implements Serializable{
 	 * @throws SQLException on error
 	 */
 	protected void addFreeConnection(ConnectionHandle connectionHandle) throws SQLException{
+        this.availableConnections.incrementAndGet(); 
 		connectionHandle.setOriginatingPartition(this);
 		if (this.freeConnections.offer(connectionHandle)){ // may race
 			updateCreatedConnections(1);
@@ -111,7 +117,7 @@ public class ConnectionPartition implements Serializable{
 		}
 	}
 
-	/** This method is a replacement for finalize() but avoids all the pitfalls of it (see Joshua Bloch et. all).
+    /** This method is a replacement for finalize() but avoids all its pitfalls (see Joshua Bloch et. all).
 	 * 
 	 * Keeps a handle on the connection. If the application called closed, then it means that the handle gets pushed back to the connection
 	 * pool and thus we get a strong reference again. If the application forgot to call close() and subsequently lost the strong reference to it,
@@ -158,7 +164,7 @@ public class ConnectionPartition implements Serializable{
 	/**
 	 * @return the freeConnections
 	 */
-	protected ArrayBlockingQueue<ConnectionHandle> getFreeConnections() {
+    protected LinkedTransferQueue<ConnectionHandle> getFreeConnections() {
 		return this.freeConnections;
 	}
 
@@ -166,7 +172,7 @@ public class ConnectionPartition implements Serializable{
 	 * @param freeConnections the freeConnections to set
 	 */
 	protected void setFreeConnections(
-			ArrayBlockingQueue<ConnectionHandle> freeConnections) {
+            LinkedTransferQueue<ConnectionHandle> freeConnections) {
 		this.freeConnections = freeConnections;
 	}
 
@@ -184,7 +190,7 @@ public class ConnectionPartition implements Serializable{
 		this.url = config.getJdbcUrl();
 		this.username = config.getUsername();
 		this.password = config.getPassword();
-		this.connectionsPendingRelease = new ArrayBlockingQueue<ConnectionHandle>(this.maxConnections);
+        this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 		this.disableTracking = config.isDisableConnectionTracking();
 
 		/** Create a number of helper threads for connection release. */
@@ -244,7 +250,7 @@ public class ConnectionPartition implements Serializable{
 	 * @return number of free slots.
 	 */
 	protected int getRemainingCapacity(){
-		return this.freeConnections.remainingCapacity();
+        return this.maxConnections-this.availableConnections.get();
 	}
 
 	/**
@@ -296,7 +302,14 @@ public class ConnectionPartition implements Serializable{
 	 *
 	 * @return release connection handle queue 
 	 */
-	protected ArrayBlockingQueue<ConnectionHandle> getConnectionsPendingRelease() {
+    protected LinkedTransferQueue<ConnectionHandle> getConnectionsPendingRelease() {
 		return this.connectionsPendingRelease;
 	}
+	/**
+	 * @return the availableConnections
+	 */
+	protected AtomicInteger getAvailableConnections() {
+		return this.availableConnections;
+	}
+
 }

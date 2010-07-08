@@ -33,7 +33,7 @@ public enum ConnectionPoolType {
 	PROXOOL(false),
 //	NANOPOOL,
 	/** pool type. */
-	DBCP(false),
+	DBCP(true),
 	/** pool type. */
 	TOMCAT_JDBC(false),
 	/** pool type. */

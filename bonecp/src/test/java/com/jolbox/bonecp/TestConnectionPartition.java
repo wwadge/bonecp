@@ -47,6 +47,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import jsr166y.LinkedTransferQueue;
+import jsr166y.TransferQueue;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -156,7 +159,7 @@ public class TestConnectionPartition {
 	public void testFreeConnection() throws SQLException  {
 		int count = testClass.getCreatedConnections();
 
-		ArrayBlockingQueue<ConnectionHandle> freeConnections = createNiceMock(ArrayBlockingQueue.class);
+		LinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedTransferQueue.class);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
 		this.mockPool = createNiceMock(BoneCP.class);
@@ -168,13 +171,12 @@ public class TestConnectionPartition {
     	ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
     	expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(freeConnections.offer(mockConnectionHandle)).andReturn(true);
-		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
 		
 		replay(mockConnectionHandle, freeConnections, this.mockPool);
 		testClass.addFreeConnection(mockConnectionHandle);
 		verify(mockConnectionHandle, freeConnections);
 		assertEquals(count+1, testClass.getCreatedConnections());
-		assertEquals(1, testClass.getRemainingCapacity());
+		assertEquals(0, testClass.getRemainingCapacity());
 		
 	}
 
@@ -186,7 +188,7 @@ public class TestConnectionPartition {
 	public void testFreeConnectionFailing() throws SQLException  {
 		int count = testClass.getCreatedConnections();
 
-		ArrayBlockingQueue<ConnectionHandle> freeConnections = createNiceMock(ArrayBlockingQueue.class);
+		LinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedTransferQueue.class);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
 		this.mockPool = createNiceMock(BoneCP.class);

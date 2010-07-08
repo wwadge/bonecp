@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
-import java.text.ParseException;
 
 import javax.naming.NamingException;
 
@@ -36,6 +35,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
@@ -47,6 +47,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import com.jolbox.bonecp.MockJDBCDriver;
 
 
 /**
@@ -70,9 +71,8 @@ public class BenchmarkMain {
 	 * @throws IllegalArgumentException 
 	 * @throws NamingException 
 	 * @throws ParseException 
-	 * @throws org.apache.commons.cli.ParseException 
 	 */
-	public static void main(String[] args) throws ClassNotFoundException, SQLException, PropertyVetoException, IllegalArgumentException, SecurityException, InterruptedException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NamingException, ParseException, org.apache.commons.cli.ParseException {
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, PropertyVetoException, IllegalArgumentException, SecurityException, InterruptedException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NamingException, ParseException {
 
 		Options options = new Options();
 		options.addOption("t", "threads",true, "Max number of threads");
@@ -89,10 +89,23 @@ public class BenchmarkMain {
 			System.exit(1);
 		}
 			
+		Class.forName("com.jolbox.bonecp.MockJDBCDriver" );
+		new MockJDBCDriver();
+		BenchmarkTests tests = new BenchmarkTests();
 		
+
+		BenchmarkTests.threads=400;
+		BenchmarkTests.stepping=20;
+		BenchmarkTests.pool_size=200;
+		// warm up
+		System.out.println("JIT warm up");
+		tests.testMultiThreadedConstantDelay(0);
+
 		BenchmarkTests.threads=400;
 		BenchmarkTests.stepping=5;
 		BenchmarkTests.pool_size=200;
+
+
 		if (cmd.hasOption("t")){
 			BenchmarkTests.threads=Integer.parseInt(cmd.getOptionValue("t", "400"));
 		} 
@@ -107,24 +120,19 @@ public class BenchmarkMain {
 				+ BenchmarkTests.threads + " threads (stepping "
 				+ BenchmarkTests.stepping+ ") using pool size of "+BenchmarkTests.pool_size+" connections");
 		
-	//	Class.forName("org.hsqldb.jdbcDriver" );
-		Class.forName("com.jolbox.benchmark.MockJDBCDriver" );
-		new MockJDBCDriver();
-	
-		BenchmarkTests tests = new BenchmarkTests();
-
 
 		
+		System.out.println("Starting tests");
 		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(10), 10, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(25), 25, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(50), 50, false);
 //		plotLineGraph(tests.testMultiThreadedConstantDelay(75), 75, false);
 //		
-//		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
-//		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
-//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
+		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
+		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
+		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);
@@ -138,7 +146,7 @@ public class BenchmarkMain {
 	 * @param statementBenchmark
 	 */
 	private static void plotLineGraph(long[][] results, int delay, boolean statementBenchmark) {
-		doPlotLineGraph(results, delay, statementBenchmark, true);
+//		doPlotLineGraph(results, delay, statementBenchmark, true);
 		doPlotLineGraph(results, delay, statementBenchmark, false);
 	}
 	/**
@@ -160,6 +168,7 @@ public class BenchmarkMain {
 			}
 			dataset.addSeries(series);
 		}
+		
         
         //         Generate the graph
 		String title = "Multi-Thread test ("+delay+"ms delay)";
@@ -200,7 +209,7 @@ public class BenchmarkMain {
         		fname+="-noC3P0";
         	}
         	 fname += ".png";
-            ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024, 768);
+            ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024*4, 768*4);
             System.out.println("******* Saved chart to: " + fname);
         } catch (IOException e) {
             System.err.println("Problem occurred creating chart.");
@@ -214,7 +223,6 @@ public class BenchmarkMain {
 	 * @param filename 
 	 * @param results 
 	 */
-	@SuppressWarnings("unused")
 	private static void plotBarGraph(String title, String filename, long[] results) {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		for (ConnectionPoolType poolType: ConnectionPoolType.values()){
