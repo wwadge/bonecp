@@ -173,7 +173,7 @@ public class TestPoolWatchThread {
 	public void testRunCreateConnections() throws InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
 		expect(mockLogger.isDebugEnabled()).andReturn(true).anyTimes();
 
-		LinkedTransferQueue<ConnectionHandle> fakeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 //		mockPartition.almostFullWait();
 //		expectLastCall().anyTimes();
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
@@ -201,7 +201,7 @@ public class TestPoolWatchThread {
 		expect(mockPartition.getUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(mockPartition.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockPartition.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
-		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(fakeConnections.size())).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(fakeConnections.size()).anyTimes();
 
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
@@ -270,7 +270,7 @@ public class TestPoolWatchThread {
 			} 
 		}).once();
 		expect(mockPartition.getAcquireIncrement()).andReturn(1).anyTimes();
-		expect(mockPartition.getAvailableConnections()).andReturn(new AtomicInteger(fakeConnections.size())).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(fakeConnections.size()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 
 		expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();

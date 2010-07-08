@@ -275,7 +275,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this);
 			this.partitions[p]=connectionPartition;
-			this.partitions[p].setFreeConnections(new LinkedTransferQueue<ConnectionHandle>());
+			this.partitions[p].setFreeConnections(new BoundedLinkedTransferQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition()));
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
@@ -385,7 +385,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			watchConnection(result);
 		}
 
-		connectionPartition.getAvailableConnections().decrementAndGet();
 		return result;
 	}
 
@@ -440,7 +439,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
 		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && 
-				connectionPartition.getAvailableConnections().get()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
+				connectionPartition.getAvailableConnections()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
 			connectionPartition.getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 		}
 	}
@@ -502,15 +501,17 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 	/** Places a connection back in the originating partition.
 	 * @param connectionHandle to place back
+	 * @throws SQLException on error
 	 */
-	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) {
-		LinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
+		BoundedLinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
 
 		if (!queue.tryTransfer(connectionHandle)){
-			queue.put(connectionHandle);
+			if (!queue.tryPut(connectionHandle)){
+				connectionHandle.internalClose();
+			}
 		}
 
-		connectionHandle.getOriginatingPartition().getAvailableConnections().incrementAndGet();
 
 	}
 
@@ -576,7 +577,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	public int getTotalLeased(){
 		int total=0;
 		for (int i=0; i < this.partitionCount; i++){
-			total+=this.partitions[i].getCreatedConnections()-this.partitions[i].getAvailableConnections().get();
+			total+=this.partitions[i].getCreatedConnections()-this.partitions[i].getAvailableConnections();
 		}
 		return total;
 	}
@@ -588,7 +589,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	public int getTotalFree(){
 		int total=0;
 		for (int i=0; i < this.partitionCount; i++){
-			total+=this.partitions[i].getAvailableConnections().get();
+			total+=this.partitions[i].getAvailableConnections();
 		}
 		return total;
 	}

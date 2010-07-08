@@ -49,7 +49,7 @@ public class ConnectionPartition implements Serializable{
 	/** Logger class. */
 	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
-    private LinkedTransferQueue<ConnectionHandle> freeConnections;
+    private BoundedLinkedTransferQueue<ConnectionHandle> freeConnections;
 	/** When connections start running out, add these number of new connections. */
 	private final int acquireIncrement;
 	/** Minimum number of connections to start off with. */
@@ -60,8 +60,6 @@ public class ConnectionPartition implements Serializable{
 	protected ReentrantReadWriteLock statsLock = new ReentrantReadWriteLock();
 	/** Number of connections that have been created. */
 	private int createdConnections=0;
-    /** TransferQueue.size() is O(n) so we have to maintain the size as we go along for good performance :-( */ 
-    private AtomicInteger availableConnections = new AtomicInteger();
 	/** DB details. */
 	private final String url;
 	/** DB details. */
@@ -107,9 +105,8 @@ public class ConnectionPartition implements Serializable{
 	 * @throws SQLException on error
 	 */
 	protected void addFreeConnection(ConnectionHandle connectionHandle) throws SQLException{
-        this.availableConnections.incrementAndGet(); 
 		connectionHandle.setOriginatingPartition(this);
-		if (this.freeConnections.offer(connectionHandle)){ // may race
+		if (this.freeConnections.tryPut(connectionHandle)){ 
 			updateCreatedConnections(1);
 			trackConnectionFinalizer(connectionHandle);
 		} else {
@@ -164,7 +161,7 @@ public class ConnectionPartition implements Serializable{
 	/**
 	 * @return the freeConnections
 	 */
-    protected LinkedTransferQueue<ConnectionHandle> getFreeConnections() {
+    protected BoundedLinkedTransferQueue<ConnectionHandle> getFreeConnections() {
 		return this.freeConnections;
 	}
 
@@ -172,7 +169,7 @@ public class ConnectionPartition implements Serializable{
 	 * @param freeConnections the freeConnections to set
 	 */
 	protected void setFreeConnections(
-            LinkedTransferQueue<ConnectionHandle> freeConnections) {
+            BoundedLinkedTransferQueue<ConnectionHandle> freeConnections) {
 		this.freeConnections = freeConnections;
 	}
 
@@ -245,15 +242,6 @@ public class ConnectionPartition implements Serializable{
 	}
 
 	/**
-	 * Returns the number of free slots in this partition. 
-	 *
-	 * @return number of free slots.
-	 */
-	protected int getRemainingCapacity(){
-        return this.maxConnections-this.availableConnections.get();
-	}
-
-	/**
 	 * @return the url
 	 */
 	protected String getUrl() {
@@ -305,11 +293,15 @@ public class ConnectionPartition implements Serializable{
     protected LinkedTransferQueue<ConnectionHandle> getConnectionsPendingRelease() {
 		return this.connectionsPendingRelease;
 	}
-	/**
-	 * @return the availableConnections
+
+    /* @return the availableConnections
 	 */
-	protected AtomicInteger getAvailableConnections() {
-		return this.availableConnections;
+	protected int getAvailableConnections() {
+		return this.freeConnections.getSize();
+	}
+
+	public int getRemainingCapacity() {
+		return this.freeConnections.getRemainingCapacity();
 	}
 
 }

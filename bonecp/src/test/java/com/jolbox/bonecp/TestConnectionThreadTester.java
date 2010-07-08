@@ -94,11 +94,11 @@ public class TestConnectionThreadTester {
 	 * @throws SQLException */
 	@Test
 	public void testConnectionMarkedBroken() throws SQLException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1).anyTimes();
 
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
  		expect(mockConnection.isPossiblyBroken()).andReturn(true);
@@ -118,13 +118,13 @@ public class TestConnectionThreadTester {
 	 * @throws SQLException */
 	@Test
 	public void testIdleConnectionIsKilled() throws SQLException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		fakeFreeConnections.add(mockConnection);
 		
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(new AtomicInteger(2)).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2).anyTimes();
 		
 		expect(mockConnectionPartition.getMinConnections()).andReturn(0).once();
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
@@ -146,15 +146,14 @@ public class TestConnectionThreadTester {
 	 * @throws InterruptedException */
 	@Test
 	public void testIdleConnectionIsSentKeepAlive() throws SQLException, InterruptedException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		config.setIdleConnectionTestPeriod(1);
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
 		expect(mockConnectionPartition.getMinConnections()).andReturn(10).once();
-		AtomicInteger ai = new AtomicInteger(2);
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(ai).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2).anyTimes();
 		
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
@@ -175,14 +174,14 @@ public class TestConnectionThreadTester {
 	 * @throws InterruptedException */
 	@Test
 	public void testIdleConnectionFailedKeepAlive() throws SQLException, InterruptedException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		config.setIdleConnectionTestPeriod(1);
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
 		expect(mockConnectionPartition.getMinConnections()).andReturn(10).once();
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(false).anyTimes();
@@ -205,14 +204,14 @@ public class TestConnectionThreadTester {
 	 * @throws InterruptedException */
 	@Test
 	public void testInterruptedException() throws SQLException, InterruptedException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		config.setIdleConnectionTestPeriod(1);
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
 		expect(mockConnectionPartition.getMinConnections()).andReturn(10).once();
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
@@ -242,14 +241,14 @@ public class TestConnectionThreadTester {
 	 * @throws IllegalArgumentException */
 	@Test
 	public void testExceptionSpurious() throws SQLException, InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(10);
 		fakeFreeConnections.add(mockConnection);
 		
 		config.setIdleConnectionTestPeriod(1);
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
 		expect(mockConnectionPartition.getMinConnections()).andReturn(10).once();
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
@@ -278,14 +277,14 @@ public class TestConnectionThreadTester {
 	 * @throws IllegalArgumentException */
 	@Test
 	public void testExceptionOnCloseConnection() throws SQLException, InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-		LinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new LinkedTransferQueue<ConnectionHandle>();
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		config.setIdleConnectionTestPeriod(1);
 		expect(mockPool.getConfig()).andReturn(config).anyTimes();
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
 		expect(mockConnectionPartition.getMinConnections()).andReturn(10).once();
-		expect(mockConnectionPartition.getAvailableConnections()).andReturn(new AtomicInteger(1)).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
 		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
 		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(false).anyTimes();

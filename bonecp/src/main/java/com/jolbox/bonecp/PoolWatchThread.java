@@ -75,7 +75,7 @@ public class PoolWatchThread implements Runnable {
 
 				maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				// loop for spurious interrupt
-				while (maxNewConnections == 0 || (this.partition.getAvailableConnections().get()*100/this.partition.getMaxConnections() > this.poolAvailabilityThreshold)){
+				while (maxNewConnections == 0 || (this.partition.getAvailableConnections() *100/this.partition.getMaxConnections() > this.poolAvailabilityThreshold)){
 					if (maxNewConnections == 0){
 						this.partition.setUnableToCreateMoreTransactions(true);
 					}

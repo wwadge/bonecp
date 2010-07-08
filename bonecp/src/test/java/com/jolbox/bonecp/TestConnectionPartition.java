@@ -159,7 +159,7 @@ public class TestConnectionPartition {
 	public void testFreeConnection() throws SQLException  {
 		int count = testClass.getCreatedConnections();
 
-		LinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedTransferQueue.class);
+		BoundedLinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(BoundedLinkedTransferQueue.class);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
 		this.mockPool = createNiceMock(BoneCP.class);
@@ -170,7 +170,6 @@ public class TestConnectionPartition {
 
     	ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
     	expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
-		expect(freeConnections.offer(mockConnectionHandle)).andReturn(true);
 		
 		replay(mockConnectionHandle, freeConnections, this.mockPool);
 		testClass.addFreeConnection(mockConnectionHandle);
@@ -188,7 +187,7 @@ public class TestConnectionPartition {
 	public void testFreeConnectionFailing() throws SQLException  {
 		int count = testClass.getCreatedConnections();
 
-		LinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedTransferQueue.class);
+		BoundedLinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(BoundedLinkedTransferQueue.class);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
 		this.mockPool = createNiceMock(BoneCP.class);
@@ -199,7 +198,7 @@ public class TestConnectionPartition {
 
     	ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
     	expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
-		expect(freeConnections.offer(mockConnectionHandle)).andReturn(false);
+//		expect(freeConnections.offer(mockConnectionHandle)).andReturn(false);
 		mockConnectionHandle.internalClose();
 		expectLastCall().once();
 		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
