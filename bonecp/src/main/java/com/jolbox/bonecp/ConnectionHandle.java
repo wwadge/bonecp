@@ -41,13 +41,13 @@ import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
+import java.util.concurrent.atomic.AtomicInteger;
 // #ifdef JDK6
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Struct;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.sql.NClob;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLXML;
@@ -110,6 +110,8 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;	
+	/** Keep track of the thread that's using this connection for connection watch. */
+	private Thread threadUsingConnection;
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -299,8 +301,11 @@ public class ConnectionHandle implements Connection{
 		//		char firstChar = state.charAt(0);
 		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
+		// state == HY000 is firebird specific triggered when a connection is broken
 		char firstChar = state.charAt(0);
-		if (state.equals("40001") || state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
+		if (state.equals("40001") || 
+				state.equals("HY000") ||
+				state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
 			this.possiblyBroken = true;
 		}
 
@@ -345,7 +350,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			if (!this.logicallyClosed) {
 				this.logicallyClosed = true;
-
+				this.threadUsingConnection = null;
 				this.pool.releaseConnection(this);
 
 				if (this.doubleCloseCheck){
@@ -1100,6 +1105,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	protected void renewConnection() {
 		this.logicallyClosed = false;
+		this.threadUsingConnection = Thread.currentThread();
 		if (this.doubleCloseCheck){
 			this.doubleCloseException = null;
 		}
@@ -1237,4 +1243,12 @@ public class ConnectionHandle implements Connection{
 			throw new RuntimeException("BoneCP: Internal error - transaction replay log is not turned on?", t);
 		}
 	}
+
+	/** Returns the thread that is currently utilizing this connection.
+	 * @return the threadUsingConnection
+	 */
+	public Thread getThreadUsingConnection() {
+		return this.threadUsingConnection;
+	}
+
 }

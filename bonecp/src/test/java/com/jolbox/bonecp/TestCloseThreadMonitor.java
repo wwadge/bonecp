@@ -66,7 +66,7 @@ public class TestCloseThreadMonitor {
 		mockLogger = createStrictMock(Logger.class);
 		mockThread = createNiceMock(Thread.class);
 		
-		testClass = new CloseThreadMonitor(mockThread, mockConnection, "fakeexception");
+		testClass = new CloseThreadMonitor(mockThread, mockConnection, "fakeexception", 0);
 		Field field = testClass.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 		field.set(testClass, mockLogger);
@@ -108,6 +108,7 @@ public class TestCloseThreadMonitor {
 		mockLogger.error((String)anyObject());
 		expectLastCall().once();
 		expect(mockConnection.isClosed()).andReturn(false).once();
+		expect(mockConnection.getThreadUsingConnection()).andReturn(mockThread).once();
 		replay(mockConnection, mockLogger);
 		testClass.run();
 		verify(mockConnection, mockLogger);

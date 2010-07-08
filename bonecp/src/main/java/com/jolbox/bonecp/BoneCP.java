@@ -60,6 +60,8 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
  *
  */
 public class BoneCP implements BoneCPMBean, Serializable {
+	/** Warning message. */
+	private static final String THREAD_CLOSE_CONNECTION_WARNING = "Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!";
 	/** Serialization UID */
 	private static final long serialVersionUID = -8386816681977604817L;
 	/** Exception message. */
@@ -119,6 +121,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
 	private long connectionTimeout;
+	/** No of ms to wait for thread.join() in connection watch thread. */
+	private long closeConnectionWatchTimeout;
 
 	/**
 	 * Closes off this connection pool.
@@ -225,6 +229,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.config = config;
 		config.sanitize();
 		
+		this.closeConnectionWatchTimeout = config.getCloseConnectionWatchTimeout();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeout = config.getConnectionTimeout();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
@@ -260,7 +265,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 
 		if (this.closeConnectionWatch){
-			logger.warn("Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!");
+			logger.warn(THREAD_CLOSE_CONNECTION_WARNING);
 			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread"+suffix, true));
 
 		}
@@ -280,7 +285,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){
-				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
+				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester, config.getIdleConnectionTestPeriod(), 
+						config.getIdleConnectionTestPeriod(), TimeUnit.MILLISECONDS);
 			}
 
 			// watch this partition for low no of threads
@@ -392,7 +398,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	private void watchConnection(ConnectionHandle connectionHandle) {
 		String message = captureStackTrace(UNCLOSED_EXCEPTION_MESSAGE);
-		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message));
+		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message, this.closeConnectionWatchTimeout));
 	}
 
 	/** Throw an exception to capture it so as to be able to print it out later on
@@ -483,7 +489,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			connectionHandle.recoveryResult.getReplaceTarget().clear();
 		}
 
-		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() && !isConnectionHandleAlive(connectionHandle)){
+		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() 
+				&& !isConnectionHandleAlive(connectionHandle)){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			maybeSignalForMoreConnections(connectionPartition);

@@ -176,7 +176,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				// when we commit/close/rollback, destroy our log. Does this work if we have nested transactions???? Fixme?
 				if (!con.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
 					con.getReplayLog().clear();
-					con.recoveryResult.getReplaceTarget().clear();
+//					con.recoveryResult.getReplaceTarget().clear();
 				}
 
 

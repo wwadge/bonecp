@@ -119,6 +119,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private Properties driverProperties;
 	/** Time to wait before a call to getConnection() times out and returns an error. */ 
 	private long connectionTimeout = Long.MAX_VALUE;
+	/** Time in ms to wait for close connection watch thread. */
+	private long closeConnectionWatchTimeout = 0;
 	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1096,5 +1098,19 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.driverProperties = new Properties();
 			this.driverProperties.putAll(driverProperties);
 		}
+	}
+
+	/** Returns the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
+	 * @return the watchTimeout currently set.
+	 */
+	public long getCloseConnectionWatchTimeout() {
+		return this.closeConnectionWatchTimeout;
+	}
+
+	/** Sets the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
+	 * @param closeConnectionWatchTimeout the watchTimeout to set
+	 */
+	public void setCloseConnectionWatchTimeout(long closeConnectionWatchTimeout) {
+		this.closeConnectionWatchTimeout = closeConnectionWatchTimeout;
 	}
 }
