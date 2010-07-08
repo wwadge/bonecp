@@ -361,6 +361,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		if (result == null) {
 			try {
 				result = connectionPartition.getFreeConnections().poll(this.connectionTimeout, TimeUnit.MILLISECONDS);
+				if (result == null){
+					// 08001 = The application requester is unable to establish the connection.
+					throw new SQLException("Timed out waiting for a free available connection.", "08001");
+				}
 			}
 			catch (InterruptedException e) {
 				throw new SQLException(e.getMessage());
