@@ -38,6 +38,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -49,6 +50,9 @@ import org.junit.Test;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.MockConnection;
+import com.jolbox.bonecp.MockJDBCAnswer;
+import com.jolbox.bonecp.MockJDBCDriver;
 
 /** Test case for the Hibernate boneCP connection provider.
  * @author wallacew
@@ -64,13 +68,13 @@ public class TestBoneCPConnectionProvider {
 	/** Class under test. */
 	private static BoneCPConnectionProvider testClass;
 	/** hsqldb driver. */
-	private static String URL = "jdbc:hsqldb:mem:test";
+	private static String URL = "jdbc:mock";
 	/** hsqldb username. */
 	private static String USERNAME = "sa";
 	/** hsqldb password. */
 	private static String PASSWORD = "";
 	/** hsqldb driver. */
-	private static String DRIVER = "org.hsqldb.jdbcDriver";
+	private static String DRIVER = "com.jolbox.bonecp.MockJDBCDriver";
 	/** A dummy query for HSQLDB. */
 	public static final String TEST_QUERY = "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
 	
@@ -79,12 +83,14 @@ public class TestBoneCPConnectionProvider {
 	 * @throws NoSuchFieldException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException 
 	 */
 	@BeforeClass
-	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, ClassNotFoundException {
 		mockPool = createNiceMock(BoneCP.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockProperties = createNiceMock(Properties.class);
+	
 	}
 
 
@@ -103,6 +109,7 @@ public class TestBoneCPConnectionProvider {
 		Field field = testClass.getClass().getDeclaredField("pool");
 		field.setAccessible(true);
 		field.set(testClass, mockPool);
+		
 		
 		reset(mockPool, mockConnection, mockProperties);
 	}
@@ -140,9 +147,18 @@ public class TestBoneCPConnectionProvider {
 	 * @throws IllegalArgumentException 
 	 * @throws NoSuchMethodException 
 	 * @throws ClassNotFoundException 
+	 * @throws SQLException 
 	 */
 	@Test
-	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException {
+	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException, SQLException {
+		// load the driver.
+		new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
+		Class.forName("com.jolbox.bonecp.MockJDBCDriver");
 		expect(mockProperties.getProperty("bonecp.statementsCacheSize")).andReturn("40").anyTimes();
 		expect(mockProperties.getProperty("bonecp.minConnectionsPerPartition")).andReturn("20").anyTimes();
 		expect(mockProperties.getProperty("bonecp.maxConnectionsPerPartition")).andReturn("50").anyTimes(); 
@@ -264,7 +280,7 @@ public class TestBoneCPConnectionProvider {
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn("somethingbad").anyTimes();
 		expect(mockConfig.getPassword()).andReturn("somethingbad").anyTimes();
-		expect(mockConfig.getJdbcUrl()).andReturn("somethingbad").anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("invalid").anyTimes();
 //		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
 		replay(mockConfig);
 		try{
@@ -277,7 +293,7 @@ public class TestBoneCPConnectionProvider {
 		
 		reset(mockConfig);
 		
-		Class.forName("org.hsqldb.jdbcDriver");
+		Class.forName(DRIVER);
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();

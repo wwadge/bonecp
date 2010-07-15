@@ -20,7 +20,7 @@
 		<url>https://launchpad.net/bonecp</url>
 	</issueManagement>
 
-	<version>0.7.0-SNAPSHOT</version>
+	<version>0.7.0-ltq-SNAPSHOT</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
@@ -54,6 +54,12 @@
 				<artifactId>spring</artifactId>
 				<version>2.5.6</version>
 			</dependency>
+	
+		<dependency>
+			<groupId>com.jolbox</groupId>
+			<artifactId>bonecp-test-commons</artifactId>
+			<version>0.7.0-ltq-SNAPSHOT</version>
+		</dependency>
 
 <!-- 
 			<dependency>
@@ -215,7 +221,7 @@
 						<artifactId>maven-compiler-plugin</artifactId>
 						<version>2.0.1</version>
 						<configuration>
-							<verbose>true</verbose>
+							<verbose>false</verbose>
 							<source>1.6</source>
 							<target>1.6</target>
 						</configuration>
@@ -314,6 +320,9 @@
 					<includes>
 						<include>**/*.java</include>
 					</includes>
+					<excludes>
+						<exclude>**/jsr166y/*</exclude>
+					</excludes>
 				</configuration>
 
 				<executions>

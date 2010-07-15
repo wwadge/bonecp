@@ -6,15 +6,16 @@
 
 package jsr166y;
 
-import java.util.concurrent.*;
-
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
+
+import sun.misc.Unsafe;
 /**
  * An unbounded {@link TransferQueue} based on linked nodes.
  * This queue orders elements FIFO (first-in-first-out) with respect
@@ -499,6 +500,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         // Unsafe mechanics
+        
         private static final sun.misc.Unsafe UNSAFE = getUnsafe();
         private static final long nextOffset =
             objectFieldOffset(UNSAFE, "next", Node.class);
@@ -1219,7 +1221,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
+    private static final Unsafe UNSAFE = getUnsafe();
     private static final long headOffset =
         objectFieldOffset(UNSAFE, "head", LinkedTransferQueue.class);
     private static final long tailOffset =
@@ -1227,7 +1229,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final long sweepVotesOffset =
         objectFieldOffset(UNSAFE, "sweepVotes", LinkedTransferQueue.class);
 
-    static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
+    static long objectFieldOffset(Unsafe UNSAFE,
                                   String field, Class<?> klazz) {
         try {
             return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));

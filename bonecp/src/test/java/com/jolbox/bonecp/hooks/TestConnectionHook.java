@@ -62,8 +62,6 @@ public class TestConnectionHook {
 	private static CustomHook hookClass;
 	/** Driver class. */
 	private static MockJDBCDriver driver;
-	/** Mock connection. */
-	private static Connection mockConnection;
 
 	/** Setups all mocks.
 	 * @throws SQLException
@@ -99,7 +97,6 @@ public class TestConnectionHook {
 	/** Unload the driver.
 	 * @throws SQLException
 	 */
-	@SuppressWarnings("static-access")
 	@AfterClass
 	public static void destroy() throws SQLException{
 		driver.disable();
@@ -270,6 +267,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
+		Connection mockConnection = createNiceMock(Connection.class);
 		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
 		expect(mockPreparedStatement.execute()).andAnswer(new IAnswer<Boolean>() {
 			
@@ -296,6 +294,7 @@ public class TestConnectionHook {
 	 */
 	@Test
 	public void testonQueryExecuteTimeLimitExceededCoverage() throws SQLException {
+		Connection mockConnection = createNiceMock(Connection.class);
 		reset(mockConfig, mockConnection);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();

@@ -97,14 +97,6 @@ public interface BoneCPConfigMBean {
 	String getConnectionTestStatement();
 
 	/**
-	 * Gets preparedStatementsCacheSize setting.
-	 * 
-	 * @return preparedStatementsCacheSize
-	 */
-	@Deprecated
-	int getPreparedStatementsCacheSize();
-
-	/**
 	 * Gets statementsCacheSize setting.
 	 * 
 	 * @return statementsCacheSize

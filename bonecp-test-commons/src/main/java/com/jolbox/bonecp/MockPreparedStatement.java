@@ -44,7 +44,7 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-/* #ifdef JDK6
+// #ifdef JDK6
 import java.sql.NClob;
 import java.sql.RowId;
 import java.sql.SQLXML;
@@ -323,7 +323,7 @@ public class MockPreparedStatement implements PreparedStatement {
 			long length) throws SQLException {
 	}
 
-	/* #ifdef JDK6
+	// #ifdef JDK6
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
 	}
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
@@ -333,7 +333,7 @@ public class MockPreparedStatement implements PreparedStatement {
 			throws SQLException {
 	}
 
-	#endif JDK6 */
+	// #endif JDK6
 
 	/** {@inheritDoc}
 	 * @see java.sql.PreparedStatement#setNClob(int, java.io.Reader)
@@ -791,24 +791,4 @@ public class MockPreparedStatement implements PreparedStatement {
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return null;
 	}
-
-	@Override
-	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void setRowId(int parameterIndex, RowId x) throws SQLException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
-			throws SQLException {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

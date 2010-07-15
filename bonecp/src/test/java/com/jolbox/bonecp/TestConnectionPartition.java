@@ -42,13 +42,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
-
-import jsr166y.LinkedTransferQueue;
-import jsr166y.TransferQueue;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -170,7 +166,7 @@ public class TestConnectionPartition {
 
     	ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
     	expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
-		
+    	expect(freeConnections.offer(mockConnectionHandle)).andReturn(true).anyTimes();
 		replay(mockConnectionHandle, freeConnections, this.mockPool);
 		testClass.addFreeConnection(mockConnectionHandle);
 		verify(mockConnectionHandle, freeConnections);
@@ -198,7 +194,7 @@ public class TestConnectionPartition {
 
     	ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
     	expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
-//		expect(freeConnections.offer(mockConnectionHandle)).andReturn(false);
+		expect(freeConnections.offer(mockConnectionHandle)).andReturn(false);
 		mockConnectionHandle.internalClose();
 		expectLastCall().once();
 		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();

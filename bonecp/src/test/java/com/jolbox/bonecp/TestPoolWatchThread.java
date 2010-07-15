@@ -33,9 +33,6 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import jsr166y.LinkedTransferQueue;
 
 import org.easymock.IAnswer;
 import org.junit.AfterClass;

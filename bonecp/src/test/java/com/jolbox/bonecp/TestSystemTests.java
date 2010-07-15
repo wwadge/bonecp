@@ -288,7 +288,7 @@ public class TestSystemTests {
 		dsb.close();
 		CommonTestUtils.logPass();
 	}
-
+	
 	/** Tests that new connections are created on the fly. */
 	@Test
 	public void testConnectionCreate() throws InterruptedException, SQLException{
@@ -305,12 +305,13 @@ public class TestSystemTests {
 		assertEquals(10, dsb.getTotalCreatedConnections());
 		assertEquals(0, dsb.getTotalLeased());
 
+		Connection[] con = new Connection[10];
 		for (int i=0; i < 10; i++){
-			dsb.getConnection();
+			con[i] = dsb.getConnection(); // keep track of it to avoid finalizer
 		}
 		assertEquals(10, dsb.getTotalLeased());
 
-		for (int i=0; i < 60; i++) {
+		for (int i=0; i < 10; i++) {
 			Thread.yield();
 			Thread.sleep(500); // give time for pool watch thread to fire up
 			if (dsb.getTotalCreatedConnections() == 15) {
@@ -320,7 +321,11 @@ public class TestSystemTests {
 		assertEquals(15, dsb.getTotalCreatedConnections());
 		assertEquals(10, dsb.getTotalLeased());
 		assertEquals(5, dsb.getTotalFree());
-
+		
+		for (Connection c : con){
+			c.close();
+		}
+		
 		dsb.shutdown();
 		CommonTestUtils.logPass();
 	}

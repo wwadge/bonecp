@@ -32,11 +32,13 @@ import static org.junit.Assert.fail;
 
 import java.sql.SQLException;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
+import com.jolbox.bonecp.MockJDBCDriver;
 /**
  * Tests DynamicDataSourceProxy.
  * @author Wallace
@@ -44,6 +46,15 @@ import com.jolbox.bonecp.BoneCPDataSource;
  */
 public class TestDynamicDataSourceProxy {
 
+	/**
+	 * @throws ClassNotFoundException
+	 * @throws SQLException 
+	 */
+	@BeforeClass
+	public static void setup() throws ClassNotFoundException, SQLException{
+		Class.forName("com.jolbox.bonecp.MockJDBCDriver");
+		new MockJDBCDriver();
+	}
 	/**
 	 * Test method for {@link com.jolbox.bonecp.spring.DynamicDataSourceProxy#DynamicDataSourceProxy(javax.sql.DataSource)}.
 	 */
@@ -69,6 +80,7 @@ public class TestDynamicDataSourceProxy {
 	 */
 	@Test
 	public void testSwitchDataSource() throws SQLException, ClassNotFoundException {
+
 		BoneCPDataSource mockDataSource = createNiceMock(BoneCPDataSource.class);
 		DynamicDataSourceProxy ddsp = new DynamicDataSourceProxy();
 		// Test #1: Check for correct instance.
@@ -82,13 +94,13 @@ public class TestDynamicDataSourceProxy {
 		
 		// Test #2: Given a good config, should initialize pool and switch datasource to it
 		BoneCPConfig config = new BoneCPConfig();
-		config.setJdbcUrl("jdbc:hsqldb:mem:test");
+		config.setJdbcUrl("jdbc:mock");
 		config.setUsername("sa");
 		config.setPassword("");
 		config.setMinConnectionsPerPartition(2);
 		config.setMaxConnectionsPerPartition(2);
 		config.setPartitionCount(1);
-		Class.forName("org.hsqldb.jdbcDriver");
+		
 
 		ddsp = new DynamicDataSourceProxy(mockDataSource);
 

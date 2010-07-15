@@ -45,8 +45,6 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
-import jsr166y.LinkedTransferQueue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -445,7 +443,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && 
 				connectionPartition.getAvailableConnections()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
 			connectionPartition.getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
-		}
+		} 
 	}
 
 	/**
@@ -511,7 +509,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		BoundedLinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
 
 		if (!queue.tryTransfer(connectionHandle)){
-			if (!queue.tryPut(connectionHandle)){
+			if (!queue.offer(connectionHandle)){
 				connectionHandle.internalClose();
 			}
 		}

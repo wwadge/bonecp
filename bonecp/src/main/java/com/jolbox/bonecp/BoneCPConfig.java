@@ -339,7 +339,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/** Deprecated. Use getStatementsCacheSize() instead
-	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getPreparedStatementsCacheSize()
+	 * @return statementsCacheSize
 	 */
 	@Deprecated
 	public int getPreparedStatementsCacheSize() {
@@ -349,7 +349,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 	/** Deprecated. Use getStatementsCacheSize() instead
 	 * @return statementsCacheSize
-	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getPreparedStatementsCacheSize()
 	 */
 	@Deprecated
 	public int getPreparedStatementCacheSize() {

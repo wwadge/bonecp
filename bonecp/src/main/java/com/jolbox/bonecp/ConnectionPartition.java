@@ -28,7 +28,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jsr166y.LinkedTransferQueue;
@@ -106,7 +105,7 @@ public class ConnectionPartition implements Serializable{
 	 */
 	protected void addFreeConnection(ConnectionHandle connectionHandle) throws SQLException{
 		connectionHandle.setOriginatingPartition(this);
-		if (this.freeConnections.tryPut(connectionHandle)){ 
+		if (this.freeConnections.offer(connectionHandle)){ 
 			updateCreatedConnections(1);
 			trackConnectionFinalizer(connectionHandle);
 		} else {
@@ -235,10 +234,12 @@ public class ConnectionPartition implements Serializable{
 	 * @return the leasedConnections
 	 */
 	protected int getCreatedConnections() {
-		this.statsLock.readLock().lock();
-		int result = this.createdConnections;
-		this.statsLock.readLock().unlock();
-		return result;
+		try{
+			this.statsLock.readLock().lock();
+			return this.createdConnections;
+		} finally {
+			this.statsLock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -294,14 +295,19 @@ public class ConnectionPartition implements Serializable{
 		return this.connectionsPendingRelease;
 	}
 
-    /* @return the availableConnections
+    
+	/** Returns the number of avail connections
+	 * @return avail connections.
 	 */
 	protected int getAvailableConnections() {
-		return this.freeConnections.getSize();
+		return this.freeConnections.size();
 	}
 
+	/** Returns no of free slots.
+	 * @return remaining capacity.
+	 */
 	public int getRemainingCapacity() {
-		return this.freeConnections.getRemainingCapacity();
+		return this.freeConnections.remainingCapacity();
 	}
 
 }

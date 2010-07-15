@@ -62,7 +62,6 @@ public class PoolWatchThread implements Runnable {
 
 	public void run() {
 		int maxNewConnections;
-
 		while (!this.signalled){
 			maxNewConnections=0;
 
@@ -80,7 +79,6 @@ public class PoolWatchThread implements Runnable {
 						this.partition.setUnableToCreateMoreTransactions(true);
 					}
 					this.partition.getPoolWatchThreadSignalQueue().take();
-
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 				}
 

@@ -33,9 +33,6 @@ import static org.easymock.classextension.EasyMock.verify;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import jsr166y.LinkedTransferQueue;
 
 import org.junit.Before;
 import org.junit.BeforeClass;

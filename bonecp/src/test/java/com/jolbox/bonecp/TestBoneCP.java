@@ -49,7 +49,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -602,7 +601,7 @@ public class TestBoneCP {
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
-		expect(mockConnectionHandles.tryPut(mockConnection)).andReturn(true).once();
+//		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 
 		// should reset last connection use
 		mockConnection.setConnectionLastUsed(anyLong());
@@ -674,7 +673,7 @@ public class TestBoneCP {
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		
 //		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
-		expect(mockConnectionHandles.tryPut(mockConnection)).andReturn(true).once();
+		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 		
 		replay(mockConnection,mockPartition, mockConnectionHandles);
 		testClass.internalReleaseConnection(mockConnection);
@@ -712,7 +711,7 @@ public class TestBoneCP {
 		
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
-		expect(mockConnectionHandles.tryPut(mockConnection)).andReturn(true).once();
+		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		testClass.putConnectionBackInPartition(mockConnection);
 		// FIXME

@@ -78,7 +78,7 @@ public class MockJDBCDriver  implements Driver {
 	 */
 	// @Override
 	public Connection connect(String url, Properties info) throws SQLException {
-		if (url.startsWith("invalid")){
+		if (url.startsWith("invalid") || url.equals("")){
 			throw new SQLException("Mock Driver rejecting invalid URL");
 		}
 		if (this.connection != null){
