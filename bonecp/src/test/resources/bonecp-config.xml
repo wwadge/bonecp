@@ -9,4 +9,14 @@
      	<property name="minConnectionsPerPartition">99</property>
 	    <property name="lazyInit">true</property>
    </named-config>
+   
+    <named-config name="specialApp2">
+     	<property name="minConnectionsPerPartition">123</property>
+	    <property name="lazyInit">true</property>
+   </named-config>
+   
+    <named-config name="specialApp3">
+     	<property name="minConnectionsPerPartition">999</property>
+	    <property name="lazyInit">true</property>
+   </named-config>
 </bonecp-config> 
