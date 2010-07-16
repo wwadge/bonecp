@@ -37,7 +37,7 @@ import org.junit.Test;
 
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ReleaseHelperThread;
+import com.jolbox.bonecp.ConnectionReleaseHelperThread;
 
 /**
  * Mock tester for release helper thread
@@ -92,7 +92,7 @@ public class TestReleaseHelperThread {
 			
 		
 		replay(mockPool, mockQueue);
-		ReleaseHelperThread clazz = new ReleaseHelperThread(mockQueue, mockPool);
+		ConnectionReleaseHelperThread clazz = new ConnectionReleaseHelperThread(mockQueue, mockPool);
 		clazz.run();
 		verify(mockPool, mockQueue);
 		reset(mockPool, mockQueue);
@@ -113,7 +113,7 @@ public class TestReleaseHelperThread {
 		
 		
 		replay(mockPool, mockQueue);
-		ReleaseHelperThread clazz = new ReleaseHelperThread(mockQueue, mockPool);
+		ConnectionReleaseHelperThread clazz = new ConnectionReleaseHelperThread(mockQueue, mockPool);
 		clazz.run();
 		verify(mockPool, mockQueue);
 		reset(mockPool, mockQueue);

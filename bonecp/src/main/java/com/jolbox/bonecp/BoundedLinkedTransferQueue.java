@@ -105,4 +105,18 @@ public class BoundedLinkedTransferQueue<E> extends LinkedTransferQueue<E>{
 		return result;	
 	}
 
+	/** Tries to move the item to a waiting consumer. If there's no consumer waiting,
+	 * offers the item to the queue if there's space available.  
+	 * @param e Item to transfer
+	 * @return true if the item was transferred or placed on the queue, false if there are no
+	 * waiting clients and there's no more space on the queue.
+	 */
+	public boolean tryTransferOffer(E e) {
+		boolean result = true;
+		if (!tryTransfer(e)){
+			result = offer(e);
+		}
+		return result;
+	}
+	
 }

@@ -96,6 +96,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private boolean releaseHelperThreadsConfigured;
 	/** pointer to the thread containing the release helper threads. */
 	private ExecutorService releaseHelper;
+	/** pointer to the service containing the statement close helper threads. */
+	private ExecutorService statementCloseHelper;
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
 	private ExecutorService asyncExecutor;
 	/** Logger class. */
@@ -135,8 +137,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.shutdownStackTrace = captureStackTrace(SHUTDOWN_LOCATION_TRACE);
 			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
+			
 			if (this.releaseHelperThreadsConfigured){
 				this.releaseHelper.shutdownNow();
+				this.statementCloseHelper.shutdownNow();
 			}
 			if (this.asyncExecutor != null){
 				this.asyncExecutor.shutdownNow();
@@ -463,7 +467,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
 		// close off the connection right away because the helper threads have gone away.
 		if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){
-			handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
+			if (!handle.getOriginatingPartition().getConnectionsPendingRelease().tryTransfer(handle)){
+				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
+			}
 		} else {
 			internalReleaseConnection(handle);
 		}
@@ -646,5 +652,31 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	protected FinalizableReferenceQueue getFinalizableRefQueue() {
 		return this.finalizableRefQueue;
 	}
+
+	/**
+	 * Returns the statementCloseHelper field.
+	 * @return statementCloseHelper
+	 */
+	protected ExecutorService getStatementCloseHelper() {
+		return this.statementCloseHelper;
+	}
+
+
+	/**
+	 * Sets the statementCloseHelper field.
+	 * @param statementCloseHelper the statementCloseHelper to set
+	 */
+	protected void setStatementCloseHelper(ExecutorService statementCloseHelper) {
+		this.statementCloseHelper = statementCloseHelper;
+	}
+
+	/**
+	 * Returns the releaseHelperThreadsConfigured field.
+	 * @return releaseHelperThreadsConfigured
+	 */
+	protected boolean isReleaseHelperThreadsConfigured() {
+		return this.releaseHelperThreadsConfigured;
+	}
+
 
 }

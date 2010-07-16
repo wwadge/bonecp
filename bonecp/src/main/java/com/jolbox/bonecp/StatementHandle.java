@@ -71,6 +71,10 @@ public class StatementHandle implements Statement{
 	protected long queryExecuteTimeLimit;
 	/** Config setting. */
 	private ConnectionHook connectionHook;
+	/** If true, we will close off statements in a separate thread. */
+	private boolean releaseHelperEnabled;
+	/** Scratch queue of statments awaiting to be closed. */
+	private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	
 	/**
 	 * Constructor to statement handle wrapper. 
@@ -90,7 +94,11 @@ public class StatementHandle implements Statement{
 		this.cacheKey = cacheKey; 
 		this.connectionHandle = connectionHandle;
 		this.logStatementsEnabled = logStatementsEnabled;
-
+		this.releaseHelperEnabled = connectionHandle.getPool().isReleaseHelperThreadsConfigured();
+		if (this.releaseHelperEnabled){
+			this.statementsPendingRelease = connectionHandle.getOriginatingPartition().getStatementsPendingRelease();
+		}
+		
 		try{
 			BoneCPConfig config = connectionHandle.getPool().getConfig();
 			this.connectionHook = config.getConnectionHook();
@@ -118,8 +126,11 @@ public class StatementHandle implements Statement{
 	}
 
 
-	// @Override
-	public void close() throws SQLException {
+
+	/** Closes off the statement
+	 * @throws SQLException
+	 */
+	protected void closeStatement() throws SQLException {
 		this.logicallyClosed.set(true);
 		if (this.logStatementsEnabled){
 			this.logParams.clear();
@@ -129,7 +140,20 @@ public class StatementHandle implements Statement{
 		}
 	}
 
-
+	public void close() throws SQLException {
+		
+		if (this.releaseHelperEnabled){
+			// try moving onto queue so that a separate thread will handle it....
+			if (!this.statementsPendingRelease.tryTransferOffer(this)){
+				// closing off the statement if that fails....
+				closeStatement();
+			}
+		} else {
+			// otherwise just close it off straight away
+			closeStatement();
+		}
+	}
+		
 
 	/**
 	 * {@inheritDoc}

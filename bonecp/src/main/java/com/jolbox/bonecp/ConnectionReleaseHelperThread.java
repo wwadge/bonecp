@@ -30,7 +30,7 @@ import java.util.concurrent.BlockingQueue;
  *
  * @author wallacew
  */
-public class ReleaseHelperThread
+public class ConnectionReleaseHelperThread
 implements Runnable {
 
 	/** Queue of connections awaiting to be released back to each partition. */
@@ -43,7 +43,7 @@ implements Runnable {
 	 * @param queue Handle to the release queue.
 	 * @param pool handle to the connection pool.
 	 */
-	public ReleaseHelperThread(BlockingQueue<ConnectionHandle> queue, BoneCP pool ){
+	public ConnectionReleaseHelperThread(BlockingQueue<ConnectionHandle> queue, BoneCP pool ){
 		this.queue = queue;
 		this.pool = pool;
 	}

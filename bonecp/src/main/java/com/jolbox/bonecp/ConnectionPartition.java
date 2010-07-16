@@ -71,10 +71,13 @@ public class ConnectionPartition implements Serializable{
 	private volatile boolean unableToCreateMoreTransactions=false;
 	/** Scratch queue of connections awaiting to be placed back in queue. */
     private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
+	/** Scratch queue of statments awaiting to be closed. */
+    private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	/** Config setting. */
 	private boolean disableTracking;
 	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
 	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
+	
 	
 
 	/** Returns a handle to the poolWatchThreadSignalQueue
@@ -187,6 +190,10 @@ public class ConnectionPartition implements Serializable{
 		this.username = config.getUsername();
 		this.password = config.getPassword();
         this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
+        // we pick a max size of maxConnections * 3 i.e. 3 statements per connection as our limit
+        // anything more than that will mean the statements will start being closed off straight away
+        // without enqueing
+        this.statementsPendingRelease = new BoundedLinkedTransferQueue<StatementHandle>(this.maxConnections*3);
 		this.disableTracking = config.isDisableConnectionTracking();
 
 		/** Create a number of helper threads for connection release. */
@@ -198,12 +205,15 @@ public class ConnectionPartition implements Serializable{
 				suffix="-"+config.getPoolName();
 			}
 
-			ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));
+			ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-helper-thread"+suffix, true));
+			ExecutorService statementCloseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-statement-close-helper-thread"+suffix, true));
 			pool.setReleaseHelper(releaseHelper); // keep a handle just in case
+			pool.setStatementCloseHelper(statementCloseHelper); // keep a handle just in case
 
 			for (int i = 0; i < helperThreads; i++) { 
 				// go through pool.getReleaseHelper() rather than releaseHelper directly to aid unit testing (i.e. mocking)
-				pool.getReleaseHelper().execute(new ReleaseHelperThread(this.connectionsPendingRelease, pool));
+				pool.getReleaseHelper().execute(new ConnectionReleaseHelperThread(this.connectionsPendingRelease, pool));
+				pool.getStatementCloseHelper().execute(new StatementReleaseHelperThread(this.statementsPendingRelease, pool));
 			}
 		}
 	}
@@ -308,6 +318,14 @@ public class ConnectionPartition implements Serializable{
 	 */
 	public int getRemainingCapacity() {
 		return this.freeConnections.remainingCapacity();
+	}
+
+	/**
+	 * Returns the statementsPendingRelease field.
+	 * @return statementsPendingRelease
+	 */
+	protected BoundedLinkedTransferQueue<StatementHandle> getStatementsPendingRelease() {
+		return this.statementsPendingRelease;
 	}
 
 }
