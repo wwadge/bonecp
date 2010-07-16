@@ -219,6 +219,7 @@ return dsb;
 		dsb.setPassword(password);
 		dsb.setIdleMaxAge(0L);
 		dsb.setIdleConnectionTestPeriod(0L);
+		dsb.setDisableConnectionTracking(true);
 		if (doPreparedStatement){
 			dsb.setStatementsCacheSize(max_statement);
 		} else {
@@ -254,6 +255,7 @@ return dsb;
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
+		config.setDisableConnectionTracking(true);
 		config.setReleaseHelperThreads(helper_threads);
 		config.setStatementReleaseHelperThreads(statement_release_helper);
 		BoneCP dsb = new BoneCP(config);
@@ -728,6 +730,7 @@ return dsb;
 		config.setIdleConnectionTestPeriod(0);
 		config.setIdleMaxAge(0);
 		config.setStatementsCacheSize(30);
+		config.setDisableConnectionTracking(true);
 		config.setMinConnectionsPerPartition(pool_size);
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);

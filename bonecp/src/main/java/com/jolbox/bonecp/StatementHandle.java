@@ -27,6 +27,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class StatementHandle implements Statement{
 	/** For logging purposes - stores parameters to be used for execution. */
 	protected Map<Object, Object> logParams;
 	/** Set to true if the connection has been "closed". */
-	protected volatile boolean logicallyClosed = false;
+	protected AtomicBoolean logicallyClosed = new AtomicBoolean();
 	/** A handle to the actual statement. */
 	protected Statement internalStatement;
 	/** SQL Statement used for this statement. */
@@ -133,7 +134,7 @@ public class StatementHandle implements Statement{
 	 * @throws SQLException
 	 */
 	protected void closeStatement() throws SQLException {
-		this.logicallyClosed = true;
+		this.logicallyClosed.set(true);
 		if (this.logStatementsEnabled){
 			this.logParams.clear();
 		}
@@ -186,7 +187,7 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void checkClosed() throws SQLException {
-		if (this.logicallyClosed) {
+		if (this.logicallyClosed.get()) {
 			throw new SQLException("Statement is closed");
 		}
 	}
@@ -826,7 +827,7 @@ public class StatementHandle implements Statement{
 	 * @return True if handle is closed
 	 */
 	public boolean isClosed() {
-		return this.logicallyClosed;
+		return this.logicallyClosed.get();
 	}
 
 	// #ifdef JDK6
@@ -1040,7 +1041,7 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void setLogicallyOpen() {
-		this.logicallyClosed=false;
+		this.logicallyClosed.set(false);
 	}
 
 

@@ -142,7 +142,6 @@ public class TestStatementHandle {
 		handle.getConnection();
 		
 		handle.logicallyClosed.set(true);
-		
 		Method method = handle.getClass().getDeclaredMethod("checkClosed");
 		method.setAccessible(true);
 		try{
