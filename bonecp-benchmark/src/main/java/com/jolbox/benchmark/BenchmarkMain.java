@@ -94,16 +94,16 @@ public class BenchmarkMain {
 		BenchmarkTests tests = new BenchmarkTests();
 		
 
-		BenchmarkTests.threads=400;
+		BenchmarkTests.threads=200;
 		BenchmarkTests.stepping=20;
 		BenchmarkTests.pool_size=200;
 		// warm up
 		System.out.println("JIT warm up");
 		tests.testMultiThreadedConstantDelay(0);
 
-		BenchmarkTests.threads=400;
+		BenchmarkTests.threads=200;
 		BenchmarkTests.stepping=5;
-		BenchmarkTests.pool_size=200;
+		BenchmarkTests.pool_size=100;
 
 
 		if (cmd.hasOption("t")){
