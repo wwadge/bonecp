@@ -28,6 +28,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jsr166y.LinkedTransferQueue;
@@ -71,12 +72,12 @@ public class ConnectionPartition implements Serializable{
 	private volatile boolean unableToCreateMoreTransactions=false;
 	/** Scratch queue of connections awaiting to be placed back in queue. */
     private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
-	/** Scratch queue of statments awaiting to be closed. */
-    private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	/** Config setting. */
 	private boolean disableTracking;
 	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
 	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
+	/** Store the unit translation here to avoid recalculating it in statement handles. */
+	private long preComputedQueryExecuteTimeLimit;
 	
 	
 
@@ -190,30 +191,24 @@ public class ConnectionPartition implements Serializable{
 		this.username = config.getUsername();
 		this.password = config.getPassword();
         this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
-        // we pick a max size of maxConnections * 3 i.e. 3 statements per connection as our limit
-        // anything more than that will mean the statements will start being closed off straight away
-        // without enqueing
-        this.statementsPendingRelease = new BoundedLinkedTransferQueue<StatementHandle>(this.maxConnections*3);
 		this.disableTracking = config.isDisableConnectionTracking();
-
+		this.preComputedQueryExecuteTimeLimit = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimit(), TimeUnit.MILLISECONDS);
 		/** Create a number of helper threads for connection release. */
+		String suffix = "";
+
+		if (config.getPoolName()!=null) {
+			suffix="-"+config.getPoolName();
+		}
+
 		int helperThreads = config.getReleaseHelperThreads();
+
 		if (helperThreads > 0) {
-			String suffix = "";
-
-			if (config.getPoolName()!=null) {
-				suffix="-"+config.getPoolName();
-			}
-
 			ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-helper-thread"+suffix, true));
-			ExecutorService statementCloseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-statement-close-helper-thread"+suffix, true));
 			pool.setReleaseHelper(releaseHelper); // keep a handle just in case
-			pool.setStatementCloseHelper(statementCloseHelper); // keep a handle just in case
 
 			for (int i = 0; i < helperThreads; i++) { 
 				// go through pool.getReleaseHelper() rather than releaseHelper directly to aid unit testing (i.e. mocking)
 				pool.getReleaseHelper().execute(new ConnectionReleaseHelperThread(this.connectionsPendingRelease, pool));
-				pool.getStatementCloseHelper().execute(new StatementReleaseHelperThread(this.statementsPendingRelease, pool));
 			}
 		}
 	}
@@ -319,13 +314,11 @@ public class ConnectionPartition implements Serializable{
 	public int getRemainingCapacity() {
 		return this.freeConnections.remainingCapacity();
 	}
-
-	/**
-	 * Returns the statementsPendingRelease field.
-	 * @return statementsPendingRelease
+	
+	/** Store the unit translation here to avoid recalculating it in the constructor of StatementHandle. 
+	 * @return value
 	 */
-	protected BoundedLinkedTransferQueue<StatementHandle> getStatementsPendingRelease() {
-		return this.statementsPendingRelease;
+	protected long getPreComputedQueryExecuteTimeLimit(){
+		return this.preComputedQueryExecuteTimeLimit;
 	}
-
 }

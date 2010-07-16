@@ -23,8 +23,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -74,7 +77,17 @@ public class BenchmarkTests {
 	public static int pool_size = 200;
 	/** config setting. */
 	public static int helper_threads = 5;
-
+	/** config setting. */
+	private int max_idle_time = 0;
+	/** config setting. */
+	private int idle_connection_test_period = 0;
+	/** config setting. */
+	private int max_statement = 10;
+	/** config setting. */
+	private int statement_release_helper = 15;
+	/** config setting. */
+	private int acquire_increment = 5;
+	
 	/** 
 	 *
 	 * @param doPreparedStatement 
@@ -90,12 +103,12 @@ public class BenchmarkTests {
 		cpds.setJdbcUrl(url);
 		cpds.setUser(username);
 		cpds.setPassword(password);
-		cpds.setMaxIdleTime(0);
+		cpds.setMaxIdleTime(max_idle_time);
 		cpds.setMaxIdleTimeExcessConnections(0);
-		cpds.setIdleConnectionTestPeriod(0);
+		cpds.setIdleConnectionTestPeriod(idle_connection_test_period);
 		cpds.setMaxConnectionAge(0);
 		if (doPreparedStatement){
-			cpds.setMaxStatements(10);
+			cpds.setMaxStatements(max_statement);
 		} else {
 			cpds.setMaxStatements(0);
 		}
@@ -148,7 +161,7 @@ public class BenchmarkTests {
 		cpds.setMinIdle(-1);
 		if (doPreparedStatement){
 			cpds.setPoolPreparedStatements(true);
-			cpds.setMaxOpenPreparedStatements(10);
+			cpds.setMaxOpenPreparedStatements(max_statement);
 		}
 		cpds.setInitialSize(pool_size);
 		cpds.setMaxActive(pool_size);
@@ -207,15 +220,16 @@ return dsb;
 		dsb.setIdleMaxAge(0L);
 		dsb.setIdleConnectionTestPeriod(0L);
 		if (doPreparedStatement){
-			dsb.setStatementsCacheSize(10);
+			dsb.setStatementsCacheSize(max_statement);
 		} else {
 			dsb.setStatementsCacheSize(0);
 		}
 		dsb.setMinConnectionsPerPartition(pool_size / partitions);
 		dsb.setMaxConnectionsPerPartition(pool_size / partitions);
 		dsb.setPartitionCount(partitions);
-		dsb.setReleaseHelperThreads(0);
-//		dsb.setAcquireIncrement(5);
+		dsb.setReleaseHelperThreads(helper_threads);
+		dsb.setStatementReleaseHelperThreads(15);
+		dsb.setAcquireIncrement(5);
 		return dsb;
 
 	}
@@ -240,7 +254,8 @@ return dsb;
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
-		config.setReleaseHelperThreads(0);
+		config.setReleaseHelperThreads(helper_threads);
+		config.setStatementReleaseHelperThreads(statement_release_helper);
 		BoneCP dsb = new BoneCP(config);
 
 		long start = System.currentTimeMillis();
@@ -306,7 +321,7 @@ return dsb;
 		cpds.setPassword(password);
 		cpds.setMaxIdle(-1);
 		cpds.setMinIdle(-1);
-		cpds.setMaxOpenPreparedStatements(0);
+		cpds.setMaxOpenPreparedStatements(max_statement);
 		cpds.setInitialSize(pool_size);
 		cpds.setMaxActive(pool_size);
 		cpds.getConnection(); // call to initialize possible lazy structures etc 
@@ -349,7 +364,7 @@ return dsb;
 		cpds.setMaxStatements(0);
 		cpds.setMinPoolSize(pool_size);
 		cpds.setMaxPoolSize(pool_size);
-		cpds.setAcquireIncrement(5);
+		cpds.setAcquireIncrement(acquire_increment );
 		cpds.setNumHelperThreads(1);
 		long start = System.currentTimeMillis();
 		for (int i=0; i< MAX_CONNECTIONS; i++){
@@ -718,6 +733,8 @@ return dsb;
 		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
 		config.setReleaseHelperThreads(helper_threads);
+		config.setStatementReleaseHelperThreads(15);
+		
 		BoneCP dsb = new BoneCP(config);
 
 		Connection conn = dsb.getConnection();
@@ -821,5 +838,5 @@ return dsb;
 		pool.shutdown();
 		return time;
 	}
-
 }
+

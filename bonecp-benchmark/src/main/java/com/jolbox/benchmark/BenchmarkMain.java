@@ -131,8 +131,8 @@ public class BenchmarkMain {
 //		
 		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
 		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
-		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(0), 0, true);
+//		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(10), 10, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(25), 25, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(50), 50, true);
 //		plotLineGraph(tests.testMultiThreadedConstantDelayWithPreparedStatements(75), 75, true);
@@ -209,7 +209,7 @@ public class BenchmarkMain {
         		fname+="-noC3P0";
         	}
         	 fname += ".png";
-            ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024*4, 768*4);
+            ChartUtilities.saveChartAsPNG(new File(fname), chart, 1024, 768);
             System.out.println("******* Saved chart to: " + fname);
         } catch (IOException e) {
             System.err.println("Problem occurred creating chart.");

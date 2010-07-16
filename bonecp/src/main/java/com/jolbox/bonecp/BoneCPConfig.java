@@ -81,6 +81,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int statementsCachedPerConnection = 0;
 	/** Number of release-connection helper threads to create per partition. */
 	private int releaseHelperThreads = 3;
+	/** Number of statement release helper threads to create. */
+	private int statementReleaseHelperThreads = 3;
 	/** Hook class (external). */
 	private ConnectionHook connectionHook;
 	/** Query to send once per connection to the database. */
@@ -121,7 +123,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private long connectionTimeout = Long.MAX_VALUE;
 	/** Time in ms to wait for close connection watch thread. */
 	private long closeConnectionWatchTimeout = 0;
-	
+
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
@@ -467,7 +469,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
 			this.poolAvailabilityThreshold = 20;
 		}
-		
+
 		if (this.maxConnectionsPerPartition < 2) {
 			logger.warn("Max Connections < 2. Setting to 50");
 			this.maxConnectionsPerPartition = 50;
@@ -495,6 +497,11 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.releaseHelperThreads = 3;
 		}
 
+		if (this.statementReleaseHelperThreads < 0){
+			logger.warn("statementReleaseHelperThreads < 0! Setting to 3");
+			this.statementReleaseHelperThreads = 3;
+		}
+		
 		if (this.statementsCacheSize < 0) {
 			logger.warn("preparedStatementsCacheSize < 0! Setting to 0");
 			this.statementsCacheSize = 0;
@@ -516,7 +523,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
 			logger.warn("JDBC password was not set in config!");
 		}
-		
+
 		// if no datasource and we have driver properties set...
 		if (this.datasourceBean == null && this.driverProperties != null){
 			if ((this.driverProperties.get("user") == null) && this.username == null){
@@ -529,7 +536,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				this.driverProperties.setProperty("user", this.username);
 			}  
 		}
-		
+
 		// if no datasource and we have driver properties set...
 		if (this.datasourceBean == null && this.driverProperties != null){
 			if ((this.driverProperties.get("password") == null) && this.password == null){
@@ -541,12 +548,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				logger.warn("JDBC password set in driver properties does not match the one set in the pool config. Overriding it with pool config.");
 				this.driverProperties.setProperty("password", this.password);
 			}
-			
+
 			// maintain sanity between the two states 
 			this.username = this.driverProperties.getProperty("user");
 			this.password = this.driverProperties.getProperty("password");
 		}
-		
+
 		this.username = this.username == null ? "" : this.username.trim();
 		this.jdbcUrl = this.jdbcUrl == null ? "" : this.jdbcUrl.trim();
 		this.password = this.password == null ? "" : this.password.trim();
@@ -949,7 +956,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			}
 		}
 	}
-	
+
 	/** Parses the given XML doc to extract the properties and return them into a java.util.Properties.
 	 * @param doc to parse
 	 * @param sectionName which section to extract
@@ -979,13 +986,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 					}
 				}
 			}
-			
+
 			if (found == -1){
 				config = null;
 				logger.warn("Did not find "+sectionName+" section in config file. Reverting to defaults.");
 			}
 		}
-		
+
 		if(config != null && config.getLength() > 0) {
 			Node node = config.item(found);
 			if(node.getNodeType() == Node.ELEMENT_NODE){
@@ -1120,5 +1127,29 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setCloseConnectionWatchTimeout(long closeConnectionWatchTimeout) {
 		this.closeConnectionWatchTimeout = closeConnectionWatchTimeout;
+	}
+
+	/**
+	 * Returns the statementHelperThreads field.
+	 * @return statementHelperThreads
+	 */
+	public int getStatementReleaseHelperThreads() {
+		return this.statementReleaseHelperThreads;
+	}
+
+	/**
+	 * Sets number of statement helper threads to create that will handle releasing a statement.
+	 *
+	 * When this value is set to zero, the application thread is blocked until the pool and JDBC driver are able to close off the statement. 
+	 * 
+	 * When a non-zero value is set, the pool will create threads that will take care of closing off the statement asychronously to the application via the release helper 
+	 * threads).
+	 * 
+	 * Useful when your application is opening up lots of statements otherwise will probably slow things down.
+	 * 
+	 * @param statementReleaseHelperThreads no to release 
+	 */	
+	public void setStatementReleaseHelperThreads(int statementReleaseHelperThreads) {
+		this.statementReleaseHelperThreads = statementReleaseHelperThreads;
 	}
 }

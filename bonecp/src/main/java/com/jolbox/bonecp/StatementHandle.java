@@ -27,8 +27,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +42,9 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  */
 public class StatementHandle implements Statement{
 	/** For logging purposes - stores parameters to be used for execution. */
-	protected Map<Object, Object> logParams = new TreeMap<Object, Object>();
+	protected Map<Object, Object> logParams;
 	/** Set to true if the connection has been "closed". */
-	protected AtomicBoolean logicallyClosed = new AtomicBoolean(false);
+	protected volatile boolean logicallyClosed = false;
 	/** A handle to the actual statement. */
 	protected Statement internalStatement;
 	/** SQL Statement used for this statement. */
@@ -60,7 +58,7 @@ public class StatementHandle implements Statement{
 	/** If enabled, log all statements being executed. */
 	protected boolean logStatementsEnabled;
 	/** for logging of addBatch. */
-	protected StringBuffer batchSQL = new StringBuffer();
+	protected StringBuffer batchSQL;
 	/** If true, this statement is in the cache. */
 	public volatile boolean inCache = false;
 	/** Stack trace capture of where this statement was opened. */ 
@@ -72,7 +70,7 @@ public class StatementHandle implements Statement{
 	/** Config setting. */
 	private ConnectionHook connectionHook;
 	/** If true, we will close off statements in a separate thread. */
-	private boolean releaseHelperEnabled;
+	private boolean statementReleaseHelperEnabled;
 	/** Scratch queue of statments awaiting to be closed. */
 	private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	
@@ -94,15 +92,19 @@ public class StatementHandle implements Statement{
 		this.cacheKey = cacheKey; 
 		this.connectionHandle = connectionHandle;
 		this.logStatementsEnabled = logStatementsEnabled;
-		this.releaseHelperEnabled = connectionHandle.getPool().isReleaseHelperThreadsConfigured();
-		if (this.releaseHelperEnabled){
-			this.statementsPendingRelease = connectionHandle.getOriginatingPartition().getStatementsPendingRelease();
+		if (this.logStatementsEnabled){
+			 this.logParams = new TreeMap<Object, Object>();
+			 this.batchSQL = new StringBuffer();
 		}
-		
+
+		this.statementReleaseHelperEnabled = connectionHandle.getPool().isStatementReleaseHelperThreadsConfigured();
+		if (this.statementReleaseHelperEnabled){
+			this.statementsPendingRelease = connectionHandle.getPool().getStatementsPendingRelease();
+		}
 		try{
 			BoneCPConfig config = connectionHandle.getPool().getConfig();
 			this.connectionHook = config.getConnectionHook();
-			this.queryExecuteTimeLimit = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimit(), TimeUnit.MILLISECONDS);
+			this.queryExecuteTimeLimit = connectionHandle.getOriginatingPartition().getPreComputedQueryExecuteTimeLimit();
 		} catch (Exception e){ // safety!
 			this.connectionHook = null;
 			this.queryExecuteTimeLimit = 0; 
@@ -131,7 +133,7 @@ public class StatementHandle implements Statement{
 	 * @throws SQLException
 	 */
 	protected void closeStatement() throws SQLException {
-		this.logicallyClosed.set(true);
+		this.logicallyClosed = true;
 		if (this.logStatementsEnabled){
 			this.logParams.clear();
 		}
@@ -142,7 +144,7 @@ public class StatementHandle implements Statement{
 
 	public void close() throws SQLException {
 		
-		if (this.releaseHelperEnabled){
+		if (this.statementReleaseHelperEnabled){
 			// try moving onto queue so that a separate thread will handle it....
 			if (!this.statementsPendingRelease.tryTransferOffer(this)){
 				// closing off the statement if that fails....
@@ -184,7 +186,7 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void checkClosed() throws SQLException {
-		if (this.logicallyClosed.get()) {
+		if (this.logicallyClosed) {
 			throw new SQLException("Statement is closed");
 		}
 	}
@@ -388,7 +390,7 @@ public class StatementHandle implements Statement{
 			}
 			long queryStartTime = queryTimerStart();
 			result = this.internalStatement.executeBatch();
-			queryTimerEnd(this.batchSQL.toString(), queryStartTime);
+			queryTimerEnd(this.batchSQL == null ? "" : this.batchSQL.toString(), queryStartTime);
 
 		} catch (Throwable t) {
 			throw this.connectionHandle.markPossiblyBroken(t);
@@ -824,7 +826,7 @@ public class StatementHandle implements Statement{
 	 * @return True if handle is closed
 	 */
 	public boolean isClosed() {
-		return this.logicallyClosed.get();
+		return this.logicallyClosed;
 	}
 
 	// #ifdef JDK6
@@ -1015,9 +1017,9 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void internalClose() throws SQLException {
-		this.batchSQL = new StringBuffer();
 		if (this.logStatementsEnabled){
 			this.logParams.clear();
+			this.batchSQL = new StringBuffer();
 		}
 		this.internalStatement.close();
 	}
@@ -1038,7 +1040,7 @@ public class StatementHandle implements Statement{
 	 *
 	 */
 	protected void setLogicallyOpen() {
-		this.logicallyClosed.set(false);
+		this.logicallyClosed=false;
 	}
 
 

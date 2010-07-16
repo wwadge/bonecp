@@ -97,7 +97,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** pointer to the thread containing the release helper threads. */
 	private ExecutorService releaseHelper;
 	/** pointer to the service containing the statement close helper threads. */
-	private ExecutorService statementCloseHelper;
+	private ExecutorService statementCloseHelperExecutor;
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
 	private ExecutorService asyncExecutor;
 	/** Logger class. */
@@ -124,6 +124,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private long connectionTimeout;
 	/** No of ms to wait for thread.join() in connection watch thread. */
 	private long closeConnectionWatchTimeout;
+	/** If set to true, config has specified the use of statement release helper threads. */
+	private boolean statementReleaseHelperThreadsConfigured;
+	/** Scratch queue of statments awaiting to be closed. */
+    private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
 
 	/**
 	 * Closes off this connection pool.
@@ -140,7 +144,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			
 			if (this.releaseHelperThreadsConfigured){
 				this.releaseHelper.shutdownNow();
-				this.statementCloseHelper.shutdownNow();
+			}
+			if (this.statementReleaseHelperThreadsConfigured){
+				this.statementCloseHelperExecutor.shutdownNow();
 			}
 			if (this.asyncExecutor != null){
 				this.asyncExecutor.shutdownNow();
@@ -253,6 +259,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		}
 		this.asyncExecutor = Executors.newCachedThreadPool();
 		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
+		this.statementReleaseHelperThreadsConfigured = config.getStatementReleaseHelperThreads() > 0;
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
 		String suffix = "";
@@ -295,9 +302,31 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			// watch this partition for low no of threads
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
-
-		if (!this.config.isDisableJMX()){
+		
+        initStmtReleaseHelper(suffix);
+		
+        if (!this.config.isDisableJMX()){
 			initJMX();
+		}
+	}
+
+	/** Starts off threads released to statement release helpers.
+	 * @param suffix of pool
+	 */
+	private void initStmtReleaseHelper(String suffix) {
+		// we pick a max size of maxConnections * 3 i.e. 3 statements per connection as our limit
+        // anything more than that will mean the statements will start being closed off straight away
+        // without enqueing
+        this.statementsPendingRelease = new BoundedLinkedTransferQueue<StatementHandle>(this.config.getMaxConnectionsPerPartition()*3);
+        int statementReleaseHelperThreads = this.config.getStatementReleaseHelperThreads();
+
+        if (statementReleaseHelperThreads > 0) {
+        	this.setStatementCloseHelperExecutor(Executors.newFixedThreadPool(statementReleaseHelperThreads, new CustomThreadFactory("BoneCP-statement-close-helper-thread"+suffix, true)));
+
+			for (int i = 0; i < statementReleaseHelperThreads; i++) { 
+				// go through pool  rather than statementReleaseHelper directly to aid unit testing (i.e. mocking)
+				getStatementCloseHelperExecutor().execute(new StatementReleaseHelperThread(this.statementsPendingRelease, this));
+			}
 		}
 	}
 
@@ -657,8 +686,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * Returns the statementCloseHelper field.
 	 * @return statementCloseHelper
 	 */
-	protected ExecutorService getStatementCloseHelper() {
-		return this.statementCloseHelper;
+	protected ExecutorService getStatementCloseHelperExecutor() {
+		return this.statementCloseHelperExecutor;
 	}
 
 
@@ -666,8 +695,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * Sets the statementCloseHelper field.
 	 * @param statementCloseHelper the statementCloseHelper to set
 	 */
-	protected void setStatementCloseHelper(ExecutorService statementCloseHelper) {
-		this.statementCloseHelper = statementCloseHelper;
+	protected void setStatementCloseHelperExecutor(ExecutorService statementCloseHelper) {
+		this.statementCloseHelperExecutor = statementCloseHelper;
 	}
 
 	/**
@@ -677,6 +706,21 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	protected boolean isReleaseHelperThreadsConfigured() {
 		return this.releaseHelperThreadsConfigured;
 	}
+	
+	/**
+	 * Returns the statementReleaseHelperThreadsConfigured field.
+	 * @return statementReleaseHelperThreadsConfigured
+	 */
+	protected boolean isStatementReleaseHelperThreadsConfigured() {
+		return this.statementReleaseHelperThreadsConfigured;
+	}
 
+	/**
+	 * Returns the statementsPendingRelease field.
+	 * @return statementsPendingRelease
+	 */
+	protected BoundedLinkedTransferQueue<StatementHandle> getStatementsPendingRelease() {
+		return this.statementsPendingRelease;
+	}
 
 }
