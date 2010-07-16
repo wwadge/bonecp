@@ -947,12 +947,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @return Properties map
 	 */
 	private Properties parseXML(Document doc, String sectionName) {
+		int found = -1;
 		Properties results = new Properties();
 		NodeList config = null;
 		if (sectionName == null){
 			config = doc.getElementsByTagName("default-config");
+			found = 0;
 		} else {
-			boolean found = false;
 			config = doc.getElementsByTagName("named-config");
 			if(config != null && config.getLength() > 0) {
 				for (int i = 0; i < config.getLength(); i++) {
@@ -962,7 +963,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 						if (attributes != null && attributes.getLength() > 0){
 							Node name = attributes.getNamedItem("name");
 							if (name.getNodeValue().equalsIgnoreCase(sectionName)){
-								found = true;
+								found = i;
 								break;
 							}
 						}
@@ -970,14 +971,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				}
 			}
 			
-			if (!found){
+			if (found == -1){
 				config = null;
 				logger.warn("Did not find "+sectionName+" section in config file. Reverting to defaults.");
 			}
 		}
-
+		
 		if(config != null && config.getLength() > 0) {
-			Node node = config.item(0);
+			Node node = config.item(found);
 			if(node.getNodeType() == Node.ELEMENT_NODE){
 				Element elementEntry = (Element)node;
 				NodeList childNodeList = elementEntry.getChildNodes();

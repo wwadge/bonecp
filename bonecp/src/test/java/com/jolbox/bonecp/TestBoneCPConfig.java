@@ -65,6 +65,16 @@ public class TestBoneCPConfig {
 		assertEquals(99, config.getMinConnectionsPerPartition());
 	}
 	
+	/** Tests configs using xml setups.
+	 * @throws Exception
+	 */
+	@Test
+	public void testXMLConfig2() throws Exception{
+		// read off from the default bonecp-config.xml
+		BoneCPConfig config = new BoneCPConfig("specialApp2");
+		assertEquals(123, config.getMinConnectionsPerPartition());
+	}
+	
 	/**
 	 * Load properties via a given stream.
 	 * @throws Exception
