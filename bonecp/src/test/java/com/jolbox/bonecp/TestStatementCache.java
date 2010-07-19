@@ -99,6 +99,7 @@ public class TestStatementCache {
 		config.setStatementsCacheSize(0);
 		config.setReleaseHelperThreads(0);
 		config.setDisableConnectionTracking(true);
+		config.setStatementReleaseHelperThreads(0);
 	}
 
 
@@ -120,6 +121,7 @@ public class TestStatementCache {
 		config.setPartitionCount(1);
 		config.setStatementsCacheSize(1);
 		config.setLogStatementsEnabled(true);
+		config.setStatementReleaseHelperThreads(0);
 		dsb = new BoneCP(config);
 
 		ConnectionHandle con = (ConnectionHandle) dsb.getConnection();
@@ -184,6 +186,7 @@ public class TestStatementCache {
 		config.setAcquireIncrement(1);
 		config.setPartitionCount(1);
 		config.setStatementsCacheSize(5);
+		config.setStatementReleaseHelperThreads(0);
 		dsb = new BoneCP(config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
@@ -220,6 +223,7 @@ public class TestStatementCache {
 		config.setAcquireIncrement(1);
 		config.setPartitionCount(1);
 		config.setStatementsCacheSize(5);
+		config.setStatementReleaseHelperThreads(0);
 		dsb = new BoneCP(config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);

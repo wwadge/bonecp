@@ -32,7 +32,6 @@ import java.util.Set;
 import org.easymock.classextension.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** Tests preparedStatementHandle class.
@@ -41,34 +40,30 @@ import org.junit.Test;
  */
 public class TestPreparedStatementHandle {
 	/** Class under test. */
-	private static PreparedStatementHandle testClass;
+	private PreparedStatementHandle testClass;
 	/** Mock class under test. */
-	private static PreparedStatementHandle mockClass;
+	private PreparedStatementHandle mockClass = createNiceMock(PreparedStatementHandle.class);
 	/** Mock handles. */
-	private static IStatementCache mockCallableStatementCache;
+	private IStatementCache mockCallableStatementCache = createNiceMock(IStatementCache.class);
 	/** Mock handles. */
-	private static ConnectionHandle mockConnection;
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		mockClass = createNiceMock(PreparedStatementHandle.class);
-		mockCallableStatementCache = createNiceMock(IStatementCache.class);
-		mockConnection = createNiceMock(ConnectionHandle.class);
-		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		EasyMock.replay(mockConnection);
-		testClass = new PreparedStatementHandle(mockClass, "", mockConnection, "TestSQL", mockCallableStatementCache);
-
-	}
+	private ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+	/** Mock handles. */
+	private BoneCP mockPool = createNiceMock(BoneCP.class);
+	
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		reset(mockClass, mockCallableStatementCache, mockConnection);
+		reset(this.mockClass, this.mockCallableStatementCache, this.mockConnection);
+		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
+		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
+		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		EasyMock.replay(this.mockConnection, this.mockPool);
+		this.testClass = new PreparedStatementHandle(this.mockClass, "", this.mockConnection, "TestSQL", this.mockCallableStatementCache);
+		EasyMock.reset(this.mockConnection, this.mockPool);
+		
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)
@@ -80,7 +75,7 @@ public class TestPreparedStatementHandle {
 	public void testStandardBounceMethods() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
+		CommonTestUtils.testStatementBounceMethod(this.mockPool, this.mockConnection, this.testClass, skipTests, this.mockClass);
 	}
 	
 	/**
@@ -89,7 +84,7 @@ public class TestPreparedStatementHandle {
 	@Test
 	public void testGetterSetter(){
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class); 
-		testClass.setInternalPreparedStatement(mockPreparedStatement);
-		Assert.assertEquals(mockPreparedStatement, testClass.getInternalPreparedStatement());
+		this.testClass.setInternalPreparedStatement(mockPreparedStatement);
+		Assert.assertEquals(mockPreparedStatement, this.testClass.getInternalPreparedStatement());
 	}
 }

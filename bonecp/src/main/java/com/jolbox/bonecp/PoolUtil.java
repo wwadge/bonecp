@@ -26,6 +26,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Ref;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -42,7 +43,9 @@ public class PoolUtil {
 	 */
 	public static String fillLogParams(String sql, Map<Object, Object> logParams) {
 		StringBuilder result = new StringBuilder();
-		Iterator<Object> it = logParams.values().iterator();
+		Map<Object, Object> tmpLogParam = (logParams == null ? new HashMap<Object, Object>() : logParams);
+		
+		Iterator<Object> it = tmpLogParam.values().iterator();
 		boolean inQuote = false;
 		boolean inQuote2 = false;
 		char[] sqlChar = sql.toCharArray();

@@ -86,7 +86,8 @@ public class StatementHandle implements Statement{
 	 * @param logStatementsEnabled set to true to log statements. 
 	 */
 	public StatementHandle(Statement internalStatement, String sql, IStatementCache cache, 
-			ConnectionHandle connectionHandle, String cacheKey, boolean logStatementsEnabled) {
+						   ConnectionHandle connectionHandle, String cacheKey, 
+						   boolean logStatementsEnabled) {
 		this.sql = sql;
 		this.internalStatement = internalStatement;
 		this.cache = cache;

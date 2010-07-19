@@ -30,9 +30,9 @@ import java.sql.CallableStatement;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.easymock.classextension.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 /**
  * @author Wallace
@@ -40,35 +40,33 @@ import org.junit.Test;
  */
 public class TestCallableStatementHandle {
 	/** Class under test. */
-	private static CallableStatementHandle testClass;
+	private CallableStatementHandle testClass;
 	/** Mock class under test. */
-	private static CallableStatementHandle mockClass;
+	private CallableStatementHandle mockClass = createNiceMock(CallableStatementHandle.class);
 	/** Mock handles. */
-	private static IStatementCache mockCallableStatementCache;
+	private IStatementCache mockCallableStatementCache = createNiceMock(IStatementCache.class);
 	/** Mock handles. */
-	private static ConnectionHandle mockConnection;
+	private ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+	/** Mock handles. */
+	private BoneCP mockPool = createNiceMock(BoneCP.class);
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		mockClass = createNiceMock(CallableStatementHandle.class);
-		mockCallableStatementCache = createNiceMock(IStatementCache.class);
-		mockConnection = createNiceMock(ConnectionHandle.class);
-		
-		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		testClass = new CallableStatementHandle(mockClass, "",  mockConnection, "somesql", mockCallableStatementCache);
-		testClass.logStatementsEnabled=true;
-
-	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		reset(mockClass, mockCallableStatementCache, mockConnection);
+		
+		reset(this.mockClass, this.mockCallableStatementCache, this.mockConnection);
+		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
+		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
+		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		EasyMock.replay(this.mockConnection, this.mockPool);
+		this.testClass = new CallableStatementHandle(this.mockClass, "",  this.mockConnection, "somesql", this.mockCallableStatementCache);
+		this.testClass.logStatementsEnabled=true;
+		EasyMock.reset(this.mockConnection, this.mockPool);
+
+
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)
@@ -80,7 +78,7 @@ public class TestCallableStatementHandle {
 	public void testStandardBounceMethods() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
+		CommonTestUtils.testStatementBounceMethod(this.mockPool, this.mockConnection, this.testClass, skipTests, this.mockClass);
 	}
 	
 	/**
@@ -89,7 +87,7 @@ public class TestCallableStatementHandle {
 	@Test
 	public void testGetterSetter(){
 		CallableStatement mockCallableStatement = createNiceMock(CallableStatement.class); 
-		testClass.setInternalCallableStatement(mockCallableStatement);
-		Assert.assertEquals(mockCallableStatement, testClass.getInternalCallableStatement());
+		this.testClass.setInternalCallableStatement(mockCallableStatement);
+		Assert.assertEquals(mockCallableStatement, this.testClass.getInternalCallableStatement());
 	}
 }

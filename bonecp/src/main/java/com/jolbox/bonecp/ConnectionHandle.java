@@ -111,7 +111,7 @@ public class ConnectionHandle implements Connection{
 	/** Connection url. */
 	protected String url;	
 	/** Keep track of the thread that's using this connection for connection watch. */
-	private Thread threadUsingConnection;
+	protected Thread threadUsingConnection;
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception

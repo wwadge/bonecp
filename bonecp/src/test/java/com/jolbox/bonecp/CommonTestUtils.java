@@ -39,9 +39,9 @@ import java.util.concurrent.Executors;
 
 import javax.sql.DataSource;
 
+import org.easymock.EasyMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.easymock.EasyMock;
 
 
 /**
@@ -147,6 +147,7 @@ public class CommonTestUtils {
 
 
 	/** Create mock expectations of the given classes then invoke the given method twice (once normal + once faking an SQL exception).
+	 * @param mockPool 
 	 * @param mockConnection 
 	 * @param mockClass
 	 * @param testClass
@@ -156,9 +157,7 @@ public class CommonTestUtils {
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	private static void doTestStatementBounceMethod(ConnectionHandle mockConnection, Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
-		expect(mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		
+	private static void doTestStatementBounceMethod(BoneCP mockPool, ConnectionHandle mockConnection, Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		if (method.getReturnType() == void.class){
 			method.invoke(mockClass, args);
 			expectLastCall().once().andThrow(new Error()).once();
@@ -188,6 +187,7 @@ public class CommonTestUtils {
 	}
 
 	/** Create mock expectations of the given classes then invoke the given method twice (once normal + once faking an SQL exception).
+	 * @param mockPool 
 	 * @param mockConnection 
 	 * @param testClass
 	 * @param skipTests
@@ -196,7 +196,7 @@ public class CommonTestUtils {
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public static void testStatementBounceMethod(ConnectionHandle mockConnection, Object testClass, Set<String> skipTests, Object mockClass) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+	public static void testStatementBounceMethod(BoneCP mockPool, ConnectionHandle mockConnection, Object testClass, Set<String> skipTests, Object mockClass) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 
 		Method[] methods = testClass.getClass().getDeclaredMethods();
 		for (Method method: methods){
@@ -209,7 +209,7 @@ public class CommonTestUtils {
 				mockParams[i] = CommonTestUtils.instanceMap.get(params[i]);
 			}
 
-			doTestStatementBounceMethod(mockConnection, mockClass, testClass, method, mockParams);
+			doTestStatementBounceMethod(mockPool, mockConnection, mockClass, testClass, method, mockParams);
 		}
 	}
 

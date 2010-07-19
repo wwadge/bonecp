@@ -106,10 +106,11 @@ public class TestStatementHandle {
 		skipTests.add("internalClose");
 		skipTests.add("trackResultSet");
 		skipTests.add("checkClosed");
+		skipTests.add("closeStatement"); 
 		skipTests.add("closeAndClearResultSetHandles"); 
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
-		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
+		CommonTestUtils.testStatementBounceMethod(null, mockConnection, testClass, skipTests, mockClass);
 		
 	}
 	
@@ -189,7 +190,10 @@ public class TestStatementHandle {
 		expect(mockConnection.getPool()).andReturn(mockPool).anyTimes();
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		reset(mockConfig);
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1).anyTimes();
+		ConnectionPartition mockPartition = createNiceMock(ConnectionPartition.class);
+		expect(mockPartition.getPreComputedQueryExecuteTimeLimit()).andReturn(1L).anyTimes();
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+//		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1).anyTimes();
 		CustomHook hook = new CustomHook();
 		expect(mockConfig.getConnectionHook()).andReturn(hook).anyTimes();
 		mockStatement.execute((String)EasyMock.anyObject());
@@ -204,7 +208,7 @@ public class TestStatementHandle {
 				return true;
 			}
 		}).anyTimes();
-		replay(mockConnection, mockConfig, mockPool, mockStatement);
+		replay(mockConnection, mockConfig, mockPool, mockStatement, mockPartition);
 
 		StatementHandle handle = new StatementHandle(mockStatement, mockConnection, true);
 		handle.execute("test");
