@@ -36,10 +36,10 @@ import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
-/* #ifdef JDK6
+// #ifdef JDK6
 import java.sql.NClob;
 import java.sql.SQLXML;
-#endif JDK6 */
+// #endif JDK6
 /**
  * @author Wallace
  *
@@ -93,7 +93,7 @@ public class MockConnection implements Connection {
 		return null;
 	}
 
-	/* #ifdef JDK6
+	// #ifdef JDK6
 	@Override
 	public NClob createNClob() throws SQLException {
 		return null;
@@ -102,7 +102,7 @@ public class MockConnection implements Connection {
 	public SQLXML createSQLXML() throws SQLException {
 		return null;
 	}
-	#endif JDK6 */
+	// #endif JDK6
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createStatement()
