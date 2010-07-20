@@ -16,12 +16,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,63 +44,75 @@ public class ConnectionTesterThread implements Runnable {
 	/** Scheduler handle. **/
 	private ScheduledExecutorService scheduler;
 	/** Handle to connection pool. */
-    private BoneCP pool;
-    /** Logger handle. */
-    private static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
-    
+	private BoneCP pool;
+	/** Logger handle. */
+	private static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
+
 	/** Constructor
 	 * @param connectionPartition partition to work on
 	 * @param scheduler Scheduler handler.
-	 * @param pool 
+	 * @param pool pool handle
+	 * @param idleMaxAge Threads older than this are killed off 
+	 * @param idleConnectionTestPeriod Threads that are idle for more than this time are sent a keep-alive.
 	 */
-	public ConnectionTesterThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, BoneCP pool){
+	protected ConnectionTesterThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
+			BoneCP pool, long idleMaxAge, long idleConnectionTestPeriod){
 		this.partition = connectionPartition;
 		this.scheduler = scheduler;
-		this.idleMaxAge = pool.getConfig().getIdleMaxAge();
-		this.idleConnectionTestPeriod = pool.getConfig().getIdleConnectionTestPeriod();
-		this.pool = pool; 
+		this.idleMaxAge = idleMaxAge;
+		this.idleConnectionTestPeriod = idleConnectionTestPeriod;
+		this.pool = pool;
 	}
 
 
 	/** Invoked periodically. */
 	public void run() {
 		ConnectionHandle connection = null;
-	
+		long tmp;
 		try {
-			//FIXME: size is O(n) with LinkedTransferQueue!
-			int partitionSize= this.partition.getAvailableConnections();
-			long currentTime = System.currentTimeMillis();
-			for (int i=0; i < partitionSize; i++){
-			 
-				connection = this.partition.getFreeConnections().poll();
-				if (connection != null){
-					connection.setOriginatingPartition(this.partition);
-					if (connection.isPossiblyBroken() || 
-							((this.idleMaxAge > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
-						// kill off this connection
-						closeConnection(connection);
-						continue;
-					}
+				long nextCheck = this.idleConnectionTestPeriod;
+				
+				int partitionSize= this.partition.getAvailableConnections();
+				long currentTime = System.currentTimeMillis();
+				for (int i=0; i < partitionSize; i++){
 
-					if (this.idleConnectionTestPeriod > 0 && (currentTime-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
-							(currentTime-connection.getConnectionLastReset() > this.idleConnectionTestPeriod)) {
-					    // send a keep-alive, close off connection if we fail.
-						if (!this.pool.isConnectionHandleAlive(connection)){
-						    closeConnection(connection);
-						    continue; 
+					connection = this.partition.getFreeConnections().poll();
+					if (connection != null){
+						connection.setOriginatingPartition(this.partition);
+						if (connection.isPossiblyBroken() || 
+								((this.idleMaxAge > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
+							// kill off this connection
+							closeConnection(connection);
+							continue;
 						}
-						connection.setConnectionLastReset(System.currentTimeMillis());
+
+						if (this.idleConnectionTestPeriod > 0 && (currentTime-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
+								(currentTime-connection.getConnectionLastReset() > this.idleConnectionTestPeriod)) {
+							// send a keep-alive, close off connection if we fail.
+							if (!this.pool.isConnectionHandleAlive(connection)){
+								closeConnection(connection);
+								continue; 
+							}
+							connection.setConnectionLastReset(System.currentTimeMillis());
+							tmp = this.idleConnectionTestPeriod;
+						} else {
+							tmp = this.idleConnectionTestPeriod-(System.currentTimeMillis() - connection.getConnectionLastUsed()); 
+						}
+						if (tmp < nextCheck){
+							nextCheck = tmp; 
+						}
+						
+						this.pool.putConnectionBackInPartition(connection);
+
+						Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
 					}
 
-				    this.pool.putConnectionBackInPartition(connection);
-				    
-					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
-				}
+				} // throw it back on the queue
 
-			} // throw it back on the queue
+				this.scheduler.schedule(this, nextCheck, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
-			    logger.debug("Shutting down connection tester thread.");
+				logger.debug("Shutting down connection tester thread.");
 				closeConnection(connection);
 			} else {
 				logger.error("Connection tester thread interrupted", e);
@@ -116,13 +129,13 @@ public class ConnectionTesterThread implements Runnable {
 			try {
 				connection.internalClose();
 				this.pool.postDestroyConnection(connection);
-				
+
 			} catch (SQLException e) {
 				logger.error("Destroy connection exception", e);
 			}
 		}
 	}
 
-	
+
 
 }

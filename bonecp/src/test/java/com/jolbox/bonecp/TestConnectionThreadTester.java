@@ -105,7 +105,7 @@ public class TestConnectionThreadTester {
 		mockPool.postDestroyConnection(mockConnection);
 		expectLastCall().once();
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
@@ -133,7 +133,7 @@ public class TestConnectionThreadTester {
 		expectLastCall().once();
 
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
@@ -161,7 +161,7 @@ public class TestConnectionThreadTester {
 		mockConnection.setConnectionLastReset(anyLong());
 
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
@@ -190,7 +190,7 @@ public class TestConnectionThreadTester {
 
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
@@ -222,7 +222,7 @@ public class TestConnectionThreadTester {
 		
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
@@ -255,7 +255,7 @@ public class TestConnectionThreadTester {
 		mockLogger.error((String)anyObject(), (Exception)anyObject());
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor, mockLogger);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		Field loggerField = this.testClass.getClass().getDeclaredField("logger");
 		loggerField.setAccessible(true);
 		loggerField.set(this.testClass, mockLogger);
@@ -292,7 +292,7 @@ public class TestConnectionThreadTester {
 
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor, mockLogger);
-		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
 		Field loggerField = this.testClass.getClass().getDeclaredField("logger");
 		loggerField.setAccessible(true);
 		loggerField.set(this.testClass, mockLogger);
