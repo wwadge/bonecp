@@ -219,7 +219,7 @@ public class TestConnectionThreadTester {
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
 
-	
+
 	/** Tests fake exceptions, connection should be shutdown if the scheduler was marked as going down. Same test except just used
 	 * to check for a spurious interrupted exception (should be logged). 
 	 * @throws SQLException 

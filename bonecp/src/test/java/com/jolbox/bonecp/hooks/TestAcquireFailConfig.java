@@ -33,7 +33,7 @@ import org.junit.Test;
  * @author Wallace
  *
  */
-public class AcquireFailConfigTest {
+public class TestAcquireFailConfig {
 	
 	/**
 	 * Test getters/setters for acquireFail class.
