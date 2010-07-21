@@ -35,7 +35,7 @@ public enum ConnectionPoolType {
 	/** pool type. */
 	DBCP(false),
 	/** pool type. */
-	TOMCAT_JDBC(false),
+	TOMCAT_JDBC(true),
 	/** pool type. */
 	BONECP_1_PARTITIONS(true, false),
 	/** pool type. */
