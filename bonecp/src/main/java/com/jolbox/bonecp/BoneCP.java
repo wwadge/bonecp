@@ -586,7 +586,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			result = false;
 		} finally {
 			connection.logicallyClosed = logicallyClosed;
-			connection.setConnectionLastUsed(System.currentTimeMillis());
+			connection.setConnectionLastReset(System.currentTimeMillis());
 			result = closeStatement(stmt, result);
 		}
 		return result;

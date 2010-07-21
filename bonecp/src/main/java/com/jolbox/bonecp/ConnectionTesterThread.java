@@ -96,7 +96,7 @@ public class ConnectionTesterThread implements Runnable {
 							connection.setConnectionLastReset(System.currentTimeMillis());
 							tmp = this.idleConnectionTestPeriod;
 						} else {
-							tmp = this.idleConnectionTestPeriod-(System.currentTimeMillis() - connection.getConnectionLastUsed()); 
+							tmp = this.idleConnectionTestPeriod-(System.currentTimeMillis() - connection.getConnectionLastReset()); 
 						}
 						if (tmp < nextCheck){
 							nextCheck = tmp; 
