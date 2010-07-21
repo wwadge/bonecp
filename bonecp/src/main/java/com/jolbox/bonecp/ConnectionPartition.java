@@ -49,7 +49,7 @@ public class ConnectionPartition implements Serializable{
 	/** Logger class. */
 	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
-    private BoundedLinkedTransferQueue<ConnectionHandle> freeConnections;
+    private LinkedTransferQueue<ConnectionHandle> freeConnections;
 	/** When connections start running out, add these number of new connections. */
 	private final int acquireIncrement;
 	/** Minimum number of connections to start off with. */
@@ -164,7 +164,7 @@ public class ConnectionPartition implements Serializable{
 	/**
 	 * @return the freeConnections
 	 */
-    protected BoundedLinkedTransferQueue<ConnectionHandle> getFreeConnections() {
+    protected LinkedTransferQueue<ConnectionHandle> getFreeConnections() {
 		return this.freeConnections;
 	}
 
@@ -172,7 +172,7 @@ public class ConnectionPartition implements Serializable{
 	 * @param freeConnections the freeConnections to set
 	 */
 	protected void setFreeConnections(
-            BoundedLinkedTransferQueue<ConnectionHandle> freeConnections) {
+            LinkedTransferQueue<ConnectionHandle> freeConnections) {
 		this.freeConnections = freeConnections;
 	}
 

@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import jsr166y.LinkedTransferQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +75,7 @@ public class StatementHandle implements Statement{
 	/** If true, we will close off statements in a separate thread. */
 	private boolean statementReleaseHelperEnabled;
 	/** Scratch queue of statments awaiting to be closed. */
-	private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
+	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	
 	/**
 	 * Constructor to statement handle wrapper. 
@@ -144,11 +146,27 @@ public class StatementHandle implements Statement{
 		}
 	}
 
+	/** Tries to move the item to a waiting consumer. If there's no consumer waiting,
+	 * offers the item to the queue if there's space available.  
+	 * @param e Item to transfer
+	 * @return true if the item was transferred or placed on the queue, false if there are no
+	 * waiting clients and there's no more space on the queue.
+	 */
+	private boolean tryTransferOffer(StatementHandle e) {
+		boolean result = true;
+		// if we are using a normal LinkedTransferQueue instead of a bounded one, tryTransfer
+		// will never fail.
+		if (!this.statementsPendingRelease.tryTransfer(e)){
+			result = this.statementsPendingRelease.offer(e);
+		}
+		return result;
+	}
+	
 	public void close() throws SQLException {
 		
 		if (this.statementReleaseHelperEnabled){
 			// try moving onto queue so that a separate thread will handle it....
-			if (!this.statementsPendingRelease.tryTransferOffer(this)){
+			if (!tryTransferOffer(this)){
 				// closing off the statement if that fails....
 				closeStatement();
 			}

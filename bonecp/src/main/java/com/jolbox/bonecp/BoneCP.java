@@ -45,6 +45,8 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
+import jsr166y.LinkedTransferQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +129,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** If set to true, config has specified the use of statement release helper threads. */
 	private boolean statementReleaseHelperThreadsConfigured;
 	/** Scratch queue of statments awaiting to be closed. */
-    private BoundedLinkedTransferQueue<StatementHandle> statementsPendingRelease;
+	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
 
 	/**
 	 * Closes off this connection pool.
@@ -141,7 +143,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.shutdownStackTrace = captureStackTrace(SHUTDOWN_LOCATION_TRACE);
 			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
-			
+
 			if (this.releaseHelperThreadsConfigured){
 				this.releaseHelper.shutdownNow();
 			}
@@ -283,7 +285,16 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			this.partitions[p]=connectionPartition;
-			this.partitions[p].setFreeConnections(new BoundedLinkedTransferQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition()));
+			LinkedTransferQueue<ConnectionHandle> connectionHandles;
+			if (config.getMaxConnectionsPerPartition() == config.getMinConnectionsPerPartition()){
+				// if we have a pool that we don't want resized, make it even faster by ignoring
+				// the size constraints.
+				connectionHandles = new LinkedTransferQueue<ConnectionHandle>();
+			} else {
+				connectionHandles = new BoundedLinkedTransferQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition());
+			}
+			
+			this.partitions[p].setFreeConnections(connectionHandles);
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
@@ -301,10 +312,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			// watch this partition for low no of threads
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
-		
-        initStmtReleaseHelper(suffix);
-		
-        if (!this.config.isDisableJMX()){
+
+		initStmtReleaseHelper(suffix);
+
+		if (!this.config.isDisableJMX()){
 			initJMX();
 		}
 	}
@@ -314,13 +325,13 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	private void initStmtReleaseHelper(String suffix) {
 		// we pick a max size of maxConnections * 3 i.e. 3 statements per connection as our limit
-        // anything more than that will mean the statements will start being closed off straight away
-        // without enqueing
-        this.statementsPendingRelease = new BoundedLinkedTransferQueue<StatementHandle>(this.config.getMaxConnectionsPerPartition()*3);
-        int statementReleaseHelperThreads = this.config.getStatementReleaseHelperThreads();
+		// anything more than that will mean the statements will start being closed off straight away
+		// without enqueing
+		this.statementsPendingRelease = new BoundedLinkedTransferQueue<StatementHandle>(this.config.getMaxConnectionsPerPartition()*3);
+		int statementReleaseHelperThreads = this.config.getStatementReleaseHelperThreads();
 
-        if (statementReleaseHelperThreads > 0) {
-        	this.setStatementCloseHelperExecutor(Executors.newFixedThreadPool(statementReleaseHelperThreads, new CustomThreadFactory("BoneCP-statement-close-helper-thread"+suffix, true)));
+		if (statementReleaseHelperThreads > 0) {
+			this.setStatementCloseHelperExecutor(Executors.newFixedThreadPool(statementReleaseHelperThreads, new CustomThreadFactory("BoneCP-statement-close-helper-thread"+suffix, true)));
 
 			for (int i = 0; i < statementReleaseHelperThreads; i++) { 
 				// go through pool  rather than statementReleaseHelper directly to aid unit testing (i.e. mocking)
@@ -540,7 +551,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @throws SQLException on error
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
-		BoundedLinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+		LinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
 
 		if (!queue.tryTransfer(connectionHandle)){
 			if (!queue.offer(connectionHandle)){
@@ -706,7 +717,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	protected boolean isReleaseHelperThreadsConfigured() {
 		return this.releaseHelperThreadsConfigured;
 	}
-	
+
 	/**
 	 * Returns the statementReleaseHelperThreadsConfigured field.
 	 * @return statementReleaseHelperThreadsConfigured
@@ -719,7 +730,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * Returns the statementsPendingRelease field.
 	 * @return statementsPendingRelease
 	 */
-	protected BoundedLinkedTransferQueue<StatementHandle> getStatementsPendingRelease() {
+	protected LinkedTransferQueue<StatementHandle> getStatementsPendingRelease() {
 		return this.statementsPendingRelease;
 	}
 
