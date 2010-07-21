@@ -68,6 +68,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.jolbox.bonecp.hooks.ConnectionHook;
+
 /**
  * @author wwadge
  *
@@ -294,6 +296,26 @@ public class TestBoneCP {
 	}
 
 	/**
+	 * Mostly for coverage.
+	 */
+	@Test
+	public void testPostDestroyConnection(){
+		reset(mockConnection);
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+		mockPartition.updateCreatedConnections(-1);
+		expectLastCall().once();
+		mockPartition.setUnableToCreateMoreTransactions(false);
+		expectLastCall().once();
+		ConnectionHook mockConnectionHook = createNiceMock(ConnectionHook.class);
+		expect(mockConnection.getConnectionHook()).andReturn(mockConnectionHook).anyTimes();
+		mockConnectionHook.onDestroy(mockConnection);
+		expectLastCall().once();
+		replay(mockConnectionHook, mockConnection);
+		testClass.postDestroyConnection(mockConnection);
+		verify(mockConnectionHook, mockConnection);
+	}
+	
+	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#getConnection()}.
 	 * @throws SQLException 
 	 * @throws InterruptedException 
@@ -317,6 +339,32 @@ public class TestBoneCP {
 
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		assertEquals(mockConnection, testClass.getConnection());
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
+
+	/**
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#getConnection()}.
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 */
+	@Test
+	public void testGetConnectionWithTimeout() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockConnectionHandles.poll()).andReturn(null).anyTimes();
+
+		replay(mockPartition, mockConnectionHandles, mockConnection);
+		try{
+			testClass.getConnection();
+			fail("Should have thrown an exception");
+		} catch (SQLException e){
+			// do nothing
+		}
 		verify(mockPartition, mockConnectionHandles, mockConnection);
 	}
 
