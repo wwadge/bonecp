@@ -260,7 +260,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 		}
 		this.asyncExecutor = Executors.newCachedThreadPool();
-		this.releaseHelperThreadsConfigured = config.getReleaseHelperThreads() > 0;
+		int helperThreads = config.getReleaseHelperThreads();
+		this.releaseHelperThreadsConfigured = helperThreads > 0;
+		
 		this.statementReleaseHelperThreadsConfigured = config.getStatementReleaseHelperThreads() > 0;
 		this.config = config;
 		this.partitions = new ConnectionPartition[config.getPartitionCount()];
@@ -269,7 +271,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		if (config.getPoolName()!=null) {
 			suffix="-"+config.getPoolName();
 		}
-
+			
+		if (this.releaseHelperThreadsConfigured){
+			this.releaseHelper = Executors.newFixedThreadPool(helperThreads*config.getPartitionCount(), new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));
+		}
 		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler"+suffix, true));
 		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread"+suffix, true));
 
