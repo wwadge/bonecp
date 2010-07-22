@@ -112,7 +112,6 @@ long nextCheck = this.idleConnectionTestPeriod;
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
 				logger.debug("Shutting down connection tester thread.");
-				closeConnection(connection);
 			} else {
 				logger.error("Connection tester thread interrupted", e);
 			}

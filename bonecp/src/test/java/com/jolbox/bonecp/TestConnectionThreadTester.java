@@ -189,7 +189,7 @@ public class TestConnectionThreadTester {
 	}
 
 
-	/** Tests fake exceptions, connection should be shutdown if the scheduler was marked as going down. Mostly for code coverage. 
+	/** Tests fake exceptions, Mostly for code coverage. 
 	 * @throws SQLException 
 	 * @throws InterruptedException */
 	@Test
@@ -207,10 +207,6 @@ public class TestConnectionThreadTester {
 		expect(mockExecutor.isShutdown()).andReturn(true);
 		mockPool.putConnectionBackInPartition((ConnectionHandle)anyObject());
 		expectLastCall().andThrow(new InterruptedException());
-		// connection should be closed
-		mockConnection.internalClose();
-		mockPool.postDestroyConnection(mockConnection);
-		expectLastCall().once();
 		
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
