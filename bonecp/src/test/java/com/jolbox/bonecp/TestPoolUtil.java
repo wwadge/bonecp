@@ -234,10 +234,12 @@ public class TestPoolUtil {
 					return null;
 				}
 				
+				
 				public Object getObject() throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
+				
 				
 				public String getBaseTypeName() throws SQLException {
 					// TODO Auto-generated method stub
