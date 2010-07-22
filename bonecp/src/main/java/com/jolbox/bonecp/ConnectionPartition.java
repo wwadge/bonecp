@@ -47,7 +47,7 @@ public class ConnectionPartition implements Serializable{
 	/** Logger class. */
 	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
-    private LinkedTransferQueue<ConnectionHandle> freeConnections;
+	private LinkedTransferQueue<ConnectionHandle> freeConnections;
 	/** When connections start running out, add these number of new connections. */
 	private final int acquireIncrement;
 	/** Minimum number of connections to start off with. */
@@ -69,15 +69,15 @@ public class ConnectionPartition implements Serializable{
 	 */
 	private volatile boolean unableToCreateMoreTransactions=false;
 	/** Scratch queue of connections awaiting to be placed back in queue. */
-    private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
+	private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
 	/** Config setting. */
 	private boolean disableTracking;
 	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
 	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
 	/** Store the unit translation here to avoid recalculating it in statement handles. */
 	private long preComputedQueryExecuteTimeLimit;
-	
-	
+
+
 
 	/** Returns a handle to the poolWatchThreadSignalQueue
 	 * @return the poolWatchThreadSignal
@@ -85,7 +85,7 @@ public class ConnectionPartition implements Serializable{
 	protected BlockingQueue<Object> getPoolWatchThreadSignalQueue() {
 		return this.poolWatchThreadSignalQueue;
 	}
-	
+
 	/** Updates leased connections statistics
 	 * @param increment value to add/subtract
 	 */
@@ -115,7 +115,7 @@ public class ConnectionPartition implements Serializable{
 		}
 	}
 
-    /** This method is a replacement for finalize() but avoids all its pitfalls (see Joshua Bloch et. all).
+	/** This method is a replacement for finalize() but avoids all its pitfalls (see Joshua Bloch et. all).
 	 * 
 	 * Keeps a handle on the connection. If the application called closed, then it means that the handle gets pushed back to the connection
 	 * pool and thus we get a strong reference again. If the application forgot to call close() and subsequently lost the strong reference to it,
@@ -162,7 +162,7 @@ public class ConnectionPartition implements Serializable{
 	/**
 	 * @return the freeConnections
 	 */
-    protected LinkedTransferQueue<ConnectionHandle> getFreeConnections() {
+	protected LinkedTransferQueue<ConnectionHandle> getFreeConnections() {
 		return this.freeConnections;
 	}
 
@@ -170,7 +170,7 @@ public class ConnectionPartition implements Serializable{
 	 * @param freeConnections the freeConnections to set
 	 */
 	protected void setFreeConnections(
-            LinkedTransferQueue<ConnectionHandle> freeConnections) {
+			LinkedTransferQueue<ConnectionHandle> freeConnections) {
 		this.freeConnections = freeConnections;
 	}
 
@@ -188,15 +188,14 @@ public class ConnectionPartition implements Serializable{
 		this.url = config.getJdbcUrl();
 		this.username = config.getUsername();
 		this.password = config.getPassword();
-        this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
+		this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 		this.disableTracking = config.isDisableConnectionTracking();
 		this.preComputedQueryExecuteTimeLimit = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimit(), TimeUnit.MILLISECONDS);
 		/** Create a number of helper threads for connection release. */
-
-			for (int i = 0; i < helperThreads; i++) { 
-				// go through pool.getReleaseHelper() rather than releaseHelper directly to aid unit testing (i.e. mocking)
-				pool.getReleaseHelper().execute(new ConnectionReleaseHelperThread(this.connectionsPendingRelease, pool));
-			}
+		int helperThreads = config.getReleaseHelperThreads();
+		for (int i = 0; i < helperThreads; i++) { 
+			// go through pool.getReleaseHelper() rather than releaseHelper directly to aid unit testing (i.e. mocking)
+			pool.getReleaseHelper().execute(new ConnectionReleaseHelperThread(this.connectionsPendingRelease, pool));
 		}
 	}
 
@@ -283,11 +282,11 @@ public class ConnectionPartition implements Serializable{
 	 *
 	 * @return release connection handle queue 
 	 */
-    protected LinkedTransferQueue<ConnectionHandle> getConnectionsPendingRelease() {
+	protected LinkedTransferQueue<ConnectionHandle> getConnectionsPendingRelease() {
 		return this.connectionsPendingRelease;
 	}
 
-    
+
 	/** Returns the number of avail connections
 	 * @return avail connections.
 	 */
@@ -301,7 +300,7 @@ public class ConnectionPartition implements Serializable{
 	public int getRemainingCapacity() {
 		return this.freeConnections.remainingCapacity();
 	}
-	
+
 	/** Store the unit translation here to avoid recalculating it in the constructor of StatementHandle. 
 	 * @return value
 	 */
