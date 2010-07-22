@@ -60,196 +60,161 @@ public class TestPoolUtil {
 			logParams.put("2", "456");
 			logParams.put("3", new Blob() {
 				
-				@Override
 				public void truncate(long len) throws SQLException {
 					// do nothing
 				}
 				
-				@Override
 				public int setBytes(long pos, byte[] bytes, int offset, int len)
 						throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public int setBytes(long pos, byte[] bytes) throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public OutputStream setBinaryStream(long pos) throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public long position(Blob pattern, long start) throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public long position(byte[] pattern, long start) throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public long length() throws SQLException {
 					return 5;
 				}
 				
-				@Override
 				public byte[] getBytes(long pos, int length) throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public InputStream getBinaryStream(long pos, long length)
 						throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public InputStream getBinaryStream() throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public void free() throws SQLException {
 					//do nothing
 				}
 			});
 			logParams.put("4", new Clob() {
 				
-				@Override
 				public void truncate(long len) throws SQLException {
 					//do nothing
 				}
 				
-				@Override
 				public int setString(long pos, String str, int offset, int len)
 						throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public int setString(long pos, String str) throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public Writer setCharacterStream(long pos) throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public OutputStream setAsciiStream(long pos) throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public long position(Clob searchstr, long start) throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public long position(String searchstr, long start) throws SQLException {
 					return 0;
 				}
 				
-				@Override
 				public long length() throws SQLException {
 					return 5;
 				}
 				
-				@Override
 				public String getSubString(long pos, int length) throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public Reader getCharacterStream(long pos, long length) throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public Reader getCharacterStream() throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public InputStream getAsciiStream() throws SQLException {
 					return null;
 				}
 				
-				@Override
 				public void free() throws SQLException {
 					//do nothing
 				}
 			});
 			logParams.put("5", new Array() {
 				
-				@Override
 				public ResultSet getResultSet(long index, int count,
 						Map<String, Class<?>> map) throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public ResultSet getResultSet(long index, int count) throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public ResultSet getResultSet(Map<String, Class<?>> map)
 						throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public ResultSet getResultSet() throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public String getBaseTypeName() throws SQLException {
 					return "Base type name";
 				}
 				
-				@Override
 				public int getBaseType() throws SQLException {
 					// TODO Auto-generated method stub
 					return 14;
 				}
 				
-				@Override
 				public Object getArray(long index, int count, Map<String, Class<?>> map)
 						throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public Object getArray(long index, int count) throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public Object getArray(Map<String, Class<?>> map) throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public Object getArray() throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
 				public void free() throws SQLException {
 					// TODO Auto-generated method stub
 					
@@ -259,25 +224,23 @@ public class TestPoolUtil {
 			
 			logParams.put("6", new Ref() {
 				
-				@Override
 				public void setObject(Object value) throws SQLException {
 					// TODO Auto-generated method stub
 					
 				}
 				
-				@Override
 				public Object getObject(Map<String, Class<?>> map) throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
+				
 				public Object getObject() throws SQLException {
 					// TODO Auto-generated method stub
 					return null;
 				}
 				
-				@Override
+				
 				public String getBaseTypeName() throws SQLException {
 					// TODO Auto-generated method stub
 					return "type";

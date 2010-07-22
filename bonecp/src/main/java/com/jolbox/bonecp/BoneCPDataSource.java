@@ -20,7 +20,6 @@
 package com.jolbox.bonecp;
 
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,7 +37,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author wallacew
  */
-public class BoneCPDataSource extends BoneCPConfig implements DataSource, Serializable{
+public class BoneCPDataSource extends BoneCPConfig implements DataSource {
 	/** Serialization UID. */
 	private static final long serialVersionUID = -1561804548443209469L;
 	/** Config setting. */

@@ -133,7 +133,7 @@ public class TestConnectionHook {
 	@Test
 	public void testOnDestroy() {
 		poolClass.close();
-		assertEquals(5, hookClass.destroy);
+		assertEquals(6, hookClass.destroy);
 	}
 
 	
