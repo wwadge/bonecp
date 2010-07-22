@@ -110,8 +110,10 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;	
-	/** Keep track of the thread that's using this connection for connection watch. */
-	protected Thread threadUsingConnection;
+	/** If true, we have release helper threads. */
+	private boolean releaseHelperThreadsEnabled;
+	/** Keep track of the thread. */
+	protected Thread threadUsingConnection;	
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -168,6 +170,7 @@ public class ConnectionHandle implements Connection{
 			this.statementCachingEnabled = true;
 		}
 		
+		this.releaseHelperThreadsEnabled = pool.getConfig().getReleaseHelperThreads() > 0;
 	}
 
 	/** Obtains a database connection, retrying if necessary.
@@ -378,7 +381,9 @@ public class ConnectionHandle implements Connection{
 			clearStatementCaches(true);
 			if (this.connection != null){ // safety!
 				this.connection.close();
+				if (this.releaseHelperThreadsEnabled){
 				this.pool.getFinalizableRefs().remove(this.connection);
+			}
 			}
 			this.logicallyClosed = true;
 		} catch (Throwable t) {

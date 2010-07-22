@@ -121,7 +121,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	/** Reference of objects that are to be watched. */
 	private final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
 	/** Watch for connections that should have been safely closed but the application forgot. */
-	private final FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
+	private FinalizableReferenceQueue finalizableRefQueue;
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
 	private long connectionTimeout;
 	/** No of ms to wait for thread.join() in connection watch thread. */
@@ -247,7 +247,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelay(0);
 		acquireConfig.setLogMessage("Failed to obtain initial connection");
-
+		
 		if (!config.isLazyInit()){
 			try{
 				Connection sanityConnection = obtainRawInternalConnection();
@@ -259,6 +259,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
 			}
 		}
+		if (!config.isDisableConnectionTracking()){
+			this.finalizableRefQueue = new FinalizableReferenceQueue();
+		}
+		
 		this.asyncExecutor = Executors.newCachedThreadPool();
 		int helperThreads = config.getReleaseHelperThreads();
 		this.releaseHelperThreadsConfigured = helperThreads > 0;
@@ -271,6 +275,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		if (config.getPoolName()!=null) {
 			suffix="-"+config.getPoolName();
 		}
+		
+		
 			
 		if (this.releaseHelperThreadsConfigured){
 			this.releaseHelper = Executors.newFixedThreadPool(helperThreads*config.getPartitionCount(), new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));

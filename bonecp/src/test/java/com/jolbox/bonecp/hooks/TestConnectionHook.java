@@ -80,12 +80,14 @@ public class TestConnectionHook {
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
+		expect(mockConfig.getAcquireIncrement()).andReturn(0).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		replay(mockConfig);
 		
@@ -161,6 +163,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hook).anyTimes();
 		replay(mockConfig);
 		
@@ -178,6 +181,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hook).anyTimes();
+		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("something-bad").anyTimes();
 		replay(mockConfig);
 		try{
@@ -186,7 +190,8 @@ public class TestConnectionHook {
 		} catch (Exception e){
 			// do nothing
 		}
-
+		
+		poolClass.close();
 	}
 	
 	/**
@@ -215,6 +220,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("invalid").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
+		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		replay(mockConfig);
 		
@@ -286,6 +292,7 @@ public class TestConnectionHook {
 		
 		assertEquals(1, hookClass.queryTimeout);
 		reset(mockConfig, mockPreparedStatement, mockConnection);
+		poolClass.close();
 	}
 	
 	/**
