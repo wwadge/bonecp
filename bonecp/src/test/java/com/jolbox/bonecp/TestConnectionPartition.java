@@ -90,8 +90,6 @@ public class TestConnectionPartition {
 	    	Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 	    	expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 	    	expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
-	    	this.mockPool.setReleaseHelper((ExecutorService)anyObject());
-	    	expectLastCall().once();
 	    	ExecutorService mockReleaseHelper = createNiceMock(ExecutorService.class); 
 	    	expect(this.mockPool.getReleaseHelper()).andReturn(mockReleaseHelper).anyTimes();
 	    	mockReleaseHelper.execute((Runnable)anyObject());

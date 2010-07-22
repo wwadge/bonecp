@@ -41,13 +41,13 @@ import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
+import java.util.concurrent.atomic.AtomicInteger;
 // #ifdef JDK6
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Struct;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.sql.NClob;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLXML;

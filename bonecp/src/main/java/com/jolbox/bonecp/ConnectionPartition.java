@@ -26,8 +26,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
@@ -190,14 +188,6 @@ public class ConnectionPartition implements Serializable{
 		/** Create a number of helper threads for connection release. */
 		int helperThreads = config.getReleaseHelperThreads();
 		if (helperThreads > 0) {
-			String suffix = "";
-
-			if (config.getPoolName()!=null) {
-				suffix="-"+config.getPoolName();
-			}
-
-			ExecutorService releaseHelper = Executors.newFixedThreadPool(helperThreads, new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));
-			pool.setReleaseHelper(releaseHelper); // keep a handle just in case
 
 			for (int i = 0; i < helperThreads; i++) { 
 				// go through pool.getReleaseHelper() rather than releaseHelper directly to aid unit testing (i.e. mocking)
