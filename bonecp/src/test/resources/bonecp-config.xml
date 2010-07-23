@@ -4,7 +4,7 @@
   	<property name="minConnectionsPerPartition">20</property>
   	<property name="maxConnectionsPerPartition">30</property>
   </default-config> 
-   
+    
    <named-config name="specialApp">
      	<property name="minConnectionsPerPartition">99</property>
 	    <property name="lazyInit">true</property>

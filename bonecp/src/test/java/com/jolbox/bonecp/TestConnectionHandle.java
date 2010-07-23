@@ -383,6 +383,9 @@ public class TestConnectionHandle {
 		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
 		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
 		
+		Field f = this.testClass.getClass().getDeclaredField("releaseHelperThreadsEnabled");
+		f.setAccessible(true);
+		f.setBoolean(this.testClass, true);
 		this.mockConnection.close();
 		expectLastCall().once().andThrow(new SQLException()).once();
 		
@@ -813,6 +816,7 @@ public class TestConnectionHandle {
 		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
 		ConnectionHook mockConnectionHook = createNiceMock(CoverageHook.class);
 		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once();
 		expect(mockConfig.getConnectionHook()).andReturn(mockConnectionHook).once();
 		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
 		replay(this.mockPool, mockConfig, mockConnectionHook);

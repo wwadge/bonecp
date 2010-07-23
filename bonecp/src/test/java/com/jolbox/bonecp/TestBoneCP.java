@@ -950,6 +950,11 @@ public class TestBoneCP {
 		assertEquals(mockConfig, testClass.getConfig());
 	}
 
+	@Test
+	public void testIsReleaseHelperThreadsConfigured(){
+		// coverage
+		assertFalse(testClass.isReleaseHelperThreadsConfigured());
+	}
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#setReleaseHelper(java.util.concurrent.ExecutorService)}.
 	 */
@@ -1053,8 +1058,7 @@ public class TestBoneCP {
 		
 		// Test #2: Code coverage
 		method.invoke(testClass, new Object[]{null});
-		
-
-		
 	}
+	
+	
 }

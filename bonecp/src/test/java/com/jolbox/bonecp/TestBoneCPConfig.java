@@ -146,6 +146,7 @@ public class TestBoneCPConfig {
 		config.setPartitionCount(1);
 		config.setConnectionTestStatement("test");
 		config.setAcquireIncrement(6);
+		
 		config.setStatementsCachedPerConnection(7);
 		config.setPreparedStatementsCacheSize(2);
 		config.setStatementCacheSize(2);
@@ -168,6 +169,7 @@ public class TestBoneCPConfig {
 		assertEquals(2, config.getStatementsCacheSize());
 		assertEquals(2, config.getStatementCacheSize());
 		assertEquals(2, config.getPreparedStatementsCacheSize());
+		assertEquals(2, config.getPreparedStatementCacheSize());
 		assertEquals(3, config.getReleaseHelperThreads());
 		assertEquals(5, config.getMaxConnectionsPerPartition());
 		assertEquals(5, config.getMinConnectionsPerPartition());
@@ -196,11 +198,13 @@ public class TestBoneCPConfig {
 		config.setAcquireIncrement(0);
 		config.setPassword(null);
 		config.setPoolAvailabilityThreshold(-50);
+		config.setStatementReleaseHelperThreads(-50);
 		
 		config.setReleaseHelperThreads(-1);
 		config.sanitize();
 
 		assertNotNull(config.toString());
+		assertEquals(3, config.getStatementReleaseHelperThreads());
 		assertFalse(config.getAcquireIncrement() == 0);
 		assertFalse(config.getReleaseHelperThreads() == -1);
 		assertFalse(config.getMaxConnectionsPerPartition() == -1);

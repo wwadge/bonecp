@@ -170,7 +170,9 @@ public class ConnectionHandle implements Connection{
 			this.statementCachingEnabled = true;
 		}
 		
-		this.releaseHelperThreadsEnabled = pool.getConfig().getReleaseHelperThreads() > 0;
+		if (pool.getConfig().getReleaseHelperThreads() > 0){
+			this.releaseHelperThreadsEnabled = true;
+		}
 	}
 
 	/** Obtains a database connection, retrying if necessary.
@@ -382,7 +384,7 @@ public class ConnectionHandle implements Connection{
 			if (this.connection != null){ // safety!
 				this.connection.close();
 				if (this.releaseHelperThreadsEnabled){
-				this.pool.getFinalizableRefs().remove(this.connection);
+					this.pool.getFinalizableRefs().remove(this.connection);
 			}
 			}
 			this.logicallyClosed = true;

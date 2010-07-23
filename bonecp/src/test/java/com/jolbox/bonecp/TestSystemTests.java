@@ -20,7 +20,9 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -32,13 +34,17 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Enumeration;
 
-import org.easymock.EasyMock;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+
+import static org.easymock.classextension.EasyMock.createNiceMock;
+import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.classextension.EasyMock.verify;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.CoverageHook;
@@ -354,7 +360,53 @@ public class TestSystemTests {
 		}
 	}
 
+	/**
+	 * Tests general methods.
+	 * @throws CloneNotSupportedException 
+	 */
+	@Test
+	public void testCloneEqualsHashCode() throws CloneNotSupportedException{
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(30);
+		config.setMaxConnectionsPerPartition(100);
+		config.setPartitionCount(1);
+		
+		
+		BoneCPDataSource dsb = new BoneCPDataSource(config);
+		BoneCPDataSource clone = (BoneCPDataSource) dsb.clone();
+		
+		assertTrue(clone.equals(dsb));
+		assertEquals(clone.hashCode(), dsb.hashCode());
+		
+		assertFalse(clone.equals(null));
+		assertTrue(clone.equals(dsb));
+		
+		clone.setJdbcUrl("something else");
+		assertFalse(clone.equals(dsb));
+	}
 	
+	@Test
+	public void testGetObjectInstance() throws Exception{
+		config.setAcquireIncrement(5);
+		config.setMinConnectionsPerPartition(30);
+		config.setMaxConnectionsPerPartition(100);
+		config.setPartitionCount(1);
+		
+		Reference mockRef = createNiceMock(Reference.class);
+		Enumeration<RefAddr> mockEnum = createNiceMock(Enumeration.class);
+		RefAddr mockRefAddr = createNiceMock(RefAddr.class);
+		expect(mockRef.getAll()).andReturn(mockEnum).anyTimes();
+		expect(mockEnum.hasMoreElements()).andReturn(true).times(2);
+		
+		expect(mockEnum.nextElement()).andReturn(mockRefAddr).anyTimes();
+		expect(mockRefAddr.getType()).andReturn("driverClassName").once().andReturn("password").times(2);
+		expect(mockRefAddr.getContent()).andReturn("com.jolbox.bonecp.MockJDBCDriver").once().andReturn("abcdefgh").once();
+		replay(mockRef, mockEnum, mockRefAddr);
+		BoneCPDataSource dsb = new BoneCPDataSource();
+		BoneCPDataSource result = (BoneCPDataSource) dsb.getObjectInstance(mockRef, null, null, null);
+		assertEquals("abcdefgh", result.getPassword());
+		verify(mockRef, mockEnum, mockRefAddr);
+	}
 
 
 }

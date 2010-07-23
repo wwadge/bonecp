@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.junit.Test;
@@ -205,6 +206,29 @@ public class TestConnectionPartition {
 		
 	}
 
+	@Test
+	public void testGetCreatedConnections() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		ReentrantReadWriteLock mockLock = createNiceMock(ReentrantReadWriteLock.class);
+		ReadLock mockReadLock = createNiceMock(ReadLock.class);
+
+		Field field = testClass.getClass().getDeclaredField("statsLock");
+		field.setAccessible(true);
+		ReentrantReadWriteLock oldLock = (ReentrantReadWriteLock) field.get(testClass);
+		field.set(testClass, mockLock);
+		expect(mockLock.readLock()).andThrow(new RuntimeException()).once().andReturn(mockReadLock).once();
+		mockReadLock.lock();
+		expectLastCall().once();
+		replay(mockLock, mockReadLock);
+		
+		try{
+			testClass.getCreatedConnections();
+			fail("Should have thrown an exception");
+		} catch (Throwable t){
+			//do nothing
+		}
+		verify(mockLock);
+		field.set(testClass, oldLock);
+	}
 
 	/**
 	 * Test method for config related stuff.
