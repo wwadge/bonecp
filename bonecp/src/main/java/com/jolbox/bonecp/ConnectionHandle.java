@@ -110,6 +110,8 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;
+	/** Keep track of the thread that's using this connection for connection watch. */
+	private Thread threadUsingConnection;
 	/** If true, we have release helper threads. */
 	private boolean releaseHelperThreadsEnabled;	
 	/*
@@ -348,7 +350,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			if (!this.logicallyClosed) {
 				this.logicallyClosed = true;
-
+				this.threadUsingConnection = null;
 				this.pool.releaseConnection(this);
 
 				if (this.doubleCloseCheck){
@@ -1105,6 +1107,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	protected void renewConnection() {
 		this.logicallyClosed = false;
+		this.threadUsingConnection = Thread.currentThread();
 		if (this.doubleCloseCheck){
 			this.doubleCloseException = null;
 		}
@@ -1242,4 +1245,12 @@ public class ConnectionHandle implements Connection{
 			throw new RuntimeException("BoneCP: Internal error - transaction replay log is not turned on?", t);
 		}
 	}
+
+	/** Returns the thread that is currently utilizing this connection.
+	 * @return the threadUsingConnection
+	 */
+	public Thread getThreadUsingConnection() {
+		return this.threadUsingConnection;
+}
+
 }
