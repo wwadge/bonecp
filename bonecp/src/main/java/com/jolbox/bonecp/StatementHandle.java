@@ -61,7 +61,7 @@ public class StatementHandle implements Statement{
 	/** If enabled, log all statements being executed. */
 	protected boolean logStatementsEnabled;
 	/** for logging of addBatch. */
-	protected StringBuffer batchSQL;
+	protected StringBuilder batchSQL;
 	/** If true, this statement is in the cache. */
 	public volatile boolean inCache = false;
 	/** Stack trace capture of where this statement was opened. */ 
@@ -98,7 +98,7 @@ public class StatementHandle implements Statement{
 		this.logStatementsEnabled = logStatementsEnabled;
 		if (this.logStatementsEnabled){
 			 this.logParams = new TreeMap<Object, Object>();
-			 this.batchSQL = new StringBuffer();
+			 this.batchSQL = new StringBuilder();
 		}
 
 		this.statementReleaseHelperEnabled = connectionHandle.getPool().isStatementReleaseHelperThreadsConfigured();
@@ -241,7 +241,7 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			if (this.logStatementsEnabled){
-				this.batchSQL = new StringBuffer();
+				this.batchSQL = new StringBuilder();
 			}
 			this.internalStatement.clearBatch();
 		} catch (Throwable t) {
@@ -302,8 +302,8 @@ public class StatementHandle implements Statement{
 	 * @param queryStartTime time when query was started.
 	 */
 	protected void queryTimerEnd(String sql, long queryStartTime) {
-		if ((System.nanoTime() - queryStartTime) > this.queryExecuteTimeLimit 
-				&&  this.connectionHook != null){
+		if ((this.queryExecuteTimeLimit != 0) 
+				&& (this.connectionHook != null) && (System.nanoTime() - queryStartTime) > this.queryExecuteTimeLimit){
 			this.connectionHook.onQueryExecuteTimeLimitExceeded(sql, this.logParams);
 		}
 	}
@@ -1039,7 +1039,7 @@ public class StatementHandle implements Statement{
 	protected void internalClose() throws SQLException {
 		if (this.logStatementsEnabled){
 			this.logParams.clear();
-			this.batchSQL = new StringBuffer();
+			this.batchSQL = new StringBuilder();
 		}
 		this.internalStatement.close();
 	}

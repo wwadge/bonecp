@@ -459,15 +459,15 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * 
 	 */
 	protected String captureStackTrace(String message) {
-		StringBuffer stringBuffer = new StringBuffer(String.format(message, Thread.currentThread().getName()));		
+		StringBuilder stringBuilder = new StringBuilder(String.format(message, Thread.currentThread().getName()));		
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 		for(int i = 0; i < trace.length; i++){
-			stringBuffer.append(" "+trace[i]+"\r\n");
+			stringBuilder.append(" "+trace[i]+"\r\n");
 		}
 
-		stringBuffer.append("");
+		stringBuilder.append("");
 
-		return stringBuffer.toString();
+		return stringBuilder.toString();
 	}
 
 	/** Obtain a connection asynchronously by queueing a request to obtain a connection in a separate thread. 
