@@ -111,7 +111,7 @@ public class ConnectionHandle implements Connection{
 	/** Connection url. */
 	protected String url;
 	/** Keep track of the thread that's using this connection for connection watch. */
-	private Thread threadUsingConnection;
+	protected Thread threadUsingConnection;
 	/** If true, we have release helper threads. */
 	private boolean releaseHelperThreadsEnabled;	
 	/*
@@ -170,7 +170,9 @@ public class ConnectionHandle implements Connection{
 			this.statementCachingEnabled = true;
 		}
 		
-		this.releaseHelperThreadsEnabled = pool.getConfig().getReleaseHelperThreads() > 0;
+		if (pool.getConfig().getReleaseHelperThreads() > 0){
+			this.releaseHelperThreadsEnabled = true;
+		}
 	}
 
 	/** Obtains a database connection, retrying if necessary.

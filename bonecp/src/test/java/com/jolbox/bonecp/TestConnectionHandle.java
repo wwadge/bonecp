@@ -523,6 +523,9 @@ public class TestConnectionHandle {
 		testClass.setInReplayMode(true);
 		assertTrue(testClass.isInReplayMode());
 		testClass.setInReplayMode(false);
+		
+		testClass.threadUsingConnection = Thread.currentThread();
+		assertEquals(Thread.currentThread(), testClass.getThreadUsingConnection());
 	}
 
 	/**
