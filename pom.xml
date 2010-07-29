@@ -20,7 +20,7 @@
 		<url>https://launchpad.net/bonecp</url>
 	</issueManagement>
 
-	<version>0.7.0-ltq-SNAPSHOT</version>
+	<version>0.7.0-rc1</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp-test-commons</artifactId>
-			<version>0.7.0-ltq-SNAPSHOT</version>
+			<version>0.7.0-rc1</version>
 		</dependency>
 
 <!-- 
@@ -315,7 +315,7 @@
 				<artifactId>maven-license-plugin</artifactId>
 				<version>1.5.1</version>
 				<configuration>
-					<header>docs/gplheader.txt</header>
+					<header>docs/apache-header.txt</header>
 					<includes>
 						<include>**/*.java</include>
 					</includes>
