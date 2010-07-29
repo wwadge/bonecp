@@ -576,8 +576,8 @@ public class TestConnectionHandle {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	@SuppressWarnings("unchecked")
-	private void prepareStatementTest(Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+	@SuppressWarnings("rawtypes")
+	private void prepareStatementTest( Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		Object[] params = new Object[args.length];
 		for (int i=0; i < args.length; i++){
 			params[i] = CommonTestUtils.instanceMap.get(args[i]);
@@ -697,7 +697,7 @@ public class TestConnectionHandle {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("all")
 	private void callableStatementTest(Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		Object[] params = new Object[args.length];
 		for (int i=0; i < args.length; i++){

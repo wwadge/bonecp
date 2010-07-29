@@ -27,14 +27,18 @@ import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
+
+import jsr166y.LinkedTransferQueue;
 
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
@@ -222,6 +226,79 @@ public class TestStatementHandle {
 	public void testGetterSetter(){
 		Statement mockStatement = createNiceMock(Statement.class); 
 		testClass.setInternalStatement(mockStatement);
-		Assert.assertEquals(mockStatement, testClass.getInternalStatement());
+		assertEquals(mockStatement, testClass.getInternalStatement());
+	}
+	
+	/**
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testTryTransferOffer() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
+		LinkedTransferQueue<StatementHandle> mockQueue = createNiceMock(LinkedTransferQueue.class); 
+		Field field = testClass.getClass().getDeclaredField("statementsPendingRelease");
+		field.setAccessible(true);
+		field.set(testClass, mockQueue);
+		expect(mockQueue.tryTransfer(mockStatement)).andReturn(false).once();
+		expect(mockQueue.offer(mockStatement)).andReturn(false).once();
+		replay(mockQueue, mockStatement);
+		assertFalse(testClass.tryTransferOffer(mockStatement));
+		verify(mockQueue, mockStatement);
+	}
+	
+	/**
+	 * @throws SQLException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testAssortedCoverage() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		// using a null batchSQL statement...
+		Statement mockStatement = createNiceMock(Statement.class);
+		testClass.batchSQL=null; // new StringBuilder();
+		testClass.logStatementsEnabled = false;
+		Field field = testClass.getClass().getDeclaredField("internalStatement");
+		field.setAccessible(true);
+		field.set(testClass, mockStatement);
+		expect(mockStatement.executeBatch()).andReturn(null).once();
+		replay(mockStatement);
+		testClass.executeBatch();
+	}
+	
+	/**
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws SQLException
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testCloseUsingStatementReleaseHelper() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
+		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
+		LinkedTransferQueue<StatementHandle> mockQueue = createNiceMock(LinkedTransferQueue.class); 
+		Field field = testClass.getClass().getDeclaredField("statementsPendingRelease");
+		field.setAccessible(true);
+		field.set(testClass, mockQueue);
+		testClass.cache = null;
+		expect(mockQueue.tryTransfer(mockStatement)).andReturn(false).once();
+		expect(mockQueue.offer(mockStatement)).andReturn(false).once();
+		testClass.internalStatement = mockStatement;
+		mockStatement.close();
+		expectLastCall().once();
+		field = testClass.getClass().getDeclaredField("statementReleaseHelperEnabled");
+		field.setAccessible(true);
+		field.set(testClass, true);
+
+		
+		replay(mockQueue, mockStatement);
+		testClass.close();
+		verify(mockStatement);
 	}
 }

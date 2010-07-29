@@ -267,7 +267,7 @@ public class ConnectionHandle implements Connection{
 		}
 	}
 
-
+ 
 
 	/** 
 	 * Given an exception, flag the connection (or database) as being potentially broken. If the exception is a data-specific exception,

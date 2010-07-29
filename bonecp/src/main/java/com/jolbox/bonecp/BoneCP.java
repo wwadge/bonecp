@@ -400,7 +400,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		if (result == null) { 
 			// we ran out of space on this partition, pick another free one
-			for (int i=0; i < this.partitionCount ; i++){
+			for (int i=0; i < this.partitionCount; i++){
 				if (i == partition) {
 					continue; // we already determined it's not here
 				}

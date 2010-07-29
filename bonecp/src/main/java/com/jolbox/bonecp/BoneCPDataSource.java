@@ -201,7 +201,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * @return unwrapped object
 	 * @throws SQLException 
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("all")
 	public Object unwrap(Class arg0) throws SQLException {
 		return null;
 	}

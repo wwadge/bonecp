@@ -950,6 +950,9 @@ public class TestBoneCP {
 		assertEquals(mockConfig, testClass.getConfig());
 	}
 
+	/**
+	 * A coverage test.
+	 */
 	@Test
 	public void testIsReleaseHelperThreadsConfigured(){
 		// coverage

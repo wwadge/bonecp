@@ -206,6 +206,12 @@ public class TestConnectionPartition {
 		
 	}
 
+	/**
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
 	@Test
 	public void testGetCreatedConnections() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		ReentrantReadWriteLock mockLock = createNiceMock(ReentrantReadWriteLock.class);

@@ -704,14 +704,20 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				&& Objects.equal(this.minConnectionsPerPartition, that.getMinConnectionsPerPartition())
 				&& Objects.equal(this.partitionCount, that.getPartitionCount())
 				&& Objects.equal(this.releaseHelperThreads, that.getReleaseHelperThreads())
-				&& Objects.equal(this.statementsCachedPerConnection, that.getStatementsCachedPerConnection())
 				&& Objects.equal(this.statementsCacheSize, that.getStatementsCacheSize())
 				&& Objects.equal(this.username, that.getUsername())
 				&& Objects.equal(this.password, that.getPassword())
 				&& Objects.equal(this.lazyInit, that.isLazyInit())
 				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
 				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
-
+				&& Objects.equal(this.statementReleaseHelperThreads, that.getStatementReleaseHelperThreads())
+				&& Objects.equal(this.closeConnectionWatchTimeout, that.getCloseConnectionWatchTimeout())
+				&& Objects.equal(this.connectionTimeout, that.getConnectionTimeout())
+				&& Objects.equal(this.datasourceBean, that.getDatasourceBean())
+				&& Objects.equal(this.queryExecuteTimeLimit, that.getQueryExecuteTimeLimit())
+				&& Objects.equal(this.poolAvailabilityThreshold, that.getPoolAvailabilityThreshold())
+				&& Objects.equal(this.poolName, that.getPoolName())
+				&& Objects.equal(this.disableConnectionTracking, that.isDisableConnectionTracking())
 
 		){
 			return true;

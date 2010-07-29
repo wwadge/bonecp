@@ -4,6 +4,9 @@ package com.jolbox.bonecp;
 import java.sql.SQLException;
 import java.util.concurrent.BlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * A thread that monitors a queue containing statements to be closed. 
@@ -16,6 +19,9 @@ public class StatementReleaseHelperThread implements Runnable {
 	private BlockingQueue<StatementHandle> queue;
 	/** Handle to the connection pool. */
 	private BoneCP pool;
+	/** Handle to logger. */
+	private static Logger logger = LoggerFactory.getLogger(StatementReleaseHelperThread.class);
+
 	/**
 	 * Helper Thread constructor.
 	 *
@@ -38,8 +44,6 @@ public class StatementReleaseHelperThread implements Runnable {
 			try {
 				StatementHandle statement = this.queue.take();
 				statement.closeStatement();
-			} catch (SQLException e) {
-				interrupted = true;
 			} catch (InterruptedException e) {
 				if (this.pool.poolShuttingDown){
 					// cleanup any remaining stuff. This is a gentle shutdown
@@ -47,15 +51,17 @@ public class StatementReleaseHelperThread implements Runnable {
 					while ((statement = this.queue.poll()) != null){
 						try {
 							statement.closeStatement();
-						} catch (Exception e1) {
+						} catch (SQLException e1) {
 							// yeah we're shutting down, shut up for a bit...
 						}
 					}
 
 				}
 				interrupted = true;
+			}			
+			catch (Exception e) {
+				logger.error("Count not close statement.", e);
 			}
 		}
 	}
-
 }

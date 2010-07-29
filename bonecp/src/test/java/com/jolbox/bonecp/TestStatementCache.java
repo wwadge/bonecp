@@ -309,7 +309,7 @@ public class TestStatementCache {
 	 * @throws IllegalAccessException
 	 * @throws SQLException 
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testStatementCacheClear() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException {
 		ConcurrentMap mockCache = createNiceMock(ConcurrentMap.class);
@@ -345,7 +345,7 @@ public class TestStatementCache {
 	 * @throws IllegalAccessException
 	 * @throws SQLException
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testStatementCacheCheckForProperClosure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException {
 		

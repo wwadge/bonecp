@@ -152,7 +152,7 @@ public class StatementHandle implements Statement{
 	 * @return true if the item was transferred or placed on the queue, false if there are no
 	 * waiting clients and there's no more space on the queue.
 	 */
-	private boolean tryTransferOffer(StatementHandle e) {
+	protected boolean tryTransferOffer(StatementHandle e) {
 		boolean result = true;
 		// if we are using a normal LinkedTransferQueue instead of a bounded one, tryTransfer
 		// will never fail.
@@ -307,6 +307,7 @@ public class StatementHandle implements Statement{
 			this.connectionHook.onQueryExecuteTimeLimitExceeded(sql, this.logParams);
 		}
 	}
+	
 
 	/**
 	 * {@inheritDoc}
@@ -339,7 +340,7 @@ public class StatementHandle implements Statement{
 	 * @return Start time
 	 */
 	protected long queryTimerStart() {
-		return (this.queryExecuteTimeLimit != 0) ? System.nanoTime() : Long.MAX_VALUE;
+		return (this.queryExecuteTimeLimit != 0) && (this.connectionHook != null) ? System.nanoTime() : Long.MAX_VALUE;
 	}
 
 	/**
