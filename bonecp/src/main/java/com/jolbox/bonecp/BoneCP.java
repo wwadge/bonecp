@@ -425,7 +425,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				throw new SQLException(e.getMessage());
 			}
 		}
-		result.setOriginatingPartition(connectionPartition); // track the winning partition to keep partitions balanced
 		result.renewConnection(); // mark it as being logically "open"
 
 		// Give an application a chance to do something with it.
@@ -490,7 +489,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	private void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
-		if (!this.poolShuttingDown && !connectionPartition.isUnableToCreateMoreTransactions() && 
+		if (!connectionPartition.isUnableToCreateMoreTransactions() && !this.poolShuttingDown &&  
 				connectionPartition.getAvailableConnections()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
 			connectionPartition.getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 		} 
