@@ -328,8 +328,6 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
-		mockConnection.setOriginatingPartition(mockPartition);
-		expectLastCall().once();
 		mockConnection.renewConnection();
 		expectLastCall().once();
 
@@ -486,8 +484,6 @@ public class TestBoneCP {
 //		expectLastCall().once();
 
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
-		mockConnection.setOriginatingPartition(mockPartition);
-		expectLastCall().once();
 		mockConnection.renewConnection();
 		expectLastCall().once();
 
@@ -512,8 +508,6 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andReturn(mockConnection).once();
 
-		mockConnection.setOriginatingPartition(mockPartition);
-		expectLastCall().once();
 		mockConnection.renewConnection();
 		expectLastCall().once();
 
@@ -591,8 +585,6 @@ public class TestBoneCP {
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
 		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andReturn(mockConnection).once();
 		
-		mockConnection.setOriginatingPartition(mockPartition);
-		expectLastCall().once();
 		mockConnection.renewConnection();
 		expectLastCall().once();
 
@@ -611,8 +603,6 @@ public class TestBoneCP {
 			expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 			expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
 			expect(mockConnectionHandles.poll()).andReturn(mockConnection).once();
-			mockConnection.setOriginatingPartition(mockPartition);
-			expectLastCall().once();
 			mockConnection.renewConnection();
 			expectLastCall().once();
 
