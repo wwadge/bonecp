@@ -115,7 +115,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Used when the alternate way of obtaining a connection is required */
 	private Properties driverProperties;
 	/** Time to wait before a call to getConnection() times out and returns an error. */ 
-	private long connectionTimeout = Long.MAX_VALUE;
+	private long connectionTimeout = 0;
 	/** Time in ms to wait for close connection watch thread. */
 	private long closeConnectionWatchTimeout = 0;
 
@@ -469,8 +469,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("Max Connections < 2. Setting to 50");
 			this.maxConnectionsPerPartition = 50;
 		}
-		if (this.minConnectionsPerPartition < 2) {
-			logger.warn("Min Connections < 2. Setting to 10");
+		if (this.minConnectionsPerPartition < 1) {
+			logger.warn("Min Connections < 1. Setting to 10");
 			this.minConnectionsPerPartition = 10;
 		}
 
@@ -517,6 +517,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
 			logger.warn("JDBC password was not set in config!");
+		}
+		
+		if (this.connectionTimeout == 0){
+			this.connectionTimeout = Long.MAX_VALUE;
 		}
 
 		// if no datasource and we have driver properties set...
@@ -1078,9 +1082,11 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return this.connectionTimeout;
 	}
 
-	/** Sets the maximum time (in milliseconds) to wait before a call to getConnection is timed out. 
+	/** Sets the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
 	 * 
-	 * Default: Long.MAX_VALUE ( = wait forever )
+	 *  Setting this to zero is similar to setting it to Long.MAX_VALUE
+	 * 
+	 * Default: 0 ( = wait forever )
 	 * 
 	 * @param connectionTimeout the connectionTimeout to set
 	 */
