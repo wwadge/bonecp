@@ -10,8 +10,8 @@
 	<inceptionYear>2009</inceptionYear>
 	<licenses>
 		<license>
-			<name>LGPLv3</name>
-			<url>http://www.gnu.org/copyleft/lesser.html</url>
+			<name>Apache v2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -20,13 +20,13 @@
 		<url>https://launchpad.net/bonecp</url>
 	</issueManagement>
 
-	<version>0.7.0-rc1</version>
+	<version>0.7.0-rc2</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
 		<module>bonecp-spring</module>
 		<module>bonecp-test-commons</module>
-		<module>bonecp-benchmark</module>  
+		<module>bonecp-benchmark</module>
 	</modules>
 
 	<developers>
@@ -53,21 +53,15 @@
 				<artifactId>spring</artifactId>
 				<version>2.5.6</version>
 			</dependency>
-	
-		<dependency>
-			<groupId>com.jolbox</groupId>
-			<artifactId>bonecp-test-commons</artifactId>
-			<version>0.7.0-rc1</version>
-		</dependency>
 
-<!-- 
 			<dependency>
-				<groupId>hsqldb</groupId>
-				<artifactId>hsqldb</artifactId>
-				<version>1.8.0.10</version>
-				<scope>test</scope>
+				<groupId>com.jolbox</groupId>
+				<artifactId>bonecp-test-commons</artifactId>
+				<version>0.7.0-rc2</version>
 			</dependency>
- -->
+
+			<!-- <dependency> <groupId>hsqldb</groupId> <artifactId>hsqldb</artifactId> 
+				<version>1.8.0.10</version> <scope>test</scope> </dependency> -->
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
@@ -264,6 +258,17 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Public-Package>com.jolbox.*</Public-Package>
+						<Private-Package>jsr166y.*</Private-Package>
+					</instructions>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
