@@ -506,7 +506,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.acquireRetryDelay = 1000;
 		}
 
-		if (this.jdbcUrl == null || this.jdbcUrl.trim().equals("")){
+		if (this.datasourceBean == null && this.driverProperties == null 
+				&& (this.jdbcUrl == null || this.jdbcUrl.trim().equals(""))){
 			logger.warn("JDBC url was not set in config!");
 		}
 
@@ -553,9 +554,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.password = this.driverProperties.getProperty("password");
 		}
 
-		this.username = this.username == null ? "" : this.username.trim();
-		this.jdbcUrl = this.jdbcUrl == null ? "" : this.jdbcUrl.trim();
-		this.password = this.password == null ? "" : this.password.trim();
+		if (this.username != null){
+			this.username = this.username.trim();
+		}
+		if (this.jdbcUrl != null){
+			this.jdbcUrl = this.jdbcUrl.trim();
+		}
+		if (this.password != null){
+			this.password = this.password.trim();
+		}
+		
 		if (this.connectionTestStatement != null) { 
 			this.connectionTestStatement = this.connectionTestStatement.trim();
 		}
