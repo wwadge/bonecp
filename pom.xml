@@ -20,7 +20,7 @@
 		<url>https://launchpad.net/bonecp</url>
 	</issueManagement>
 
-	<version>0.7.0-rc2</version>
+	<version>0.7.0-rc3</version>
 	<modules>
 		<module>bonecp</module>
 		<module>bonecp-hbnprovider</module>
@@ -57,7 +57,7 @@
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp-test-commons</artifactId>
-				<version>0.7.0-rc2</version>
+				<version>0.7.0-rc3</version>
 			</dependency>
 
 			<!-- <dependency> <groupId>hsqldb</groupId> <artifactId>hsqldb</artifactId> 

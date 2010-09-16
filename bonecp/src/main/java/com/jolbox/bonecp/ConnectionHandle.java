@@ -88,6 +88,8 @@ public class ConnectionHandle implements Connection{
 	private long connectionLastUsed = System.currentTimeMillis();
 	/** Last time we sent a reset to this connection. */
 	private long connectionLastReset = System.currentTimeMillis();
+	/** Time when this connection was created. */
+	private long connectionCreationTime = System.currentTimeMillis();
 	/** Pool handle. */
 	private BoneCP pool;
 	/**
@@ -129,7 +131,9 @@ public class ConnectionHandle implements Connection{
 	/** If true, we have release helper threads. */
 	private boolean releaseHelperThreadsEnabled;
 	/** Keep track of the thread. */
-	protected Thread threadUsingConnection;	
+	protected Thread threadUsingConnection;
+	/** Configured max connection age. */
+	private long maxConnectionAge;
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -142,12 +146,12 @@ public class ConnectionHandle implements Connection{
 		08007	Transaction resolution unknown.
 		08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
 		08504	An error was encountered while processing the specified path rename configuration file.
-	  */
-	 /** SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
+	 */
+	/** SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
 	  Anything else will be taken as the *connection* (not the db) being broken. 
 	 */
 	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007"); 
-	
+
 	/**
 	 * Connection wrapper constructor
 	 * 
@@ -177,6 +181,7 @@ public class ConnectionHandle implements Connection{
 		}
 
 
+		this.maxConnectionAge = pool.getConfig().getMaxConnectionAge() * 1000;
 		this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
 		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
@@ -185,7 +190,7 @@ public class ConnectionHandle implements Connection{
 			this.callableStatementCache = new StatementCache(cacheSize);
 			this.statementCachingEnabled = true;
 		}
-		
+
 		if (pool.getConfig().getReleaseHelperThreads() > 0){
 			this.releaseHelperThreadsEnabled = true;
 		}
@@ -198,7 +203,7 @@ public class ConnectionHandle implements Connection{
 	protected Connection obtainInternalConnection() throws SQLException {
 		boolean tryAgain = false;
 		Connection result = null;
-		
+
 		int acquireRetryAttempts = this.pool.getConfig().getAcquireRetryAttempts();
 		int acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
@@ -228,7 +233,7 @@ public class ConnectionHandle implements Connection{
 				if (this.connectionHook != null){
 					tryAgain = this.connectionHook.onAcquireFail(t, acquireConfig);
 				} else {
-					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelay+"ms. Attempts left: "+acquireRetryAttempts);
+					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelay+"ms. Attempts left: "+acquireRetryAttempts, t);
 
 					try {
 						Thread.sleep(acquireRetryDelay);
@@ -283,7 +288,7 @@ public class ConnectionHandle implements Connection{
 		}
 	}
 
- 
+
 
 	/** 
 	 * Given an exception, flag the connection (or database) as being potentially broken. If the exception is a data-specific exception,
@@ -401,7 +406,7 @@ public class ConnectionHandle implements Connection{
 				this.connection.close();
 				if (this.releaseHelperThreadsEnabled){
 					this.pool.getFinalizableRefs().remove(this.connection);
-			}
+				}
 			}
 			this.logicallyClosed = true;
 		} catch (Throwable t) {
@@ -417,7 +422,7 @@ public class ConnectionHandle implements Connection{
 			throw markPossiblyBroken(t);
 		}
 	}
-// #ifdef JDK6
+	// #ifdef JDK6
 	public Properties getClientInfo() throws SQLException {
 		Properties result = null;
 		checkClosed();
@@ -508,7 +513,7 @@ public class ConnectionHandle implements Connection{
 		}
 		return result;
 	}
-	
+
 	@Override
 	public Clob createClob() throws SQLException {
 		Clob result = null;
@@ -667,7 +672,7 @@ public class ConnectionHandle implements Connection{
 	/** Returns true if this connection has been (logically) closed.
 	 * @return the logicallyClosed setting.
 	 */
-//	@Override
+	//	@Override
 	public boolean isClosed() {
 		return this.logicallyClosed;
 	}
@@ -1272,6 +1277,29 @@ public class ConnectionHandle implements Connection{
 	 */
 	public Thread getThreadUsingConnection() {
 		return this.threadUsingConnection;
+	}
+
+	/**
+	 * Returns the connectionCreationTime field.
+	 * @return connectionCreationTime
+	 */
+	public long getConnectionCreationTime() {
+		return this.connectionCreationTime;
+	}
+
+	/** Returns true if the given connection has exceeded the maxConnectionAge.
+	 * @return true if the connection has expired.
+	 */
+	public boolean isExpired() {
+		return isExpired(System.currentTimeMillis());
+	}
+
+	/** Returns true if the given connection has exceeded the maxConnectionAge.
+	 * @param currentTime current time to use.
+	 * @return true if the connection has expired.
+	 */
+	protected boolean isExpired(long currentTime) {
+		return this.maxConnectionAge > 0 && (currentTime - this.connectionCreationTime) > this.maxConnectionAge;
 	}
 
 }

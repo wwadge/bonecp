@@ -85,6 +85,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * activity on the connection.
 	 */
 	private ScheduledExecutorService keepAliveScheduler;
+	/** Handle to factory that creates 1 thread per partition that periodically wakes up and performs some
+	 * activity on the connection.
+	 */
+	private ScheduledExecutorService maxAliveScheduler;
 	/** Executor for threads watching each partition to dynamically create new threads/kill off excess ones.
 	 */
 	private ExecutorService connectionsScheduler;
@@ -126,7 +130,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private boolean statementReleaseHelperThreadsConfigured;
 	/** Scratch queue of statments awaiting to be closed. */
 	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
-
+	
 	/**
 	 * Closes off this connection pool.
 	 */
@@ -138,6 +142,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 			this.shutdownStackTrace = captureStackTrace(SHUTDOWN_LOCATION_TRACE);
 			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
+			this.maxAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
 
 			if (this.releaseHelperThreadsConfigured){
@@ -278,6 +283,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			this.releaseHelper = Executors.newFixedThreadPool(helperThreads*config.getPartitionCount(), new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));
 		}
 		this.keepAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler"+suffix, true));
+		this.maxAliveScheduler =  Executors.newScheduledThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-max-alive-scheduler"+suffix, true));
 		this.connectionsScheduler =  Executors.newFixedThreadPool(config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread"+suffix, true));
 
 		this.partitionCount = config.getPartitionCount();
@@ -316,6 +322,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				this.keepAliveScheduler.submit(connectionTester);
 			}
 
+			if (config.getMaxConnectionAge() > 0){
+				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge());
+				this.maxAliveScheduler.submit(connectionMaxAgeTester);
+			}
 			// watch this partition for low no of threads
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
 		}
@@ -532,14 +542,14 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			connectionHandle.recoveryResult.getReplaceTarget().clear();
 		}
 
-		if (!this.poolShuttingDown && connectionHandle.isPossiblyBroken() 
-				&& !isConnectionHandleAlive(connectionHandle)){
+		if (connectionHandle.isExpired() || (!this.poolShuttingDown && connectionHandle.isPossiblyBroken()
+				&& !isConnectionHandleAlive(connectionHandle))){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			maybeSignalForMoreConnections(connectionPartition);
 
 			postDestroyConnection(connectionHandle);
-			return; // don't place back in queue - connection is broken!
+			return; // don't place back in queue - connection is broken or expired.
 		}
 
 
@@ -551,6 +561,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			connectionHandle.internalClose();
 		}
 	}
+
+	
 
 	/** Places a connection back in the originating partition.
 	 * @param connectionHandle to place back

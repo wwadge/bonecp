@@ -118,6 +118,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private long connectionTimeout = 0;
 	/** Time in ms to wait for close connection watch thread. */
 	private long closeConnectionWatchTimeout = 0;
+	/** A connection older than maxConnectionAge will be destroyed and purged from the pool. */
+	private long maxConnectionAge = 0;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1166,5 +1168,24 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */	
 	public void setStatementReleaseHelperThreads(int statementReleaseHelperThreads) {
 		this.statementReleaseHelperThreads = statementReleaseHelperThreads;
+	}
+
+	/**
+	 * Returns the maxConnectionAge field.
+	 * @return maxConnectionAge
+	 */
+	public long getMaxConnectionAge() {
+		return this.maxConnectionAge;
+	}
+
+	/**
+	 * Sets the maxConnectionAge in seconds. Any connections older than this setting will be closed
+	 * off whether it is idle or not. Connections currently in use will not be affected until they
+	 * are returned to the pool.
+	 * 
+	 * @param maxConnectionAge the maxConnectionAge to set
+	 */
+	public void setMaxConnectionAge(long maxConnectionAge) {
+		this.maxConnectionAge = maxConnectionAge;
 	}
 }

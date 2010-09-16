@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
@@ -24,17 +25,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Periodically sends a keep-alive statement to idle threads
- * and kills off any connections that have been unused for a long time (or broken).
+ * Periodically checks for connections to see if the connection has expired.
  * @author wwadge
  *
  */
-public class ConnectionTesterThread implements Runnable {
+public class ConnectionMaxAgeThread implements Runnable {
 
-	/** Connections used less than this time ago are not keep-alive tested. */
-	private long idleConnectionTestPeriod;
 	/** Max no of ms to wait before a connection that isn't used is killed off. */
-	private long idleMaxAge;
+	private long maxAge;
 	/** Partition being handled. */
 	private ConnectionPartition partition;
 	/** Scheduler handle. **/
@@ -48,15 +46,13 @@ public class ConnectionTesterThread implements Runnable {
 	 * @param connectionPartition partition to work on
 	 * @param scheduler Scheduler handler.
 	 * @param pool pool handle
-	 * @param idleMaxAge Threads older than this are killed off 
-	 * @param idleConnectionTestPeriod Threads that are idle for more than this time are sent a keep-alive.
+	 * @param maxAge Threads older than this are killed off 
 	 */
-	protected ConnectionTesterThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
-			BoneCP pool, long idleMaxAge, long idleConnectionTestPeriod){
+	protected ConnectionMaxAgeThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
+			BoneCP pool, long maxAge){
 		this.partition = connectionPartition;
 		this.scheduler = scheduler;
-		this.idleMaxAge = idleMaxAge;
-		this.idleConnectionTestPeriod = idleConnectionTestPeriod;
+		this.maxAge = maxAge;
 		this.pool = pool;
 	}
 
@@ -66,7 +62,7 @@ public class ConnectionTesterThread implements Runnable {
 		ConnectionHandle connection = null;
 		long tmp;
 		try {
-				long nextCheck = this.idleConnectionTestPeriod;
+				long nextCheck = this.maxAge;
 				
 				int partitionSize= this.partition.getAvailableConnections();
 				long currentTime = System.currentTimeMillis();
@@ -75,25 +71,15 @@ public class ConnectionTesterThread implements Runnable {
 					connection = this.partition.getFreeConnections().poll();
 					if (connection != null){
 						connection.setOriginatingPartition(this.partition);
-						if (connection.isPossiblyBroken() || 
-								((this.idleMaxAge > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
+						if (connection.isExpired(currentTime)){
 							// kill off this connection
 							closeConnection(connection);
 							continue;
 						}
 
-						if (this.idleConnectionTestPeriod > 0 && (currentTime-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
-								(currentTime-connection.getConnectionLastReset() > this.idleConnectionTestPeriod)) {
-							// send a keep-alive, close off connection if we fail.
-							if (!this.pool.isConnectionHandleAlive(connection)){
-								closeConnection(connection);
-								continue; 
-							}
-							connection.setConnectionLastReset(System.currentTimeMillis());
-							tmp = this.idleConnectionTestPeriod;
-						} else {
-							tmp = this.idleConnectionTestPeriod-(System.currentTimeMillis() - connection.getConnectionLastReset()); 
-						}
+						
+						tmp = this.maxAge - (currentTime - connection.getConnectionCreationTime()); 
+						
 						if (tmp < nextCheck){
 							nextCheck = tmp; 
 						}
@@ -130,7 +116,4 @@ public class ConnectionTesterThread implements Runnable {
 			}
 		}
 	}
-
-
-
 }
