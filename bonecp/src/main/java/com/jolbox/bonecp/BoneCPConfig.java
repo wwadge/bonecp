@@ -471,9 +471,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("Max Connections < 2. Setting to 50");
 			this.maxConnectionsPerPartition = 50;
 		}
-		if (this.minConnectionsPerPartition < 1) {
-			logger.warn("Min Connections < 1. Setting to 10");
-			this.minConnectionsPerPartition = 10;
+		if (this.minConnectionsPerPartition < 0) {
+			logger.warn("Min Connections < 0. Setting to 1");
+			this.minConnectionsPerPartition = 1;
 		}
 
 		if (this.minConnectionsPerPartition > this.maxConnectionsPerPartition) {
