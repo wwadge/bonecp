@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -120,6 +121,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private long closeConnectionWatchTimeout = 0;
 	/** A connection older than maxConnectionAge will be destroyed and purged from the pool. */
 	private long maxConnectionAge = 0;
+	/** Config property. */
+	private String configFile;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -463,6 +466,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 *
 	 */
 	public void sanitize(){
+		if (this.configFile != null){
+			loadProperties(this.configFile);
+		}
+
 		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
 			this.poolAvailabilityThreshold = 20;
 		}
@@ -498,7 +505,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("statementReleaseHelperThreads < 0! Setting to 3");
 			this.statementReleaseHelperThreads = 3;
 		}
-		
+
 		if (this.statementsCacheSize < 0) {
 			logger.warn("preparedStatementsCacheSize < 0! Setting to 0");
 			this.statementsCacheSize = 0;
@@ -521,7 +528,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
 			logger.warn("JDBC password was not set in config!");
 		}
-		
+
 		if (this.connectionTimeout == 0){
 			this.connectionTimeout = Long.MAX_VALUE;
 		}
@@ -565,9 +572,25 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if (this.password != null){
 			this.password = this.password.trim();
 		}
-		
+
 		if (this.connectionTestStatement != null) { 
 			this.connectionTestStatement = this.connectionTestStatement.trim();
+		}
+	}
+
+	/**
+	 * Loads the given properties file using the classloader.
+	 * @param filename Config filename to load
+	 * 
+	 */
+	private void loadProperties(String filename) {
+		URL url = ClassLoader.getSystemResource(filename);
+		if (url != null){
+			try {
+				this.setXMLProperties(url.openStream(), null);
+			} catch (Exception e) {
+				// do nothing
+			}
 		}
 	}
 
@@ -855,10 +878,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 
 	/**
-	 * Default constructor.
+	 * Default constructor. Attempts to fill settings in this order:
+	 * 1. bonecp-default-config.xml file, usually found in the pool jar
+	 * 2. bonecp-config.xml file, usually found in your application's classpath
+	 * 3. Other hardcoded defaults in BoneCPConfig class.
 	 */
 	public BoneCPConfig(){
-		// do nothing (default constructor)
+		// try to load the default config file, if available from somewhere in the classpath
+		loadProperties("bonecp-default-config.xml");
+		// try to override with app specific config, if available
+		loadProperties("bonecp-config.xml");
 	}
 
 	/** Initialize the configuration by loading bonecp-config.xml containing the settings. 
@@ -875,6 +904,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @throws Exception 
 	 */
 	public BoneCPConfig(InputStream xmlConfigFile, String sectionName) throws Exception{
+		setXMLProperties(xmlConfigFile, sectionName);
+	}
+
+	/**
+	 * @param xmlConfigFile
+	 * @param sectionName
+	 * @throws Exception
+	 */
+	private void setXMLProperties(InputStream xmlConfigFile, String sectionName)
+			throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db;
 		// ugly XML parsing, but this is built-in the JDK.
@@ -1187,5 +1226,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setMaxConnectionAge(long maxConnectionAge) {
 		this.maxConnectionAge = maxConnectionAge;
+	}
+
+	/**
+	 * Returns the configFile field.
+	 * @return configFile
+	 */
+	public String getConfigFile() {
+		return this.configFile;
+	}
+
+	/**
+	 * Sets the configFile. If configured, this will cause the pool to initialise using the
+	 * config file in the same way as if calling new BoneCPConfig(filename).
+	 * @param configFile the configFile to set
+	 */
+	public void setConfigFile(String configFile) {
+		this.configFile = configFile;
 	}
 }
