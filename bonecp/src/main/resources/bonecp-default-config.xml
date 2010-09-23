@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bonecp-config>
+  <default-config>
+  	<!-- JDBC url to use. -->
+	<property name="jdbcUrl"></property>
+	<!-- User name to use to connect to the DB. -->
+  	<property name="username"></property>
+	<!-- Password to use to connect to the DB. -->
+  	<property name="password"></property>
+  	<!-- Min no of connections the pool will (initially) create (per partition). See also: poolAvailabilityThreshold -->
+  	<property name="minConnectionsPerPartition">5</property>
+  	<!-- Max no of connections the pool will ever create (per partition). -->
+  	<property name="maxConnectionsPerPartition">10</property>
+	<!--  
+  	  Sets number of partitions to use. 
+	  
+	  In order to reduce lock contention and thus improve performance, 
+	  each incoming connection request picks off a connection from a pool that has thread-affinity, 
+	  i.e. pool[threadId % partition_count]. The higher this number, the better your performance will be for the case 
+	  when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
+	  to have a negative effect on performance (and only for the case when connections on a partition start running out).
+	  
+	  Minimum: 1, recommended: 2-4 (but very app specific)
+	 -->
+  	<property name="partitionCount">1</property>
+	<!-- Number of new connections to create in 1 batch whenever we need more connections. -->
+  	<property name="acquireIncrement">2</property>
+  
+	<!-- 
+	  Sets the idleConnectionTestPeriod.
+	  
+	  This sets the time (in minutes), for a connection to remain idle before sending 
+	  a test query to the DB. This is useful to prevent a DB from timing out connections 
+	  on its end. Do not use aggressive values here! 
+	  
+	  Note: This value only makes sense when used in conjuction with idleMaxAge. 
+	  
+	  Set to 0 to disable
+	 -->
+  	<property name="idleConnectionTestPeriod">240</property>
+	<!--  Maximum age of an unused connection before it is closed off. In minutes. -->
+	<property name="idleMaxAge">60</property>
+	<!-- Min no of prepared statements to cache. Typically results in poorer performance. -->
+	<property name="statementsCacheSize">0</property>
+	<!-- Number of release-connection helper threads to create per partition. Usually increases
+	performance in highly concurrent applications. -->
+	<property name="releaseHelperThreads">3</property>
+	<!-- Number of statement release helper threads to create. -->
+	<property name="statementReleaseHelperThreads">3</property>
+	<!-- Instruct the pool to create a helper thread to watch over connection acquires that are never released (or released twice). 
+	  This is for debugging purposes _only_ and will create a new thread for each call to getConnection(). 
+	  WARNING: Enabling this option will have a big negative impact on pool performance.
+	 -->
+	<property name="closeConnectionWatch">false</property>
+	<!-- If set to true, log SQL statements being executed (together with the values). -->
+	<property name="logStatementsEnabled">false</property>
+	<!-- After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. -->
+	<property name="acquireRetryDelay">7000</property>
+	<!-- After attempting to acquire a connection and failing, try to connect these many times before giving up. -->
+	<property name="acquireRetryAttempts">5</property>
+	<!-- If set to true, the connection pool will remain empty until the first connection is obtained. -->
+	<property name="lazyInit">false</property>
+	<!-- If set to true, stores all activity on this connection to allow for replaying it again automatically
+	if it fails. Makes the pool marginally slower. -->
+	<property name="transactionRecoveryEnabled">false</property>
+	<!-- Queries taking longer than this limit to execute are logged. --> 
+	<property name="queryExecuteTimeLimit">0</property>
+	<!-- Sets the Pool Watch thread threshold.
+	  
+	  The pool watch thread attempts to maintain a number of connections always available (between minConnections and maxConnections). This
+	  value sets the percentage value to maintain. For example, setting it to 20 means that if the following condition holds:
+	  Free Connections / MaxConnections < poolAvailabilityThreshold
+	  
+	  new connections will be created. In other words, it tries to keep at least 20% of the pool full of connections. Setting the value
+	  to zero will make the pool create new connections when it needs them but it also means your application may have to wait for new
+	  connections to be obtained at times.
+	-->	  
+
+	<property name="poolAvailabilityThreshold">20</property>
+	<!-- If set to true, the pool will not monitor connections for proper closure. Enable this option if you only ever obtain
+	  your connections via a mechanism that is guaranteed to release the connection back to the pool (eg Spring's jdbcTemplate, 
+	  some kind of transaction manager, etc). -->
+	<property name="disableConnectionTracking">false</property>
+
+	<!-- Time to wait before a call to getConnection() times out and returns an error. --> 
+	<property name="connectionTimeout">0</property>
+	<!-- Sets the no of ms to wait when close connection watch threads are enabled. 0 = wait forever. -->
+	<property name="closeConnectionWatchTimeout">0</property>
+	<!-- A connection older than maxConnectionAge will be destroyed and purged from the pool. -->
+	<property name="maxConnectionAge">0</property>
+  </default-config> 
+</bonecp-config> 

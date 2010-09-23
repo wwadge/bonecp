@@ -57,7 +57,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Number of new connections to create in 1 batch. */
 	private int acquireIncrement = 2;
 	/** Number of partitions. */
-	private int partitionCount = 2;
+	private int partitionCount = 1;
 	/** DB connection string. */
 	private String jdbcUrl;
 	/** User name to use. */
@@ -206,7 +206,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
 	 * to have a negative effect on performance (and only for the case when connections on a partition start running out).
 	 * 
-	 * <p>Default: 2, minimum: 1, recommended: 3-4 (but very app specific)
+	 * <p>Default: 1, minimum: 1, recommended: 3-4 (but very app specific)
 	 *
 	 * @param partitionCount to set 
 	 */
@@ -1060,7 +1060,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * to zero will make the pool create new connections when it needs them but it also means your application may have to wait for new
 	 * connections to be obtained at times.
 	 * 
-	 * Default: 10.
+	 * Default: 20.
 	 *  
 	 * @param poolAvailabilityThreshold the poolAvailabilityThreshold to set
 	 */
