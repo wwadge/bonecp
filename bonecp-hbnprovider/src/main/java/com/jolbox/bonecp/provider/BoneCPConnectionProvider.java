@@ -181,17 +181,29 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		Connection connection = this.pool.getConnection();
 
 		// set the Transaction Isolation if defined
-		if (this.isolation !=null){
-			connection.setTransactionIsolation( this.isolation.intValue() );
+		boolean success = false;
+		try {
+			// set the Transaction Isolation if defined
+			if ((this.isolation != null) && (connection.getTransactionIsolation() != this.isolation.intValue())) {
+				connection.setTransactionIsolation (this.isolation.intValue());
+			}
+
+			// toggle autoCommit to false if set
+			if ( connection.getAutoCommit() != this.autocommit ){
+				connection.setAutoCommit(this.autocommit);
+			}
+
+			success = true;
+			return connection;
+		} finally {
+			if (!success) {
+				try {
+					connection.close();
+				} catch (Exception e) {
+					logger.warn("Failed to close a connection", e);
+				}
+			}
 		}
-
-		// toggle autoCommit to false if set
-		if ( connection.getAutoCommit() != this.autocommit ){
-			connection.setAutoCommit(this.autocommit);
-		}
-		return connection;
-
-
 	}
 
 	/**
