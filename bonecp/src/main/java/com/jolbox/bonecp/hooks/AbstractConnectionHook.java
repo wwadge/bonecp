@@ -16,6 +16,7 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.sql.Statement;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -86,14 +87,29 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	}
 
 
+	public void onQueryExecuteTimeLimitExceeded(ConnectionHandle handle, Statement statement, String sql, Map<Object, Object> logParams){
+		onQueryExecuteTimeLimitExceeded(sql, logParams);
+	}
+
+	@Deprecated
 	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
 		StringBuilder sb = new StringBuilder("Query execute time limit exceeded. Query: ");
 		sb.append(PoolUtil.fillLogParams(sql, logParams));
 		logger.warn(sb.toString());
 	}
-
+	
 	public boolean onConnectionException(ConnectionHandle connection, String state, Throwable t) {
 		return true; // keep the default behaviour
+	}
+
+	@Override
+	public void onBeforeStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> params) {
+		// do nothing
+	}
+	
+	@Override
+	public void onAfterStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> params) {
+		// do nothing
 	}
 
 }

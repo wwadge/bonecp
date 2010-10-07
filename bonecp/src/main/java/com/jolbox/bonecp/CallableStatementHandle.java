@@ -459,7 +459,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setAsciiStream(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -474,7 +474,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -490,7 +490,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setBinaryStream(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -505,7 +505,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			checkClosed();
 			try {
 				this.internalCallableStatement.setBinaryStream(parameterName, x, length);
-				if (this.logStatementsEnabled){
+				if (this.logStatementsEnabled || this.connectionHook != null){
 					this.logParams.put(parameterName, x);
 				}
 			} catch (Throwable t) {
@@ -520,7 +520,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			checkClosed();
 			try {
 				this.internalCallableStatement.setBlob(parameterName, x);
-				if (this.logStatementsEnabled){
+				if (this.logStatementsEnabled || this.connectionHook != null){
 					this.logParams.put(parameterName, x);
 				}
 			} catch (Throwable t) {
@@ -536,7 +536,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			checkClosed();
 			try {
 				this.internalCallableStatement.setBlob(parameterName, inputStream);
-				if (this.logStatementsEnabled){
+				if (this.logStatementsEnabled || this.connectionHook != null){
 					this.logParams.put(parameterName, inputStream);
 				}
 			} catch (Throwable t) {
@@ -552,7 +552,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			checkClosed();
 			try {
 				this.internalCallableStatement.setBlob(parameterName, inputStream, length);
-				if (this.logStatementsEnabled){
+				if (this.logStatementsEnabled || this.connectionHook != null){
 					this.logParams.put(parameterName, inputStream);
 				}
 			} catch (Throwable t) {
@@ -569,7 +569,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setCharacterStream(parameterName, reader);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -584,7 +584,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setCharacterStream(parameterName, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -598,7 +598,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setClob(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -613,7 +613,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setClob(parameterName, reader);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -628,7 +628,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setClob(parameterName, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -642,7 +642,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNCharacterStream(parameterName, value);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, value);
 			}
 		} catch (Throwable t) {
@@ -657,7 +657,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNCharacterStream(parameterName, value, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, value);
 			}
 		} catch (Throwable t) {
@@ -671,7 +671,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNClob(parameterName, value);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, value);
 			}
 		} catch (Throwable t) {
@@ -686,7 +686,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNClob(parameterName, reader);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -701,7 +701,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNClob(parameterName, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -716,7 +716,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNString(parameterName, value);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, value);
 			}
 		} catch (Throwable t) {
@@ -730,7 +730,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setRowId(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -746,7 +746,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setSQLXML(parameterName, xmlObject);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, xmlObject);
 			}
 		} catch (Throwable t) {
@@ -1471,7 +1471,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1494,7 +1494,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setBigDecimal(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1517,7 +1517,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setBinaryStream(parameterName, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1536,7 +1536,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setBoolean(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1556,7 +1556,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setByte(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1576,7 +1576,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setBytes(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1599,7 +1599,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setCharacterStream(parameterName, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, reader);
 			}
 		} catch (Throwable t) {
@@ -1619,7 +1619,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setDate(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1640,7 +1640,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setDate(parameterName, x, cal);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
@@ -1659,7 +1659,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setDouble(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1678,7 +1678,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setFloat(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1697,7 +1697,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setInt(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1716,7 +1716,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setLong(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1735,7 +1735,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNull(parameterName, sqlType);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, "]"));
 			}
 		} catch (Throwable t) {
@@ -1756,7 +1756,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setNull(parameterName, sqlType, typeName);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, ", type=", typeName+"]"));
 			}
 		} catch (Throwable t) {
@@ -1776,7 +1776,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setObject(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1797,7 +1797,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setObject(parameterName, x, targetSqlType);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1818,7 +1818,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setObject(parameterName, x, targetSqlType, scale);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1832,7 +1832,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setShort(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1852,7 +1852,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setString(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1871,7 +1871,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setTime(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1892,7 +1892,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setTime(parameterName, x, cal);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
@@ -1913,7 +1913,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setTimestamp(parameterName, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, x);
 			}
 		} catch (Throwable t) {
@@ -1934,7 +1934,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setTimestamp(parameterName, x, cal);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
@@ -1953,7 +1953,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		checkClosed();
 		try {
 			this.internalCallableStatement.setURL(parameterName, val);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterName, val);
 			}
 		} catch (Throwable t) {

@@ -141,7 +141,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 */
 	public Connection getConnection(String username, String password)
 	throws SQLException {
-		throw new UnsupportedOperationException("getConnectionString username, String password) is not supported");
+		throw new UnsupportedOperationException("getConnection(String username, String password) is not supported");
 	}
 
 	/**

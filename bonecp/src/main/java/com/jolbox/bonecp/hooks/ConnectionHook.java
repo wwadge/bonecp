@@ -16,6 +16,7 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.sql.Statement;
 import java.util.Map;
 
 import com.jolbox.bonecp.ConnectionHandle;
@@ -75,11 +76,41 @@ public interface ConnectionHook {
 	
 	/** Called when a query execute time limit has been set and an executing query took longer
 	 * to than the limit to return control to the application.
+	 * @param conn handle to the connection
+	 * @param statement statement handle.
 	 * @param sql SQL statement that was used.
 	 * @param logParams Parameters used in this statement.
 	 */
+	void onQueryExecuteTimeLimitExceeded(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> logParams);
+	 
+	/** Deprecated. Use the similarly named hook having more parameters instead.
+	 * 
+	 * Called when a query execute time limit has been set and an executing query took longer
+	 * to than the limit to return control to the application.
+	 * @param sql SQL statement that was used.
+	 * @param logParams Parameters used in this statement.
+	 */
+	@Deprecated
 	void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams);
 	 
+	/**
+	 * Called before a statement is about to execute.
+	 * @param conn Connection handle
+	 * @param statement Handle to the statement
+	 * @param sql SQL statement about to be executed.
+	 * @param params parameters currently bound to the statement
+	 */
+	void onBeforeStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object,Object> params);
+	
+	/**
+	 * Called right after a statement has executed.
+	 * @param conn Connection handle
+	 * @param statement Handle to the statement
+	 * @param sql SQL statement about to be executed.
+	 * @param params parameters currently bound to the statement
+	 */
+	void onAfterStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object,Object> params);
+	
 	/** Called whenever an exception on a connection occurs. This exception may be a connection failure, a DB failure or a 
 	 * non-fatal logical failure (eg Duplicate key exception).
 	 * 

@@ -109,10 +109,10 @@ public class ConnectionMaxAgeThread implements Runnable {
 		if (connection != null) {
 			try {
 				connection.internalClose();
-				this.pool.postDestroyConnection(connection);
-
 			} catch (SQLException e) {
 				logger.error("Destroy connection exception", e);
+			} finally {
+				this.pool.postDestroyConnection(connection);
 			}
 		}
 	}

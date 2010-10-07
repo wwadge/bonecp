@@ -108,7 +108,7 @@ PreparedStatement {
 	public void addBatch() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.batchSQL.append(this.sql);
 			}
 			this.internalPreparedStatement.addBatch();
@@ -129,7 +129,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.clearParameters();
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.clear();
 			}
 		} catch (Throwable t) {
@@ -148,11 +148,22 @@ PreparedStatement {
 	public boolean execute() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
+			
+			if (this.connectionHook != null){
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
+			}
+
 			boolean result = this.internalPreparedStatement.execute();
+			
+			if (this.connectionHook != null){
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
+			}
+
+
 			queryTimerEnd(this.sql, queryStartTime);
 
 			return result;
@@ -173,11 +184,18 @@ PreparedStatement {
 	public ResultSet executeQuery() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
+			if (this.connectionHook != null){
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
+			}
 			ResultSet result = this.internalPreparedStatement.executeQuery();
+			if (this.connectionHook != null){
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
+			}
+
 			queryTimerEnd(this.sql, queryStartTime);
 
 			return result;
@@ -197,11 +215,18 @@ PreparedStatement {
 	public int executeUpdate() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
+			if (this.connectionHook != null){
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
+			}
 			int result = this.internalPreparedStatement.executeUpdate();
+			if (this.connectionHook != null){
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
+			}
+
 			queryTimerEnd(this.sql, queryStartTime);
 
 			return result;
@@ -256,7 +281,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setArray(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null) {
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -273,7 +298,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -289,7 +314,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -305,7 +330,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, inputStream);
 			}
 		} catch (Throwable t) {
@@ -321,7 +346,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -336,7 +361,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (Throwable t) {
@@ -351,7 +376,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setRowId(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -367,7 +392,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setSQLXML(parameterIndex, xmlObject);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, xmlObject);
 			}
 		} catch (Throwable t) {
@@ -383,7 +408,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 
@@ -400,7 +425,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, value);
 			}
 
@@ -417,7 +442,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, value);
 			}
 		} catch (Throwable t) {
@@ -432,7 +457,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, value);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, value);
 			}
 		} catch (Throwable t) {
@@ -447,7 +472,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (Throwable t) {
@@ -463,7 +488,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (Throwable t) {
@@ -479,7 +504,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNString(parameterIndex, value);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, value);
 			}
 		} catch (Throwable t) {
@@ -495,7 +520,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -510,7 +535,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (Throwable t) {
@@ -526,7 +551,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, inputStream);
 			}
 		} catch (Throwable t) {
@@ -542,7 +567,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (Throwable t) {
@@ -566,7 +591,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -587,7 +612,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBigDecimal(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -610,7 +635,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -630,7 +655,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -651,7 +676,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBoolean(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -671,7 +696,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setByte(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -691,7 +716,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBytes(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -715,7 +740,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (Throwable t) {
@@ -736,7 +761,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -757,7 +782,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -779,7 +804,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
@@ -799,7 +824,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setDouble(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -819,7 +844,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setFloat(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -839,7 +864,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setInt(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -859,7 +884,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setLong(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -879,7 +904,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, "[SQL NULL of type "+sqlType+"]");
 			}
 		} catch (Throwable t) {
@@ -900,7 +925,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType, typeName);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
 			}
 		} catch (Throwable t) {
@@ -920,7 +945,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -941,7 +966,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -963,7 +988,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -983,7 +1008,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setRef(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -1004,7 +1029,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setShort(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -1024,7 +1049,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setString(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -1044,7 +1069,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -1066,7 +1091,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
@@ -1087,7 +1112,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -1109,7 +1134,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (Throwable t) {
@@ -1129,7 +1154,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setURL(parameterIndex, x);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
@@ -1152,7 +1177,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setUnicodeStream(parameterIndex, x, length);
-			if (this.logStatementsEnabled){
+			if (this.logStatementsEnabled || this.connectionHook != null){
 				this.logParams.put(parameterIndex, x);
 			}
 		} catch (Throwable t) {
