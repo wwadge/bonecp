@@ -28,7 +28,7 @@ import jsr166y.LinkedTransferQueue;
  *
  * @param <E>
  */
-public class BoundedLinkedTransferQueue<E> extends LinkedTransferQueue<E>{
+public class BoundedLinkedTransferQueue<E> extends LinkedTransferQueue<E> {
 	/** UUID */
 	private static final long serialVersionUID = -1875525368357897907L;
 	/** No of elements in queue. */

@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jsr166y.LinkedTransferQueue;
+import jsr166y.TransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public class ConnectionPartition implements Serializable{
 	/** Logger class. */
 	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
-	private LinkedTransferQueue<ConnectionHandle> freeConnections;
+	private TransferQueue<ConnectionHandle> freeConnections;
 	/** When connections start running out, add these number of new connections. */
 	private final int acquireIncrement;
 	/** Minimum number of connections to start off with. */
@@ -178,15 +179,14 @@ public class ConnectionPartition implements Serializable{
 	/**
 	 * @return the freeConnections
 	 */
-	protected LinkedTransferQueue<ConnectionHandle> getFreeConnections() {
+	protected TransferQueue<ConnectionHandle> getFreeConnections() {
 		return this.freeConnections;
 	}
 
 	/**
 	 * @param freeConnections the freeConnections to set
 	 */
-	protected void setFreeConnections(
-			LinkedTransferQueue<ConnectionHandle> freeConnections) {
+	protected void setFreeConnections(TransferQueue<ConnectionHandle> freeConnections) {
 		this.freeConnections = freeConnections;
 	}
 

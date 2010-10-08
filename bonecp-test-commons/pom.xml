@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.7.0-rc6-SNAPSHOT</version>
+		<version>0.7.0-rc6-LIFO-SNAPSHOT</version>
 	</parent>
 
 

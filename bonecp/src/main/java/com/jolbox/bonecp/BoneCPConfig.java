@@ -123,7 +123,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private long maxConnectionAge = 0;
 	/** Config property. */
 	private String configFile;
-
+	/** Queue mode. Values currently understood are FIFO and LIFO. */
+	private String serviceOrder;
+	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
@@ -576,6 +578,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if (this.connectionTestStatement != null) { 
 			this.connectionTestStatement = this.connectionTestStatement.trim();
 		}
+		
+		this.serviceOrder = this.serviceOrder != null ? this.serviceOrder.toUpperCase() : "FIFO";
+		
+		if (!(this.serviceOrder.equals("FIFO") || this.serviceOrder.equals("LIFO"))){
+			logger.warn("Queue service order is not set to FIFO or LIFO. Defaulting to FIFO.");
+			this.serviceOrder = "FIFO";
+		}
+		
 	}
 
 	/**
@@ -1243,5 +1253,21 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setConfigFile(String configFile) {
 		this.configFile = configFile;
+	}
+
+	/**
+	 * Returns the serviceOrder field.
+	 * @return serviceOrder
+	 */
+	public String getServiceOrder() {
+		return this.serviceOrder;
+	}
+
+	/**
+	 * Sets the queue serviceOrder. Values currently understood are FIFO and LIFO.
+	 * @param serviceOrder the serviceOrder to set
+	 */
+	public void setServiceOrder(String serviceOrder) {
+		this.serviceOrder = serviceOrder;
 	}
 }

@@ -42,6 +42,7 @@ import javax.management.ObjectName;
 import javax.sql.DataSource;
 
 import jsr166y.LinkedTransferQueue;
+import jsr166y.TransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -288,7 +289,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 		this.partitionCount = config.getPartitionCount();
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
-
+		boolean queueLIFO = config.getServiceOrder() != null && config.getServiceOrder().equalsIgnoreCase("LIFO");
+		
 		if (this.closeConnectionWatch){
 			logger.warn(THREAD_CLOSE_CONNECTION_WARNING);
 			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread"+suffix, true));
@@ -298,13 +300,13 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			this.partitions[p]=connectionPartition;
-			LinkedTransferQueue<ConnectionHandle> connectionHandles;
+			TransferQueue<ConnectionHandle> connectionHandles;
 			if (config.getMaxConnectionsPerPartition() == config.getMinConnectionsPerPartition()){
 				// if we have a pool that we don't want resized, make it even faster by ignoring
 				// the size constraints.
-				connectionHandles = new LinkedTransferQueue<ConnectionHandle>();
+				connectionHandles = queueLIFO ? new LIFOQueue<ConnectionHandle>() :  new LinkedTransferQueue<ConnectionHandle>();
 			} else {
-				connectionHandles = new BoundedLinkedTransferQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition());
+				connectionHandles = queueLIFO ? new LIFOQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition()) : new BoundedLinkedTransferQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition());
 			}
 			
 			this.partitions[p].setFreeConnections(connectionHandles);
@@ -569,7 +571,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @throws SQLException on error
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
-		LinkedTransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+		TransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
 
 		if (!queue.tryTransfer(connectionHandle)){
 			if (!queue.offer(connectionHandle)){

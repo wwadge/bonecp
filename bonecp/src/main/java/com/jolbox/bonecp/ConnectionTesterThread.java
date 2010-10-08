@@ -100,7 +100,7 @@ public class ConnectionTesterThread implements Runnable {
 						
 						this.pool.putConnectionBackInPartition(connection);
 
-						Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
+						Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with (avoid CPU spikes)...
 					}
 
 				} // throw it back on the queue
