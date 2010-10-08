@@ -278,7 +278,7 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 			long timer = queryTimerStart();
@@ -324,7 +324,7 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 
@@ -366,7 +366,7 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 
@@ -403,7 +403,7 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -435,7 +435,7 @@ public class StatementHandle implements Statement{
 		int[] result = null;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.batchSQL.toString(), this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -470,7 +470,7 @@ public class StatementHandle implements Statement{
 		ResultSet result = null;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -503,7 +503,7 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -536,7 +536,7 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -569,7 +569,7 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams), columnIndexes);
 			}
 			long queryStartTime = queryTimerStart();
@@ -602,7 +602,7 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(sql, this.logParams), columnNames);
 			}
 			long queryStartTime = queryTimerStart();

@@ -94,7 +94,8 @@ public interface ConnectionHook {
 	void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams);
 	 
 	/**
-	 * Called before a statement is about to execute.
+	 * Called before a statement is about to execute. Tip: You may use PoolUtil.fillLogParams(...) to
+	 * get the sql statement with the '?' replaced with the actual values.
 	 * @param conn Connection handle
 	 * @param statement Handle to the statement
 	 * @param sql SQL statement about to be executed.
@@ -103,7 +104,8 @@ public interface ConnectionHook {
 	void onBeforeStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object,Object> params);
 	
 	/**
-	 * Called right after a statement has executed.
+	 * Called right after a statement has executed. Tip: You may use PoolUtil.fillLogParams(...) to
+	 * get the sql statement with the '?' replaced with the actual values.
 	 * @param conn Connection handle
 	 * @param statement Handle to the statement
 	 * @param sql SQL statement about to be executed.

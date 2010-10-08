@@ -148,17 +148,17 @@ PreparedStatement {
 	public boolean execute() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
-			
+
 			if (this.connectionHook != null){
 				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 
 			boolean result = this.internalPreparedStatement.execute();
-			
+
 			if (this.connectionHook != null){
 				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
@@ -184,7 +184,7 @@ PreparedStatement {
 	public ResultSet executeQuery() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -215,7 +215,7 @@ PreparedStatement {
 	public int executeUpdate() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -294,7 +294,7 @@ PreparedStatement {
 	// #ifdef JDK6
 	@Override
 	public void setBinaryStream(int parameterIndex, InputStream x)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
@@ -310,7 +310,7 @@ PreparedStatement {
 
 	@Override
 	public void setBinaryStream(int parameterIndex, InputStream x, long length)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
@@ -326,7 +326,7 @@ PreparedStatement {
 
 	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
@@ -342,7 +342,7 @@ PreparedStatement {
 
 	@Override
 	public void setAsciiStream(int parameterIndex, InputStream x, long length)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
@@ -516,7 +516,7 @@ PreparedStatement {
 
 	@Override
 	public void setAsciiStream(int parameterIndex, InputStream x)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
@@ -547,7 +547,7 @@ PreparedStatement {
 
 	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream, long length)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream, length);
@@ -561,9 +561,9 @@ PreparedStatement {
 
 	}
 
- 	@Override
+	@Override
 	public void setCharacterStream(int parameterIndex, Reader reader)
-			throws SQLException {
+	throws SQLException {
 		checkClosed();
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader);
@@ -577,7 +577,7 @@ PreparedStatement {
 
 	}
 
-	 // #endif JDK6
+	// #endif JDK6
 
 	/**
 	 * {@inheritDoc}
@@ -1018,7 +1018,7 @@ PreparedStatement {
 
 	}
 
-	
+
 	/**
 	 * {@inheritDoc}
 	 * 
