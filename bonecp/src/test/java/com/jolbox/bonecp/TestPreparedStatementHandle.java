@@ -75,6 +75,9 @@ public class TestPreparedStatementHandle {
 		reset(this.mockClass, this.mockCallableStatementCache, this.mockConnection);
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
+		BoneCPConfig config = new BoneCPConfig();
+		expect(this.mockPool.getConfig()).andReturn(config).anyTimes();
+		
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		EasyMock.replay(this.mockConnection, this.mockPool);
 		this.testClass = new PreparedStatementHandle(this.mockClass, "", this.mockConnection, "TestSQL", this.mockCallableStatementCache);

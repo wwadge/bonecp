@@ -77,6 +77,9 @@ public class TestCallableStatementHandle {
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		BoneCPConfig config = new BoneCPConfig();
+		expect(this.mockPool.getConfig()).andReturn(config).anyTimes();
+	
 		EasyMock.replay(this.mockConnection, this.mockPool);
 		this.testClass = new CallableStatementHandle(this.mockClass, "",  this.mockConnection, "somesql", this.mockCallableStatementCache);
 		this.testClass.logStatementsEnabled=true;

@@ -71,6 +71,8 @@ public class StatementHandle implements Statement{
 	private boolean statementReleaseHelperEnabled;
 	/** Scratch queue of statments awaiting to be closed. */
 	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
+	/** An opaque object. */
+	private Object debugHandle;
 	
 	/**
 	 * Constructor to statement handle wrapper. 
@@ -1172,5 +1174,23 @@ public class StatementHandle implements Statement{
 	public void setInternalStatement(Statement internalStatement) {
 		this.internalStatement = internalStatement;
 	}
+	
+	/** Sets a debugHandle, an object that is not used by the connection pool at all but may be set by an application to track
+	 * this particular connection handle for any purpose it deems fit.
+	 * @param debugHandle any object.
+	 */
+	public void setDebugHandle(Object debugHandle) {
+		this.debugHandle = debugHandle;
+	}
+
+
+	/**
+	 * Returns the debugHandle field.
+	 * @return debugHandle
+	 */
+	public Object getDebugHandle() {
+		return this.debugHandle;
+	}
+
 
 }

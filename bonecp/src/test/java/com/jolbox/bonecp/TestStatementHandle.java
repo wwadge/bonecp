@@ -223,7 +223,11 @@ public class TestStatementHandle {
 	public void testGetterSetter(){
 		Statement mockStatement = createNiceMock(Statement.class); 
 		testClass.setInternalStatement(mockStatement);
+		Object obj = new Object();
+		testClass.setDebugHandle(obj);
 		assertEquals(mockStatement, testClass.getInternalStatement());
+		
+		assertEquals(obj, testClass.getDebugHandle());
 	}
 	
 	/**

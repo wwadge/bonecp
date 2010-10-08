@@ -231,6 +231,7 @@ public class TestConnectionHandle {
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
 		CommonTestUtils.testStatementBounceMethod(this.mockPool, this.mockConnection, this.testClass, skipTests, this.mockConnection);
 	}
@@ -533,6 +534,7 @@ public class TestConnectionHandle {
 	@Test
 	public void testPrepareStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		expect(this.mockPool.captureStackTrace((String)anyObject())).andReturn("").anyTimes();
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
 		this.config.setStatementsCacheSize(1);
 		prepareStatementTest(String.class);
@@ -554,6 +556,8 @@ public class TestConnectionHandle {
 	@Test
 	public void testCallableStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		expect(this.mockPool.captureStackTrace((String)anyObject())).andReturn("").anyTimes();
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+		
 		replay(this.mockPool);
 
 		callableStatementTest(String.class);
