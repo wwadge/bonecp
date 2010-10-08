@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.jolbox.bonecp.ConnectionHandle;
 import com.jolbox.bonecp.PoolUtil;
+import com.jolbox.bonecp.StatementHandle;
 
 /** A no-op implementation of the ConnectionHook interface.
  * @author wallacew
@@ -103,12 +104,12 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	}
 
 	@Override
-	public void onBeforeStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> params) {
+	public void onBeforeStatementExecute(ConnectionHandle conn, StatementHandle statement, String sql, Map<Object, Object> params) {
 		// do nothing
 	}
 	
 	@Override
-	public void onAfterStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> params) {
+	public void onAfterStatementExecute(ConnectionHandle conn, StatementHandle statement, String sql, Map<Object, Object> params) {
 		// do nothing
 	}
 

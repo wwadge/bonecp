@@ -575,7 +575,7 @@ public class TestConnectionHandle {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unchecked")
 	private void prepareStatementTest( Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		Object[] params = new Object[args.length];
 		for (int i=0; i < args.length; i++){

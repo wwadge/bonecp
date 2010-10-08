@@ -125,7 +125,7 @@ public class TestPoolWatchThread {
 	/** Tests the case where we cannot create more transactions.
 	 * @throws InterruptedException
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	@Test
 	public void testRunFullConnections() throws InterruptedException{
 //		mockPartition.lockAlmostFullLock();

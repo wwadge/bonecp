@@ -20,6 +20,7 @@ import java.sql.Statement;
 import java.util.Map;
 
 import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.StatementHandle;
 
 /**
  * Interface to the hooking mechanism of a connection lifecycle. Applications
@@ -101,7 +102,7 @@ public interface ConnectionHook {
 	 * @param sql SQL statement about to be executed.
 	 * @param params parameters currently bound to the statement
 	 */
-	void onBeforeStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object,Object> params);
+	void onBeforeStatementExecute(ConnectionHandle conn, StatementHandle statement, String sql, Map<Object,Object> params);
 	
 	/**
 	 * Called right after a statement has executed. Tip: You may use PoolUtil.fillLogParams(...) to
@@ -111,7 +112,7 @@ public interface ConnectionHook {
 	 * @param sql SQL statement about to be executed.
 	 * @param params parameters currently bound to the statement
 	 */
-	void onAfterStatementExecute(ConnectionHandle conn, Statement statement, String sql, Map<Object,Object> params);
+	void onAfterStatementExecute(ConnectionHandle conn, StatementHandle statement, String sql, Map<Object,Object> params);
 	
 	/** Called whenever an exception on a connection occurs. This exception may be a connection failure, a DB failure or a 
 	 * non-fatal logical failure (eg Duplicate key exception).
