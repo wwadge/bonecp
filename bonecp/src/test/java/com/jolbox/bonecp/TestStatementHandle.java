@@ -73,6 +73,7 @@ public class TestStatementHandle {
 		mockCallableStatementCache = createNiceMock(IStatementCache.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockConfig = createNiceMock(BoneCPConfig.class);
+		
 		mockPool = createNiceMock(BoneCP.class);
 		expect(mockConnection.getPool()).andReturn(mockPool).anyTimes();
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
@@ -111,7 +112,7 @@ public class TestStatementHandle {
 		skipTests.add("closeAndClearResultSetHandles"); 
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 
-		CommonTestUtils.testStatementBounceMethod(null, mockConnection, testClass, skipTests, mockClass);
+		CommonTestUtils.testStatementBounceMethod(mockConnection, testClass, skipTests, mockClass);
 		
 	}
 	
@@ -176,6 +177,11 @@ public class TestStatementHandle {
 		assertEquals("foo", handle.getOpenStackTrace());
 		handle.sql = "foo";
 		assertNotNull(handle.toString());
+		
+		
+		testClass.logStatementsEnabled = false;
+		testClass.addBatch("");
+		testClass.clearBatch();
 	}
 	
 	/** temp */

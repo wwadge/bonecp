@@ -148,6 +148,7 @@ public class TestBoneCP {
 		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.getServiceOrder()).andReturn("LIFO").anyTimes();
 
 		expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();

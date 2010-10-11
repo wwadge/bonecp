@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -30,6 +31,9 @@ import javax.sql.DataSource;
 import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.jolbox.bonecp.hooks.AbstractConnectionHook;
+import com.jolbox.bonecp.hooks.ConnectionHook;
 
 /** Tests config object.
  * @author wwadge
@@ -142,6 +146,11 @@ public class TestBoneCPConfig {
 		config.setPartitionCount(1);
 		config.setConnectionTestStatement("test");
 		config.setAcquireIncrement(6);
+		config.setInitSQL("abc");
+		ConnectionHook hook = new AbstractConnectionHook() {
+			// do nothing
+		};
+		config.setConnectionHook(hook);
 		
 		config.setStatementsCachedPerConnection(7);
 		config.setPreparedStatementsCacheSize(2);
@@ -154,7 +163,15 @@ public class TestBoneCPConfig {
 		config.setConnectionTimeout(9999);
 		config.setDriverProperties(driverProperties);
 		config.setCloseConnectionWatchTimeout(Long.MAX_VALUE);
+		String lifo = "LIFO";
+		config.setServiceOrder(lifo);
+		config.setConfigFile("abc");
 
+		assertEquals("abc", config.getInitSQL());
+		assertEquals(hook, config.getConnectionHook());
+
+		assertEquals(lifo, config.getServiceOrder());
+		assertEquals("abc", config.getConfigFile());
 		assertEquals(Long.MAX_VALUE, config.getCloseConnectionWatchTimeout());
 		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
@@ -195,10 +212,16 @@ public class TestBoneCPConfig {
 		config.setPassword(null);
 		config.setPoolAvailabilityThreshold(-50);
 		config.setStatementReleaseHelperThreads(-50);
+		config.setConnectionTimeout(0);
+		config.setServiceOrder("something non-sensical");
+		config.setAcquireRetryDelay(-1);
 		
 		config.setReleaseHelperThreads(-1);
 		config.sanitize();
 
+		assertEquals(1000, config.getAcquireRetryDelay());
+		assertEquals("FIFO", config.getServiceOrder());
+		assertEquals(Long.MAX_VALUE, config.getConnectionTimeout());
 		assertNotNull(config.toString());
 		assertEquals(3, config.getStatementReleaseHelperThreads());
 		assertFalse(config.getAcquireIncrement() == 0);
@@ -209,9 +232,20 @@ public class TestBoneCPConfig {
 		assertFalse(config.getStatementsCacheSize() == -1);
 
 		config.setMinConnectionsPerPartition(config.getMaxConnectionsPerPartition()+1);
+		config.setServiceOrder(null);
 		config.sanitize();
+		assertEquals("FIFO", config.getServiceOrder());
 		assertEquals(config.getMinConnectionsPerPartition(), config.getMaxConnectionsPerPartition());
 		assertEquals(20, config.getPoolAvailabilityThreshold());
+		
+		
+		// coverage
+		BoneCPConfig config = new BoneCPConfig();
+		config.setDatasourceBean(null);
+		config.setDriverProperties(null);
+		config.setJdbcUrl("");
+		config.setPassword(null);
+		config.sanitize();
 	}
 	
 	/**
@@ -252,10 +286,6 @@ public class TestBoneCPConfig {
 		config.setPassword(null);
 		config.setDriverProperties(new Properties());
 		config.sanitize();
-
-		// if not set, should be blanked out
-//		assertEquals("", config.getUsername());
-//		assertEquals("", config.getPassword());
 	}
 	
 	/**
@@ -273,7 +303,20 @@ public class TestBoneCPConfig {
 		
 		clone.setJdbcUrl("something else");
 		assertFalse(clone.equals(config));
-
+	}
+	
+	/**
+	 * Tries to load an invalid property file.
+	 * @throws CloneNotSupportedException 
+	 * @throws IOException 
+	 */
+	@Test
+	public void testLoadPropertyFileInvalid() throws CloneNotSupportedException, IOException{
+		BoneCPConfig config = new BoneCPConfig();
+		BoneCPConfig clone = config.clone();
+		
+		config.loadProperties("invalid-property-file.xml");
+		assertEquals(config, clone);
 	}
 
 

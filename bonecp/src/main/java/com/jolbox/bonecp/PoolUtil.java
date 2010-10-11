@@ -45,7 +45,7 @@ public class PoolUtil {
 		Iterator<Object> it = tmpLogParam.values().iterator();
 		boolean inQuote = false;
 		boolean inQuote2 = false;
-		char[] sqlChar = sql.toCharArray();
+		char[] sqlChar = sql != null ? sql.toCharArray() : new char[]{};
 
 		for (int i=0; i < sqlChar.length; i++){
 			if (sqlChar[i] == '\''){

@@ -233,7 +233,7 @@ public class TestConnectionHandle {
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
-		CommonTestUtils.testStatementBounceMethod(this.mockPool, this.mockConnection, this.testClass, skipTests, this.mockConnection);
+		CommonTestUtils.testStatementBounceMethod(this.mockConnection, this.testClass, skipTests, this.mockConnection);
 	}
 
 	/** Test marking of possibly broken status.
@@ -482,6 +482,11 @@ public class TestConnectionHandle {
 		field.setBoolean(this.testClass, true);
 		assertTrue(this.testClass.isPossiblyBroken());
 
+		field = this.testClass.getClass().getDeclaredField("connectionCreationTime");
+		field.setAccessible(true);
+		field.setLong(this.testClass, 1234L);
+		assertEquals(1234L, this.testClass.getConnectionCreationTime());
+		
 		Object debugHandle = new Object();
 		this.testClass.setDebugHandle(debugHandle);
 		assertEquals(debugHandle, this.testClass.getDebugHandle());
@@ -521,6 +526,20 @@ public class TestConnectionHandle {
 		replay(this.mockPool);
 		this.testClass.isConnectionAlive();
 		verify(this.mockPool);
+	}
+	
+	/** Tests isExpired method.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	@Test
+	public void testIsExpired() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+		Field field = this.testClass.getClass().getDeclaredField("maxConnectionAge");
+		field.setAccessible(true);
+		field.setLong(this.testClass, 1234L);
+		assertTrue(this.testClass.isExpired(System.currentTimeMillis() + 9999L));
 	}
 
 	/** Prepare statement tests.
@@ -575,8 +594,8 @@ public class TestConnectionHandle {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	@SuppressWarnings("unchecked")
-	private void prepareStatementTest( Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
+	@SuppressWarnings("rawtypes")
+	private void prepareStatementTest(  Class... args) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		Object[] params = new Object[args.length];
 		for (int i=0; i < args.length; i++){
 			params[i] = CommonTestUtils.instanceMap.get(args[i]);

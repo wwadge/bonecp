@@ -97,7 +97,7 @@ public class TestCallableStatementHandle {
 	public void testStandardBounceMethods() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-		CommonTestUtils.testStatementBounceMethod(this.mockPool, this.mockConnection, this.testClass, skipTests, this.mockClass);
+		CommonTestUtils.testStatementBounceMethod( this.mockConnection, this.testClass, skipTests, this.mockClass);
 	}
 	
 	/**

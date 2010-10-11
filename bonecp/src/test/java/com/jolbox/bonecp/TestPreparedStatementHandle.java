@@ -50,6 +50,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.jolbox.bonecp.hooks.AbstractConnectionHook;
+
 /** Tests preparedStatementHandle class.
  * @author wwadge
  *
@@ -77,12 +79,13 @@ public class TestPreparedStatementHandle {
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		BoneCPConfig config = new BoneCPConfig();
 		expect(this.mockPool.getConfig()).andReturn(config).anyTimes();
-		
+		config.setConnectionHook(new AbstractConnectionHook() { 
+			// do nothing
+		});
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		EasyMock.replay(this.mockConnection, this.mockPool);
 		this.testClass = new PreparedStatementHandle(this.mockClass, "", this.mockConnection, "TestSQL", this.mockCallableStatementCache);
 		EasyMock.reset(this.mockConnection, this.mockPool);
-		
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)
@@ -94,7 +97,7 @@ public class TestPreparedStatementHandle {
 	public void testStandardBounceMethods() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		Set<String> skipTests = new HashSet<String>();
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-		CommonTestUtils.testStatementBounceMethod(this.mockPool, this.mockConnection, this.testClass, skipTests, this.mockClass);
+		CommonTestUtils.testStatementBounceMethod(this.mockConnection, this.testClass, skipTests, this.mockClass);
 	}
 	
 	/**

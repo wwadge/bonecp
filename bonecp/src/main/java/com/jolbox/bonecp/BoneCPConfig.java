@@ -593,7 +593,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param filename Config filename to load
 	 * 
 	 */
-	private void loadProperties(String filename) {
+	protected void loadProperties(String filename) {
 		URL url = ClassLoader.getSystemResource(filename);
 		if (url != null){
 			try {

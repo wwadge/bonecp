@@ -154,6 +154,35 @@ public class TestConnectionThreadTester {
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
 
+	
+	/** Tests that a connection that has been idle for more than the set time is closed off but during
+	 * closing, an exception occurs (should update partition counts). 
+	 * @throws SQLException */
+	@Test
+	public void testIdleConnectionIsKilledWithFailure() throws SQLException {
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		fakeFreeConnections.add(mockConnection);
+		fakeFreeConnections.add(mockConnection);
+		
+		expect(mockPool.getConfig()).andReturn(config).anyTimes();
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2).anyTimes();
+		
+		expect(mockConnectionPartition.getMinConnections()).andReturn(0).once();
+		expect(mockConnection.isPossiblyBroken()).andReturn(false);
+		expect(mockConnection.getConnectionLastUsed()).andReturn(0L);
+		
+		// connection should be closed
+		mockConnection.internalClose();
+		expectLastCall().andThrow(new RuntimeException());
+		mockPool.postDestroyConnection(mockConnection);
+		expectLastCall().once();
+
+		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
+		this.testClass.run();
+		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
+	}
 	/** Tests that a connection gets to receive a keep-alive. 
 	 * @throws SQLException 
 	 * @throws InterruptedException */

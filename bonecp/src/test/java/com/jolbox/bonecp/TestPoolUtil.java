@@ -298,4 +298,10 @@ public class TestPoolUtil {
 		assertEquals("nullhello", PoolUtil.safePrint(null, "hello"));
 		new PoolUtil(); //just for coverage
 	}
+	
+	@Test
+	public void testPoolUtilNull() throws SQLException{
+		PoolUtil.fillLogParams(null, null);
+	}
+
 }

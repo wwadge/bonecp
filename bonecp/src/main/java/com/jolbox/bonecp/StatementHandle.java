@@ -73,7 +73,7 @@ public class StatementHandle implements Statement{
 	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	/** An opaque object. */
 	private Object debugHandle;
-	
+
 	/**
 	 * Constructor to statement handle wrapper. 
 	 *
@@ -108,7 +108,7 @@ public class StatementHandle implements Statement{
 			
 			this.queryExecuteTimeLimit = connectionHandle.getOriginatingPartition().getPreComputedQueryExecuteTimeLimit();
 		} catch (Exception e){ // safety!
-			this.connectionHook = null;
+//			this.connectionHook = null;
 			this.queryExecuteTimeLimit = 0; 
 		}
 		// store it in the cache if caching is enabled(unless it's already there). FIXME: make this a direct call to putIfAbsent.
