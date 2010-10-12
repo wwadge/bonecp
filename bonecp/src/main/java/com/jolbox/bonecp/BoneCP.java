@@ -290,7 +290,6 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.partitionCount = config.getPartitionCount();
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 		boolean queueLIFO = config.getServiceOrder() != null && config.getServiceOrder().equalsIgnoreCase("LIFO");
-		
 		if (this.closeConnectionWatch){
 			logger.warn(THREAD_CLOSE_CONNECTION_WARNING);
 			this.closeConnectionExecutor =  Executors.newCachedThreadPool(new CustomThreadFactory("BoneCP-connection-watch-thread"+suffix, true));

@@ -299,6 +299,9 @@ public class TestPoolUtil {
 		new PoolUtil(); //just for coverage
 	}
 	
+	/**
+	 * @throws SQLException
+	 */
 	@Test
 	public void testPoolUtilNull() throws SQLException{
 		PoolUtil.fillLogParams(null, null);

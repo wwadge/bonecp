@@ -16,14 +16,26 @@
 
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.anyLong;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.classextension.EasyMock.createNiceMock;
 import static org.easymock.classextension.EasyMock.makeThreadSafe;
+import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
+import static org.easymock.classextension.EasyMock.verify;
 
+import java.sql.SQLException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import jsr166y.TransferQueue;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
 
 /**
@@ -39,9 +51,7 @@ public class TestConnectionMaxAgeTester {
 	/** Mock handle. */
 	private static ScheduledExecutorService mockExecutor;
 	/** Test class handle. */
-	private ConnectionTesterThread testClass;
-	/** Mock handle. */
-	private static ConnectionHandle mockConnection;
+	private static ConnectionMaxAgeThread testClass;
 	/** Mock handle. */
 	private static BoneCPConfig config;
 	/** Mock handle. */
@@ -55,12 +65,14 @@ public class TestConnectionMaxAgeTester {
 		mockPool = createNiceMock(BoneCP.class);
 		mockConnectionPartition = createNiceMock(ConnectionPartition.class);
 		mockExecutor = createNiceMock(ScheduledExecutorService.class);
-		mockConnection = createNiceMock(ConnectionHandle.class);
+		
 		mockLogger = createNiceMock(Logger.class);
 		
 		makeThreadSafe(mockLogger, true);
 		config = new BoneCPConfig();
 		config.setMaxConnectionAge(1);
+		
+		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000);
 	}
 
 	/**
@@ -68,8 +80,167 @@ public class TestConnectionMaxAgeTester {
 	 */
 	@Before
 	public void resetMocks(){
-		reset(mockPool, mockConnectionPartition, mockExecutor, mockConnection, mockLogger);
+		reset(mockPool, mockConnectionPartition, mockExecutor, mockLogger);
 	}
 	
+	/**
+	 * Tests that a partition with expired connections should those connections killed off.
+	 * @throws SQLException 
+	 */
+	@Test
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void testConnectionExpired() throws SQLException{
+		 
+		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
+		ConnectionHandle mockConnectionExpired = createNiceMock(ConnectionHandle.class);
+		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+		expect(mockQueue.poll()).andReturn(mockConnectionExpired).once();
+			
+		expect(mockConnectionExpired.isExpired(anyLong())).andReturn(true).once();
+
+		expect(mockExecutor.isShutdown()).andReturn(false).once();
+		
+		mockConnectionExpired.internalClose();
+		expectLastCall().once();
+		
+		mockPool.postDestroyConnection(mockConnectionExpired);
+		expectLastCall().once();
+		
+		
+		expect(mockExecutor.schedule((Callable)anyObject(), anyLong(), (TimeUnit)anyObject())).andReturn(null).once();
+		replay(mockQueue, mockExecutor, mockConnectionPartition, mockConnection, mockPool, mockConnectionExpired);
+		testClass.run();
+		verify(mockConnectionExpired);
+	}
 	
+	/**
+	 * Tests that a partition with expired connections should those connections killed off.
+	 * @throws SQLException 
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testConnectionNotExpired() throws SQLException{
+		 
+		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
+		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+		expect(mockQueue.poll()).andReturn(mockConnection).once();
+			
+		expect(mockConnection.isExpired(anyLong())).andReturn(false).once();
+
+		expect(mockExecutor.isShutdown()).andReturn(false).once();
+		
+		mockPool.putConnectionBackInPartition(mockConnection);
+		expectLastCall().once();
+		
+		
+		replay(mockQueue, mockExecutor, mockConnectionPartition, mockConnection, mockPool);
+		testClass.run();
+		verify(mockConnection);
+		
+	}
+	
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	@SuppressWarnings({ "unchecked" })
+	public void testExceptionsCase() throws SQLException{
+		 
+		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2);
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
+		ConnectionHandle mockConnectionException = createNiceMock(ConnectionHandle.class);
+		expect(mockQueue.poll()).andReturn(mockConnectionException).times(2);
+		expect(mockConnectionException.isExpired(anyLong())).andThrow(new RuntimeException()).anyTimes();
+		expect(mockExecutor.isShutdown()).andReturn(false).once().andReturn(true).once();
+		
+		replay(mockQueue,mockConnectionException, mockExecutor, mockConnectionPartition, mockPool);
+		testClass.run();
+		verify(mockExecutor, mockConnectionException);
+		
+	}
+	
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	@SuppressWarnings({ "unchecked",  })
+	public void testExceptionsCaseWherePutInPartitionFails() throws SQLException{
+		 
+		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
+		ConnectionHandle mockConnectionException = createNiceMock(ConnectionHandle.class);
+		expect(mockQueue.poll()).andReturn(mockConnectionException).times(1);
+		expect(mockConnectionException.isExpired(anyLong())).andReturn(false).anyTimes();
+		expect(mockExecutor.isShutdown()).andReturn(false).anyTimes();
+		mockPool.putConnectionBackInPartition(mockConnectionException);
+		expectLastCall().andThrow(new SQLException()).once();
+		
+		// we should be able to reschedule
+		expect(mockExecutor.schedule((Runnable)anyObject(), anyLong(), (TimeUnit)anyObject())).andReturn(null).once();
+		
+		replay(mockQueue,mockConnectionException, mockExecutor, mockConnectionPartition, mockPool);
+		testClass.run();
+		verify(mockExecutor, mockConnectionException);
+	}
+	
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	public void testCloseConnectionNormalCase() throws SQLException{
+		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+		mockPool.postDestroyConnection(mockConnection);
+		expectLastCall().once();
+		
+		mockConnection.internalClose();
+		expectLastCall().once();
+		
+		replay(mockConnection, mockPool);
+		testClass.closeConnection(mockConnection);
+		verify(mockConnection, mockPool);
+	}
+	
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	public void testCloseConnectionWithException() throws SQLException{
+		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+		mockPool.postDestroyConnection(mockConnection);
+		expectLastCall().once();
+		
+		mockConnection.internalClose();
+		expectLastCall().andThrow(new SQLException());
+		
+		replay(mockConnection, mockPool);
+		testClass.closeConnection(mockConnection);
+		verify(mockConnection, mockPool);
+	}
+	
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	public void testCloseConnectionWithExceptionCoverage() throws SQLException{
+		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+		mockPool.postDestroyConnection(mockConnection);
+		expectLastCall().once();
+		ConnectionMaxAgeThread.logger = null; // make it break.
+		mockConnection.internalClose();
+		expectLastCall().andThrow(new SQLException());
+		
+		replay(mockConnection, mockPool);
+		try{
+			testClass.closeConnection(mockConnection);
+		} catch (Exception e){
+			// do nothing
+		}
+		verify(mockConnection, mockPool);
+	}
 }

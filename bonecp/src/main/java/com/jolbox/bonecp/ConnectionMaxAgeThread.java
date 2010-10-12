@@ -17,7 +17,6 @@
 
 package com.jolbox.bonecp;
 
-import java.sql.SQLException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +39,7 @@ public class ConnectionMaxAgeThread implements Runnable {
 	/** Handle to connection pool. */
 	private BoneCP pool;
 	/** Logger handle. */
-	private static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
+	protected static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
 
 	/** Constructor
 	 * @param connectionPartition partition to work on
@@ -61,59 +60,64 @@ public class ConnectionMaxAgeThread implements Runnable {
 	public void run() {
 		ConnectionHandle connection = null;
 		long tmp;
-		try {
-				long nextCheck = this.maxAge;
-				
-				int partitionSize= this.partition.getAvailableConnections();
-				long currentTime = System.currentTimeMillis();
-				for (int i=0; i < partitionSize; i++){
+		long nextCheck = this.maxAge;
 
-					connection = this.partition.getFreeConnections().poll();
-					if (connection != null){
-						connection.setOriginatingPartition(this.partition);
-						if (connection.isExpired(currentTime)){
-							// kill off this connection
-							closeConnection(connection);
-							continue;
-						}
+		int partitionSize= this.partition.getAvailableConnections();
+		long currentTime = System.currentTimeMillis();
+		for (int i=0; i < partitionSize; i++){
+			try {
+				connection = this.partition.getFreeConnections().poll();
 
-						
-						tmp = this.maxAge - (currentTime - connection.getConnectionCreationTime()); 
-						
-						if (tmp < nextCheck){
-							nextCheck = tmp; 
-						}
-						
-						this.pool.putConnectionBackInPartition(connection);
+				if (connection != null){
+					connection.setOriginatingPartition(this.partition);
 
-						Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
+					tmp = this.maxAge - (currentTime - connection.getConnectionCreationTime()); 
+
+					if (tmp < nextCheck){
+						nextCheck = tmp; 
 					}
 
-				} // throw it back on the queue
+					if (connection.isExpired(currentTime)){
+						// kill off this connection
+						closeConnection(connection);
+						continue;
+					}
 
-				this.scheduler.schedule(this, nextCheck, TimeUnit.MILLISECONDS);
-		} catch (Exception e) {
-			if (this.scheduler.isShutdown()){
-				logger.debug("Shutting down connection tester thread.");
-			} else {
-				logger.error("Connection tester thread interrupted", e);
+
+					this.pool.putConnectionBackInPartition(connection);
+
+					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
+				}
+
+			} catch (Exception e) {
+				if (this.scheduler.isShutdown()){
+					logger.debug("Shutting down connection max age thread.");
+					break;
+				} 
+				logger.error("Connection max age thread exception.", e);
 			}
+
+		} // throw it back on the queue
+
+		if (!this.scheduler.isShutdown()){
+			this.scheduler.schedule(this, nextCheck, TimeUnit.MILLISECONDS);
 		}
+
 	}
 
 
 	/** Closes off this connection
 	 * @param connection to close
 	 */
-	private void closeConnection(ConnectionHandle connection) {
+	protected void closeConnection(ConnectionHandle connection) {
 		if (connection != null) {
 			try {
 				connection.internalClose();
-			} catch (SQLException e) {
-				logger.error("Destroy connection exception", e);
+			} catch (Throwable t) {
+				logger.error("Destroy connection exception", t);
 			} finally {
 				this.pool.postDestroyConnection(connection);
 			}
 		}
-	}
+}
 }

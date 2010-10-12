@@ -945,6 +945,28 @@ public class TestBoneCP {
 		// coverage
 		assertFalse(testClass.isReleaseHelperThreadsConfigured());
 	}
+	
+	/**
+	 * Coverage.
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testCoverage() throws SQLException{
+		BoneCPConfig config = createNiceMock(BoneCPConfig.class);
+		expect(config.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
+		expect(config.getMinConnectionsPerPartition()).andReturn(2).anyTimes();
+		expect(config.getMaxConnectionsPerPartition()).andReturn(20).anyTimes();
+		expect(config.getPartitionCount()).andReturn(1).anyTimes();
+		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
+		expect(config.getMaxConnectionAge()).andReturn(100000L).anyTimes();
+		replay(config);
+		try{
+			new BoneCP(config);
+		} catch (Throwable t){
+			// do nothing
+		}
+	}
+	
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#setReleaseHelper(java.util.concurrent.ExecutorService)}.
 	 */
