@@ -168,7 +168,7 @@ public class TestConnectionMaxAgeTester {
 	 * @throws SQLException
 	 */
 	@Test
-	@SuppressWarnings({ "unchecked",  })
+	@SuppressWarnings( "unchecked")
 	public void testExceptionsCaseWherePutInPartitionFails() throws SQLException{
 		 
 		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
