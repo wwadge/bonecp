@@ -162,6 +162,7 @@ public class TestConnectionThreadTester {
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
+
 	/** Tests that a connection gets to receive a keep-alive. 
 	 * @throws SQLException 
 	 * @throws InterruptedException */
