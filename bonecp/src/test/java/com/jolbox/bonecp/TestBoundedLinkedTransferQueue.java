@@ -69,7 +69,6 @@ public class TestBoundedLinkedTransferQueue {
 	public void testTryTransfer() throws InterruptedException {
 		Thread t = new Thread(new Runnable() {
 			
-			@Override
 			public void run() {
 				try {
 					testClass.take();
@@ -107,7 +106,7 @@ public class TestBoundedLinkedTransferQueue {
 		Object o = new Object();
 		testClass.offer(o);
 		assertEquals(12, testClass.size());
-		assertEquals(o, testClass.poll(1, TimeUnit.DAYS));
+		assertEquals(o, testClass.poll(9999, TimeUnit.SECONDS));
 		assertEquals(11, testClass.size());
 	}
 

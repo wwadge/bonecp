@@ -1264,7 +1264,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
-	 * Sets the queue serviceOrder. Values currently understood are FIFO and LIFO.
+	 * Sets the queue serviceOrder. Values currently understood are FIFO and LIFO. 
 	 * @param serviceOrder the serviceOrder to set
 	 */
 	public void setServiceOrder(String serviceOrder) {

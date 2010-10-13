@@ -246,7 +246,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	/* (non-Javadoc)
 	 * @see javax.naming.spi.ObjectFactory#getObjectInstance(java.lang.Object, javax.naming.Name, javax.naming.Context, java.util.Hashtable)
 	 */
-	@Override
 	public Object getObjectInstance(Object object, Name name, Context context, Hashtable<?, ?> table) throws Exception {
 
 		Reference ref = (Reference) object;

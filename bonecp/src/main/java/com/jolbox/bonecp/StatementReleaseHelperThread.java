@@ -53,7 +53,6 @@ public class StatementReleaseHelperThread implements Runnable {
 	 *
 	 * @see java.lang.Runnable#run()
 	 */
-	@Override
 	public void run() {
 		boolean interrupted = false;
 		while (!interrupted) {

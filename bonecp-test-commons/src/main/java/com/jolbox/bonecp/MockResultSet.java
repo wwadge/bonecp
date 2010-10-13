@@ -27,20 +27,21 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
-import java.sql.NClob;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
-
+// #ifdef JDK6
+import java.sql.NClob;
+import java.sql.RowId;
+import java.sql.SQLXML;
+// #endif JDK6
 /**
  * @author Wallace
  *
@@ -408,19 +409,7 @@ public class MockResultSet implements ResultSet {
 		return null;
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#getNClob(int)
-	 */
-	public NClob getNClob(int columnIndex) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#getNClob(java.lang.String)
-	 */
-	public NClob getNClob(String columnLabel) throws SQLException {
-		return null;
-	}
+	
 
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#getNString(int)
@@ -487,33 +476,6 @@ public class MockResultSet implements ResultSet {
 		return 0;
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#getRowId(int)
-	 */
-	public RowId getRowId(int columnIndex) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#getRowId(java.lang.String)
-	 */
-	public RowId getRowId(String columnLabel) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#getSQLXML(int)
-	 */
-	public SQLXML getSQLXML(int columnIndex) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#getSQLXML(java.lang.String)
-	 */
-	public SQLXML getSQLXML(String columnLabel) throws SQLException {
-		return null;
-	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#getShort(int)
@@ -1126,18 +1088,6 @@ public class MockResultSet implements ResultSet {
 			long length) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#updateNClob(int, java.sql.NClob)
-	 */
-	public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#updateNClob(java.lang.String, java.sql.NClob)
-	 */
-	public void updateNClob(String columnLabel, NClob nClob)
-			throws SQLException {
-	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#updateNClob(int, java.io.Reader)
@@ -1237,31 +1187,52 @@ public class MockResultSet implements ResultSet {
 	}
 
 	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#updateRowId(int, java.sql.RowId)
+	 * @see java.sql.ResultSet#updateNClob(int, java.sql.NClob)
 	 */
+	// #ifdef JDK6
+	public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
+	}
+
+	public void updateNClob(String columnLabel, NClob nClob)
+			throws SQLException {
+	}
+	public NClob getNClob(int columnIndex) throws SQLException {
+		return null;
+	}
+
+	public NClob getNClob(String columnLabel) throws SQLException {
+		return null;
+	}
+	public RowId getRowId(int columnIndex) throws SQLException {
+		return null;
+	}
+
+	public RowId getRowId(String columnLabel) throws SQLException {
+		return null;
+	}
+
+	public SQLXML getSQLXML(int columnIndex) throws SQLException {
+		return null;
+	}
+
+	public SQLXML getSQLXML(String columnLabel) throws SQLException {
+		return null;
+	}
+
 	public void updateRowId(int columnIndex, RowId x) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#updateRowId(java.lang.String, java.sql.RowId)
-	 */
 	public void updateRowId(String columnLabel, RowId x) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#updateSQLXML(int, java.sql.SQLXML)
-	 */
 	public void updateSQLXML(int columnIndex, SQLXML xmlObject)
 			throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.ResultSet#updateSQLXML(java.lang.String, java.sql.SQLXML)
-	 */
 	public void updateSQLXML(String columnLabel, SQLXML xmlObject)
 			throws SQLException {
 	}
-
+	// #endif JDK6  
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#updateShort(int, short)
 	 */

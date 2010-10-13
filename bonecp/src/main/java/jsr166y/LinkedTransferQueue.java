@@ -684,11 +684,21 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             else if (timed) {
                 long now = System.nanoTime();
                 if ((nanos -= now - lastTime) > 0)
+                	/* #ifdef JDK5
+                	LockSupport.parkNanos(nanos);
+                	#endif JDK5 */
+                	// #ifdef JDK6
                     LockSupport.parkNanos(this, nanos);
+                	// #endif JDK6
                 lastTime = now;
             }
             else {
+            	/* #ifdef JDK5
+            	LockSupport.park();
+            	#endif JDK5 */
+            	// #ifdef JDK6
                 LockSupport.park(this);
+                // #endif JDK6
             }
         }
     }

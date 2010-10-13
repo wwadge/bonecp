@@ -72,7 +72,7 @@ public class TestLIFOQueue {
 	@Test
 	public void testTryTransferTimeUnit() throws InterruptedException {
 		Object o = new Object();
-		TestLIFOQueue.testClass.tryTransfer(o, 10, TimeUnit.DAYS);
+		TestLIFOQueue.testClass.tryTransfer(o, 9999, TimeUnit.SECONDS);
 		assertEquals(o, TestLIFOQueue.testClass.poll());
 		
 	}

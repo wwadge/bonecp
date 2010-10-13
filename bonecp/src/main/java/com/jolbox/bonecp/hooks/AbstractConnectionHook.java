@@ -103,12 +103,12 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 		return true; // keep the default behaviour
 	}
 
-	@Override
+//	@Override
 	public void onBeforeStatementExecute(ConnectionHandle conn, StatementHandle statement, String sql, Map<Object, Object> params) {
 		// do nothing
 	}
 	
-	@Override
+//	@Override
 	public void onAfterStatementExecute(ConnectionHandle conn, StatementHandle statement, String sql, Map<Object, Object> params) {
 		// do nothing
 	}

@@ -16,10 +16,19 @@
 
 package com.jolbox.bonecp;
 
+/* #ifdef JDK5
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+#endif JDK5 */
+
+import jsr166y.TransferQueue;
+
+// #ifdef JDK6
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import jsr166y.TransferQueue;
+// #endif JDK6 
+
 
 /**
  * An implementation that uses LinkedBlockingDeque internally to hide the difference between
@@ -30,25 +39,16 @@ import jsr166y.TransferQueue;
  * @param <E> 
  *
  */
+// #ifdef JDK6
 public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueue<E>{
 
 	
-	/**
-	 * UID.
-	 */
 	private static final long serialVersionUID = -3503791017846313243L;
 
-	/** 
-	 * Create a linkedBlockingDequeue with the given capacity.
-	 * @param capacity
-	 */
 	public LIFOQueue(int capacity) {
 		super(capacity);
 	}
 
-	/**
-	 * Create an unbound linked blocking dequeue.
-	 */
 	public LIFOQueue() {
 		super();
 	}
@@ -85,3 +85,47 @@ public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueu
 	}
 
 }
+// #endif JDK6
+
+/* #ifdef JDK5
+// for JDK5, there's no dequeue implementation so we fall back on a simple linkedblockingqueue
+public class LIFOQueue<E> extends LinkedBlockingQueue<E> implements TransferQueue<E>{
+
+	private static final long serialVersionUID = -3503791017846313243L;
+
+	public LIFOQueue(int capacity) {
+		super(capacity);
+	}
+
+	public LIFOQueue() {
+		super();
+	}
+
+	public boolean tryTransfer(E e) {
+		return super.add(e);
+	}
+
+	public void transfer(E e) throws InterruptedException {
+		super.put(e);
+	}
+
+	public boolean tryTransfer(E e, long timeout, TimeUnit unit) throws InterruptedException {
+		return super.offer(e, timeout, unit);
+	}
+
+	public boolean hasWaitingConsumer() {
+		return false;
+	}
+
+	public int getWaitingConsumerCount() {
+		return 0;
+	}
+
+	
+	public boolean offer(E e) {
+		return super.offer(e);
+	}
+
+
+}
+#endif JDK5 */

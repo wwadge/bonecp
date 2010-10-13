@@ -29,15 +29,17 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+// #ifdef JDK6
+import java.sql.NClob;
 import java.sql.RowId;
+import java.sql.SQLXML;
+// #endif JDK6
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -268,19 +270,6 @@ public class MockCallableStatement implements CallableStatement {
 		return null;
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#getNClob(int)
-	 */
-	public NClob getNClob(int parameterIndex) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#getNClob(java.lang.String)
-	 */
-	public NClob getNClob(String parameterName) throws SQLException {
-		return null;
-	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.CallableStatement#getNString(int)
@@ -340,34 +329,7 @@ public class MockCallableStatement implements CallableStatement {
 		return null;
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#getRowId(int)
-	 */
-	public RowId getRowId(int parameterIndex) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#getRowId(java.lang.String)
-	 */
-	public RowId getRowId(String parameterName) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#getSQLXML(int)
-	 */
-	public SQLXML getSQLXML(int parameterIndex) throws SQLException {
-		return null;
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#getSQLXML(java.lang.String)
-	 */
-	public SQLXML getSQLXML(String parameterName) throws SQLException {
-		return null;
-	}
-
+	
 	/** {@inheritDoc}
 	 * @see java.sql.CallableStatement#getShort(int)
 	 */
@@ -689,12 +651,7 @@ public class MockCallableStatement implements CallableStatement {
 			long length) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#setNClob(java.lang.String, java.sql.NClob)
-	 */
-	public void setNClob(String parameterName, NClob value) throws SQLException {
-	}
-
+	
 	/** {@inheritDoc}
 	 * @see java.sql.CallableStatement#setNClob(java.lang.String, java.io.Reader)
 	 */
@@ -749,18 +706,6 @@ public class MockCallableStatement implements CallableStatement {
 			int scale) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#setRowId(java.lang.String, java.sql.RowId)
-	 */
-	public void setRowId(String parameterName, RowId x) throws SQLException {
-	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.CallableStatement#setSQLXML(java.lang.String, java.sql.SQLXML)
-	 */
-	public void setSQLXML(String parameterName, SQLXML xmlObject)
-			throws SQLException {
-	}
 
 	/** {@inheritDoc}
 	 * @see java.sql.CallableStatement#setShort(java.lang.String, short)
@@ -1044,12 +989,8 @@ public class MockCallableStatement implements CallableStatement {
 	public void setNCharacterStream(int parameterIndex, Reader value,
 			long length) throws SQLException {
 	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setNClob(int, java.sql.NClob)
-	 */
-	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-	}
+	
+	
 
 	/** {@inheritDoc}
 	 * @see java.sql.PreparedStatement#setNClob(int, java.io.Reader)
@@ -1109,20 +1050,46 @@ public class MockCallableStatement implements CallableStatement {
 	 */
 	public void setRef(int parameterIndex, Ref x) throws SQLException {
 	}
-
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setRowId(int, java.sql.RowId)
-	 */
+	// #ifdef JDK6
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
 	}
 
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setSQLXML(int, java.sql.SQLXML)
-	 */
 	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
 			throws SQLException {
 	}
+	public void setRowId(String parameterName, RowId x) throws SQLException {
+	}
 
+	public void setSQLXML(String parameterName, SQLXML xmlObject)
+			throws SQLException {
+	}
+	public NClob getNClob(int parameterIndex) throws SQLException {
+		return null;
+	}
+
+	public NClob getNClob(String parameterName) throws SQLException {
+		return null;
+	}
+	public RowId getRowId(int parameterIndex) throws SQLException {
+		return null;
+	}
+	public RowId getRowId(String parameterName) throws SQLException {
+		return null;
+	}
+
+	public SQLXML getSQLXML(int parameterIndex) throws SQLException {
+		return null;
+	}
+
+	public SQLXML getSQLXML(String parameterName) throws SQLException {
+		return null;
+	}
+	public void setNClob(String parameterName, NClob value) throws SQLException {
+	}
+
+	public void setNClob(int parameterIndex, NClob value) throws SQLException {
+	}
+	// #endif JDK6
 	/** {@inheritDoc}
 	 * @see java.sql.PreparedStatement#setShort(int, short)
 	 */

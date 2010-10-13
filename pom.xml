@@ -184,6 +184,14 @@
 									<token>// #endif JDK6</token>
 									<value>#endif JDK6 */</value>
 								</replacement>
+								<replacement>
+									<token>/* #ifdef JDK5</token>
+									<value>// #ifdef JDK5</value>
+								</replacement>
+								<replacement>
+									<token>#endif JDK5 */</token>
+									<value>// #endif JDK5</value>
+								</replacement>
 							</replacements>
 						</configuration>
 					</plugin>
@@ -246,6 +254,14 @@
 								<replacement>
 									<token>#endif JDK6 */</token>
 									<value>// #endif JDK6</value>
+								</replacement>
+								<replacement>
+									<token>// #ifdef JDK5</token>
+									<value>/* #ifdef JDK5</value>
+								</replacement>
+								<replacement>
+									<token>// #endif JDK5 </token>
+									<value>#endif JDK5 */</value>
 								</replacement>
 							</replacements>
 						</configuration>
@@ -371,7 +387,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>surefire-report-maven-plugin</artifactId>
-				<version>2.6</version>
+				<!--  <version>2.6</version>  -->
 				<inherited>true</inherited>
 			</plugin>
 
