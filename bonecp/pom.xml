@@ -6,11 +6,11 @@
 	<name>BoneCP Core Library</name>
 	<packaging>bundle</packaging>
 	<description>Lightweight connection pool.</description>
-	<version>0.7.0</version>
+	<version>0.7.1-SNAPSHOT</version>
 	<parent>
 		<artifactId>bonecp-parent</artifactId>
 		<groupId>com.jolbox</groupId>
-		<version>0.7.0</version>
+		<version>0.7.1-SNAPSHOT</version>
 	</parent>
 	<organization>
 		<name>JolBox</name>
@@ -18,6 +18,11 @@
 	</organization>
 
 	<dependencies>
+		<dependency>
+				<groupId>com.thoughtworks.qdox</groupId>
+				<artifactId>qdox</artifactId>
+			</dependency>
+			
 	<!-- 
 		<dependency>
 			<groupId>hsqldb</groupId>
@@ -63,7 +68,8 @@
 			<scope>test</scope>
 		</dependency>
 
-
+		
+			
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
