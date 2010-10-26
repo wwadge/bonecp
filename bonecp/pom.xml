@@ -21,6 +21,7 @@
 		<dependency>
 				<groupId>com.thoughtworks.qdox</groupId>
 				<artifactId>qdox</artifactId>
+				<scope>test</scope>
 			</dependency>
 			
 	<!-- 
