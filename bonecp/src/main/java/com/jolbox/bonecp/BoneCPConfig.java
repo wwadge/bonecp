@@ -899,6 +899,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		// try to override with app specific config, if available
 		loadProperties("bonecp-config.xml");
 	}
+	
+	/** Creates a new config using the given properties.
+	 * @param props properties to set.
+	 * @throws Exception on error
+	 */
+	public BoneCPConfig(Properties props) throws Exception {
+		this();
+		this.setProperties(props);
+	}
+
 
 	/** Initialize the configuration by loading bonecp-config.xml containing the settings. 
 	 * @param sectionName section to load
@@ -914,6 +924,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @throws Exception 
 	 */
 	public BoneCPConfig(InputStream xmlConfigFile, String sectionName) throws Exception{
+		this();
 		setXMLProperties(xmlConfigFile, sectionName);
 	}
 
@@ -946,14 +957,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 	}
 
-	/** Creates a new config using the given properties.
-	 * @param props properties to set.
-	 * @throws Exception on error
-	 */
-	public BoneCPConfig(Properties props) throws Exception {
-		this.setProperties(props);
-	}
-
+	
 	/** Uppercases the first character.
 	 * @param name
 	 * @return the same string with the first letter in uppercase
