@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 // #ifdef JDK6
+@SuppressWarnings("all")
 public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueue<E>{
 
 	

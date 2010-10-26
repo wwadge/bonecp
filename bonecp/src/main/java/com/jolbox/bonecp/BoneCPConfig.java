@@ -65,10 +65,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String username;
 	/** Password to use. */
 	private String password;
-	/** Connections older than this are sent a keep-alive statement. In milliseconds. */
-	private long idleConnectionTestPeriod = 240*60*1000; // TimeUnit.MILLISECONDS.convert(240, TimeUnit.MINUTES);
-	/** Maximum age of an unused connection before it is closed off. In milliseconds. */ 
-	private long idleMaxAge =  60*60*1000; // JDK6: TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
+	/** Connections older than this are sent a keep-alive statement. */
+	private long idleConnectionTestPeriod = 240; 
+	/** Maximum age of an unused connection before it is closed off. */ 
+	private long idleMaxAge =  60; 
 	/** SQL statement to use for keep-alive/test of connection. */
 	private String connectionTestStatement;
 	/** Min no of prepared statements to cache. */
@@ -292,7 +292,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleConnectionTestPeriod to set 
 	 */
 	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod) {
-		this.idleConnectionTestPeriod = 1000*60*idleConnectionTestPeriod; // TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		this.idleConnectionTestPeriod = idleConnectionTestPeriod; // TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
 	}
 
 	/** {@inheritDoc}
@@ -314,7 +314,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleMaxAge to set
 	 */
 	public void setIdleMaxAge(long idleMaxAge) {
-		this.idleMaxAge = 1000*60*idleMaxAge; // TimeUnit.MILLISECONDS.convert(idleMaxAge, TimeUnit.MINUTES);
+		this.idleMaxAge = idleMaxAge; // TimeUnit.MILLISECONDS.convert(idleMaxAge, TimeUnit.MINUTES);
 	}
 
 	/** {@inheritDoc}
@@ -608,8 +608,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public String toString() {
 		return String.format(CONFIG_TOSTRING, this.jdbcUrl,
 				this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-				this.releaseHelperThreads, this.idleMaxAge / (60*1000), /* TimeUnit.MINUTES.convert(this.idleMaxAge, TimeUnit.MILLISECONDS)*/
-				this.idleConnectionTestPeriod / (60*1000) /*, TimeUnit.MINUTES.convert(this.idleConnectionTestPeriod, TimeUnit.MILLISECONDS)*/);
+				this.releaseHelperThreads, this.idleMaxAge , /* TimeUnit.MINUTES.convert(this.idleMaxAge, TimeUnit.MILLISECONDS)*/
+				this.idleConnectionTestPeriod  /*, TimeUnit.MINUTES.convert(this.idleConnectionTestPeriod, TimeUnit.MILLISECONDS)*/);
 	}
 
 	/** {@inheritDoc}

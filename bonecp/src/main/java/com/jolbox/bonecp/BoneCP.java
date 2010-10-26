@@ -319,7 +319,8 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			}
 
 			if (config.getIdleConnectionTestPeriod() > 0){
-				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, config.getIdleMaxAge(), config.getIdleConnectionTestPeriod());
+				
+				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, 1000*60*config.getIdleMaxAge(), 1000*60*config.getIdleConnectionTestPeriod());
 				this.keepAliveScheduler.submit(connectionTester);
 			}
 
@@ -398,6 +399,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		if (this.poolShuttingDown){
 			throw new SQLException(this.shutdownStackTrace);
 		}
+	
 		int partition = (int) (Thread.currentThread().getId() % this.partitionCount);
 		ConnectionPartition connectionPartition = this.partitions[partition];
 

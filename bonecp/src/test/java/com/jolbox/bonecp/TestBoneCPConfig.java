@@ -137,8 +137,8 @@ public class TestBoneCPConfig {
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
 		config.setPassword(CommonTestUtils.password);
-		config.setIdleConnectionTestPeriod(1);
-		config.setIdleMaxAge(1);
+		config.setIdleConnectionTestPeriod(60);
+		config.setIdleMaxAge(60);
 		config.setStatementsCacheSize(2);
 		config.setReleaseHelperThreads(3);
 		config.setMaxConnectionsPerPartition(5);
@@ -177,8 +177,8 @@ public class TestBoneCPConfig {
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, config.getUsername());
 		assertEquals(CommonTestUtils.password, config.getPassword());
-		assertEquals(60*1000, config.getIdleConnectionTestPeriod());
-		assertEquals(60*1000, config.getIdleMaxAge());
+		assertEquals(60, config.getIdleConnectionTestPeriod());
+		assertEquals(60, config.getIdleMaxAge());
 		assertEquals(2, config.getStatementsCacheSize());
 		assertEquals(2, config.getStatementCacheSize());
 		assertEquals(2, config.getPreparedStatementsCacheSize());
