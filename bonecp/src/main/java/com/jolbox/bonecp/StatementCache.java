@@ -38,6 +38,8 @@ public class StatementCache implements IStatementCache {
 	private int cacheSize;
 	/** If true, keep statistics. */
 	private final boolean maintainStats;
+	/** Statistics handle. */
+	private final Statistics statistics;
 	
 	/**
 	 * Creates a statement cache of given size. 
@@ -45,8 +47,9 @@ public class StatementCache implements IStatementCache {
 	 * @param size of cache.
 	 * @param maintainStats if true, keep track of statistics.
 	 */
-	public StatementCache(int size, boolean maintainStats){
+	public StatementCache(int size, boolean maintainStats, Statistics statistics){
 		this.maintainStats = maintainStats;
+		this.statistics = statistics;
 		this.cache = new MapMaker()
 		.concurrencyLevel(32)
 		.makeMap();
@@ -161,9 +164,9 @@ public class StatementCache implements IStatementCache {
 		
 		if (this.maintainStats){
 			if (statement != null){
-				Statistics.cacheHits.incrementAndGet();
+				this.statistics.incrementCacheHits();
 			} else {
-				Statistics.cacheMiss.incrementAndGet();
+				this.statistics.incrementCacheMiss();
 			}
 		}
 		return statement;
@@ -211,7 +214,7 @@ public class StatementCache implements IStatementCache {
 			if (this.cache.putIfAbsent(key, handle) == null){
 				handle.inCache = true;
 				if (this.maintainStats){
-					Statistics.statementsCached.incrementAndGet();
+					this.statistics.incrementStatementsCached();
 				}
 			}
 		}

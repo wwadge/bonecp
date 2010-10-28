@@ -20,7 +20,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Savepoint;
@@ -113,6 +112,8 @@ public class ConnectionHandle implements Connection{
 	protected Thread threadUsingConnection;
 	/** Configured max connection age. */
 	private long maxConnectionAge;
+
+	
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
 	 * Table 7. Class Code 08: Connection Exception
@@ -159,14 +160,13 @@ public class ConnectionHandle implements Connection{
 			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
 		}
 
-
 		this.maxConnectionAge = pool.getConfig().getMaxConnectionAge() * 1000;
 		this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
 		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
 		if (cacheSize > 0) {
-			this.preparedStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled());
-			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled());
+			this.preparedStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
+			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
 			this.statementCachingEnabled = true;
 		}
 

@@ -36,7 +36,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class TestConnectionHandle {
 	/** Mock handle. */
 	private Logger mockLogger = createNiceMock(Logger.class);
 	/** Mock handle. */
-	private StatementCache testStatementCache = new StatementCache(100, false);
+	private StatementCache testStatementCache = new StatementCache(100, false, new Statistics(mockPool));
 	/** Config clone. */
 	private BoneCPConfig config;
 

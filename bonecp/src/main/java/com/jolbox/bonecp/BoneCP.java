@@ -57,7 +57,7 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
  * @author wwadge
  *
  */
-public class BoneCP implements BoneCPMBean, Serializable {
+public class BoneCP implements Serializable {
 	/** Warning message. */
 	private static final String THREAD_CLOSE_CONNECTION_WARNING = "Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!";
 	/** Serialization UID */
@@ -131,6 +131,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	private boolean statementReleaseHelperThreadsConfigured;
 	/** Scratch queue of statments awaiting to be closed. */
 	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
+	/** if true, we care about statistics. */
+	private boolean statisticsEnabled;
+	/** statistics handle. */
+	private Statistics statistics = new Statistics(this);
 	
 	/**
 	 * Closes off this connection pool.
@@ -242,6 +246,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		this.config = config;
 		config.sanitize();
 
+		this.statisticsEnabled = config.isStatisticsEnabled();
 		this.closeConnectionWatchTimeout = config.getCloseConnectionWatchTimeout();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeout = config.getConnectionTimeout();
@@ -378,7 +383,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 
 
 			if (!this.mbs.isRegistered(name)){
-				this.mbs.registerMBean(this, name); 
+				this.mbs.registerMBean(this.statistics, name); 
 			}
 			if (!this.mbs.isRegistered(configname)){
 				this.mbs.registerMBean(this.config, configname); 
@@ -396,6 +401,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 * @throws SQLException 
 	 */
 	public Connection getConnection() throws SQLException {
+		ConnectionHandle result;
+		long statsObtainTime = 0;
+		
 		if (this.poolShuttingDown){
 			throw new SQLException(this.shutdownStackTrace);
 		}
@@ -403,8 +411,10 @@ public class BoneCP implements BoneCPMBean, Serializable {
 		int partition = (int) (Thread.currentThread().getId() % this.partitionCount);
 		ConnectionPartition connectionPartition = this.partitions[partition];
 
-		ConnectionHandle result;
-
+		if (this.statisticsEnabled){
+			statsObtainTime = System.nanoTime();
+			this.statistics.incrementConnectionsRequested();
+		}
 		result = connectionPartition.getFreeConnections().poll();
 
 		if (result == null) { 
@@ -449,6 +459,9 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			watchConnection(result);
 		}
 
+		if (this.statisticsEnabled){
+			this.statistics.addConnectionWaitTime(System.nanoTime()-statsObtainTime);
+		}
 		return result;
 	}
 
@@ -754,6 +767,14 @@ public class BoneCP implements BoneCPMBean, Serializable {
 	 */
 	protected LinkedTransferQueue<StatementHandle> getStatementsPendingRelease() {
 		return this.statementsPendingRelease;
+	}
+
+	/**
+	 * Returns a reference to the statistics class.
+	 * @return statistics
+	 */
+	public Statistics getStatistics() {
+		return this.statistics;
 	}
 
 }
