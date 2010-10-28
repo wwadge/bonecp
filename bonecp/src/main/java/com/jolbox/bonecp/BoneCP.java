@@ -552,6 +552,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 			maybeSignalForMoreConnections(connectionPartition);
 
 			postDestroyConnection(connectionHandle);
+			connectionHandle.clearStatementCaches(true);
 			return; // don't place back in queue - connection is broken or expired.
 		}
 
