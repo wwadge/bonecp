@@ -125,6 +125,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String configFile;
 	/** Queue mode. Values currently understood are FIFO and LIFO. */
 	private String serviceOrder;
+	/** If true, keep track of some statistics. */
+	private boolean statisticsEnabled;
 	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1274,4 +1276,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setServiceOrder(String serviceOrder) {
 		this.serviceOrder = serviceOrder;
 	}
+
+	/**
+	 * Returns the statisticsEnabled field.
+	 * @return statisticsEnabled
+	 */
+	public boolean isStatisticsEnabled() {
+		return this.statisticsEnabled;
+	}
+
+	/**
+	 * If set to true, keep track of some more statistics for exposure via JMX. Slows down the pool
+	 * operation slightly. 
+	 * @param statisticsEnabled the statisticsEnabled to set
+	 */
+	public void setStatisticsEnabled(boolean statisticsEnabled) {
+		this.statisticsEnabled = statisticsEnabled;
+	}
+	
 }

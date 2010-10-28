@@ -27,6 +27,11 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  */
 public interface BoneCPConfigMBean {
 
+	/** Returns the name of the pool for JMX and thread names.
+	 * @return a pool name.
+	 */
+	String getPoolName();
+	
 	/**
 	 * Gets the minimum number of connections that will be contained in every partition.
 	 *
@@ -124,4 +129,94 @@ public interface BoneCPConfigMBean {
 	 */
 	String getInitSQL();
 
+	/** Returns true if SQL logging is currently enabled, false otherwise.
+	 * @return the logStatementsEnabled status
+	 */
+	boolean isLogStatementsEnabled();
+
+	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
+	 * @return the acquireRetryDelay
+	 */
+	int getAcquireRetryDelay();
+	
+	/** Returns true if connection pool is to be initialized lazily.
+	 * @return lazyInit setting 
+	 */
+	boolean isLazyInit();
+
+	/** Returns true if the pool is configured to record all transaction activity and replay the transaction automatically in case
+	 * of connection failures.
+	 * @return the transactionRecoveryEnabled status
+	 */
+	boolean isTransactionRecoveryEnabled();
+	
+	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. Default 5. 
+	 * @return the acquireRetryAttempts value
+	 */
+	int getAcquireRetryAttempts();
+	
+	/** Returns the connection hook class name as passed via the setter
+	 * @return the connectionHookClassName.
+	 */
+	String getConnectionHookClassName();
+	
+	/** Return true if JMX is disabled.
+	 * @return the disableJMX.
+	 */
+	boolean isDisableJMX();
+
+	/** Return the query execute time limit.
+	 * @return the queryTimeLimit
+	 */
+	int getQueryExecuteTimeLimit();
+	
+	/** Returns the pool watch connection threshold value.
+	 * @return the poolAvailabilityThreshold currently set.
+	 */
+	int getPoolAvailabilityThreshold();
+	
+	/** Returns true if connection tracking has been disabled.
+	 * @return the disableConnectionTracking
+	 */
+	boolean isDisableConnectionTracking();
+
+	/** Returns the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
+	 * @return the connectionTimeout
+	 */
+	long getConnectionTimeout();
+	
+	/** Returns the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
+	 * @return the watchTimeout currently set.
+	 */
+	long getCloseConnectionWatchTimeout();
+	
+	/**
+	 * Returns the statementHelperThreads field.
+	 * @return statementHelperThreads
+	 */
+	int getStatementReleaseHelperThreads();
+	
+	/**
+	 * Returns the maxConnectionAge field.
+	 * @return maxConnectionAge
+	 */
+	long getMaxConnectionAge();
+	
+	/**
+	 * Returns the configFile field.
+	 * @return configFile
+	 */
+	String getConfigFile();
+	
+	/**
+	 * Returns the serviceOrder field.
+	 * @return serviceOrder
+	 */
+	String getServiceOrder();
+	
+	/**
+	 * Returns the statisticsEnabled field.
+	 * @return statisticsEnabled
+	 */
+	boolean isStatisticsEnabled();
 }

@@ -189,5 +189,9 @@
 		<!-- Sets the queue serviceOrder. Values currently understood are FIFO and LIFO. -->
 		<!-- <property name="serviceOrder">(null or no default value)</property> -->
 
+		<!-- If set to true, keep track of some more statistics for exposure via 
+		     JMX. Slows down the pool operation slightly. -->
+		<property name="statisticsEnabled">false</property>
+
 	</default-config>
 </bonecp-config>

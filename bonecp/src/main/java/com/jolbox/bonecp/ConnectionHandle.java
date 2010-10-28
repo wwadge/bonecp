@@ -165,8 +165,8 @@ public class ConnectionHandle implements Connection{
 		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
 		if (cacheSize > 0) {
-			this.preparedStatementCache = new StatementCache(cacheSize);
-			this.callableStatementCache = new StatementCache(cacheSize);
+			this.preparedStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled());
+			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled());
 			this.statementCachingEnabled = true;
 		}
 
@@ -258,11 +258,7 @@ public class ConnectionHandle implements Connection{
 		String initSQL = this.pool.getConfig().getInitSQL();
 		if (initSQL != null){
 			Statement stmt = this.connection.createStatement();
-			ResultSet rs = stmt.executeQuery(initSQL);
-			// free up resources 
-			if (rs != null){
-				rs.close();
-			} 
+			stmt.execute(initSQL);
 			stmt.close();
 		}
 	}

@@ -156,7 +156,7 @@ public class TestStatementCache {
 	public void testStatementCacheNotInCache() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		CommonTestUtils.logTestInfo("Tests statement not in cache.");
 
-		StatementCache cache = new StatementCache(5);
+		StatementCache cache = new StatementCache(5, false);
 		assertNull(cache.get("nonExistent"));
 
 		CommonTestUtils.logPass();
@@ -188,7 +188,7 @@ public class TestStatementCache {
 		statement.close();
 
 		
-		StatementCache cache = new StatementCache(5);
+		StatementCache cache = new StatementCache(5, false);
 		cache.put("test1", (StatementHandle)statement);
 		assertNotNull(cache.get("test1"));
 		
@@ -269,7 +269,7 @@ public class TestStatementCache {
 		Connection conn = dsb.getConnection();
 		StatementHandle statement = (StatementHandle)conn.prepareStatement(sql);
 
-		StatementCache cache = new StatementCache(5);
+		StatementCache cache = new StatementCache(5, false);
 		cache.put("test1", statement);
 		cache.put("test2", statement);
 		cache.put("test3", statement);
@@ -309,7 +309,7 @@ public class TestStatementCache {
 	public void testStatementCacheClear() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException {
 		ConcurrentMap mockCache = createNiceMock(ConcurrentMap.class);
 		List<StatementHandle> mockStatementCollections = createNiceMock(List.class);
-		StatementCache testClass = new StatementCache(1);
+		StatementCache testClass = new StatementCache(1, false);
 		Field field = testClass.getClass().getDeclaredField("cache");
 		field.setAccessible(true);
 		field.set(testClass, mockCache);
@@ -346,7 +346,7 @@ public class TestStatementCache {
 		
 		ConcurrentMap mockCache = createNiceMock(ConcurrentMap.class);
 		List<StatementHandle> mockStatementCollections = createNiceMock(List.class);
-		StatementCache testClass = new StatementCache(1);
+		StatementCache testClass = new StatementCache(1, false);
 		Field field = testClass.getClass().getDeclaredField("cache");
 		field.setAccessible(true);
 		field.set(testClass, mockCache);

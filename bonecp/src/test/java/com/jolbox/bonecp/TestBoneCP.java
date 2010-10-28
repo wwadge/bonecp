@@ -788,20 +788,20 @@ public class TestBoneCP {
 		Statement mockStatement = createNiceMock(Statement.class);
 		expect(mockConfig.getConnectionTestStatement()).andReturn("whatever").once();
 		expect(mockConnection.createStatement()).andReturn(mockStatement).once();
-		expect(mockStatement.executeQuery((String)anyObject())).andReturn(mockResultSet).once();
-		mockResultSet.close();
-		expectLastCall().once();
+		expect(mockStatement.execute((String)anyObject())).andReturn(true).once();
+//		mockResultSet.close();
+//		expectLastCall().once();
 		
-		replay(mockConfig, mockConnection, mockDatabaseMetadata,mockStatement, mockResultSet);
+		replay(mockConfig, mockConnection, mockDatabaseMetadata,mockStatement);
 		assertTrue(testClass.isConnectionHandleAlive(mockConnection));
-		verify(mockConfig, mockConnection, mockResultSet,mockDatabaseMetadata, mockStatement);
+		verify(mockConfig, mockConnection,mockDatabaseMetadata, mockStatement);
 
 		// Test 4: Same like test 3 but triggers exception
 		reset(mockConfig, mockConnection, mockDatabaseMetadata, mockResultSet, mockStatement);
 
 		expect(mockConfig.getConnectionTestStatement()).andReturn("whatever").once();
 		expect(mockConnection.createStatement()).andReturn(mockStatement).once();
-		expect(mockStatement.executeQuery((String)anyObject())).andThrow(new RuntimeException()).once();
+		expect(mockStatement.execute((String)anyObject())).andThrow(new RuntimeException()).once();
 		mockStatement.close();
 		expectLastCall().once();
 		
@@ -821,7 +821,7 @@ public class TestBoneCP {
 
 		expect(mockConfig.getConnectionTestStatement()).andReturn("whatever").once();
 		expect(mockConnection.createStatement()).andReturn(mockStatement).once();
-		expect(mockStatement.executeQuery((String)anyObject())).andThrow(new RuntimeException()).once();
+		expect(mockStatement.execute((String)anyObject())).andThrow(new RuntimeException()).once();
 		mockStatement.close();
 		expectLastCall().andThrow(new SQLException()).once();
 		

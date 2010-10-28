@@ -605,7 +605,7 @@ public class BoneCP implements BoneCPMBean, Serializable {
 				rs = connection.getMetaData().getTables( null, null, KEEPALIVEMETADATA, METADATATABLE );
 			} else {
 				stmt = connection.createStatement();
-				rs = stmt.executeQuery(testStatement);
+				stmt.execute(testStatement);
 			}
 
 

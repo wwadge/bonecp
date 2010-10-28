@@ -13,27 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-/*
-
-Copyright 2009 Wallace Wadge
-
-This file is part of BoneCP.
-
-BoneCP is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-BoneCP is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
@@ -57,14 +36,17 @@ public class StatementCache implements IStatementCache {
 	private ConcurrentMap<String, StatementHandle> cache;
 	/** How many items to cache. */
 	private int cacheSize;
-
-
+	/** If true, keep statistics. */
+	private final boolean maintainStats;
+	
 	/**
 	 * Creates a statement cache of given size. 
 	 *
 	 * @param size of cache.
+	 * @param maintainStats if true, keep track of statistics.
 	 */
-	public StatementCache(int size){
+	public StatementCache(int size, boolean maintainStats){
+		this.maintainStats = maintainStats;
 		this.cache = new MapMaker()
 		.concurrencyLevel(32)
 		.makeMap();
@@ -177,6 +159,13 @@ public class StatementCache implements IStatementCache {
 			statement = null;
 		}
 		
+		if (this.maintainStats){
+			if (statement != null){
+				Statistics.cacheHits.incrementAndGet();
+			} else {
+				Statistics.cacheMiss.incrementAndGet();
+			}
+		}
 		return statement;
 	}
 
@@ -221,10 +210,12 @@ public class StatementCache implements IStatementCache {
 		if (this.cache.size() <=  this.cacheSize && key != null){ // perhaps use LRU in future?? Worth the overhead? Hmm....
 			if (this.cache.putIfAbsent(key, handle) == null){
 				handle.inCache = true;
+				if (this.maintainStats){
+					Statistics.statementsCached.incrementAndGet();
+				}
 			}
 		}
-	
-
+		
 	}
 
 
@@ -251,7 +242,8 @@ public class StatementCache implements IStatementCache {
 			try {
 				statement.internalClose();
 			} catch (SQLException e) {
-				logger.error("Error closing off statement", e);
+				// don't log, we might fail if the connection link has died
+				// logger.error("Error closing off statement", e);
 			}
 		}
 		this.cache.clear();

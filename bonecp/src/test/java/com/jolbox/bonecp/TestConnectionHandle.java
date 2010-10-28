@@ -81,7 +81,7 @@ public class TestConnectionHandle {
 	/** Mock handle. */
 	private Logger mockLogger = createNiceMock(Logger.class);
 	/** Mock handle. */
-	private StatementCache testStatementCache = new StatementCache(100);
+	private StatementCache testStatementCache = new StatementCache(100, false);
 	/** Config clone. */
 	private BoneCPConfig config;
 
@@ -321,15 +321,12 @@ public class TestConnectionHandle {
 		this.testClass.setInternalConnection(this.mockConnection);
 
 		Statement mockStatement = createNiceMock(Statement.class);
-		ResultSet mockResultSet = createNiceMock(ResultSet.class);
 		expect(this.mockConnection.createStatement()).andReturn(mockStatement).once();
-		expect(mockStatement.executeQuery("test")).andReturn(mockResultSet).once();
-		mockResultSet.close();
-		expectLastCall().once();
+		expect(mockStatement.execute("test")).andReturn(true).once();
 
-		replay(mockConfig, this.mockPool, this.mockConnection, mockStatement, mockResultSet);
+		replay(mockConfig, this.mockPool, this.mockConnection, mockStatement);
 		this.testClass.sendInitSQL();
-		verify(mockConfig, this.mockPool, this.mockConnection,  mockStatement, mockResultSet);
+		verify(mockConfig, this.mockPool, this.mockConnection,  mockStatement);
 
 
 	}
