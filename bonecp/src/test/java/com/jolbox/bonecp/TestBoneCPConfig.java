@@ -221,7 +221,7 @@ public class TestBoneCPConfig {
 
 		assertEquals(1000, config.getAcquireRetryDelay());
 		assertEquals("FIFO", config.getServiceOrder());
-		assertEquals(Long.MAX_VALUE, config.getConnectionTimeout());
+		assertEquals(0, config.getConnectionTimeout());
 		assertNotNull(config.toString());
 		assertEquals(3, config.getStatementReleaseHelperThreads());
 		assertFalse(config.getAcquireIncrement() == 0);

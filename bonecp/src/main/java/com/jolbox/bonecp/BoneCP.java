@@ -250,6 +250,9 @@ public class BoneCP implements Serializable {
 		this.closeConnectionWatchTimeout = config.getCloseConnectionWatchTimeout();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeout = config.getConnectionTimeout();
+		if (this.connectionTimeout == 0){
+			this.connectionTimeout = Long.MAX_VALUE;
+		}
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelay(0);

@@ -533,9 +533,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("JDBC password was not set in config!");
 		}
 
-		if (this.connectionTimeout == 0){
-			this.connectionTimeout = Long.MAX_VALUE;
-		}
 
 		// if no datasource and we have driver properties set...
 		if (this.datasourceBean == null && this.driverProperties != null){
