@@ -73,6 +73,10 @@ public class StatementHandle implements Statement{
 	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	/** An opaque object. */
 	private Object debugHandle;
+	/** if true, we care about statistics. */
+	private boolean statisticsEnabled;
+	/** Statistics handle. */
+	private Statistics statistics;
 
 	/**
 	 * Constructor to statement handle wrapper. 
@@ -95,6 +99,8 @@ public class StatementHandle implements Statement{
 		this.logStatementsEnabled = logStatementsEnabled;
 		BoneCPConfig config = connectionHandle.getPool().getConfig();
 		this.connectionHook = config.getConnectionHook();
+		this.statistics = connectionHandle.getPool().getStatistics();
+		this.statisticsEnabled = config.isStatisticsEnabled();
 		if (this.logStatementsEnabled || this.connectionHook != null){
 			 this.logParams = new TreeMap<Object, Object>();
 			 this.batchSQL = new StringBuilder();
@@ -310,6 +316,13 @@ public class StatementHandle implements Statement{
 				&& (this.connectionHook != null) && (System.nanoTime() - queryStartTime) > this.queryExecuteTimeLimit){
 			this.connectionHook.onQueryExecuteTimeLimitExceeded(this.connectionHandle, this, sql, this.logParams);
 		}
+		
+		if (this.statisticsEnabled){
+			this.statistics.incrementStatementsExecuted();
+			this.statistics.addStatementExecuteTime(System.nanoTime() - queryStartTime);
+			
+		}
+
 	}
 	
 
@@ -352,7 +365,7 @@ public class StatementHandle implements Statement{
 	 * @return Start time
 	 */
 	protected long queryTimerStart() {
-		return (this.queryExecuteTimeLimit != 0) && (this.connectionHook != null) ? System.nanoTime() : Long.MAX_VALUE;
+		return this.statisticsEnabled || ((this.queryExecuteTimeLimit != 0) && (this.connectionHook != null)) ? System.nanoTime() : Long.MAX_VALUE;
 	}
 
 	/**

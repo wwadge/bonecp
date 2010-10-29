@@ -23,10 +23,23 @@ package com.jolbox.bonecp;
 public interface StatisticsMBean {
 
 	/** 
-	 * Return the average time it takes for a getConnection request to be services (in ms)
+	 * Return the average time it takes for a getConnection request to be services (in ms).
 	 * @return Time in ms
 	 */
-	long getWaitTimeAvg();
+	double getConnectionWaitTimeAvg();
+	
+	/** 
+	 * Return the average execution time for prepared statements to execute (in ms).
+	 * @return Time in ms
+	 */
+	double getStatementExecuteTimeAvg();
+
+
+	/** 
+	 * Return the statement prepare time average (in ms).
+	 * @return Time in ms
+	 */
+	double getStatementPrepareTimeAvg();
 
 	/** Return total number of connections currently in use by an application
 	 * @return no of leased connections
@@ -59,10 +72,16 @@ public interface StatisticsMBean {
 	long getCacheMiss();
 
 	/**
-	 * Returns the statementsCached field.
+	 * Returns the number of statements that have been cached.
 	 * @return statementsCached
 	 */
 	long getStatementsCached();
+
+	/**
+	 * Returns the number of statements prepared.
+	 * @return statements prepared
+	 */
+	long getStatementsPrepared();
 
 	/**
 	 * Returns the connectionsRequested field.
@@ -71,14 +90,38 @@ public interface StatisticsMBean {
 	long getConnectionsRequested();
 
 	/**
-	 * Returns the connectionWaitTime field in ms.
+	 * Returns the total time that the application waited in order to obtain its connections (in ms).
 	 * @return connectionWaitTime
 	 */
-	long getConnectionWaitTime();
+	long getCumulativeConnectionWaitTime();
 
+	/**
+	 * Returns the time taken for the prepared statements to execute (in ms).
+	 * @return time in ms
+	 */
+	long getCumulativeStatementExecutionTime();
+
+	/**
+	 * Returns the time taken to prepare statements (or obtain from cache) (in ms).
+	 * @return time in ms
+	 */
+	long getCumulativeStatementPrepareTime();
 
 	/**
 	 * Reset all statistics.
 	 */
 	void resetStats();
+	
+	/** Returns the cache hit ratio calculated as hits/(hits+misses).
+	 * @return hit ratio
+	 */
+	double getCacheHitRatio();
+	
+	/** Returns the number of statements that have been executed. 
+	 * @return number of statements. 
+	 */
+	long getStatementsExecuted();
+	
+	
+
 }

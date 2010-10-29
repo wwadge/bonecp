@@ -463,7 +463,7 @@ public class BoneCP implements Serializable {
 		}
 
 		if (this.statisticsEnabled){
-			this.statistics.addConnectionWaitTime(System.nanoTime()-statsObtainTime);
+			this.statistics.addCumulativeConnectionWaitTime(System.nanoTime()-statsObtainTime);
 		}
 		return result;
 	}

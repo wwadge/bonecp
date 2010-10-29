@@ -32,7 +32,16 @@ public class Statistics implements StatisticsMBean{
 	/** Connections obtained. */
 	private final AtomicLong connectionsRequested = new AtomicLong(0);
 	/** Time taken to give a connection to the application. */  
-	private final AtomicLong connectionWaitTime = new AtomicLong(0);
+	private final AtomicLong cumulativeConnectionWaitTime = new AtomicLong(0);
+	/** Time taken to execute statements. */  
+	private final AtomicLong cumulativeStatementExecuteTime = new AtomicLong(0);
+	/** Time taken to prepare statements (or obtain from cache). */  
+	private final AtomicLong cumulativeStatementPrepareTime = new AtomicLong(0);
+	/** Number of statements that have been executed. */
+	private final AtomicLong statementsExecuted = new AtomicLong(0);
+	/** Number of statements that have been prepared. */
+	private final AtomicLong statementsPrepared = new AtomicLong(0);
+	
 	/** Pool handle. */
 	private BoneCP pool;
 
@@ -51,16 +60,35 @@ public class Statistics implements StatisticsMBean{
 		this.cacheMiss.set(0);
 		this.statementsCached.set(0);
 		this.connectionsRequested.set(0);
-		this.connectionWaitTime.set(0);
+		this.cumulativeConnectionWaitTime.set(0);
+		this.cumulativeStatementExecuteTime.set(0);
+		this.cumulativeStatementPrepareTime.set(0);
+		this.statementsExecuted.set(0);
+		this.statementsPrepared.set(0);
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.jolbox.bonecp.StatisticsMBean#getWaitTimeAvg()
+	 * @see com.jolbox.bonecp.StatisticsMBean#getConnectionWaitTimeAvg()
 	 */
-	public long getWaitTimeAvg(){
-		return this.connectionsRequested.get() == 0 ? 0 : Math.round((this.connectionWaitTime.get() / this.connectionsRequested.get()) / 1000000.0);
+	public double getConnectionWaitTimeAvg(){
+		return this.connectionsRequested.get() == 0 ? 0 : this.cumulativeConnectionWaitTime.get() / (1.0*this.connectionsRequested.get()) / 1000000.0;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getStatementWaitTimeAvg()
+	 */
+	public double getStatementExecuteTimeAvg(){
+		return this.statementsExecuted.get() == 0 ? 0 : this.cumulativeStatementExecuteTime.get() / (1.0*this.statementsExecuted.get()) / 1000000.0;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getStatementPrepareTimeAvg()
+	 */
+	public double getStatementPrepareTimeAvg(){
+		return this.statementsPrepared.get() == 0 ? 0 : this.statementsPrepared.get() / (1.0*this.cumulativeStatementPrepareTime.get()) / 1000000.0;
+	}
+
+	
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.StatisticsMBean#getTotalLeased()
 	 */
@@ -96,13 +124,14 @@ public class Statistics implements StatisticsMBean{
 		return this.cacheMiss.get();
 	}
 
+	
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.StatisticsMBean#getStatementsCached()
 	 */
 	public long getStatementsCached() {
 		return this.statementsCached.get();
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see com.jolbox.bonecp.StatisticsMBean#getConnectionsRequested()
 	 */
@@ -111,19 +140,31 @@ public class Statistics implements StatisticsMBean{
 	}
 
 	/* (non-Javadoc)
-	 * @see com.jolbox.bonecp.StatisticsMBean#getConnectionWaitTime()
+	 * @see com.jolbox.bonecp.StatisticsMBean#getCumulativeConnectionWaitTime()
 	 */
-	public long getConnectionWaitTime() {
-		return Math.round(this.connectionWaitTime.get() / 1000000.0);
+	public long getCumulativeConnectionWaitTime() {
+		return this.cumulativeConnectionWaitTime.get() / 1000000;
 	}
 
 	/** Adds connection wait time.
 	 * @param increment
 	 */
-	protected void addConnectionWaitTime(long increment) {
-		this.connectionWaitTime.addAndGet(increment);
+	protected void addCumulativeConnectionWaitTime(long increment) {
+		this.cumulativeConnectionWaitTime.addAndGet(increment);
 	}
 
+	/** Adds statements executed.
+	 */
+	protected void incrementStatementsExecuted() {
+		this.statementsExecuted.incrementAndGet();
+	}
+	
+	/** Adds statements executed.
+	 */
+	protected void incrementStatementsPrepared() {
+		this.statementsPrepared.incrementAndGet();
+	}
+	
 	/**
 	 * Accessor method.
 	 */
@@ -152,4 +193,56 @@ public class Statistics implements StatisticsMBean{
 	protected void incrementConnectionsRequested() {
 		this.connectionsRequested.incrementAndGet();
 	}
+
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getCacheHitRatio()
+	 */
+	public double getCacheHitRatio() {
+		return this.cacheHits.get()+this.cacheMiss.get() == 0 ? 0 : this.cacheHits.get() / (1.0*this.cacheHits.get()+this.cacheMiss.get());
+	}
+
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getStatementsExecuted()
+	 */
+	public long getStatementsExecuted() {
+		return this.statementsExecuted.get();
+	}
+
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getCumulativeStatementExecutionTime()
+	 */
+	public long getCumulativeStatementExecutionTime() {
+		return this.cumulativeStatementExecuteTime.get() / 1000000;
+	}
+
+	/**
+	 * Accessor method
+	 * @param time
+	 */
+	protected void addStatementExecuteTime(long time) {
+		this.cumulativeStatementExecuteTime.addAndGet(time);
+	}
+	
+	/**
+	 * Accessor method
+	 * @param time
+	 */
+	protected void addStatementPrepareTime(long time) {
+		this.cumulativeStatementPrepareTime.addAndGet(time);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getCumulativeStatementPrepareTime()
+	 */
+	public long getCumulativeStatementPrepareTime() {
+		return this.cumulativeStatementPrepareTime.get() / 1000000;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.StatisticsMBean#getStatementsPrepared()
+	 */
+	public long getStatementsPrepared() {
+		return this.statementsPrepared.get();
+	}
+	
 }
