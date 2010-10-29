@@ -135,6 +135,14 @@ public class BoneCP implements Serializable {
 	private boolean statisticsEnabled;
 	/** statistics handle. */
 	private Statistics statistics = new Statistics(this);
+	/** Config setting. */
+	private Boolean defaultReadOnly;
+	/** Config setting. */
+	private String defaultCatalog;
+	/** Config setting. */
+	private int defaultTransactionIsolationValue;
+	/** Config setting. */
+	private Boolean defaultAutoCommit;
 	
 	/**
 	 * Closes off this connection pool.
@@ -234,6 +242,19 @@ public class BoneCP implements Serializable {
 			result = DriverManager.getConnection(url, username, password);
 		}
 
+		if (this.defaultAutoCommit != null){
+			result.setAutoCommit(this.defaultAutoCommit);
+		}
+		if (this.defaultReadOnly != null){
+			result.setReadOnly(this.defaultReadOnly);
+		}
+		if (this.defaultCatalog != null){
+			result.setCatalog(this.defaultCatalog);
+		}
+		if (this.defaultTransactionIsolationValue != -1){
+			result.setTransactionIsolation(this.defaultTransactionIsolationValue);
+		}
+
 		return result;
 	}
 
@@ -253,6 +274,11 @@ public class BoneCP implements Serializable {
 		if (this.connectionTimeout == 0){
 			this.connectionTimeout = Long.MAX_VALUE;
 		}
+		this.defaultReadOnly = config.getDefaultReadOnly();
+		this.defaultCatalog = config.getDefaultCatalog();
+		this.defaultTransactionIsolationValue = config.getDefaultTransactionIsolationValue();
+		this.defaultAutoCommit = config.getDefaultAutoCommit();
+		
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelay(0);

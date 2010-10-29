@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.sql.Connection;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -127,6 +128,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String serviceOrder;
 	/** If true, keep track of some statistics. */
 	private boolean statisticsEnabled;
+	/** The default auto-commit state of created connections. */
+	private Boolean defaultAutoCommit;
+	/** The default read-only state of created connections. */
+	private Boolean defaultReadOnly;
+	/** The default transaction isolation state of created connections. */
+	private String defaultTransactionIsolation;
+	/** The default catalog state of created connections. */
+	private String defaultCatalog;
+	/** The parsed transaction isolation value. */
+	private int defaultTransactionIsolationValue=-1;
 	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -478,6 +489,24 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.poolAvailabilityThreshold = 20;
 		}
 
+		if (this.defaultTransactionIsolation != null){
+			this.defaultTransactionIsolation = this.defaultTransactionIsolation.toUpperCase();
+			
+			if (this.defaultTransactionIsolation.equals("NONE")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_NONE;
+			} else if (this.defaultTransactionIsolation.equals("READ COMMITTED")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_COMMITTED;
+			} else if (this.defaultTransactionIsolation.equals("REPEATABLE_READ")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_REPEATABLE_READ;
+			} else if (this.defaultTransactionIsolation.equals("READ_UNCOMMITTED")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_UNCOMMITTED;
+			} else if (this.defaultTransactionIsolation.equals("SERIALIZABLE")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_SERIALIZABLE;
+			} else {
+				logger.warn("Unrecognized defaultTransactionIsolation value. Using driver default.");
+				this.defaultTransactionIsolationValue = -1;
+			}
+		}
 		if (this.maxConnectionsPerPartition < 2) {
 			logger.warn("Max Connections < 2. Setting to 50");
 			this.maxConnectionsPerPartition = 50;
@@ -1289,6 +1318,80 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setStatisticsEnabled(boolean statisticsEnabled) {
 		this.statisticsEnabled = statisticsEnabled;
+	}
+
+	/**
+	 * Returns the defaultAutoCommit field.
+	 * @return defaultAutoCommit
+	 */
+	public Boolean getDefaultAutoCommit() {
+		return this.defaultAutoCommit;
+	}
+
+	/**
+	 * Sets the defaultAutoCommit setting for newly created connections. If not set, use driver default.
+	 * @param defaultAutoCommit the defaultAutoCommit to set
+	 */
+	public void setDefaultAutoCommit(Boolean defaultAutoCommit) {
+		this.defaultAutoCommit = defaultAutoCommit;
+	}
+
+	/**
+	 * Returns the defaultReadOnly field.
+	 * @return defaultReadOnly
+	 */
+	public Boolean getDefaultReadOnly() {
+		return this.defaultReadOnly;
+	}
+
+	/**
+	 * Sets the defaultReadOnly setting for newly created connections. If not set, use driver default.
+	 * @param defaultReadOnly the defaultReadOnly to set
+	 */
+	public void setDefaultReadOnly(Boolean defaultReadOnly) {
+		this.defaultReadOnly = defaultReadOnly;
+	}
+
+
+	/**
+	 * Returns the defaultCatalog field.
+	 * @return defaultCatalog
+	 */
+	public String getDefaultCatalog() {
+		return this.defaultCatalog;
+	}
+
+	/**
+	 * Sets the defaultCatalog setting for newly created connections. If not set, use driver default.
+	 * @param defaultCatalog the defaultCatalog to set
+	 */
+	public void setDefaultCatalog(String defaultCatalog) {
+		this.defaultCatalog = defaultCatalog;
+	}
+
+	/**
+	 * Returns the defaultTransactionIsolation field.
+	 * @return defaultTransactionIsolation
+	 */
+	public String getDefaultTransactionIsolation() {
+		return this.defaultTransactionIsolation;
+	}
+
+	/**
+	 * Sets the defaultTransactionIsolation. Should be set to one of: NONE, READ_COMMITTED, READ_UNCOMMITTED,  
+ 	 * REPEATABLE_READ or SERIALIZABLE. If not set, will use driver default. 
+	 * @param defaultTransactionIsolation the defaultTransactionIsolation to set
+	 */
+	public void setDefaultTransactionIsolation(String defaultTransactionIsolation) {
+		this.defaultTransactionIsolation = defaultTransactionIsolation;
+	}
+
+	/**
+	 * Returns the defaultTransactionIsolationValue field.
+	 * @return defaultTransactionIsolationValue
+	 */
+	protected int getDefaultTransactionIsolationValue() {
+		return this.defaultTransactionIsolationValue;
 	}
 	
 }
