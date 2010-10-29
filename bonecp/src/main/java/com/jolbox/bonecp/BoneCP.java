@@ -266,7 +266,13 @@ public class BoneCP implements Serializable {
 				if (config.getConnectionHook() != null){
 					config.getConnectionHook().onAcquireFail(e, acquireConfig);
 				}
+// #ifdef JDK6
+				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)), e);
+// #endif
+/* #ifdef JDK5
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
+#endif JDK5 */
+
 			}
 		}
 		if (!config.isDisableConnectionTracking()){
