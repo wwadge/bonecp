@@ -193,5 +193,21 @@
 		     JMX. Slows down the pool operation slightly. -->
 		<property name="statisticsEnabled">false</property>
 
+		<!-- Sets the defaultAutoCommit setting for newly created connections. If not set, use driver 
+		     default. -->
+		<!-- <property name="defaultAutoCommit">(null or no default value)</property> -->
+
+		<!-- Sets the defaultReadOnly setting for newly created connections. If not set, use driver 
+		     default. -->
+		<!-- <property name="defaultReadOnly">(null or no default value)</property> -->
+
+		<!-- Sets the defaultCatalog setting for newly created connections. If not set, use driver 
+		     default. -->
+		<!-- <property name="defaultCatalog">(null or no default value)</property> -->
+
+		<!-- Sets the defaultTransactionIsolation. Should be set to one of: NONE, READ_COMMITTED, READ_UNCOMMITTED, REPEATABLE_READ 
+		     or SERIALIZABLE. If not set, will use driver default. -->
+		<!-- <property name="defaultTransactionIsolation">(null or no default value)</property> -->
+
 	</default-config>
 </bonecp-config>
