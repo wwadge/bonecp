@@ -358,15 +358,19 @@ public class BoneCP implements Serializable {
 
 			}
 
-			if (config.getIdleConnectionTestPeriod() > 0){
+			if (config.getIdleConnectionTestPeriod() > 0 || config.getIdleMaxAge() > 0){
 				
-				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, 1000*60*config.getIdleMaxAge(), 1000*60*config.getIdleConnectionTestPeriod());
-				this.keepAliveScheduler.submit(connectionTester);
+				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, 1000*60*config.getIdleMaxAge(), 1000*60*config.getIdleConnectionTestPeriod(), queueLIFO);
+				long delay = config.getIdleConnectionTestPeriod();
+				if (config.getIdleMaxAge() != 0 && config.getIdleMaxAge() < delay){
+					delay = config.getIdleMaxAge();
+				}
+				this.keepAliveScheduler.schedule(connectionTester, delay, TimeUnit.MINUTES);
 			}
 
 			if (config.getMaxConnectionAge() > 0){
 				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge());
-				this.maxAliveScheduler.submit(connectionMaxAgeTester);
+				this.maxAliveScheduler.schedule(connectionMaxAgeTester, config.getMaxConnectionAge(), TimeUnit.SECONDS);
 			}
 			// watch this partition for low no of threads
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
