@@ -132,9 +132,9 @@ public class ConnectionHandle implements Connection{
 		08504	An error was encountered while processing the specified path rename configuration file.
 	 */
 	/** SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
-	  Anything else will be taken as the *connection* (not the db) being broken. 
+	  Anything else will be taken as the *connection* (not the db) being broken. Note: 08S01 is considered as connection failure in MySQL. 
 	 */
-	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007"); 
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01"); 
 
 	/**
 	 * Connection wrapper constructor
