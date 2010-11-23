@@ -115,8 +115,8 @@ PreparedStatement {
 				this.batchSQL.append(this.sql);
 			}
 			this.internalPreparedStatement.addBatch();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -135,8 +135,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.clear();
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -170,8 +170,8 @@ PreparedStatement {
 			queryTimerEnd(this.sql, queryStartTime);
 
 			return result;
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -202,8 +202,8 @@ PreparedStatement {
 			queryTimerEnd(this.sql, queryStartTime);
 
 			return result;
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -233,8 +233,8 @@ PreparedStatement {
 			queryTimerEnd(this.sql, queryStartTime);
 
 			return result;
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -250,8 +250,8 @@ PreparedStatement {
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.getMetaData();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -267,8 +267,8 @@ PreparedStatement {
 		checkClosed();
 		try {
 			return this.internalPreparedStatement.getParameterMetaData();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -287,8 +287,8 @@ PreparedStatement {
 			if (this.fillInParams) {
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -304,8 +304,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -320,8 +320,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -336,8 +336,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, inputStream);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -352,8 +352,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -367,8 +367,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, reader);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -382,8 +382,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -398,8 +398,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, xmlObject);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -415,8 +415,8 @@ PreparedStatement {
 				this.logParams.put(parameterIndex, reader);
 			}
 
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -432,8 +432,8 @@ PreparedStatement {
 				this.logParams.put(parameterIndex, value);
 			}
 
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -448,8 +448,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, value);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -463,8 +463,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, value);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -478,8 +478,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, reader);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -494,8 +494,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, reader);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -510,8 +510,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, value);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -526,8 +526,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 	}
@@ -541,8 +541,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, reader);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -557,8 +557,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, inputStream);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -573,8 +573,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, reader);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -597,8 +597,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -618,8 +618,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -641,8 +641,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -661,8 +661,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -682,8 +682,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -702,8 +702,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -722,8 +722,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -746,8 +746,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, reader);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -767,8 +767,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -788,8 +788,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -810,8 +810,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -830,8 +830,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -850,8 +850,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -870,8 +870,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -890,8 +890,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -910,8 +910,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, "[SQL NULL of type "+sqlType+"]");
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -931,8 +931,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -951,8 +951,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -972,8 +972,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -994,8 +994,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1014,8 +1014,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1035,8 +1035,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1055,8 +1055,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1075,8 +1075,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1097,8 +1097,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1118,8 +1118,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1140,8 +1140,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1160,8 +1160,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1183,8 +1183,8 @@ PreparedStatement {
 			if (this.fillInParams){
 				this.logParams.put(parameterIndex, x);
 			}
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 		}
 
 	}

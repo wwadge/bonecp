@@ -196,8 +196,8 @@ public class StatementHandle implements Statement{
 			}
 
 			this.internalStatement.addBatch(sql);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -228,8 +228,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.cancel();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 	}
@@ -248,8 +248,8 @@ public class StatementHandle implements Statement{
 				this.batchSQL = new StringBuilder();
 			}
 			this.internalStatement.clearBatch();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -266,8 +266,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.clearWarnings();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -297,8 +297,8 @@ public class StatementHandle implements Statement{
 			}
 			queryTimerEnd(sql, timer);
 
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result;
@@ -352,8 +352,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result;
@@ -397,8 +397,8 @@ public class StatementHandle implements Statement{
 			}
 			queryTimerEnd(sql, queryStartTime);
 
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -429,8 +429,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result;
@@ -464,8 +464,8 @@ public class StatementHandle implements Statement{
 
 			queryTimerEnd(this.batchSQL == null ? "" : this.batchSQL.toString(), queryStartTime);
 
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; // never reached
@@ -496,8 +496,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result;
@@ -529,8 +529,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -562,8 +562,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -595,8 +595,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -628,8 +628,8 @@ public class StatementHandle implements Statement{
 			}
 
 			queryTimerEnd(sql, queryStartTime);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 		}
 
 		return result; 
@@ -659,8 +659,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getFetchDirection();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -679,8 +679,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getFetchSize();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -699,8 +699,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getGeneratedKeys();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -719,8 +719,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getMaxFieldSize();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -738,8 +738,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getMaxRows();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -759,8 +759,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getMoreResults();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -780,8 +780,8 @@ public class StatementHandle implements Statement{
 
 		try{ 
 			result = this.internalStatement.getMoreResults(current);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -800,8 +800,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getQueryTimeout();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -820,8 +820,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getResultSet();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -840,8 +840,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getResultSetConcurrency();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -860,8 +860,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getResultSetHoldability();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -880,8 +880,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getResultSetType();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -900,8 +900,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getUpdateCount();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -920,8 +920,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.getWarnings();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -943,8 +943,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setPoolable(poolable);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -956,8 +956,8 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		try{
 			result = this.internalStatement.isWrapperFor(iface);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result;
@@ -970,8 +970,8 @@ public class StatementHandle implements Statement{
 		try{
 			
 			result = this.internalStatement.unwrap(iface);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result;
@@ -985,8 +985,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			result = this.internalStatement.isPoolable();
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 		return result; 
@@ -1000,8 +1000,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setCursorName(name);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1018,8 +1018,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setEscapeProcessing(enable);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1036,8 +1036,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setFetchDirection(direction);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1054,8 +1054,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setFetchSize(rows);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1072,8 +1072,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setMaxFieldSize(max);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1090,8 +1090,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setMaxRows(max);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
@@ -1109,8 +1109,8 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			this.internalStatement.setQueryTimeout(seconds);
-		} catch (Throwable t) {
-			throw this.connectionHandle.markPossiblyBroken(t);
+		} catch (SQLException e) {
+			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
 
