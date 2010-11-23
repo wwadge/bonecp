@@ -84,6 +84,7 @@ public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueu
 	public boolean offer(E e) {
 		return super.offerFirst(e);
 	}
+	
 
 }
 // #endif JDK6
@@ -124,9 +125,12 @@ public class LIFOQueue<E> extends LinkedBlockingQueue<E> implements TransferQueu
 
 	
 	public boolean offer(E e) {
-		return super.offer(e);
+		return super.insert(e, 0);
 	}
 
+	public boolean offerLast(E e) {
+		return super.offer(e);
+	}
 
 }
 #endif JDK5 */

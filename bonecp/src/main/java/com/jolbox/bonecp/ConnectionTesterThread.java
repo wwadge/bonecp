@@ -41,6 +41,8 @@ public class ConnectionTesterThread implements Runnable {
 	private ScheduledExecutorService scheduler;
 	/** Handle to connection pool. */
 	private BoneCP pool;
+	/** If true, we're operating in a LIFO fashion. */ 
+	private boolean lifoMode;
 	/** Logger handle. */
 	private static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
 
@@ -50,14 +52,16 @@ public class ConnectionTesterThread implements Runnable {
 	 * @param pool pool handle
 	 * @param idleMaxAge Threads older than this are killed off 
 	 * @param idleConnectionTestPeriod Threads that are idle for more than this time are sent a keep-alive.
+	 * @param lifoMode if true, we're running under a lifo fashion.
 	 */
 	protected ConnectionTesterThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
-			BoneCP pool, long idleMaxAge, long idleConnectionTestPeriod){
+			BoneCP pool, long idleMaxAge, long idleConnectionTestPeriod, boolean lifoMode){
 		this.partition = connectionPartition;
 		this.scheduler = scheduler;
 		this.idleMaxAge = idleMaxAge;
 		this.idleConnectionTestPeriod = idleConnectionTestPeriod;
 		this.pool = pool;
+		this.lifoMode = lifoMode;
 	}
 
 
@@ -67,6 +71,9 @@ public class ConnectionTesterThread implements Runnable {
 		long tmp;
 		try {
 				long nextCheck = this.idleConnectionTestPeriod;
+				if (this.idleMaxAge > 0){
+					nextCheck = Math.min(nextCheck, this.idleMaxAge);
+				}
 				
 				int partitionSize= this.partition.getAvailableConnections();
 				long currentTime = System.currentTimeMillis();
@@ -75,36 +82,53 @@ public class ConnectionTesterThread implements Runnable {
 					connection = this.partition.getFreeConnections().poll();
 					if (connection != null){
 						connection.setOriginatingPartition(this.partition);
+						
+						// check if connection has been idle for too long (or is marked as broken)
 						if (connection.isPossiblyBroken() || 
 								((this.idleMaxAge > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
 							// kill off this connection
 							closeConnection(connection);
 							continue;
 						}
-
+						
+						// check if it's time to send a new keep-alive test statement.
 						if (this.idleConnectionTestPeriod > 0 && (currentTime-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
-								(currentTime-connection.getConnectionLastReset() > this.idleConnectionTestPeriod)) {
+								(currentTime-connection.getConnectionLastReset() >= this.idleConnectionTestPeriod)) {
 							// send a keep-alive, close off connection if we fail.
 							if (!this.pool.isConnectionHandleAlive(connection)){
 								closeConnection(connection);
 								continue; 
 							}
-							connection.setConnectionLastReset(System.currentTimeMillis());
 							tmp = this.idleConnectionTestPeriod;
+							if (this.idleMaxAge > 0){
+								tmp = Math.min(tmp, this.idleMaxAge);
+							}
 						} else {
-							tmp = this.idleConnectionTestPeriod-(System.currentTimeMillis() - connection.getConnectionLastReset()); 
+							tmp = this.idleConnectionTestPeriod-(currentTime - connection.getConnectionLastReset());
+							long tmp2 = this.idleMaxAge - (currentTime-connection.getConnectionLastUsed());
+							if (this.idleMaxAge > 0){
+								tmp = Math.min(tmp, tmp2);
+							}
+							
 						}
 						if (tmp < nextCheck){
 							nextCheck = tmp; 
 						}
 						
-						this.pool.putConnectionBackInPartition(connection);
+						if (this.lifoMode){
+							// we can't put it back normally or it will end up in front again.
+							if (!((LIFOQueue<ConnectionHandle>)connection.getOriginatingPartition().getFreeConnections()).offerLast(connection)){
+								connection.internalClose();
+							}
+						} else {
+							this.pool.putConnectionBackInPartition(connection);
+						}
 
 						Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with (avoid CPU spikes)...
 					}
 
 				} // throw it back on the queue
-
+				System.out.println("nextCheck = " + nextCheck);
 				this.scheduler.schedule(this, nextCheck, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
