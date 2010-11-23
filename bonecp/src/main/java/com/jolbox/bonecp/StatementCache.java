@@ -46,6 +46,7 @@ public class StatementCache implements IStatementCache {
 	 *
 	 * @param size of cache.
 	 * @param maintainStats if true, keep track of statistics.
+	 * @param statistics statistics handle.
 	 */
 	public StatementCache(int size, boolean maintainStats, Statistics statistics){
 		this.maintainStats = maintainStats;

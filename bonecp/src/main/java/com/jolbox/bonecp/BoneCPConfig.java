@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.sql.Connection;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
@@ -136,8 +137,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String defaultTransactionIsolation;
 	/** The default catalog state of created connections. */
 	private String defaultCatalog;
-	/** The parsed transaction isolation value. */
-	private int defaultTransactionIsolationValue=-1;
+	/** The parsed transaction isolation value. Default = driver value*/
+	private int defaultTransactionIsolationValue = -1;
 	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1312,9 +1313,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
-	 * If set to true, keep track of some more statistics for exposure via JMX. Slows down the pool
-	 * operation slightly. 
-	 * @param statisticsEnabled the statisticsEnabled to set
+	 * If set to true, keep track of some more statistics for exposure via JMX. Will slow down the pool
+	 * operation. 
+	 * @param statisticsEnabled set to true to enable
 	 */
 	public void setStatisticsEnabled(boolean statisticsEnabled) {
 		this.statisticsEnabled = statisticsEnabled;
@@ -1392,6 +1393,15 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	protected int getDefaultTransactionIsolationValue() {
 		return this.defaultTransactionIsolationValue;
+	}
+
+	/**
+	 * Sets the defaultTransactionIsolationValue.
+	 * @param defaultTransactionIsolationValue the defaultTransactionIsolationValue to set
+	 */
+	protected void setDefaultTransactionIsolationValue(
+			int defaultTransactionIsolationValue) {
+		this.defaultTransactionIsolationValue = defaultTransactionIsolationValue;
 	}
 	
 }
