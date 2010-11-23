@@ -184,7 +184,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				con.setInReplayMode(true); // stop recording
 
 				// this will possibly terminate all connections here
-				con.markPossiblyBroken(t.getCause()); 
+				if (t instanceof SQLException){
+					con.markPossiblyBroken((SQLException)t.getCause());
+				}
 
 				if (con.isPossiblyBroken()){ // connection is possibly recoverable...
 					logger.error("Connection failed. Attempting to recover transaction on Thread #"+ Thread.currentThread().getId());
