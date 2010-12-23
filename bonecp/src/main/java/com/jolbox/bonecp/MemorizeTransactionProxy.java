@@ -184,7 +184,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				con.setInReplayMode(true); // stop recording
 
 				// this will possibly terminate all connections here
-				if (t instanceof SQLException){
+				if (t instanceof SQLException || (t.getCause() != null && t.getCause() instanceof SQLException)){
 					con.markPossiblyBroken((SQLException)t.getCause());
 				}
 

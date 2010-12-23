@@ -359,7 +359,7 @@ public class TestMemorizeTransactionProxy {
 		 
 		// This connection should be closed off
 		mockConnection.close(); // remember that this is the internal connection
-		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		expectLastCall().once().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
 		mockConnection2.close(); // remember that this is the internal connection
 		mockConnection3.close(); // remember that this is the internal connection
 		
@@ -433,7 +433,7 @@ public class TestMemorizeTransactionProxy {
 		 
 		// This connection should be closed off
 		mockConnection.close(); // remember that this is the internal connection
-		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		expectLastCall().once().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
 		
 
 		
@@ -508,7 +508,7 @@ public class TestMemorizeTransactionProxy {
 		 
 		// This connection should be closed off
 		mockConnection.close(); // remember that this is the internal connection
-		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		expectLastCall().once().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
 		
 
 		
@@ -598,7 +598,7 @@ public class TestMemorizeTransactionProxy {
 		 
 		// This connection should be closed off
 		mockConnection.close(); // remember that this is the internal connection
-		expectLastCall().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
+		expectLastCall().once().andThrow(new SQLException("just a fake exception for code coverage")).anyTimes();
 		
 
 		

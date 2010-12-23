@@ -247,7 +247,7 @@ public class TestConnectionHandle {
 		Field field = this.testClass.getClass().getDeclaredField("possiblyBroken");
 		field.setAccessible(true);
 		field.set(this.testClass, false);
-		this.testClass.markPossiblyBroken(null);
+		this.testClass.markPossiblyBroken(new SQLException());
 		Assert.assertTrue(field.getBoolean(this.testClass));
 
 		// Test that a db fatal error will lead to the pool being instructed to terminate all connections (+ log)
