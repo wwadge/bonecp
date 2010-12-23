@@ -44,6 +44,7 @@ package com.jolbox.bonecp;
  * @author wallacew
  */
 public interface IStatementCache {
+	
 	/**
 	 * Retrieves the cached statement identified by the given key
 	 *

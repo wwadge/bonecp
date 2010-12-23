@@ -177,11 +177,11 @@ public class CommonTestUtils {
 			method.invoke(mockClass, args);
 			expectLastCall().once().andThrow(new Error()).once();
 		} else {
-			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new Error()).once();
+			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new SQLException()).once();
 		}
 
 		
-		expect(mockConnection.markPossiblyBroken((Throwable)EasyMock.anyObject())).andReturn(new SQLException()).anyTimes();
+		expect(mockConnection.markPossiblyBroken((SQLException)EasyMock.anyObject())).andReturn(new SQLException()).anyTimes();
 		replay(mockClass);
 		if (!mockClass.equals(mockConnection)){
 			replay(mockConnection); 

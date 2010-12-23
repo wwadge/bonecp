@@ -128,7 +128,6 @@ public class ConnectionTesterThread implements Runnable {
 					}
 
 				} // throw it back on the queue
-				System.out.println("nextCheck = " + nextCheck);
 				this.scheduler.schedule(this, nextCheck, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
