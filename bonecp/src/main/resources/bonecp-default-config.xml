@@ -37,7 +37,7 @@
 		<!-- <property name="jdbcUrl">(null or no default value)</property> -->
 
 		<!-- Sets username to use for connections. -->
-		<property name="username">unknown</property>
+		<!-- <property name="username">(null or no default value)</property> -->
 
 		<!-- Sets password to use for connections. -->
 		<!-- <property name="password">(null or no default value)</property> -->
@@ -45,15 +45,13 @@
 		<!-- Sets the idleConnectionTestPeriod.  This sets the time (in minutes), for a connection 
 		     to remain idle before sending a test query to the DB. This is 
 		     useful to prevent a DB from timing out connections on its end. Do 
-		     not use aggressive values here!  Note: This value only makes sense when 
-		     used in conjuction with idleMaxAge.  Default: 240 min, set to 0 to 
-		     disable -->
+		     not use aggressive values here!   Default: 240 min, set to 0 
+		     to disable -->
 		<property name="idleConnectionTestPeriod">240</property>
 
 		<!-- Sets Idle max age (in min).  The time (in minutes), for a 
 		     connection to remain unused before it is closed off. Do not use aggressive 
-		     values here!  Note: This value only makes sense when used in conjuction 
-		     with idleConnectionTestPeriod.  Default: 60 minutes, set to 0 to disable. -->
+		     values here!  Default: 60 minutes, set to 0 to disable. -->
 		<property name="idleMaxAge">60</property>
 
 		<!-- Sets the connection test statement.  The query to send to the DB 
@@ -100,7 +98,7 @@
 		<property name="logStatementsEnabled">false</property>
 
 		<!-- Sets the number of ms to wait before attempting to obtain a connection 
-		     again after a failure. Default: 7000. -->
+		     again after a failure. -->
 		<property name="acquireRetryDelay">7000</property>
 
 		<!-- Set to true to force the connection pool to obtain the initial connections 
@@ -175,7 +173,7 @@
 		     that will take care of closing off the statement asychronously to the application 
 		     via the release helper threads).  Useful when your application is opening up 
 		     lots of statements otherwise will probably slow things down. -->
-		<property name="statementReleaseHelperThreads">3</property>
+		<property name="statementReleaseHelperThreads">0</property>
 
 		<!-- Sets the maxConnectionAge in seconds. Any connections older than this setting will be 
 		     closed off whether it is idle or not. Connections currently in use will 
@@ -190,7 +188,7 @@
 		<!-- <property name="serviceOrder">(null or no default value)</property> -->
 
 		<!-- If set to true, keep track of some more statistics for exposure via 
-		     JMX. Slows down the pool operation slightly. -->
+		     JMX. Will slow down the pool operation. -->
 		<property name="statisticsEnabled">false</property>
 
 		<!-- Sets the defaultAutoCommit setting for newly created connections. If not set, use driver 
