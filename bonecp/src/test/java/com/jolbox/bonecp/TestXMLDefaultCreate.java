@@ -21,7 +21,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.thoughtworks.qdox.JavaDocBuilder;
@@ -36,6 +42,7 @@ import com.thoughtworks.qdox.model.JavaMethod;
  * 
  */
 public class TestXMLDefaultCreate {
+	
 
 	/**
 	 * @throws IllegalAccessException
@@ -45,8 +52,8 @@ public class TestXMLDefaultCreate {
 	 */
 	@Test
 	public void testCreateXMLFile() throws SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
-		StringBuilder sb = new StringBuilder();
 		BoneCPConfig config = new BoneCPConfig();
+		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		sb.append("<!-- Default options loaded by BoneCP. Modify as per your needs. This file has\n");
 		sb.append("     been automatically generated. -->\n");
@@ -73,7 +80,7 @@ public class TestXMLDefaultCreate {
 			String mName = method.getName();
 			if (mName.startsWith("set") && method.isPublic()) {
 				Annotation[] a = method.getAnnotations();
-				if (!(a.length > 0 && a[0].getType().getValue()
+				if (method.getParameters().length == 1 && !(a.length > 0 && a[0].getType().getValue()
 						.equals("java.lang.Deprecated"))) {
 
 					sb.append(formatComment(method.getComment()));
