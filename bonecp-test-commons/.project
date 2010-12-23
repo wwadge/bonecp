@@ -1,10 +1,7 @@
 <projectDescription>
-  <name>bonecp-benchmark</name>
+  <name>bonecp-test-commons</name>
   <comment>The fast Java JDBC Database Connection pool. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
-  <projects>
-    <project>bonecp</project>
-    <project>bonecp-test-commons</project>
-  </projects>
+  <projects/>
   <buildSpec>
     <buildCommand>
       <name>org.eclipse.jdt.core.javabuilder</name>
