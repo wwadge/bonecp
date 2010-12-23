@@ -189,7 +189,7 @@ public class BoneCP implements Serializable {
 				ConnectionHandle conn;
 				while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
 					postDestroyConnection(conn);
-
+					conn.setInReplayMode(true); // we're dead, stop attempting to replay anything
 					try {
 						conn.internalClose();
 					} catch (SQLException e) {
