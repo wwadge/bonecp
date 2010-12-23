@@ -80,7 +80,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Number of release-connection helper threads to create per partition. */
 	private int releaseHelperThreads = 3;
 	/** Number of statement release helper threads to create. */
-	private int statementReleaseHelperThreads = 3;
+	private int statementReleaseHelperThreads = 0;
 	/** Hook class (external). */
 	private ConnectionHook connectionHook;
 	/** Query to send once per connection to the database. */
@@ -298,8 +298,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * a test query to the DB. This is useful to prevent a DB from timing out connections 
 	 * on its end. Do not use aggressive values here! 
 	 * 
-	 * <p>Note: This value only makes sense when used in conjuction with 
-	 * idleMaxAge. 
 	 * 
 	 * <p>Default: 240 min, set to 0 to disable
 	 *
@@ -309,6 +307,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.idleConnectionTestPeriod = idleConnectionTestPeriod; // TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
 	}
 
+	
+	/** Wrapper method for idleConnectionTestPeriod for easier programmatic access.
+	 * @param idleConnectionTestPeriod time for a connection to remain idle before sending a test
+	 * query to the DB.
+	 * @param timeUnit Time granularity of given parameter. 
+	 */
+	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod, TimeUnit timeUnit) {
+		this.idleConnectionTestPeriod = TimeUnit.MINUTES.convert(idleConnectionTestPeriod, timeUnit); // TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
+	}
+	
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getIdleMaxAge()
 	 */
@@ -321,8 +329,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * The time (in minutes), for a connection to remain unused before it is closed off. Do not use aggressive values here! 
 	 * 
-	 * <p>Note: This value only makes sense when used in conjuction with idleConnectionTestPeriod. 
-	 * 
 	 * <p>Default: 60 minutes, set to 0 to disable.
 	 *
 	 * @param idleMaxAge to set
@@ -331,6 +337,19 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.idleMaxAge = idleMaxAge; // TimeUnit.MILLISECONDS.convert(idleMaxAge, TimeUnit.MINUTES);
 	}
 
+	
+	/** Sets Idle max age.
+	 * 
+	 * The time, for a connection to remain unused before it is closed off. Do not use aggressive values here!
+	 * @param idleMaxAge time after which a connection is closed off
+	 * @param timeUnit idleMaxAge time granularity.
+	 */
+	public void setIdleMaxAge(long idleMaxAge, TimeUnit timeUnit) {
+		this.idleMaxAge = TimeUnit.MINUTES.convert(idleMaxAge, timeUnit); // TimeUnit.MILLISECONDS.convert(idleMaxAge, TimeUnit.MINUTES);
+	}
+	
+	 
+	 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getConnectionTestStatement()
 	 */
@@ -712,13 +731,21 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return this.acquireRetryDelay;
 	}
 
-	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure. 
 	 * @param acquireRetryDelay the acquireRetryDelay to set
 	 */
 	public void setAcquireRetryDelay(int acquireRetryDelay) {
 		this.acquireRetryDelay = acquireRetryDelay;
 	}
 
+	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure.
+	 * @param acquireRetryDelay  the acquireRetryDelay to set
+	 * @param timeUnit time granularity
+	 */
+	public void setAcquireRetryDelay(int acquireRetryDelay, TimeUnit timeUnit) {
+		this.acquireRetryDelay = (int) TimeUnit.MILLISECONDS.convert(acquireRetryDelay, timeUnit);
+	}
+	
 	/** Returns true if connection pool is to be initialized lazily.
 	 * @return lazyInit setting 
 	 */
@@ -1186,6 +1213,17 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.connectionTimeout = connectionTimeout;
 	}
 
+	
+	/** Sets the maximum time to wait before a call to getConnection is timed out.
+	 * 
+	 * Setting this to zero is similar to setting it to Long.MAX_VALUE
+	 * 
+	 * @param connectionTimeout
+	 * @param timeUnit the unit of the connectionTimeout argument
+	 */
+	public void setConnectionTimeout(long connectionTimeout, TimeUnit timeUnit) {
+		this.connectionTimeout = TimeUnit.MILLISECONDS.convert(connectionTimeout, timeUnit);
+	}
 	/** Returns the currently configured driver properties.
 	 * @return the driverProperties handle
 	 */
@@ -1271,6 +1309,17 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.maxConnectionAge = maxConnectionAge;
 	}
 
+	/**
+	 * Sets the maxConnectionAge. Any connections older than this setting will be closed
+	 * off whether it is idle or not. Connections currently in use will not be affected until they
+	 * are returned to the pool.
+	 * 
+	 * @param maxConnectionAge the maxConnectionAge to set.
+	 * @param timeUnit the unit of the maxConnectionAge argument.
+	 */
+	public void setMaxConnectionAge(long maxConnectionAge, TimeUnit timeUnit) {
+		this.maxConnectionAge = TimeUnit.SECONDS.convert(maxConnectionAge, timeUnit);
+	}
 	/**
 	 * Returns the configFile field.
 	 * @return configFile
@@ -1399,8 +1448,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Sets the defaultTransactionIsolationValue.
 	 * @param defaultTransactionIsolationValue the defaultTransactionIsolationValue to set
 	 */
-	protected void setDefaultTransactionIsolationValue(
-			int defaultTransactionIsolationValue) {
+	protected void setDefaultTransactionIsolationValue(int defaultTransactionIsolationValue) {
 		this.defaultTransactionIsolationValue = defaultTransactionIsolationValue;
 	}
 	
