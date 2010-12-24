@@ -95,6 +95,7 @@ public class TestStatementCache {
 		config.setReleaseHelperThreads(0);
 		config.setDisableConnectionTracking(true);
 		config.setStatementReleaseHelperThreads(0);
+		config.setStatisticsEnabled(true);
 	}
 
 

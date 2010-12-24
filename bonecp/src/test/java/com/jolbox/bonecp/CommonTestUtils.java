@@ -175,7 +175,7 @@ public class CommonTestUtils {
 	private static void doTestStatementBounceMethod(ConnectionHandle mockConnection, Object mockClass, Object testClass, Method method, Object... args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
 		if (method.getReturnType() == void.class){
 			method.invoke(mockClass, args);
-			expectLastCall().once().andThrow(new Error()).once();
+			expectLastCall().once().andThrow(new SQLException()).once();
 		} else {
 			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new SQLException()).once();
 		}

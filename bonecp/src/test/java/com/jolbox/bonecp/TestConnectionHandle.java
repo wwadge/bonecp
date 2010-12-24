@@ -96,6 +96,7 @@ public class TestConnectionHandle {
 		
 		this.config = CommonTestUtils.getConfigClone();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+		
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
@@ -104,6 +105,7 @@ public class TestConnectionHandle {
 		this.config.setReleaseHelperThreads(0);
 		this.config.setTransactionRecoveryEnabled(false);
 		this.config.setStatementsCacheSize(1);
+		this.config.setStatisticsEnabled(true);
 		
 		this.testClass = new ConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
 		
@@ -116,6 +118,15 @@ public class TestConnectionHandle {
 		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);
 		field.set(this.testClass, false);
+		
+		field = this.testClass.getClass().getDeclaredField("statisticsEnabled");
+		field.setAccessible(true);
+		field.set(this.testClass, true);
+		
+		field = this.testClass.getClass().getDeclaredField("statistics");
+		field.setAccessible(true);
+		field.set(this.testClass, new Statistics(this.mockPool));
+		
 		reset(this.mockConnection, this.mockPreparedStatementCache, this.mockPool, this.mockCallableStatementCache);
 	}
 
@@ -573,6 +584,7 @@ public class TestConnectionHandle {
 	public void testCallableStatement() throws SecurityException, IllegalArgumentException,  NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException{
 		expect(this.mockPool.captureStackTrace((String)anyObject())).andReturn("").anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+		this.config.setStatisticsEnabled(true);
 		
 		replay(this.mockPool);
 
@@ -724,6 +736,7 @@ public class TestConnectionHandle {
 		CallableStatementHandle mockStatement = createNiceMock(CallableStatementHandle.class);
 		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
 
+		
 		this.testClass.renewConnection(); // logically open the connection
 
 		// fetching a statement that is found in cache. Statement should be returned and marked as being (logically) open

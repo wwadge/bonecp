@@ -77,6 +77,8 @@ public class TestStatementHandle {
 		mockPool = createNiceMock(BoneCP.class);
 		expect(mockConnection.getPool()).andReturn(mockPool).anyTimes();
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockPool.getStatistics()).andReturn(new Statistics(mockPool)).anyTimes();
+		expect(mockConfig.isStatisticsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		replay(mockConnection, mockPool, mockConfig);
@@ -132,9 +134,10 @@ public class TestStatementHandle {
 		IStatementCache mockCache = createNiceMock(IStatementCache.class);
 		expect(mockConnection.getPool()).andReturn(mockPool).anyTimes();
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockConfig.isStatisticsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1).anyTimes();
-		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
-
+		expect(mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(true).anyTimes();
+		
 		replay(mockConnection, mockConfig, mockPool);
 		// alternate constructor 
 		StatementHandle handle = new StatementHandle(mockStatement, mockConnection, true);

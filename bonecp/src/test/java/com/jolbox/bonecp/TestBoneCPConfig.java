@@ -24,7 +24,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
@@ -147,6 +149,31 @@ public class TestBoneCPConfig {
 		config.setConnectionTestStatement("test");
 		config.setAcquireIncrement(6);
 		config.setInitSQL("abc");
+		config.setDefaultTransactionIsolation("foo");
+		config.setDefaultTransactionIsolationValue(123);
+		config.setAcquireRetryDelay(1, TimeUnit.MINUTES);
+		config.setConnectionTimeout(1, TimeUnit.MINUTES);
+		config.setIdleMaxAge(1, TimeUnit.MINUTES);
+		config.setIdleConnectionTestPeriod(1, TimeUnit.MINUTES);
+		config.setMaxConnectionAge(1, TimeUnit.MINUTES);
+		config.setDefaultReadOnly(true);
+		config.setDefaultCatalog("foo");
+		config.setDefaultAutoCommit(true);
+		config.setStatisticsEnabled(true);
+		
+		assertEquals("foo", config.getDefaultCatalog());
+		assertTrue(config.getDefaultAutoCommit());
+		assertTrue(config.isStatisticsEnabled());
+		assertTrue(config.getDefaultReadOnly());
+		
+		assertEquals(60, config.getMaxConnectionAge());
+		assertEquals(1, config.getIdleConnectionTestPeriod());
+		assertEquals(1, config.getIdleMaxAge());
+		assertEquals(60000, config.getConnectionTimeout());
+		assertEquals(60000, config.getAcquireRetryDelay());
+		assertEquals("foo", config.getDefaultTransactionIsolation());
+		assertEquals(123, config.getDefaultTransactionIsolationValue());
+		
 		ConnectionHook hook = new AbstractConnectionHook() {
 			// do nothing
 		};
@@ -177,8 +204,6 @@ public class TestBoneCPConfig {
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, config.getUsername());
 		assertEquals(CommonTestUtils.password, config.getPassword());
-		assertEquals(60, config.getIdleConnectionTestPeriod());
-		assertEquals(60, config.getIdleMaxAge());
 		assertEquals(2, config.getStatementsCacheSize());
 		assertEquals(2, config.getStatementCacheSize());
 		assertEquals(2, config.getPreparedStatementsCacheSize());
@@ -238,6 +263,29 @@ public class TestBoneCPConfig {
 		assertEquals(config.getMinConnectionsPerPartition(), config.getMaxConnectionsPerPartition());
 		assertEquals(20, config.getPoolAvailabilityThreshold());
 		
+		config.setDefaultTransactionIsolation("NONE");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_NONE, config.getDefaultTransactionIsolationValue());
+		
+		config.setDefaultTransactionIsolation("READ_COMMITTED");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_READ_COMMITTED, config.getDefaultTransactionIsolationValue());
+		
+		config.setDefaultTransactionIsolation("READ_UNCOMMITTED");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_READ_UNCOMMITTED, config.getDefaultTransactionIsolationValue());
+		
+		config.setDefaultTransactionIsolation("SERIALIZABLE");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_SERIALIZABLE, config.getDefaultTransactionIsolationValue());
+		
+		config.setDefaultTransactionIsolation("REPEATABLE_READ");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_REPEATABLE_READ, config.getDefaultTransactionIsolationValue());
+		
+		config.setDefaultTransactionIsolation("BAD_VALUE");
+		config.sanitize();
+		assertEquals(-1, config.getDefaultTransactionIsolationValue());
 		
 		// coverage
 		BoneCPConfig config = new BoneCPConfig();
@@ -316,6 +364,15 @@ public class TestBoneCPConfig {
 		BoneCPConfig clone = config.clone();
 		
 		config.loadProperties("invalid-property-file.xml");
+		assertEquals(config, clone);
+	}
+
+	@Test
+	public void testLoadPropertyFileInvalid2() throws CloneNotSupportedException, IOException{
+		BoneCPConfig config = new BoneCPConfig();
+		BoneCPConfig clone = config.clone();
+		
+		config.loadProperties("java/lang/String.class");
 		assertEquals(config, clone);
 	}
 
