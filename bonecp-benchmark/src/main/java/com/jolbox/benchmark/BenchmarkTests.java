@@ -14,24 +14,6 @@
  *    limitations under the License.
  */
 
-/*
- Copyright 2009 Wallace Wadge
-
-This file is part of BoneCP.
-
-BoneCP is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-BoneCP is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.jolbox.benchmark;
 
 import java.beans.PropertyVetoException;
@@ -39,11 +21,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -55,6 +34,8 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.logicalcobwebs.proxool.ProxoolDataSource;
+
+import snaq.db.DBPoolDataSource;
 
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
@@ -215,7 +196,26 @@ return dsb;
 		
 		
 	}
+
+	private DataSource multiThreadedDBPool(boolean doPreparedStatement) throws PropertyVetoException, InterruptedException, SQLException {
+
+		DBPoolDataSource ds = new DBPoolDataSource();
+		ds.setName("db-pool-ds");
+		ds.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
+		ds.setUrl(url);
+		ds.setUser(username);
+		ds.setPassword(password);
+		ds.setMinPool(pool_size);
+		ds.setMaxPool(pool_size);
+		ds.setMaxSize(pool_size);
 	
+          if (doPreparedStatement){
+        	  // not yet implemented in this version
+          }
+
+          return ds;
+	}
+
 	/**
 	 * 
 	 *
@@ -322,6 +322,35 @@ return dsb;
 
 	}
 
+	/**
+	 * 
+	 *
+	 * @return time taken
+	 * @throws SQLException
+	 */
+	private long singleDBPool() throws SQLException{
+		DBPoolDataSource ds = new DBPoolDataSource();
+		ds.setName("db-pool-ds");
+		ds.setDriverClassName("com.jolbox.bonecp.MockJDBCDriver");
+		ds.setUrl(url);
+		ds.setUser(username);
+		ds.setPassword(password);
+		ds.setMinPool(pool_size);
+		ds.setMaxPool(pool_size);
+		ds.setMaxSize(pool_size);
+	
+		long start = System.currentTimeMillis();
+		for (int i=0; i < MAX_CONNECTIONS; i++){
+			Connection conn = ds.getConnection();
+			conn.close();
+		}
+		long end = (System.currentTimeMillis() - start);
+
+
+		ds.release();
+		return end;
+
+	}
 
 	/**
 	 * 
@@ -433,6 +462,8 @@ return dsb;
 					break;
 				case TOMCAT_JDBC:
 					cycleResults[i]=singleTomcatJDBC();
+				case DBPOOL:
+					cycleResults[i]=singleDBPool();
 				default: 
 					System.err.println("Unknown");
 				}
@@ -620,6 +651,9 @@ return dsb;
 		case TOMCAT_JDBC:
 			ds = multiThreadedTomcatJDBC(doPreparedStatement);
 			break;
+		case DBPOOL: 
+			ds = multiThreadedDBPool(doPreparedStatement);
+			break;
 		default:
 			break;
 		}
@@ -646,7 +680,11 @@ return dsb;
 			//			results.add(result);
 		}
 		if (ds != null){
-			ds.getClass().getMethod("close").invoke(ds);
+			try {
+				ds.getClass().getMethod("close").invoke(ds);
+			} catch (NoSuchMethodException e) {
+				ds.getClass().getMethod("release").invoke(ds);
+			}
 		}
 		return poolResults;
 	}
