@@ -85,7 +85,7 @@ public class Statistics implements StatisticsMBean{
 	 * @see com.jolbox.bonecp.StatisticsMBean#getStatementPrepareTimeAvg()
 	 */
 	public double getStatementPrepareTimeAvg(){
-		return this.statementsPrepared.get() == 0 ? 0 : this.statementsPrepared.get() / (1.0*this.cumulativeStatementPrepareTime.get()) / 1000000.0;
+		return this.statementsPrepared.get() == 0 ? 0 : this.statementsPrepared.get() / (1.0*this.cumulativeStatementPrepareTime.get() / 1000000.0);
 	}
 
 	
