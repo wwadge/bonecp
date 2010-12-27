@@ -27,6 +27,7 @@ import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -43,6 +44,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -56,6 +58,7 @@ import javax.management.ObjectName;
 import javax.sql.DataSource;
 
 import jsr166y.LinkedTransferQueue;
+import jsr166y.TransferQueue;
 
 import org.easymock.EasyMock;
 import org.junit.AfterClass;
@@ -144,6 +147,7 @@ public class TestBoneCP {
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
+		expect(mockConfig.getStatementReleaseHelperThreads()).andReturn(1).once().andReturn(0).anyTimes();
 		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
 		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
@@ -156,7 +160,7 @@ public class TestBoneCP {
 
 		replay(mockConfig);
 		
-		// once for no release threads, once with release threads....
+		// once for no {statement, connection} release threads, once with release threads....
 		testClass = new BoneCP(mockConfig);
 		testClass = new BoneCP(mockConfig);
 		
@@ -224,22 +228,34 @@ public class TestBoneCP {
 	private void testShutdownClose(boolean doShutdown) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
 		expect(mockKeepAliveScheduler.shutdownNow()).andReturn(null).once();
 		expect(mockConnectionsScheduler.shutdownNow()).andReturn(null).once();
+		
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		Field field = testClass.getClass().getDeclaredField("releaseHelperThreadsConfigured");
 		field.setAccessible(true);
 		field.setBoolean(testClass, true);
+		
+		field = BoneCP.class.getDeclaredField("statementReleaseHelperThreadsConfigured");
+		field.setAccessible(true);
+		field.set(testClass, true);
+
 		ExecutorService mockReleaseHelper = createNiceMock(ExecutorService.class);
 		testClass.setReleaseHelper(mockReleaseHelper);
 		expect(mockReleaseHelper.shutdownNow()).andReturn(null).once();
-		replay(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
+		
+		ExecutorService mockStatementCloseHelperExecutor = createNiceMock(ExecutorService.class);
+		testClass.setStatementCloseHelperExecutor(mockStatementCloseHelperExecutor);
+		expect(mockStatementCloseHelperExecutor.shutdownNow()).andReturn(null).once();
+		
+		
+		replay(mockConnectionsScheduler, mockStatementCloseHelperExecutor, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
 		
 		if (doShutdown){
 			testClass.shutdown();
 		} else {
 			testClass.close();
 		}
-		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
+		verify(mockConnectionsScheduler, mockStatementCloseHelperExecutor, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
 	}
 
 	/**
@@ -377,10 +393,30 @@ public class TestBoneCP {
 	public void testGetConnectionViaDataSourceBean() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
 		DataSource mockDataSource = createNiceMock(DataSource.class);
 		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
-		expect(mockConfig.getJdbcUrl()).andReturn("").once();
-		expect(mockConfig.getUsername()).andReturn(null).once();
-		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once();
+		expect(mockConfig.getJdbcUrl()).andReturn("").once().andReturn("jdbc:mock:foo").once();
+		expect(mockConfig.getUsername()).andReturn(null).anyTimes();
+		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once().andReturn(null).once();
+		
+		
+		Field field = BoneCP.class.getDeclaredField("defaultAutoCommit");
+		field.setAccessible(true);
+		field.set(testClass, true);
+		
+		field = BoneCP.class.getDeclaredField("defaultReadOnly");
+		field.setAccessible(true);
+		field.set(testClass, true);
+		
+		field = BoneCP.class.getDeclaredField("defaultCatalog");
+		field.setAccessible(true);
+		field.set(testClass, "foo");
+		
+		field = BoneCP.class.getDeclaredField("defaultTransactionIsolationValue");
+		field.setAccessible(true);
+		field.set(testClass, 0);
+		
 		replay(mockConfig, mockDataSource);
+		testClass.obtainRawInternalConnection();
+		// 2nd path
 		testClass.obtainRawInternalConnection();
 		verify(mockConfig, mockDataSource);
 	}
@@ -961,10 +997,26 @@ public class TestBoneCP {
 		expect(config.getMaxConnectionAge()).andReturn(100000L).anyTimes();
 		replay(config);
 		try{
-			new BoneCP(config);
+			BoneCP pool = new BoneCP(config);
+			// just for more coverage
+			ExecutorService statementCloseHelper = Executors.newFixedThreadPool(1);
+			pool.setStatementCloseHelperExecutor(statementCloseHelper);
+			assertEquals(statementCloseHelper, pool.getStatementCloseHelperExecutor());
+			
+			TransferQueue<StatementHandle> tmp = new BoundedLinkedTransferQueue<StatementHandle>(1);
+			Field field = BoneCP.class.getDeclaredField("statementsPendingRelease");
+			field.setAccessible(true);
+			field.set(pool, tmp);
+			assertEquals(tmp, pool.getStatementsPendingRelease());
+			
+			
+			
 		} catch (Throwable t){
 			// do nothing
 		}
+		
+		
+		
 	}
 	
 	/**
@@ -1071,6 +1123,16 @@ public class TestBoneCP {
 		// Test #2: Code coverage
 		method.invoke(testClass, new Object[]{null});
 	}
-	
+
+	/**
+	 * Mostly for coverage.
+	 */
+	@Test
+	public void testInitStmtReleaseHelper(){
+		expect(mockConfig.getStatementReleaseHelperThreads()).andReturn(1).once();
+		replay(mockConfig);
+		testClass.initStmtReleaseHelper("test");
+		assertNotNull(testClass.getStatementCloseHelperExecutor());
+	}
 	
 }

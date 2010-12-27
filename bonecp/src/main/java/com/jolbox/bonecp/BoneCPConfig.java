@@ -510,15 +510,15 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 
 		if (this.defaultTransactionIsolation != null){
-			this.defaultTransactionIsolation = this.defaultTransactionIsolation.toUpperCase();
+			this.defaultTransactionIsolation = this.defaultTransactionIsolation.trim().toUpperCase();
 			
 			if (this.defaultTransactionIsolation.equals("NONE")){
 				this.defaultTransactionIsolationValue = Connection.TRANSACTION_NONE;
-			} else if (this.defaultTransactionIsolation.equals("READ_COMMITTED")){
+			} else if (this.defaultTransactionIsolation.equals("READ_COMMITTED") || this.defaultTransactionIsolation.equals("READ COMMITTED")){
 				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_COMMITTED;
-			} else if (this.defaultTransactionIsolation.equals("REPEATABLE_READ")){
+			} else if (this.defaultTransactionIsolation.equals("REPEATABLE_READ") || this.defaultTransactionIsolation.equals("REPEATABLE READ")){
 				this.defaultTransactionIsolationValue = Connection.TRANSACTION_REPEATABLE_READ;
-			} else if (this.defaultTransactionIsolation.equals("READ_UNCOMMITTED")){
+			} else if (this.defaultTransactionIsolation.equals("READ_UNCOMMITTED") || this.defaultTransactionIsolation.equals("READ UNCOMMITTED")){
 				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_UNCOMMITTED;
 			} else if (this.defaultTransactionIsolation.equals("SERIALIZABLE")){
 				this.defaultTransactionIsolationValue = Connection.TRANSACTION_SERIALIZABLE;

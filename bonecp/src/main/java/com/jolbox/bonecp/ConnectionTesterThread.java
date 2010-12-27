@@ -77,8 +77,9 @@ public class ConnectionTesterThread implements Runnable {
 				
 				int partitionSize= this.partition.getAvailableConnections();
 				long currentTime = System.currentTimeMillis();
+				// go thru all partitions
 				for (int i=0; i < partitionSize; i++){
-
+					// grab connections one by one.
 					connection = this.partition.getFreeConnections().poll();
 					if (connection != null){
 						connection.setOriginatingPartition(this.partition);
@@ -86,7 +87,7 @@ public class ConnectionTesterThread implements Runnable {
 						// check if connection has been idle for too long (or is marked as broken)
 						if (connection.isPossiblyBroken() || 
 								((this.idleMaxAge > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
-							// kill off this connection
+							// kill off this connection - it's broken or it has been idle for too long
 							closeConnection(connection);
 							continue;
 						}
@@ -99,11 +100,13 @@ public class ConnectionTesterThread implements Runnable {
 								closeConnection(connection);
 								continue; 
 							}
+							// calculate the next time to wake up
 							tmp = this.idleConnectionTestPeriod;
-							if (this.idleMaxAge > 0){
+							if (this.idleMaxAge > 0){ // wake up earlier for the idleMaxAge test?
 								tmp = Math.min(tmp, this.idleMaxAge);
 							}
 						} else {
+							// determine the next time to wake up (connection test time or idle Max age?) 
 							tmp = this.idleConnectionTestPeriod-(currentTime - connection.getConnectionLastReset());
 							long tmp2 = this.idleMaxAge - (currentTime-connection.getConnectionLastUsed());
 							if (this.idleMaxAge > 0){

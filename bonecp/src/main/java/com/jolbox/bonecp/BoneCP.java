@@ -386,7 +386,7 @@ public class BoneCP implements Serializable {
 	/** Starts off threads released to statement release helpers.
 	 * @param suffix of pool
 	 */
-	private void initStmtReleaseHelper(String suffix) {
+	protected void initStmtReleaseHelper(String suffix) {
 		// we pick a max size of maxConnections * 3 i.e. 3 statements per connection as our limit
 		// anything more than that will mean the statements will start being closed off straight away
 		// without enqueing
