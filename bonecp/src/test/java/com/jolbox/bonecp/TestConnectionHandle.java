@@ -80,7 +80,7 @@ public class TestConnectionHandle {
 	/** Mock handle. */
 	private Logger mockLogger = createNiceMock(Logger.class);
 	/** Mock handle. */
-	private StatementCache testStatementCache = new StatementCache(100, false, new Statistics(mockPool));
+	private StatementCache testStatementCache = new StatementCache(100, false, new Statistics(this.mockPool));
 	/** Config clone. */
 	private BoneCPConfig config;
 

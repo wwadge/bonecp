@@ -367,6 +367,10 @@ public class TestBoneCPConfig {
 		assertEquals(config, clone);
 	}
 
+	/** See how the config handles a garbage filled file.
+	 * @throws CloneNotSupportedException
+	 * @throws IOException
+	 */
 	@Test
 	public void testLoadPropertyFileInvalid2() throws CloneNotSupportedException, IOException{
 		BoneCPConfig config = new BoneCPConfig();
