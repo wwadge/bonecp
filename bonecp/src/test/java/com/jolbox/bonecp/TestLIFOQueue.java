@@ -24,7 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** 
- * Tests for the LIFO queue
+ * Tests for the LIFO queue.
  * @author wallacew
  *
  */
