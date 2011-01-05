@@ -59,7 +59,7 @@ public class PoolUtil {
 				if (it.hasNext()){
 					result.append(prettyPrint(it.next()));
 				} else {
-					result.append("?");
+					result.append('?');
 				}
 			} else {
 				result.append(sqlChar[i]);
