@@ -21,6 +21,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Properties;
 
 import org.junit.Test;
 
@@ -74,7 +75,9 @@ public class TestXMLDefaultCreate {
 			String mName = method.getName();
 			if (mName.startsWith("set") && method.isPublic()) {
 				Annotation[] a = method.getAnnotations();
-				if (method.getParameters().length == 1 && !(a.length > 0 && a[0].getType().getValue()
+				if (method.getParameters().length == 1 
+						&& !method.getParameters()[0].getType().getJavaClass().getFullyQualifiedName().equals("java.util.Properties") 
+						&&  !(a.length > 0 && a[0].getType().getValue()
 						.equals("java.lang.Deprecated"))) {
 
 					sb.append(formatComment(method.getComment()));

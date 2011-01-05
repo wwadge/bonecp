@@ -47,13 +47,9 @@
 		     useful to prevent a DB from timing out connections on its end. Do 
 		     not use aggressive values here!   Default: 240 min, set to 0 
 		     to disable -->
-		<property name="idleConnectionTestPeriod">240</property>
-
 		<!-- Sets Idle max age (in min).  The time (in minutes), for a 
 		     connection to remain unused before it is closed off. Do not use aggressive 
 		     values here!  Default: 60 minutes, set to 0 to disable. -->
-		<property name="idleMaxAge">60</property>
-
 		<!-- Sets the connection test statement.  The query to send to the DB 
 		     to maintain keep-alives and test for dead connections. This is database specific and 
 		     should be set to a query that consumes the minimal amount of load 
@@ -126,8 +122,6 @@
 		<!-- If set, use datasourceBean.getConnection() to obtain a new connection instead of Driver.getConnection(). -->
 		<!-- <property name="datasourceBean">(null or no default value)</property> -->
 
-		<!-- Sets the properties by reading off entries in the given parameter (where each 
-		     key is equivalent to the field name) -->
 		<!-- Queries taking longer than this limit to execute are logged. -->
 		<property name="queryExecuteTimeLimit">0</property>
 
@@ -152,15 +146,6 @@
 		     is timed out.  Setting this to zero is similar to setting it 
 		     to Long.MAX_VALUE  Default: 0 ( = wait forever ) -->
 		<property name="connectionTimeout">0</property>
-
-		<!-- Sets properties that will be passed on to the driver.  The properties 
-		     handle should contain a list of arbitrary string tag/value pairs as connection arguments; 
-		     normally at least a "user" and "password" property should be included. Failure to 
-		     include the user or password properties will make the pool copy the values 
-		     given in config.setUsername(..) and config.setPassword(..).  Note that the pool will make a 
-		     copy of these properties so as not to risk attempting to create a 
-		     connection later on with different settings. -->
-		<!-- <property name="driverProperties">(null or no default value)</property> -->
 
 		<!-- Sets the no of ms to wait when close connection watch threads are 
 		     enabled. 0 = wait forever. -->

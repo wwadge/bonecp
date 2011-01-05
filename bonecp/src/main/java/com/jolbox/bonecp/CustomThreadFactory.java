@@ -75,9 +75,8 @@ public class CustomThreadFactory
      */
     //@Override
     public Thread newThread(Runnable r) {
-        Thread t = new Thread(r);
+        Thread t = new Thread(r, this.threadName);
         t.setDaemon(this.daemon);
-        t.setName(this.threadName);
         t.setUncaughtExceptionHandler(this);
         return t;
     }

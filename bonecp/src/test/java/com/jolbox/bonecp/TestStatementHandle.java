@@ -79,7 +79,7 @@ public class TestStatementHandle {
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		expect(mockPool.getStatistics()).andReturn(new Statistics(mockPool)).anyTimes();
 		expect(mockConfig.isStatisticsEnabled()).andReturn(true).anyTimes();
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1L).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		replay(mockConnection, mockPool, mockConfig);
 		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "testSQL", true);
@@ -135,7 +135,7 @@ public class TestStatementHandle {
 		expect(mockConnection.getPool()).andReturn(mockPool).anyTimes();
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		expect(mockConfig.isStatisticsEnabled()).andReturn(true).anyTimes();
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(1L).anyTimes();
 		expect(mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(true).anyTimes();
 		
 		replay(mockConnection, mockConfig, mockPool);

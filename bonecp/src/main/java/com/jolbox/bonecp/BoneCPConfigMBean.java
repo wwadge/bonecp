@@ -78,18 +78,18 @@ public interface BoneCPConfigMBean {
 	String getUsername();
 
 	/**
-	 * Gets the currently set idleConnectionTestPeriod.
+	 * Gets the currently set idleConnectionTestPeriodInMinutes.
 	 *
 	 * @return idleConnectionTestPeriod
 	 */
-	long getIdleConnectionTestPeriod();
+	long getIdleConnectionTestPeriodInMinutes();
 
 	/**
 	 * Gets idleMaxAge (time in min).
 	 *
 	 * @return idleMaxAge
 	 */
-	long getIdleMaxAge();
+	long getIdleMaxAgeInMinutes();
 
 	/**
 	 * Gets connectionTestStatement
@@ -137,7 +137,7 @@ public interface BoneCPConfigMBean {
 	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @return the acquireRetryDelay
 	 */
-	int getAcquireRetryDelay();
+	int getAcquireRetryDelayInMs();
 	
 	/** Returns true if connection pool is to be initialized lazily.
 	 * @return lazyInit setting 
@@ -165,10 +165,10 @@ public interface BoneCPConfigMBean {
 	 */
 	boolean isDisableJMX();
 
-	/** Return the query execute time limit.
+	/** Return the query execute time limit in ms.
 	 * @return the queryTimeLimit
 	 */
-	int getQueryExecuteTimeLimit();
+	long getQueryExecuteTimeLimitInMs();
 	
 	/** Returns the pool watch connection threshold value.
 	 * @return the poolAvailabilityThreshold currently set.
@@ -183,7 +183,7 @@ public interface BoneCPConfigMBean {
 	/** Returns the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
 	 * @return the connectionTimeout
 	 */
-	long getConnectionTimeout();
+	long getConnectionTimeoutInMs();
 	
 	/** Returns the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
 	 * @return the watchTimeout currently set.

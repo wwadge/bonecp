@@ -17,6 +17,7 @@
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -72,7 +73,11 @@ public class ConnectionTesterThread implements Runnable {
 		try {
 				long nextCheck = this.idleConnectionTestPeriod;
 				if (this.idleMaxAge > 0){
-					nextCheck = Math.min(nextCheck, this.idleMaxAge);
+					if (this.idleConnectionTestPeriod == 0){
+						nextCheck = this.idleMaxAge;
+					} else {
+						nextCheck = Math.min(nextCheck, this.idleMaxAge);
+					}
 				}
 				
 				int partitionSize= this.partition.getAvailableConnections();

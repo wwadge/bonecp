@@ -266,7 +266,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200L).anyTimes();
 		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
@@ -310,7 +310,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn( new CoverageHook()).anyTimes();
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200L).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();

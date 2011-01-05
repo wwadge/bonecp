@@ -362,7 +362,10 @@ public class BoneCP implements Serializable {
 				
 				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, 1000*60*config.getIdleMaxAge(), 1000*60*config.getIdleConnectionTestPeriod(), queueLIFO);
 				long delay = config.getIdleConnectionTestPeriod();
-				if (config.getIdleMaxAge() != 0 && config.getIdleMaxAge() < delay){
+				if (delay == 0){
+					delay = config.getIdleMaxAge();
+				}
+				if (config.getIdleMaxAge() != 0 && config.getIdleConnectionTestPeriod() != 0 && config.getIdleMaxAge() < delay){
 					delay = config.getIdleMaxAge();
 				}
 				this.keepAliveScheduler.schedule(connectionTester, delay, TimeUnit.MINUTES);
