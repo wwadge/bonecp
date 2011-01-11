@@ -120,10 +120,10 @@ public class TestBoneCPConfig {
 		Properties props = new Properties();
 		props.setProperty("minConnectionsPerPartition", "123");
 		props.setProperty("bonecp.maxConnectionsPerPartition", "456");
-		props.setProperty("idleConnectionTestPeriod", "999");
+		props.setProperty("idleConnectionTestPeriodInSeconds", "999");
 		props.setProperty("username", "test");
 		props.setProperty("partitionCount", "an int which is invalid");
-		props.setProperty("idleMaxAge", "a long which is invalid");
+		props.setProperty("idleMaxAgeInSeconds", "a long which is invalid");
 		BoneCPConfig config = new BoneCPConfig(props);
 		assertEquals(123, config.getMinConnectionsPerPartition());
 		assertEquals(456, config.getMaxConnectionsPerPartition());
@@ -168,10 +168,13 @@ public class TestBoneCPConfig {
 		assertTrue(config.isStatisticsEnabled());
 		assertTrue(config.getDefaultReadOnly());
 		
+		config.setMaxConnectionAge(60);
 		assertEquals(60, config.getMaxConnectionAge());
 		assertEquals(1, config.getIdleConnectionTestPeriod());
 		assertEquals(1, config.getIdleMaxAge());
 		assertEquals(60000, config.getConnectionTimeout());
+		assertEquals(60, config.getConnectionTimeout(TimeUnit.SECONDS));
+		
 		assertEquals(60000, config.getAcquireRetryDelay());
 		assertEquals("foo", config.getDefaultTransactionIsolation());
 		assertEquals(123, config.getDefaultTransactionIsolationValue());
@@ -202,6 +205,9 @@ public class TestBoneCPConfig {
 		assertEquals("abc", config.getInitSQL());
 		assertEquals(hook, config.getConnectionHook());
 		assertEquals(1000, config.getConnectionTimeoutInMs());
+		assertEquals(123, config.getQueryExecuteTimeLimit(TimeUnit.MILLISECONDS));
+		assertEquals(1000, config.getCloseConnectionWatchTimeout(TimeUnit.MILLISECONDS));
+		
 		assertEquals(1000, config.getCloseConnectionWatchTimeoutInMs());
 		assertEquals(1, config.getIdleConnectionTestPeriodInMinutes());
 		assertEquals(lifo, config.getServiceOrder());
@@ -251,6 +257,7 @@ public class TestBoneCPConfig {
 		config.setReleaseHelperThreads(-1);
 		config.sanitize();
 
+		assertEquals(1000, config.getAcquireRetryDelay(TimeUnit.MILLISECONDS));
 		assertEquals(1000, config.getAcquireRetryDelayInMs());
 		assertEquals("FIFO", config.getServiceOrder());
 		assertEquals(0, config.getConnectionTimeoutInMs());

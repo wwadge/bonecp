@@ -142,7 +142,8 @@ public class TestBoneCP {
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(0L).anyTimes();
+		expect(mockConfig.getIdleMaxAgeInMinutes()).andReturn(1000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();

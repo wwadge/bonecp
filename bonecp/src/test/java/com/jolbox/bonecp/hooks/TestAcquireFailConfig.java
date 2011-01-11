@@ -35,12 +35,14 @@ public class TestAcquireFailConfig {
 	/**
 	 * Test getters/setters for acquireFail class.
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testGettersSetters(){
 		Object obj = new Object();
 		AcquireFailConfig config = new AcquireFailConfig();
 		config.setAcquireRetryAttempts(new AtomicInteger(1));
 		config.setAcquireRetryDelayInMs(123);
+		config.setAcquireRetryDelay(123);
 		config.setLogMessage("test");
 		config.setDebugHandle(obj);
 

@@ -481,9 +481,11 @@ public class TestConnectionHandle {
 
 		this.testClass.setConnectionLastResetInMs(123);
 		assertEquals(this.testClass.getConnectionLastResetInMs(), 123);
+		assertEquals(this.testClass.getConnectionLastReset(), 123);
 
 		this.testClass.setConnectionLastUsedInMs(456);
 		assertEquals(this.testClass.getConnectionLastUsedInMs(), 456);
+		assertEquals(this.testClass.getConnectionLastUsed(), 456);
 
 		Field field = this.testClass.getClass().getDeclaredField("possiblyBroken");
 		field.setAccessible(true);
