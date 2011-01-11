@@ -68,9 +68,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Password to use. */
 	private String password;
 	/** Connections older than this are sent a keep-alive statement. */
-	private long idleConnectionTestPeriod = 240*60; 
+	private long idleConnectionTestPeriodInSeconds = 240*60; 
 	/** Maximum age of an unused connection before it is closed off. */ 
-	private long idleMaxAge =  60*60; 
+	private long idleMaxAgeInSeconds =  60*60; 
 	/** SQL statement to use for keep-alive/test of connection. */
 	private String connectionTestStatement;
 	/** Min no of prepared statements to cache. */
@@ -92,7 +92,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If set to true, log SQL statements being executed. */ 
 	private boolean logStatementsEnabled;
 	/** After attempting to acquire a connection and failing, wait for this value before attempting to acquire a new connection again. */
-	private int acquireRetryDelay=7000;
+	private long acquireRetryDelayInMs=7000;
 	/** After attempting to acquire a connection and failing, try to connect these many times before giving up. */
 	private int acquireRetryAttempts=5;
 	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
@@ -110,7 +110,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If set, use datasourceBean.getConnection() to obtain a new connection. */
 	private DataSource datasourceBean;
 	/** Queries taking longer than this limit to execute are logged. */ 
-	private long queryExecuteTimeLimit = 0;
+	private long queryExecuteTimeLimitInMs = 0;
 	/** Create more connections when we hit x% of our possible number of connections. */
 	private int poolAvailabilityThreshold = 20;
 	/** Disable connection tracking. */
@@ -118,11 +118,11 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Used when the alternate way of obtaining a connection is required */
 	private Properties driverProperties;
 	/** Time to wait before a call to getConnection() times out and returns an error. */ 
-	private long connectionTimeout = 0;
+	private long connectionTimeoutInMs = 0;
 	/** Time in ms to wait for close connection watch thread. */
-	private long closeConnectionWatchTimeout = 0;
+	private long closeConnectionWatchTimeoutInMs = 0;
 	/** A connection older than maxConnectionAge will be destroyed and purged from the pool. */
-	private long maxConnectionAge = 0;
+	private long maxConnectionAgeInSeconds = 0;
 	/** Config property. */
 	private String configFile;
 	/** Queue mode. Values currently understood are FIFO and LIFO. */
@@ -312,9 +312,19 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getIdleConnectionTestPeriodInMinutes()
 	 */
 	public long getIdleConnectionTestPeriodInMinutes() {
-		return TimeUnit.MINUTES.convert(this.idleConnectionTestPeriod, TimeUnit.SECONDS);
+		return TimeUnit.MINUTES.convert(this.idleConnectionTestPeriodInSeconds, TimeUnit.SECONDS);
 	}
 
+	/**
+	 * Returns the idleConnectionTestPeriod with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return Idle Connection test period 
+	 */
+	public long getIdleConnectionTestPeriod(TimeUnit timeUnit) {
+		return timeUnit.convert(this.idleConnectionTestPeriodInSeconds, TimeUnit.SECONDS);
+	}
+	
 	/**
 	 * Sets the idleConnectionTestPeriod.
 	 * 
@@ -337,7 +347,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit Time granularity of given parameter. 
 	 */
 	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod, TimeUnit timeUnit) {
-		this.idleConnectionTestPeriod = TimeUnit.SECONDS.convert(idleConnectionTestPeriod, timeUnit); // TimeUnit.MILLISECONDS.convert(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		this.idleConnectionTestPeriodInSeconds = TimeUnit.SECONDS.convert(idleConnectionTestPeriod, timeUnit); 
 	}
 	
 	/** Deprecated. 
@@ -350,11 +360,21 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return getIdleMaxAgeInMinutes();
 	}
 
+	/**
+	 * Returns the idleMaxAge with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return idleMaxAge value
+	 */
+	public long getIdleMaxAge(TimeUnit timeUnit) {
+		return timeUnit.convert(this.idleMaxAgeInSeconds, TimeUnit.SECONDS);
+	}
+
 	/** Returns the idleMaxAge currently set. 
 	 * @return idleMaxAge in minutes
 	 */
 	public long getIdleMaxAgeInMinutes() {
-		return TimeUnit.MINUTES.convert(this.idleMaxAge, TimeUnit.SECONDS);
+		return TimeUnit.MINUTES.convert(this.idleMaxAgeInSeconds, TimeUnit.SECONDS);
 	}
 	
 	/**
@@ -389,7 +409,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit idleMaxAge time granularity.
 	 */
 	public void setIdleMaxAge(long idleMaxAge, TimeUnit timeUnit) {
-		this.idleMaxAge = TimeUnit.SECONDS.convert(idleMaxAge, timeUnit); 
+		this.idleMaxAgeInSeconds = TimeUnit.SECONDS.convert(idleMaxAge, timeUnit); 
 	}
 	
 	 
@@ -608,8 +628,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.statementsCacheSize = 0;
 		}
 
-		if (this.acquireRetryDelay <= 0) {
-			this.acquireRetryDelay = 1000;
+		if (this.acquireRetryDelayInMs <= 0) {
+			this.acquireRetryDelayInMs = 1000;
 		}
 
 		if (this.datasourceBean == null && this.driverProperties == null 
@@ -774,34 +794,44 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @return the acquireRetryDelay
 	 */
 	@Deprecated
-	public int getAcquireRetryDelay() {
+	public long getAcquireRetryDelay() {
 		logger.warn("Please use getAcquireRetryDelayInMs in place of getAcquireRetryDelay. This method has been deprecated.");
-		return this.acquireRetryDelay;
+		return this.acquireRetryDelayInMs;
 	}
 
 	
 	/** Deprecated.  
-	 * @param acquireRetryDelay the acquireRetryDelay to set
-	 * @deprecated Use {@link #setAcquireRetryDelayInMs(int)}.
+	 * @param acquireRetryDelayInMs the acquireRetryDelay to set
+	 * @deprecated Use {@link #setAcquireRetryDelayInMs(long)}.
 	 */
 	@Deprecated
-	public void setAcquireRetryDelay(int acquireRetryDelay) {
+	public void setAcquireRetryDelay(int acquireRetryDelayInMs) {
 		logger.warn("Please use setAcquireRetryDelayInMs in place of setAcquireRetryDelay. This method has been deprecated.");
-		this.acquireRetryDelay = acquireRetryDelay;
+		this.acquireRetryDelayInMs = acquireRetryDelayInMs;
 	}
 
 	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @return the acquireRetryDelay
 	 */
-	public int getAcquireRetryDelayInMs() {
-		return this.acquireRetryDelay;
+	public long getAcquireRetryDelayInMs() {
+		return this.acquireRetryDelayInMs;
+	}
+
+	/**
+	 * Returns the acquireRetryDelay setting with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return acquireRetryDelay 
+	 */
+	public long getAcquireRetryDelay(TimeUnit timeUnit) {
+		return timeUnit.convert(this.acquireRetryDelayInMs, TimeUnit.MILLISECONDS);
 	}
 
 	
 	/** Sets the number of ms to wait before attempting to obtain a connection again after a failure. 
 	 * @param acquireRetryDelay the acquireRetryDelay to set
 	 */
-	public void setAcquireRetryDelayInMs(int acquireRetryDelay) {
+	public void setAcquireRetryDelayInMs(long acquireRetryDelay) {
 		setAcquireRetryDelay(acquireRetryDelay, TimeUnit.MILLISECONDS);
 	}
 	
@@ -811,8 +841,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param acquireRetryDelay  the acquireRetryDelay to set
 	 * @param timeUnit time granularity
 	 */
-	public void setAcquireRetryDelay(int acquireRetryDelay, TimeUnit timeUnit) {
-		this.acquireRetryDelay = (int) TimeUnit.MILLISECONDS.convert(acquireRetryDelay, timeUnit);
+	public void setAcquireRetryDelay(long acquireRetryDelay, TimeUnit timeUnit) {
+		this.acquireRetryDelayInMs = TimeUnit.MILLISECONDS.convert(acquireRetryDelay, timeUnit);
 	}
 	
 	/** Returns true if connection pool is to be initialized lazily.
@@ -858,13 +888,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 		BoneCPConfig that = (BoneCPConfig)obj;
 		if ( Objects.equal(this.acquireIncrement, that.getAcquireIncrement())
-				&& Objects.equal(this.acquireRetryDelay, that.getAcquireRetryDelay())
+				&& Objects.equal(this.acquireRetryDelayInMs, that.getAcquireRetryDelayInMs())
 				&& Objects.equal(this.closeConnectionWatch, that.isCloseConnectionWatch())
 				&& Objects.equal(this.logStatementsEnabled, that.isLogStatementsEnabled())
 				&& Objects.equal(this.connectionHook, that.getConnectionHook())
 				&& Objects.equal(this.connectionTestStatement, that.getConnectionTestStatement())
-				&& Objects.equal(this.idleConnectionTestPeriod, that.getIdleConnectionTestPeriod())
-				&& Objects.equal(this.idleMaxAge, that.getIdleMaxAge())
+				&& Objects.equal(this.idleConnectionTestPeriodInSeconds, that.getIdleConnectionTestPeriod(TimeUnit.SECONDS))
+				&& Objects.equal(this.idleMaxAgeInSeconds, that.getIdleMaxAge(TimeUnit.SECONDS))
 				&& Objects.equal(this.initSQL, that.getInitSQL())
 				&& Objects.equal(this.jdbcUrl, that.getJdbcUrl())
 				&& Objects.equal(this.maxConnectionsPerPartition, that.getMaxConnectionsPerPartition())
@@ -878,10 +908,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
 				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
 				&& Objects.equal(this.statementReleaseHelperThreads, that.getStatementReleaseHelperThreads())
-				&& Objects.equal(this.closeConnectionWatchTimeout, that.getCloseConnectionWatchTimeout())
-				&& Objects.equal(this.connectionTimeout, that.getConnectionTimeoutInMs())
+				&& Objects.equal(this.closeConnectionWatchTimeoutInMs, that.getCloseConnectionWatchTimeout())
+				&& Objects.equal(this.connectionTimeoutInMs, that.getConnectionTimeoutInMs())
 				&& Objects.equal(this.datasourceBean, that.getDatasourceBean())
-				&& Objects.equal(this.queryExecuteTimeLimit, that.getQueryExecuteTimeLimit())
+				&& Objects.equal(this.getQueryExecuteTimeLimitInMs(), that.getQueryExecuteTimeLimitInMs())
 				&& Objects.equal(this.poolAvailabilityThreshold, that.getPoolAvailabilityThreshold())
 				&& Objects.equal(this.poolName, that.getPoolName())
 				&& Objects.equal(this.disableConnectionTracking, that.isDisableConnectionTracking())
@@ -895,8 +925,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 	@Override
 	public int hashCode(){
-		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelay, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
-				this.connectionTestStatement, this.idleConnectionTestPeriod, this.idleMaxAge, this.initSQL, this.jdbcUrl, 
+		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelayInMs, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
+				this.connectionTestStatement, this.idleConnectionTestPeriodInSeconds, this.idleMaxAgeInSeconds, this.initSQL, this.jdbcUrl, 
 				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
 				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit, this.transactionRecoveryEnabled,
 				this.acquireRetryAttempts);
@@ -1100,12 +1130,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setProperties(Properties props) throws Exception {
 		// Use reflection to read in all possible properties of int, String or boolean.
 		for (Field field: BoneCPConfig.class.getDeclaredFields()){
+			String tmp = field.getName();
 			if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
 				if (field.getType().equals(int.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), int.class);
-					String val = props.getProperty(field.getName());
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), int.class);
+					String val = props.getProperty(tmp);
 					if (val == null){
-						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
 					}
 					if (val != null) {
 						try{
@@ -1115,10 +1146,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 						}
 					}
 				} if (field.getType().equals(long.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), long.class);
-					String val = props.getProperty(field.getName());
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), long.class);
+					String val = props.getProperty(tmp);
 					if (val == null){
-						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
 					}
 					if (val != null) {
 						try{
@@ -1128,19 +1159,19 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 						}
 					}
 				} else if (field.getType().equals(String.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), String.class);
-					String val = props.getProperty(field.getName());
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), String.class);
+					String val = props.getProperty(tmp);
 					if (val == null){
-						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
 					}
 					if (val != null) {
 						method.invoke(this, val);
 					}
 				} else if (field.getType().equals(boolean.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(field.getName()), boolean.class);
-					String val = props.getProperty(field.getName());
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), boolean.class);
+					String val = props.getProperty(tmp);
 					if (val == null){
-						val = props.getProperty("bonecp."+field.getName()); // hibernate provider style
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
 					}
 					if (val != null) {
 						method.invoke(this, Boolean.parseBoolean(val));
@@ -1214,12 +1245,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public long getQueryExecuteTimeLimit() {
 		logger.warn("Please use getQueryExecuteTimeLimitInMs in place of getQueryExecuteTimeLimit. This method has been deprecated.");
-		return this.queryExecuteTimeLimit;
+		return this.queryExecuteTimeLimitInMs;
 	}
 
 	/** Queries taking longer than this limit to execute are logged.  
 	 * @param queryExecuteTimeLimit the limit to set in milliseconds.
-	 * @deprecated Use {@link #setQueryExecuteTimeLimitInMs(int)} instead.
+	 * @deprecated Use {@link #setQueryExecuteTimeLimitInMs(long)} instead.
 	 */
 	@Deprecated
 	public void setQueryExecuteTimeLimit(int queryExecuteTimeLimit) {
@@ -1231,14 +1262,24 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @return the queryTimeLimit
 	 */
 	public long getQueryExecuteTimeLimitInMs() {
-		return this.queryExecuteTimeLimit;
+		return this.queryExecuteTimeLimitInMs;
+	}
+
+	/**
+	 * Returns the queryExecuteTimeLimit setting with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return queryExecuteTimeLimit period 
+	 */
+	public long getQueryExecuteTimeLimit(TimeUnit timeUnit) {
+		return timeUnit.convert(this.queryExecuteTimeLimitInMs, TimeUnit.MILLISECONDS);
 	}
 
 	
 	/** Queries taking longer than this limit to execute are logged.  
 	 * @param queryExecuteTimeLimit the limit to set in milliseconds.
 	 */
-	public void setQueryExecuteTimeLimitInMs(int queryExecuteTimeLimit) {
+	public void setQueryExecuteTimeLimitInMs(long queryExecuteTimeLimit) {
 		setQueryExecuteTimeLimit(queryExecuteTimeLimit, TimeUnit.MILLISECONDS);
 	}
 	
@@ -1246,8 +1287,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param queryExecuteTimeLimit the limit to set in milliseconds.
 	 * @param timeUnit 
 	 */
-	public void setQueryExecuteTimeLimit(int queryExecuteTimeLimit, TimeUnit timeUnit) {
-		this.queryExecuteTimeLimit = TimeUnit.MILLISECONDS.convert(queryExecuteTimeLimit, timeUnit);
+	public void setQueryExecuteTimeLimit(long queryExecuteTimeLimit, TimeUnit timeUnit) {
+		this.queryExecuteTimeLimitInMs = TimeUnit.MILLISECONDS.convert(queryExecuteTimeLimit, timeUnit);
 	}
 	
 	
@@ -1302,7 +1343,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public long getConnectionTimeout() {
 		logger.warn("Please use getConnectionTimeoutInMs in place of getConnectionTimeout. This method has been deprecated.");
-		return this.connectionTimeout;
+		return this.connectionTimeoutInMs;
 	}
 
 	/** Deprecated.
@@ -1313,15 +1354,26 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setConnectionTimeout(long connectionTimeout) {
 		logger.warn("Please use setConnectionTimeoutInMs in place of setConnectionTimeout. This method has been deprecated.");
-		this.connectionTimeout = connectionTimeout;
+		this.connectionTimeoutInMs = connectionTimeout;
 	}
 
 	/** Returns the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
 	 * @return the connectionTimeout
 	 */
 	public long getConnectionTimeoutInMs() {
-		return this.connectionTimeout;
+		return this.connectionTimeoutInMs;
 	}
+	
+	/**
+	 * Returns the connectionTimeout with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return connectionTimeout period 
+	 */
+	public long getConnectionTimeout(TimeUnit timeUnit) {
+		return timeUnit.convert(this.connectionTimeoutInMs, TimeUnit.MILLISECONDS);
+	}
+
 
 	/** Sets the maximum time (in milliseconds) to wait before a call to getConnection is timed out.
 	 * 
@@ -1329,10 +1381,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * Default: 0 ( = wait forever )
 	 * 
-	 * @param connectionTimeout the connectionTimeout to set
+	 * @param connectionTimeoutinMs the connectionTimeout to set
 	 */
-	public void setConnectionTimeoutInMs(long connectionTimeout) {
-		this.connectionTimeout = connectionTimeout;
+	public void setConnectionTimeoutInMs(long connectionTimeoutinMs) {
+		setConnectionTimeout(connectionTimeoutinMs, TimeUnit.MILLISECONDS);
 	}
 	
 	
@@ -1344,8 +1396,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit the unit of the connectionTimeout argument
 	 */
 	public void setConnectionTimeout(long connectionTimeout, TimeUnit timeUnit) {
-		this.connectionTimeout = TimeUnit.MILLISECONDS.convert(connectionTimeout, timeUnit);
+		this.connectionTimeoutInMs = TimeUnit.MILLISECONDS.convert(connectionTimeout, timeUnit);
 	}
+	
 	/** Returns the currently configured driver properties.
 	 * @return the driverProperties handle
 	 */
@@ -1374,11 +1427,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 	}
 
-	/** Returns the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
+	/** Deprecated.
+	 * @deprecated Use {@link #getCloseConnectionWatchTimeoutInMs()} instead
 	 * @return the watchTimeout currently set.
 	 */
+	@Deprecated
 	public long getCloseConnectionWatchTimeout() {
-		return this.closeConnectionWatchTimeout;
+		logger.warn("Please use getCloseConnectionWatchTimeoutInMs in place of getCloseConnectionWatchTimeout. This method has been deprecated.");
+		return this.closeConnectionWatchTimeoutInMs;
 	}
 
 	/** Deprecated.
@@ -1388,20 +1444,27 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setCloseConnectionWatchTimeout(long closeConnectionWatchTimeout) {
 		logger.warn("Please use setCloseConnectionWatchTimeoutInMs in place of setCloseConnectionWatchTimeout. This method has been deprecated.");
-		this.closeConnectionWatchTimeout = closeConnectionWatchTimeout;
+		setCloseConnectionWatchTimeoutInMs(closeConnectionWatchTimeout);
+	}
+
+	/** Returns the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
+	 * @return the watchTimeout currently set.
+	 */
+	public long getCloseConnectionWatchTimeoutInMs() {
+		return this.closeConnectionWatchTimeoutInMs;
+	}
+	
+	/**
+	 * Returns the closeConnectionWatchTimeout with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return closeConnectionWatchTimeout period 
+	 */
+	public long getCloseConnectionWatchTimeout(TimeUnit timeUnit) {
+		return timeUnit.convert(this.closeConnectionWatchTimeoutInMs, TimeUnit.MILLISECONDS);
 	}
 
 	
-	/** Deprecated.
-	 * @deprecated Use {@link #getCloseConnectionWatchTimeoutInMs()} instead
-	 * @return the watchTimeout currently set.
-	 */
-	@Deprecated
-	public long getCloseConnectionWatchTimeoutInMs() {
-		logger.warn("Please use getCloseConnectionWatchTimeoutInMs in place of getCloseConnectionWatchTimeoutInMs. This method has been deprecated.");
-		return this.closeConnectionWatchTimeout;
-	}
-
 	/** Sets the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
 	 * @param closeConnectionWatchTimeout the watchTimeout to set
 	 */
@@ -1414,7 +1477,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit Time granularity
 	 */
 	public void setCloseConnectionWatchTimeout(long closeConnectionWatchTimeout, TimeUnit timeUnit) {
-		this.closeConnectionWatchTimeout = TimeUnit.MILLISECONDS.convert(closeConnectionWatchTimeout, timeUnit);
+		this.closeConnectionWatchTimeoutInMs = TimeUnit.MILLISECONDS.convert(closeConnectionWatchTimeout, timeUnit);
 	}
 	
 	/**
@@ -1441,12 +1504,48 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.statementReleaseHelperThreads = statementReleaseHelperThreads;
 	}
 
+	
 	/**
-	 * Returns the maxConnectionAge field.
+	 * Deprecated. Please use {@link #getMaxConnectionAgeInSeconds()} instead.
+
+	 * @return maxConnectionAge
+	 * @deprecated Please use {@link #getMaxConnectionAgeInSeconds()} instead.
+	 */
+	@Deprecated
+	public long getMaxConnectionAge() {
+		logger.warn("Please use getMaxConnectionAgeInSeconds in place of getMaxConnectionAge. This method has been deprecated.");
+		return this.maxConnectionAgeInSeconds;
+	}
+	
+	/**
+	 * Returns the maxConnectionAge field in seconds
 	 * @return maxConnectionAge
 	 */
-	public long getMaxConnectionAge() {
-		return this.maxConnectionAge;
+	public long getMaxConnectionAgeInSeconds() {
+		return this.maxConnectionAgeInSeconds;
+	}
+
+	/**
+	 * Returns the maxConnectionAge with the specified granularity.
+	 * 
+	 * @param timeUnit time granularity
+	 * @return maxConnectionAge period 
+	 */
+	public long getMaxConnectionAge(TimeUnit timeUnit) {
+		return timeUnit.convert(this.maxConnectionAgeInSeconds, TimeUnit.SECONDS);
+	}
+	
+
+	/**
+	 * Deprecated. Use {{@link #setMaxConnectionAgeInSeconds(long)} instead.
+	 * 
+	 * @param maxConnectionAgeInSeconds the maxConnectionAge to set
+	 * @deprecated Please use {{@link #setMaxConnectionAgeInSeconds(long)} instead.
+	 */
+	@Deprecated
+	public void setMaxConnectionAge(long maxConnectionAgeInSeconds) {
+		logger.warn("Please use setmaxConnectionAgeInSecondsInSeconds in place of setMaxConnectionAge. This method has been deprecated.");
+		this.maxConnectionAgeInSeconds = maxConnectionAgeInSeconds;
 	}
 
 	/**
@@ -1454,10 +1553,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * off whether it is idle or not. Connections currently in use will not be affected until they
 	 * are returned to the pool.
 	 * 
-	 * @param maxConnectionAge the maxConnectionAge to set
+	 * @param maxConnectionAgeInSeconds the maxConnectionAge to set
 	 */
-	public void setMaxConnectionAge(long maxConnectionAge) {
-		this.maxConnectionAge = maxConnectionAge;
+	public void setMaxConnectionAgeInSeconds(long maxConnectionAgeInSeconds) {
+		setMaxConnectionAge(maxConnectionAgeInSeconds, TimeUnit.SECONDS);
 	}
 
 	/**
@@ -1469,7 +1568,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit the unit of the maxConnectionAge argument.
 	 */
 	public void setMaxConnectionAge(long maxConnectionAge, TimeUnit timeUnit) {
-		this.maxConnectionAge = TimeUnit.SECONDS.convert(maxConnectionAge, timeUnit);
+		this.maxConnectionAgeInSeconds = TimeUnit.SECONDS.convert(maxConnectionAge, timeUnit);
 	}
 	/**
 	 * Returns the configFile field.
