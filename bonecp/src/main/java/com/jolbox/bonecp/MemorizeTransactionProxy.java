@@ -252,10 +252,10 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		ConnectionHook connectionHook = con.getPool().getConfig().getConnectionHook();
 		
 		int acquireRetryAttempts = con.getPool().getConfig().getAcquireRetryAttempts();
-		int acquireRetryDelay = con.getPool().getConfig().getAcquireRetryDelay();
+		long acquireRetryDelay = con.getPool().getConfig().getAcquireRetryDelayInMs();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
-		acquireConfig.setAcquireRetryDelay(acquireRetryDelay);
+		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelay);
 		acquireConfig.setLogMessage("Failed to replay transaction");
 		
 		Map<Object, Object> replaceTarget = new HashMap<Object, Object>();

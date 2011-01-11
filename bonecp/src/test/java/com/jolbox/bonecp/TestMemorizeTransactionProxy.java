@@ -338,7 +338,7 @@ public class TestMemorizeTransactionProxy {
 		config.setJdbcUrl("jdbc:mock:driver");
 		config.setMinConnectionsPerPartition(2);
 		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelay(1);
+		config.setAcquireRetryDelayInMs(1);
 		config.setAcquireRetryAttempts(2);
 //		config.setConnectionHook(new CoverageHook());
 		BoneCP pool = new BoneCP(config);
@@ -414,7 +414,7 @@ public class TestMemorizeTransactionProxy {
 		config.setJdbcUrl("jdbc:mock:driver");
 		config.setMinConnectionsPerPartition(2);
 		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelay(1);
+		config.setAcquireRetryDelayInMs(1L);
 		config.setAcquireRetryAttempts(1);
 //		config.setConnectionHook(new CoverageHook());
 		BoneCP pool = new BoneCP(config);
@@ -489,7 +489,7 @@ public class TestMemorizeTransactionProxy {
 		config.setJdbcUrl("jdbc:mock:driver");
 		config.setMinConnectionsPerPartition(2);
 		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelay(10000);
+		config.setAcquireRetryDelayInMs(10000L);
 		config.setAcquireRetryAttempts(2);
 //		config.setConnectionHook(new CoverageHook());
 		BoneCP pool = new BoneCP(config);
@@ -579,7 +579,7 @@ public class TestMemorizeTransactionProxy {
 		config.setJdbcUrl("jdbc:mock:driver");
 		config.setMinConnectionsPerPartition(2);
 		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelay(1);
+		config.setAcquireRetryDelayInMs(1);
 		config.setAcquireRetryAttempts(2);
 		config.setConnectionHook(new CoverageHook());
 		BoneCP pool = new BoneCP(config);

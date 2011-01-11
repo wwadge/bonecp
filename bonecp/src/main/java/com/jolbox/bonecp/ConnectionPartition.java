@@ -92,7 +92,7 @@ public class ConnectionPartition implements Serializable{
 	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
 	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
 	/** Store the unit translation here to avoid recalculating it in statement handles. */
-	private long preComputedQueryExecuteTimeLimit;
+	private long queryExecuteTimeLimitInNanoSeconds;
 
 
 
@@ -206,7 +206,7 @@ public class ConnectionPartition implements Serializable{
 		this.password = config.getPassword();
 		this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 		this.disableTracking = config.isDisableConnectionTracking();
-		this.preComputedQueryExecuteTimeLimit = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimit(), TimeUnit.MILLISECONDS);
+		this.queryExecuteTimeLimitInNanoSeconds = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimitInMs(), TimeUnit.MILLISECONDS);
 		/** Create a number of helper threads for connection release. */
 		int helperThreads = config.getReleaseHelperThreads();
 		for (int i = 0; i < helperThreads; i++) { 
@@ -320,7 +320,7 @@ public class ConnectionPartition implements Serializable{
 	/** Store the unit translation here to avoid recalculating it in the constructor of StatementHandle. 
 	 * @return value
 	 */
-	protected long getPreComputedQueryExecuteTimeLimit(){
-		return this.preComputedQueryExecuteTimeLimit;
+	protected long getQueryExecuteTimeLimitinNanoSeconds(){
+		return this.queryExecuteTimeLimitInNanoSeconds;
 	}
 }

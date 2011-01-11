@@ -137,7 +137,7 @@ public interface BoneCPConfigMBean {
 	/** Returns the number of ms to wait before attempting to obtain a connection again after a failure. Default: 7000.
 	 * @return the acquireRetryDelay
 	 */
-	int getAcquireRetryDelayInMs();
+	long getAcquireRetryDelayInMs();
 	
 	/** Returns true if connection pool is to be initialized lazily.
 	 * @return lazyInit setting 

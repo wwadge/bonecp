@@ -124,9 +124,9 @@ public class BoneCP implements Serializable {
 	/** Watch for connections that should have been safely closed but the application forgot. */
 	private FinalizableReferenceQueue finalizableRefQueue;
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
-	private long connectionTimeout;
+	private long connectionTimeoutInMs;
 	/** No of ms to wait for thread.join() in connection watch thread. */
-	private long closeConnectionWatchTimeout;
+	private long closeConnectionWatchTimeoutInMs;
 	/** If set to true, config has specified the use of statement release helper threads. */
 	private boolean statementReleaseHelperThreadsConfigured;
 	/** Scratch queue of statments awaiting to be closed. */
@@ -268,11 +268,11 @@ public class BoneCP implements Serializable {
 		config.sanitize();
 
 		this.statisticsEnabled = config.isStatisticsEnabled();
-		this.closeConnectionWatchTimeout = config.getCloseConnectionWatchTimeout();
+		this.closeConnectionWatchTimeoutInMs = config.getCloseConnectionWatchTimeoutInMs();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
-		this.connectionTimeout = config.getConnectionTimeout();
-		if (this.connectionTimeout == 0){
-			this.connectionTimeout = Long.MAX_VALUE;
+		this.connectionTimeoutInMs = config.getConnectionTimeoutInMs();
+		if (this.connectionTimeoutInMs == 0){
+			this.connectionTimeoutInMs = Long.MAX_VALUE;
 		}
 		this.defaultReadOnly = config.getDefaultReadOnly();
 		this.defaultCatalog = config.getDefaultCatalog();
@@ -281,7 +281,7 @@ public class BoneCP implements Serializable {
 		
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
-		acquireConfig.setAcquireRetryDelay(0);
+		acquireConfig.setAcquireRetryDelayInMs(0);
 		acquireConfig.setLogMessage("Failed to obtain initial connection");
 		
 		if (!config.isLazyInit()){
@@ -358,22 +358,23 @@ public class BoneCP implements Serializable {
 
 			}
 
-			if (config.getIdleConnectionTestPeriod() > 0 || config.getIdleMaxAge() > 0){
+			
+			if (config.getIdleConnectionTestPeriodInMinutes() > 0 || config.getIdleMaxAgeInMinutes() > 0){
 				
-				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, 1000*60*config.getIdleMaxAge(), 1000*60*config.getIdleConnectionTestPeriod(), queueLIFO);
-				long delay = config.getIdleConnectionTestPeriod();
-				if (delay == 0){
-					delay = config.getIdleMaxAge();
+				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, config.getIdleMaxAge(TimeUnit.MILLISECONDS), config.getIdleConnectionTestPeriod(TimeUnit.MILLISECONDS), queueLIFO);
+				long delayInMinutes = config.getIdleConnectionTestPeriodInMinutes();
+				if (delayInMinutes == 0){
+					delayInMinutes = config.getIdleMaxAgeInMinutes();
 				}
-				if (config.getIdleMaxAge() != 0 && config.getIdleConnectionTestPeriod() != 0 && config.getIdleMaxAge() < delay){
-					delay = config.getIdleMaxAge();
+				if (config.getIdleMaxAgeInMinutes() != 0 && config.getIdleConnectionTestPeriodInMinutes() != 0 && config.getIdleMaxAgeInMinutes() < delayInMinutes){
+					delayInMinutes = config.getIdleMaxAgeInMinutes();
 				}
-				this.keepAliveScheduler.schedule(connectionTester, delay, TimeUnit.MINUTES);
+				this.keepAliveScheduler.schedule(connectionTester, delayInMinutes, TimeUnit.MINUTES);
 			}
 
-			if (config.getMaxConnectionAge() > 0){
-				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge());
-				this.maxAliveScheduler.schedule(connectionMaxAgeTester, config.getMaxConnectionAge(), TimeUnit.SECONDS);
+			if (config.getMaxConnectionAgeInSeconds() > 0){
+				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge(TimeUnit.MILLISECONDS));
+				this.maxAliveScheduler.schedule(connectionMaxAgeTester, config.getMaxConnectionAgeInSeconds(), TimeUnit.SECONDS);
 			}
 			// watch this partition for low no of threads
 			this.connectionsScheduler.execute(new PoolWatchThread(connectionPartition, this));
@@ -480,7 +481,7 @@ public class BoneCP implements Serializable {
 		// we still didn't find an empty one, wait forever (or as per config) until our partition is free
 		if (result == null) {
 			try {
-				result = connectionPartition.getFreeConnections().poll(this.connectionTimeout, TimeUnit.MILLISECONDS);
+				result = connectionPartition.getFreeConnections().poll(this.connectionTimeoutInMs, TimeUnit.MILLISECONDS);
 				if (result == null){
 					// 08001 = The application requester is unable to establish the connection.
 					throw new SQLException("Timed out waiting for a free available connection.", "08001");
@@ -513,7 +514,7 @@ public class BoneCP implements Serializable {
 	 */
 	private void watchConnection(ConnectionHandle connectionHandle) {
 		String message = captureStackTrace(UNCLOSED_EXCEPTION_MESSAGE);
-		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message, this.closeConnectionWatchTimeout));
+		this.closeConnectionExecutor.submit(new CloseThreadMonitor(Thread.currentThread(), connectionHandle, message, this.closeConnectionWatchTimeoutInMs));
 	}
 
 	/** Throw an exception to capture it so as to be able to print it out later on
@@ -612,7 +613,7 @@ public class BoneCP implements Serializable {
 		}
 
 
-		connectionHandle.setConnectionLastUsed(System.currentTimeMillis());
+		connectionHandle.setConnectionLastUsedInMs(System.currentTimeMillis());
 		if (!this.poolShuttingDown){
 
 			putConnectionBackInPartition(connectionHandle);
@@ -674,7 +675,7 @@ public class BoneCP implements Serializable {
 			result = false;
 		} finally {
 			connection.logicallyClosed = logicallyClosed;
-			connection.setConnectionLastReset(System.currentTimeMillis());
+			connection.setConnectionLastResetInMs(System.currentTimeMillis());
 			result = closeStatement(stmt, result);
 		}
 		return result;

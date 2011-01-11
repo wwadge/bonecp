@@ -21,7 +21,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Properties;
+import java.lang.reflect.InvocationTargetException;
 
 import org.junit.Test;
 
@@ -44,9 +44,11 @@ public class TestXMLDefaultCreate {
 	 * @throws IllegalArgumentException
 	 * @throws SecurityException
 	 * @throws IOException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
 	 */
 	@Test
-	public void testCreateXMLFile() throws SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+	public void testCreateXMLFile() throws SecurityException, IllegalArgumentException, IllegalAccessException, IOException, InvocationTargetException, NoSuchMethodException {
 		BoneCPConfig config = new BoneCPConfig();
 		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -84,6 +86,7 @@ public class TestXMLDefaultCreate {
 					String prop = toProperty(mName);
 					Object defaultVal;
 					try {
+						
 						defaultVal = fetchDefaultValue(config, prop);
 
 						if (defaultVal == null) {
@@ -116,11 +119,23 @@ public class TestXMLDefaultCreate {
 	 * @throws NoSuchFieldException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
 	 */
 	private static Object fetchDefaultValue(BoneCPConfig config, String prop)
-			throws SecurityException, NoSuchFieldException,
-			IllegalArgumentException, IllegalAccessException {
-		Field field = BoneCPConfig.class.getDeclaredField(prop);
+			throws SecurityException,
+			IllegalArgumentException, IllegalAccessException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException {
+		Field field = null ;
+	
+		try{
+			field = BoneCPConfig.class.getDeclaredField(prop);
+		} catch (NoSuchFieldException e){
+		
+			if (field == null){
+				return BoneCPConfig.class.getDeclaredMethod("get"+prop.substring(0, 1).toUpperCase()+prop.substring(1)).invoke(config);
+			}
+		}
+		
 		field.setAccessible(true);
 		return field.get(config);
 	}

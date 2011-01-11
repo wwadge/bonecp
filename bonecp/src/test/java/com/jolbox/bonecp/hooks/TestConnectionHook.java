@@ -79,7 +79,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getAcquireIncrement()).andReturn(0).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
@@ -155,7 +155,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
@@ -173,7 +173,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
@@ -212,7 +212,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("invalid").anyTimes();
@@ -240,7 +240,7 @@ public class TestConnectionHook {
 			// do nothing
 		};
 		AcquireFailConfig fail = createNiceMock(AcquireFailConfig.class);
-		expect(fail.getAcquireRetryDelay()).andReturn(0).times(5).andThrow(new RuntimeException()).once();
+		expect(fail.getAcquireRetryDelayInMs()).andReturn(0L).times(5).andThrow(new RuntimeException()).once();
 		expect(fail.getAcquireRetryAttempts()).andReturn(new AtomicInteger(2)).times(3).andReturn(new AtomicInteger(1)).times(3);
 		replay(fail);
 		assertTrue(hook.onAcquireFail(new SQLException(), fail));
@@ -259,15 +259,15 @@ public class TestConnectionHook {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200L).anyTimes();
-		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
+		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		Connection mockConnection = createNiceMock(Connection.class);
@@ -303,14 +303,14 @@ public class TestConnectionHook {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn( new CoverageHook()).anyTimes();
-		expect(mockConfig.getQueryExecuteTimeLimit()).andReturn(200L).anyTimes();
+		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();

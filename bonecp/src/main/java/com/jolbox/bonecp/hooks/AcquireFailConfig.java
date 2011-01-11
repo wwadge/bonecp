@@ -27,27 +27,45 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class AcquireFailConfig {
 	/** Delay to use between one acquire retry attempt and the next. */
-	private int acquireRetryDelay;
+	private long acquireRetryDelayInMs;
 	/** Number of attempts left before giving up. */
 	private AtomicInteger acquireRetryAttempts = new AtomicInteger();
 	/** Message that shows the origin of the problem. */ 
 	private String logMessage = "";
 	/** An opaque handle to be used by your application if necessary. */
 	private Object debugHandle;
+
+	/** Deprecated. Use {@link #getAcquireRetryDelayInMs()} instead.
+	 * @return the acquireRetryDelay value
+	 * @deprecated Use {@link #getAcquireRetryDelayInMs()} instead.
+	 */
+	@Deprecated
+	public long getAcquireRetryDelay() {
+		return getAcquireRetryDelayInMs();
+	}
+	
 	/** Getter for acquireRetryDelay. By default starts off with whatever is set in the config.
 	 * @return the acquireRetryDelay value
 	 */
-	public int getAcquireRetryDelay() {
-		return this.acquireRetryDelay;
+	public long getAcquireRetryDelayInMs() {
+		return this.acquireRetryDelayInMs;
 	}
-	
-	/** Sets the new acquireRetryDelay. Does not affect the global config.
-	 * @param acquireRetryDelay the acquireRetryDelay to set
+	/** Deprecated. Use {@link #setAcquireRetryDelayInMs(long)} instead.
+	 * @param acquireRetryDelayInMs the acquireRetryDelay to set
+	 * @deprecated Use {@link #setAcquireRetryDelayInMs(long)} instead.
 	 */
-	public void setAcquireRetryDelay(int acquireRetryDelay) {
-		this.acquireRetryDelay = acquireRetryDelay;
+	@Deprecated
+	public void setAcquireRetryDelay(long acquireRetryDelayInMs) {
+		setAcquireRetryDelayInMs(acquireRetryDelayInMs);
 	}
-	
+
+	/** Sets the new acquireRetryDelay. Does not affect the global config.
+	 * @param acquireRetryDelayInMs the acquireRetryDelay to set
+	 */
+	public void setAcquireRetryDelayInMs(long acquireRetryDelayInMs) {
+		this.acquireRetryDelayInMs = acquireRetryDelayInMs;
+	}
+
 	/** Returns the acquireRetryAttemps. By default starts off with whatever is set in the config.
 	 * @return the acquireRetryAttempts value.
 	 */

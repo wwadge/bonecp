@@ -34,7 +34,7 @@ public class PoolWatchThread implements Runnable {
 	/** Mostly used to break out easily in unit testing. */
 	private boolean signalled;
 	/** How long to wait before retrying to add a connection upon failure. */
-	private long acquireRetryDelay = 1000L;
+	private long acquireRetryDelayInMs = 1000L;
 	/** Start off lazily. */
 	private boolean lazyInit;
 	/** Occupancy% threshold. */
@@ -51,7 +51,7 @@ public class PoolWatchThread implements Runnable {
 		this.partition = connectionPartition;
 		this.pool = pool;
 		this.lazyInit = this.pool.getConfig().isLazyInit();
-		this.acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
+		this.acquireRetryDelayInMs = this.pool.getConfig().getAcquireRetryDelayInMs();
 		this.poolAvailabilityThreshold = this.pool.getConfig().getPoolAvailabilityThreshold();
 	}
 
@@ -101,8 +101,8 @@ public class PoolWatchThread implements Runnable {
 				this.partition.addFreeConnection(new ConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool));
 			}
 		} catch (SQLException e) {
-			logger.error("Error in trying to obtain a connection. Retrying in "+this.acquireRetryDelay+"ms", e);
-			Thread.sleep(this.acquireRetryDelay);
+			logger.error("Error in trying to obtain a connection. Retrying in "+this.acquireRetryDelayInMs+"ms", e);
+			Thread.sleep(this.acquireRetryDelayInMs);
 		}
 
 	}

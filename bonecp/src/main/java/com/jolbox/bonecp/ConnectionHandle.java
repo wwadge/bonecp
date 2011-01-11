@@ -35,6 +35,8 @@ import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
+
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 // #ifdef JDK6
 import java.sql.Array;
@@ -63,11 +65,11 @@ public class ConnectionHandle implements Connection{
 	/** Connection handle. */
 	private Connection connection = null;
 	/** Last time this connection was used by an application. */
-	private long connectionLastUsed = System.currentTimeMillis();
+	private long connectionLastUsedInMs = System.currentTimeMillis();
 	/** Last time we sent a reset to this connection. */
-	private long connectionLastReset = System.currentTimeMillis();
+	private long connectionLastResetInMs = System.currentTimeMillis();
 	/** Time when this connection was created. */
-	private long connectionCreationTime = System.currentTimeMillis();
+	private long connectionCreationTimeInMs = System.currentTimeMillis();
 	/** Pool handle. */
 	private BoneCP pool;
 	/**
@@ -111,7 +113,7 @@ public class ConnectionHandle implements Connection{
 	/** Keep track of the thread. */
 	protected Thread threadUsingConnection;
 	/** Configured max connection age. */
-	private long maxConnectionAge;
+	private long maxConnectionAgeInMs;
 	/** if true, we care about statistics. */
 	private boolean statisticsEnabled;
 	/** Statistics handle. */
@@ -165,7 +167,7 @@ public class ConnectionHandle implements Connection{
 			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
 		}
 
-		this.maxConnectionAge = pool.getConfig().getMaxConnectionAge() * 1000;
+		this.maxConnectionAgeInMs = pool.getConfig().getMaxConnectionAge(TimeUnit.MILLISECONDS);
 		this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
 		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
@@ -189,10 +191,10 @@ public class ConnectionHandle implements Connection{
 		Connection result = null;
 
 		int acquireRetryAttempts = this.pool.getConfig().getAcquireRetryAttempts();
-		int acquireRetryDelay = this.pool.getConfig().getAcquireRetryDelay();
+		long acquireRetryDelayInMs = this.pool.getConfig().getAcquireRetryDelayInMs();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
-		acquireConfig.setAcquireRetryDelay(acquireRetryDelay);
+		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelayInMs);
 		acquireConfig.setLogMessage("Failed to acquire connection");
 
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
@@ -217,10 +219,10 @@ public class ConnectionHandle implements Connection{
 				if (this.connectionHook != null){
 					tryAgain = this.connectionHook.onAcquireFail(e, acquireConfig);
 				} else {
-					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelay+"ms. Attempts left: "+acquireRetryAttempts, e);
+					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelayInMs+"ms. Attempts left: "+acquireRetryAttempts, e);
 
 					try {
-						Thread.sleep(acquireRetryDelay);
+						Thread.sleep(acquireRetryDelayInMs);
 						if (acquireRetryAttempts > 0){
 							tryAgain = (--acquireRetryAttempts) != 0;
 						}
@@ -1118,31 +1120,51 @@ public class ConnectionHandle implements Connection{
 	/**
 	 * @return the connectionLastUsed
 	 */
+	public long getConnectionLastUsedInMs() {
+		return this.connectionLastUsedInMs;
+	}
+
+	/**
+	 * Deprecated. Use {@link #getConnectionLastUsedInMs()} instead.
+	 * @return the connectionLastUsed
+	 * @deprecated Use {@link #getConnectionLastUsedInMs()} instead.
+	 */
+	@Deprecated
 	public long getConnectionLastUsed() {
-		return this.connectionLastUsed;
+		return getConnectionLastUsedInMs();
 	}
 
 	/**
 	 * @param connectionLastUsed
 	 *            the connectionLastUsed to set
 	 */
-	protected void setConnectionLastUsed(long connectionLastUsed) {
-		this.connectionLastUsed = connectionLastUsed;
+	protected void setConnectionLastUsedInMs(long connectionLastUsed) {
+		this.connectionLastUsedInMs = connectionLastUsed;
 	}
 
 	/**
 	 * @return the connectionLastReset
 	 */
-	public long getConnectionLastReset() {
-		return this.connectionLastReset;
+	public long getConnectionLastResetInMs() {
+		return this.connectionLastResetInMs;
 	}
 
+	/** Deprecated. Use {@link #getConnectionLastResetInMs()} instead.
+	 * @return the connectionLastReset
+	 * @deprecated Please use {@link #getConnectionLastResetInMs()} instead
+	 */
+	@Deprecated
+	public long getConnectionLastReset() {
+		return getConnectionLastResetInMs();
+	}
+
+	
 	/**
 	 * @param connectionLastReset
 	 *            the connectionLastReset to set
 	 */
-	protected void setConnectionLastReset(long connectionLastReset) {
-		this.connectionLastReset = connectionLastReset;
+	protected void setConnectionLastResetInMs(long connectionLastReset) {
+		this.connectionLastResetInMs = connectionLastReset;
 	}
 
 	/**
@@ -1327,11 +1349,21 @@ public class ConnectionHandle implements Connection{
 	}
 
 	/**
+	 * Deprecated. Use {@link #getConnectionCreationTimeInMs()} instead.
+	 * @return connectionCreationTime
+	 * @deprecated please use {@link #getConnectionCreationTimeInMs()} instead.
+	 */
+	@Deprecated
+	public long getConnectionCreationTime() {
+		return getConnectionCreationTimeInMs();
+	}
+
+	/**
 	 * Returns the connectionCreationTime field.
 	 * @return connectionCreationTime
 	 */
-	public long getConnectionCreationTime() {
-		return this.connectionCreationTime;
+	public long getConnectionCreationTimeInMs() {
+		return this.connectionCreationTimeInMs;
 	}
 
 	/** Returns true if the given connection has exceeded the maxConnectionAge.
@@ -1346,7 +1378,7 @@ public class ConnectionHandle implements Connection{
 	 * @return true if the connection has expired.
 	 */
 	protected boolean isExpired(long currentTime) {
-		return this.maxConnectionAge > 0 && (currentTime - this.connectionCreationTime) > this.maxConnectionAge;
+		return this.maxConnectionAgeInMs > 0 && (currentTime - this.connectionCreationTimeInMs) > this.maxConnectionAgeInMs;
 	}
 
 }

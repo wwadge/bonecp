@@ -17,7 +17,6 @@
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -33,9 +32,9 @@ import org.slf4j.LoggerFactory;
 public class ConnectionTesterThread implements Runnable {
 
 	/** Connections used less than this time ago are not keep-alive tested. */
-	private long idleConnectionTestPeriod;
+	private long idleConnectionTestPeriodInMs;
 	/** Max no of ms to wait before a connection that isn't used is killed off. */
-	private long idleMaxAge;
+	private long idleMaxAgeInMs;
 	/** Partition being handled. */
 	private ConnectionPartition partition;
 	/** Scheduler handle. **/
@@ -51,16 +50,16 @@ public class ConnectionTesterThread implements Runnable {
 	 * @param connectionPartition partition to work on
 	 * @param scheduler Scheduler handler.
 	 * @param pool pool handle
-	 * @param idleMaxAge Threads older than this are killed off 
-	 * @param idleConnectionTestPeriod Threads that are idle for more than this time are sent a keep-alive.
+	 * @param idleMaxAgeInMs Threads older than this are killed off 
+	 * @param idleConnectionTestPeriodInMs Threads that are idle for more than this time are sent a keep-alive.
 	 * @param lifoMode if true, we're running under a lifo fashion.
 	 */
 	protected ConnectionTesterThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
-			BoneCP pool, long idleMaxAge, long idleConnectionTestPeriod, boolean lifoMode){
+			BoneCP pool, long idleMaxAgeInMs, long idleConnectionTestPeriodInMs, boolean lifoMode){
 		this.partition = connectionPartition;
 		this.scheduler = scheduler;
-		this.idleMaxAge = idleMaxAge;
-		this.idleConnectionTestPeriod = idleConnectionTestPeriod;
+		this.idleMaxAgeInMs = idleMaxAgeInMs;
+		this.idleConnectionTestPeriodInMs = idleConnectionTestPeriodInMs;
 		this.pool = pool;
 		this.lifoMode = lifoMode;
 	}
@@ -71,17 +70,17 @@ public class ConnectionTesterThread implements Runnable {
 		ConnectionHandle connection = null;
 		long tmp;
 		try {
-				long nextCheck = this.idleConnectionTestPeriod;
-				if (this.idleMaxAge > 0){
-					if (this.idleConnectionTestPeriod == 0){
-						nextCheck = this.idleMaxAge;
+				long nextCheckInMs = this.idleConnectionTestPeriodInMs;
+				if (this.idleMaxAgeInMs > 0){
+					if (this.idleConnectionTestPeriodInMs == 0){
+						nextCheckInMs = this.idleMaxAgeInMs;
 					} else {
-						nextCheck = Math.min(nextCheck, this.idleMaxAge);
+						nextCheckInMs = Math.min(nextCheckInMs, this.idleMaxAgeInMs);
 					}
 				}
 				
 				int partitionSize= this.partition.getAvailableConnections();
-				long currentTime = System.currentTimeMillis();
+				long currentTimeInMs = System.currentTimeMillis();
 				// go thru all partitions
 				for (int i=0; i < partitionSize; i++){
 					// grab connections one by one.
@@ -91,36 +90,36 @@ public class ConnectionTesterThread implements Runnable {
 						
 						// check if connection has been idle for too long (or is marked as broken)
 						if (connection.isPossiblyBroken() || 
-								((this.idleMaxAge > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsed() > this.idleMaxAge))){
+								((this.idleMaxAgeInMs > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
 							// kill off this connection - it's broken or it has been idle for too long
 							closeConnection(connection);
 							continue;
 						}
 						
 						// check if it's time to send a new keep-alive test statement.
-						if (this.idleConnectionTestPeriod > 0 && (currentTime-connection.getConnectionLastUsed() > this.idleConnectionTestPeriod) &&
-								(currentTime-connection.getConnectionLastReset() >= this.idleConnectionTestPeriod)) {
+						if (this.idleConnectionTestPeriodInMs > 0 && (currentTimeInMs-connection.getConnectionLastUsedInMs() > this.idleConnectionTestPeriodInMs) &&
+								(currentTimeInMs-connection.getConnectionLastResetInMs() >= this.idleConnectionTestPeriodInMs)) {
 							// send a keep-alive, close off connection if we fail.
 							if (!this.pool.isConnectionHandleAlive(connection)){
 								closeConnection(connection);
 								continue; 
 							}
 							// calculate the next time to wake up
-							tmp = this.idleConnectionTestPeriod;
-							if (this.idleMaxAge > 0){ // wake up earlier for the idleMaxAge test?
-								tmp = Math.min(tmp, this.idleMaxAge);
+							tmp = this.idleConnectionTestPeriodInMs;
+							if (this.idleMaxAgeInMs > 0){ // wake up earlier for the idleMaxAge test?
+								tmp = Math.min(tmp, this.idleMaxAgeInMs);
 							}
 						} else {
 							// determine the next time to wake up (connection test time or idle Max age?) 
-							tmp = this.idleConnectionTestPeriod-(currentTime - connection.getConnectionLastReset());
-							long tmp2 = this.idleMaxAge - (currentTime-connection.getConnectionLastUsed());
-							if (this.idleMaxAge > 0){
+							tmp = this.idleConnectionTestPeriodInMs-(currentTimeInMs - connection.getConnectionLastResetInMs());
+							long tmp2 = this.idleMaxAgeInMs - (currentTimeInMs-connection.getConnectionLastUsedInMs());
+							if (this.idleMaxAgeInMs > 0){
 								tmp = Math.min(tmp, tmp2);
 							}
 							
 						}
-						if (tmp < nextCheck){
-							nextCheck = tmp; 
+						if (tmp < nextCheckInMs){
+							nextCheckInMs = tmp; 
 						}
 						
 						if (this.lifoMode){
@@ -136,7 +135,7 @@ public class ConnectionTesterThread implements Runnable {
 					}
 
 				} // throw it back on the queue
-				this.scheduler.schedule(this, nextCheck, TimeUnit.MILLISECONDS);
+				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
 				logger.debug("Shutting down connection tester thread.");

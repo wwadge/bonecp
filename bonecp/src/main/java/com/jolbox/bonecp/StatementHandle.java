@@ -112,7 +112,7 @@ public class StatementHandle implements Statement{
 		}
 		try{
 			
-			this.queryExecuteTimeLimit = connectionHandle.getOriginatingPartition().getPreComputedQueryExecuteTimeLimit();
+			this.queryExecuteTimeLimit = connectionHandle.getOriginatingPartition().getQueryExecuteTimeLimitinNanoSeconds();
 		} catch (Exception e){ // safety!
 //			this.connectionHook = null;
 			this.queryExecuteTimeLimit = 0; 

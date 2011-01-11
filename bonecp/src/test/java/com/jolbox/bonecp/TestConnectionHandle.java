@@ -143,7 +143,7 @@ public class TestConnectionHandle {
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 
 		this.testClass.url = "jdbc:mock:driver";
-		this.config.setAcquireRetryDelay(1);
+		this.config.setAcquireRetryDelayInMs(1);
 		CustomHook testHook = new CustomHook();
 		this.config.setConnectionHook(testHook);
 		// make it fail the first time and succeed the second time
@@ -181,7 +181,7 @@ public class TestConnectionHandle {
 		//	Test 4: Get signalled to interrupt fail delay
 		count=99;
 		this.config.setAcquireRetryAttempts(2);
-		this.config.setAcquireRetryDelay(7000);
+		this.config.setAcquireRetryDelayInMs(7000);
 		final Thread currentThread = Thread.currentThread();
 
 		try{
@@ -204,7 +204,7 @@ public class TestConnectionHandle {
 		} catch (SQLException e){
 			// expected behaviour
 		}
-		this.config.setAcquireRetryDelay(10);
+		this.config.setAcquireRetryDelayInMs(10);
 		
 		
 	}
@@ -479,18 +479,18 @@ public class TestConnectionHandle {
 		this.testClass.setOriginatingPartition(mockPartition);
 		assertEquals(mockPartition, this.testClass.getOriginatingPartition());
 
-		this.testClass.setConnectionLastReset(123);
-		assertEquals(this.testClass.getConnectionLastReset(), 123);
+		this.testClass.setConnectionLastResetInMs(123);
+		assertEquals(this.testClass.getConnectionLastResetInMs(), 123);
 
-		this.testClass.setConnectionLastUsed(456);
-		assertEquals(this.testClass.getConnectionLastUsed(), 456);
+		this.testClass.setConnectionLastUsedInMs(456);
+		assertEquals(this.testClass.getConnectionLastUsedInMs(), 456);
 
 		Field field = this.testClass.getClass().getDeclaredField("possiblyBroken");
 		field.setAccessible(true);
 		field.setBoolean(this.testClass, true);
 		assertTrue(this.testClass.isPossiblyBroken());
 
-		field = this.testClass.getClass().getDeclaredField("connectionCreationTime");
+		field = this.testClass.getClass().getDeclaredField("connectionCreationTimeInMs");
 		field.setAccessible(true);
 		field.setLong(this.testClass, 1234L);
 		assertEquals(1234L, this.testClass.getConnectionCreationTime());
@@ -544,7 +544,7 @@ public class TestConnectionHandle {
 	 */
 	@Test
 	public void testIsExpired() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
-		Field field = this.testClass.getClass().getDeclaredField("maxConnectionAge");
+		Field field = this.testClass.getClass().getDeclaredField("maxConnectionAgeInMs");
 		field.setAccessible(true);
 		field.setLong(this.testClass, 1234L);
 		assertTrue(this.testClass.isExpired(System.currentTimeMillis() + 9999L));

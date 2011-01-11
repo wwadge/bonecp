@@ -341,6 +341,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		setIdleConnectionTestPeriod(idleConnectionTestPeriod, TimeUnit.MINUTES);
 	}
 	
+	/**
+	 * Sets the idleConnectionTestPeriod.
+	 * 
+	 * This sets the time (in seconds), for a connection to remain idle before sending 
+	 * a test query to the DB. This is useful to prevent a DB from timing out connections 
+	 * on its end. Do not use aggressive values here! 
+	 * 
+	 * 
+	 * <p>Default: 240 min, set to 0 to disable
+	 *
+	 * @param idleConnectionTestPeriod to set 
+	 */
+	public void setIdleConnectionTestPeriodInSeconds(long idleConnectionTestPeriod) {
+		setIdleConnectionTestPeriod(idleConnectionTestPeriod, TimeUnit.SECONDS);
+	}
+	
 	/** Wrapper method for idleConnectionTestPeriod for easier programmatic access.
 	 * @param idleConnectionTestPeriod time for a connection to remain idle before sending a test
 	 * query to the DB.
@@ -402,6 +418,18 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		setIdleMaxAge(idleMaxAge, TimeUnit.MINUTES); 
 	}
 	
+	/**
+	 * Sets Idle max age (in seconds).
+	 * 
+	 * The time (in seconds), for a connection to remain unused before it is closed off. Do not use aggressive values here! 
+	 * 
+	 * <p>Default: 60 minutes, set to 0 to disable.
+	 *
+	 * @param idleMaxAge to set
+	 */
+	public void setIdleMaxAgeInSeconds(long idleMaxAge) {
+		setIdleMaxAge(idleMaxAge, TimeUnit.SECONDS); 
+	}
 	/** Sets Idle max age.
 	 * 
 	 * The time, for a connection to remain unused before it is closed off. Do not use aggressive values here!
@@ -560,169 +588,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.statementsCachedPerConnection = statementsCachedPerConnection;
 	}
 
-	/**
-	 * Performs validation on the config object.
-	 *
-	 */
-	public void sanitize(){
-		if (this.configFile != null){
-			loadProperties(this.configFile);
-		}
-
-		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
-			this.poolAvailabilityThreshold = 20;
-		}
-
-		if (this.defaultTransactionIsolation != null){
-			this.defaultTransactionIsolation = this.defaultTransactionIsolation.trim().toUpperCase();
-			
-			if (this.defaultTransactionIsolation.equals("NONE")){
-				this.defaultTransactionIsolationValue = Connection.TRANSACTION_NONE;
-			} else if (this.defaultTransactionIsolation.equals("READ_COMMITTED") || this.defaultTransactionIsolation.equals("READ COMMITTED")){
-				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_COMMITTED;
-			} else if (this.defaultTransactionIsolation.equals("REPEATABLE_READ") || this.defaultTransactionIsolation.equals("REPEATABLE READ")){
-				this.defaultTransactionIsolationValue = Connection.TRANSACTION_REPEATABLE_READ;
-			} else if (this.defaultTransactionIsolation.equals("READ_UNCOMMITTED") || this.defaultTransactionIsolation.equals("READ UNCOMMITTED")){
-				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_UNCOMMITTED;
-			} else if (this.defaultTransactionIsolation.equals("SERIALIZABLE")){
-				this.defaultTransactionIsolationValue = Connection.TRANSACTION_SERIALIZABLE;
-			} else {
-				logger.warn("Unrecognized defaultTransactionIsolation value. Using driver default.");
-				this.defaultTransactionIsolationValue = -1;
-			}
-		}
-		if (this.maxConnectionsPerPartition < 2) {
-			logger.warn("Max Connections < 2. Setting to 50");
-			this.maxConnectionsPerPartition = 50;
-		}
-		if (this.minConnectionsPerPartition < 0) {
-			logger.warn("Min Connections < 0. Setting to 1");
-			this.minConnectionsPerPartition = 1;
-		}
-
-		if (this.minConnectionsPerPartition > this.maxConnectionsPerPartition) {
-			logger.warn("Min Connections > max connections");
-			this.minConnectionsPerPartition = this.maxConnectionsPerPartition;
-		}
-		if (this.acquireIncrement <= 0) {
-			logger.warn("acquireIncrement <= 0. Setting to 1.");
-			this.acquireIncrement = 1;
-		}
-		if (this.partitionCount < 1) {
-			logger.warn("partitions < 1! Setting to 1");
-			this.partitionCount = 1;
-		}
-
-		if (this.releaseHelperThreads < 0){
-			logger.warn("releaseHelperThreads < 0! Setting to 3");
-			this.releaseHelperThreads = 3;
-		}
-
-		if (this.statementReleaseHelperThreads < 0){
-			logger.warn("statementReleaseHelperThreads < 0! Setting to 3");
-			this.statementReleaseHelperThreads = 3;
-		}
-
-		if (this.statementsCacheSize < 0) {
-			logger.warn("preparedStatementsCacheSize < 0! Setting to 0");
-			this.statementsCacheSize = 0;
-		}
-
-		if (this.acquireRetryDelayInMs <= 0) {
-			this.acquireRetryDelayInMs = 1000;
-		}
-
-		if (this.datasourceBean == null && this.driverProperties == null 
-				&& (this.jdbcUrl == null || this.jdbcUrl.trim().equals(""))){
-			logger.warn("JDBC url was not set in config!");
-		}
-
-		if (this.datasourceBean == null && this.driverProperties == null && 
-				(this.username == null || this.username.trim().equals(""))){
-			logger.warn("JDBC username was not set in config!");
-		}
-
-		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
-			logger.warn("JDBC password was not set in config!");
-		}
-
-
-		// if no datasource and we have driver properties set...
-		if (this.datasourceBean == null && this.driverProperties != null){
-			if ((this.driverProperties.get("user") == null) && this.username == null){
-				logger.warn("JDBC username not set in driver properties and not set in pool config either");
-			} else if ((this.driverProperties.get("user") == null) && this.username != null){
-				logger.warn("JDBC username not set in driver properties, copying it from pool config");
-				this.driverProperties.setProperty("user", this.username);
-			} else if (this.username != null && !this.driverProperties.get("user").equals(this.username)){
-				logger.warn("JDBC username set in driver properties does not match the one set in the pool config.  Overriding it with pool config.");
-				this.driverProperties.setProperty("user", this.username);
-			}  
-		}
-
-		// if no datasource and we have driver properties set...
-		if (this.datasourceBean == null && this.driverProperties != null){
-			if ((this.driverProperties.get("password") == null) && this.password == null){
-				logger.warn("JDBC password not set in driver properties and not set in pool config either");
-			} else if ((this.driverProperties.get("password") == null) && this.password != null){
-				logger.warn("JDBC password not set in driver properties, copying it from pool config");
-				this.driverProperties.setProperty("password", this.password);
-			} else if (this.password != null && !this.driverProperties.get("password").equals(this.password)){
-				logger.warn("JDBC password set in driver properties does not match the one set in the pool config. Overriding it with pool config.");
-				this.driverProperties.setProperty("password", this.password);
-			}
-
-			// maintain sanity between the two states 
-			this.username = this.driverProperties.getProperty("user");
-			this.password = this.driverProperties.getProperty("password");
-		}
-
-		if (this.username != null){
-			this.username = this.username.trim();
-		}
-		if (this.jdbcUrl != null){
-			this.jdbcUrl = this.jdbcUrl.trim();
-		}
-		if (this.password != null){
-			this.password = this.password.trim();
-		}
-
-		if (this.connectionTestStatement != null) { 
-			this.connectionTestStatement = this.connectionTestStatement.trim();
-		}
-		
-		this.serviceOrder = this.serviceOrder != null ? this.serviceOrder.toUpperCase() : "FIFO";
-		
-		if (!(this.serviceOrder.equals("FIFO") || this.serviceOrder.equals("LIFO"))){
-			logger.warn("Queue service order is not set to FIFO or LIFO. Defaulting to FIFO.");
-			this.serviceOrder = "FIFO";
-		}
-		
-	}
-
-	/**
-	 * Loads the given properties file using the classloader.
-	 * @param filename Config filename to load
-	 * 
-	 */
-	protected void loadProperties(String filename) {
-		URL url = ClassLoader.getSystemResource(filename);
-		if (url != null){
-			try {
-				this.setXMLProperties(url.openStream(), null);
-			} catch (Exception e) {
-				// do nothing
-			}
-		}
-	}
-
-	@Override
-	public String toString() {
-		return String.format(CONFIG_TOSTRING, this.jdbcUrl,
-				this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-				this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
-				getIdleConnectionTestPeriodInMinutes());
-	}
+	
 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getConnectionHook()
@@ -860,77 +726,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 
-	@Override
-	public BoneCPConfig clone() throws CloneNotSupportedException {
 
-		BoneCPConfig clone = (BoneCPConfig)super.clone();
-		Field[] fields = this.getClass().getDeclaredFields();
-		for (Field field: fields){
-			try {
-				field.set(clone, field.get(this));
-			} catch (Exception e) {
-				// should never happen
-			}
-		}
-		return clone;
-	}
-
-	@Override
-	public boolean equals(Object obj){
-		if (obj == this) { 
-			return true; 
-		}
-
-		if (obj == null || obj.getClass() != getClass()){ 
-			return false; 
-		}
-
-
-		BoneCPConfig that = (BoneCPConfig)obj;
-		if ( Objects.equal(this.acquireIncrement, that.getAcquireIncrement())
-				&& Objects.equal(this.acquireRetryDelayInMs, that.getAcquireRetryDelayInMs())
-				&& Objects.equal(this.closeConnectionWatch, that.isCloseConnectionWatch())
-				&& Objects.equal(this.logStatementsEnabled, that.isLogStatementsEnabled())
-				&& Objects.equal(this.connectionHook, that.getConnectionHook())
-				&& Objects.equal(this.connectionTestStatement, that.getConnectionTestStatement())
-				&& Objects.equal(this.idleConnectionTestPeriodInSeconds, that.getIdleConnectionTestPeriod(TimeUnit.SECONDS))
-				&& Objects.equal(this.idleMaxAgeInSeconds, that.getIdleMaxAge(TimeUnit.SECONDS))
-				&& Objects.equal(this.initSQL, that.getInitSQL())
-				&& Objects.equal(this.jdbcUrl, that.getJdbcUrl())
-				&& Objects.equal(this.maxConnectionsPerPartition, that.getMaxConnectionsPerPartition())
-				&& Objects.equal(this.minConnectionsPerPartition, that.getMinConnectionsPerPartition())
-				&& Objects.equal(this.partitionCount, that.getPartitionCount())
-				&& Objects.equal(this.releaseHelperThreads, that.getReleaseHelperThreads())
-				&& Objects.equal(this.statementsCacheSize, that.getStatementsCacheSize())
-				&& Objects.equal(this.username, that.getUsername())
-				&& Objects.equal(this.password, that.getPassword())
-				&& Objects.equal(this.lazyInit, that.isLazyInit())
-				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
-				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
-				&& Objects.equal(this.statementReleaseHelperThreads, that.getStatementReleaseHelperThreads())
-				&& Objects.equal(this.closeConnectionWatchTimeoutInMs, that.getCloseConnectionWatchTimeout())
-				&& Objects.equal(this.connectionTimeoutInMs, that.getConnectionTimeoutInMs())
-				&& Objects.equal(this.datasourceBean, that.getDatasourceBean())
-				&& Objects.equal(this.getQueryExecuteTimeLimitInMs(), that.getQueryExecuteTimeLimitInMs())
-				&& Objects.equal(this.poolAvailabilityThreshold, that.getPoolAvailabilityThreshold())
-				&& Objects.equal(this.poolName, that.getPoolName())
-				&& Objects.equal(this.disableConnectionTracking, that.isDisableConnectionTracking())
-
-		){
-			return true;
-		} 
-
-		return false;
-	}
-
-	@Override
-	public int hashCode(){
-		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelayInMs, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
-				this.connectionTestStatement, this.idleConnectionTestPeriodInSeconds, this.idleMaxAgeInSeconds, this.initSQL, this.jdbcUrl, 
-				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
-				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit, this.transactionRecoveryEnabled,
-				this.acquireRetryAttempts);
-	}
 
 	/** Returns true if the pool is configured to record all transaction activity and replay the transaction automatically in case
 	 * of connection failures.
@@ -986,32 +782,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return this.connectionHookClassName;
 	}
 
-	/** Loads the given class, respecting the given classloader.
-	 * @param clazz class to load
-	 * @return Loaded class
-	 * @throws ClassNotFoundException
-	 */
-	protected Class<?> loadClass(String clazz) throws ClassNotFoundException {
-		if (this.classLoader == null){
-			return Class.forName(clazz);
-		}
-
-		return Class.forName(clazz, true, this.classLoader);
-
-	}
-	/** Returns the currently active classloader. 
-	 * @return the classLoader
-	 */
-	public ClassLoader getClassLoader() {
-		return this.classLoader;
-	}
-
-	/** Sets the classloader to use to load JDBC driver and hooks (set to null to use default).
-	 * @param classLoader the classLoader to set
-	 */ 
-	public void setClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-	}
 
 	/** Return true if JMX is disabled.
 	 * @return the disableJMX.
@@ -1040,203 +810,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setDatasourceBean(DataSource datasourceBean) {
 		this.datasourceBean = datasourceBean;
 	}
-
-
-	/**
-	 * Default constructor. Attempts to fill settings in this order:
-	 * 1. bonecp-default-config.xml file, usually found in the pool jar
-	 * 2. bonecp-config.xml file, usually found in your application's classpath
-	 * 3. Other hardcoded defaults in BoneCPConfig class.
-	 */
-	public BoneCPConfig(){
-		// try to load the default config file, if available from somewhere in the classpath
-		loadProperties("bonecp-default-config.xml");
-		// try to override with app specific config, if available
-		loadProperties("bonecp-config.xml");
-	}
 	
-	/** Creates a new config using the given properties.
-	 * @param props properties to set.
-	 * @throws Exception on error
-	 */
-	public BoneCPConfig(Properties props) throws Exception {
-		this();
-		this.setProperties(props);
-	}
-
-
-	/** Initialize the configuration by loading bonecp-config.xml containing the settings. 
-	 * @param sectionName section to load
-	 * @throws Exception on parse errors
-	 */
-	public BoneCPConfig(String sectionName) throws Exception{
-		this(BoneCPConfig.class.getResourceAsStream("/bonecp-config.xml"), sectionName);
-	}
-
-	/** Initialise the configuration by loading an XML file containing the settings. 
-	 * @param xmlConfigFile file to load
-	 * @param sectionName section to load
-	 * @throws Exception 
-	 */
-	public BoneCPConfig(InputStream xmlConfigFile, String sectionName) throws Exception{
-		this();
-		setXMLProperties(xmlConfigFile, sectionName);
-	}
-
-	/**
-	 * @param xmlConfigFile
-	 * @param sectionName
-	 * @throws Exception
-	 */
-	private void setXMLProperties(InputStream xmlConfigFile, String sectionName)
-			throws Exception {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db;
-		// ugly XML parsing, but this is built-in the JDK.
-		try {
-			db = dbf.newDocumentBuilder();
-			Document doc = db.parse(xmlConfigFile);
-			doc.getDocumentElement().normalize();
-
-			// get the default settings
-			Properties settings = parseXML(doc, null);
-			if (sectionName != null){
-				// override with custom settings
-				settings.putAll(parseXML(doc, sectionName));
-			}
-			// set the properties
-			setProperties(settings);
-
-		} catch (Exception e) {
-			throw e;
-		}
-	}
-
-	
-	/** Uppercases the first character.
-	 * @param name
-	 * @return the same string with the first letter in uppercase
-	 */
-	private static String upFirst(String name) {
-		return name.substring(0, 1).toUpperCase()+name.substring(1);
-	}
-
-
-	/**
-	 * Sets the properties by reading off entries in the given parameter (where each key is equivalent to the field name) 
-	 * @param props Parameter list to set
-	 * @throws Exception on error
-	 */
-	public void setProperties(Properties props) throws Exception {
-		// Use reflection to read in all possible properties of int, String or boolean.
-		for (Field field: BoneCPConfig.class.getDeclaredFields()){
-			String tmp = field.getName();
-			if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
-				if (field.getType().equals(int.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), int.class);
-					String val = props.getProperty(tmp);
-					if (val == null){
-						val = props.getProperty("bonecp."+tmp); // hibernate provider style
-					}
-					if (val != null) {
-						try{
-							method.invoke(this, Integer.parseInt(val));
-						} catch (NumberFormatException e){
-							// do nothing, use the default value
-						}
-					}
-				} if (field.getType().equals(long.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), long.class);
-					String val = props.getProperty(tmp);
-					if (val == null){
-						val = props.getProperty("bonecp."+tmp); // hibernate provider style
-					}
-					if (val != null) {
-						try{
-							method.invoke(this, Long.parseLong(val));
-						} catch (NumberFormatException e){
-							// do nothing, use the default value
-						}
-					}
-				} else if (field.getType().equals(String.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), String.class);
-					String val = props.getProperty(tmp);
-					if (val == null){
-						val = props.getProperty("bonecp."+tmp); // hibernate provider style
-					}
-					if (val != null) {
-						method.invoke(this, val);
-					}
-				} else if (field.getType().equals(boolean.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), boolean.class);
-					String val = props.getProperty(tmp);
-					if (val == null){
-						val = props.getProperty("bonecp."+tmp); // hibernate provider style
-					}
-					if (val != null) {
-						method.invoke(this, Boolean.parseBoolean(val));
-					}
-				}
-			}
-		}
-	}
-
-	/** Parses the given XML doc to extract the properties and return them into a java.util.Properties.
-	 * @param doc to parse
-	 * @param sectionName which section to extract
-	 * @return Properties map
-	 */
-	private Properties parseXML(Document doc, String sectionName) {
-		int found = -1;
-		Properties results = new Properties();
-		NodeList config = null;
-		if (sectionName == null){
-			config = doc.getElementsByTagName("default-config");
-			found = 0;
-		} else {
-			config = doc.getElementsByTagName("named-config");
-			if(config != null && config.getLength() > 0) {
-				for (int i = 0; i < config.getLength(); i++) {
-					Node node = config.item(i);
-					if(node.getNodeType() == Node.ELEMENT_NODE ){
-						NamedNodeMap attributes = node.getAttributes();
-						if (attributes != null && attributes.getLength() > 0){
-							Node name = attributes.getNamedItem("name");
-							if (name.getNodeValue().equalsIgnoreCase(sectionName)){
-								found = i;
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			if (found == -1){
-				config = null;
-				logger.warn("Did not find "+sectionName+" section in config file. Reverting to defaults.");
-			}
-		}
-
-		if(config != null && config.getLength() > 0) {
-			Node node = config.item(found);
-			if(node.getNodeType() == Node.ELEMENT_NODE){
-				Element elementEntry = (Element)node;
-				NodeList childNodeList = elementEntry.getChildNodes();
-				for (int j = 0; j < childNodeList.getLength(); j++) {
-					Node node_j = childNodeList.item(j);
-					if (node_j.getNodeType() == Node.ELEMENT_NODE) {
-						Element piece = (Element) node_j;
-						NamedNodeMap attributes = piece.getAttributes();
-						if (attributes != null && attributes.getLength() > 0){
-							results.put(attributes.item(0).getNodeValue(), piece.getTextContent());
-						}
-					}
-				}
-			}
-		}
-
-		return results;
-	}
 
 	/** Deprecated.
   	 * @deprecated Use {@link #getQueryExecuteTimeLimitInMs()} instead.
@@ -1702,4 +1276,462 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.defaultTransactionIsolationValue = defaultTransactionIsolationValue;
 	}
 	
+	/**
+	 * Default constructor. Attempts to fill settings in this order:
+	 * 1. bonecp-default-config.xml file, usually found in the pool jar
+	 * 2. bonecp-config.xml file, usually found in your application's classpath
+	 * 3. Other hardcoded defaults in BoneCPConfig class.
+	 */
+	public BoneCPConfig(){
+		// try to load the default config file, if available from somewhere in the classpath
+		loadProperties("bonecp-default-config.xml");
+		// try to override with app specific config, if available
+		loadProperties("bonecp-config.xml");
+	}
+	
+	/** Creates a new config using the given properties.
+	 * @param props properties to set.
+	 * @throws Exception on error
+	 */
+	public BoneCPConfig(Properties props) throws Exception {
+		this();
+		this.setProperties(props);
+	}
+
+
+	/** Initialize the configuration by loading bonecp-config.xml containing the settings. 
+	 * @param sectionName section to load
+	 * @throws Exception on parse errors
+	 */
+	public BoneCPConfig(String sectionName) throws Exception{
+		this(BoneCPConfig.class.getResourceAsStream("/bonecp-config.xml"), sectionName);
+	}
+
+	/** Initialise the configuration by loading an XML file containing the settings. 
+	 * @param xmlConfigFile file to load
+	 * @param sectionName section to load
+	 * @throws Exception 
+	 */
+	public BoneCPConfig(InputStream xmlConfigFile, String sectionName) throws Exception{
+		this();
+		setXMLProperties(xmlConfigFile, sectionName);
+	}
+
+	/**
+	 * @param xmlConfigFile
+	 * @param sectionName
+	 * @throws Exception
+	 */
+	private void setXMLProperties(InputStream xmlConfigFile, String sectionName)
+			throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db;
+		// ugly XML parsing, but this is built-in the JDK.
+		try {
+			db = dbf.newDocumentBuilder();
+			Document doc = db.parse(xmlConfigFile);
+			doc.getDocumentElement().normalize();
+
+			// get the default settings
+			Properties settings = parseXML(doc, null);
+			if (sectionName != null){
+				// override with custom settings
+				settings.putAll(parseXML(doc, sectionName));
+			}
+			// set the properties
+			setProperties(settings);
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	
+	/** Uppercases the first character.
+	 * @param name
+	 * @return the same string with the first letter in uppercase
+	 */
+	private String upFirst(String name) {
+		return name.substring(0, 1).toUpperCase()+name.substring(1);
+	}
+
+
+	/**
+	 * Sets the properties by reading off entries in the given parameter (where each key is equivalent to the field name) 
+	 * @param props Parameter list to set
+	 * @throws Exception on error
+	 */
+	public void setProperties(Properties props) throws Exception {
+		// Use reflection to read in all possible properties of int, String or boolean.
+		for (Field field: BoneCPConfig.class.getDeclaredFields()){
+			String tmp = field.getName();
+			if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
+				if (field.getType().equals(int.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), int.class);
+					String val = props.getProperty(tmp);
+					if (val == null){
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
+					}
+					if (val != null) {
+						try{
+							method.invoke(this, Integer.parseInt(val));
+						} catch (NumberFormatException e){
+							// do nothing, use the default value
+						}
+					}
+				} if (field.getType().equals(long.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), long.class);
+					String val = props.getProperty(tmp);
+					if (val == null){
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
+					}
+					if (val != null) {
+						try{
+							method.invoke(this, Long.parseLong(val));
+						} catch (NumberFormatException e){
+							// do nothing, use the default value
+						}
+					}
+				} else if (field.getType().equals(String.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), String.class);
+					String val = props.getProperty(tmp);
+					if (val == null){
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
+					}
+					if (val != null) {
+						method.invoke(this, val);
+					}
+				} else if (field.getType().equals(boolean.class)){
+					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), boolean.class);
+					String val = props.getProperty(tmp);
+					if (val == null){
+						val = props.getProperty("bonecp."+tmp); // hibernate provider style
+					}
+					if (val != null) {
+						method.invoke(this, Boolean.parseBoolean(val));
+					}
+				}
+			}
+		}
+	}
+
+	/** Parses the given XML doc to extract the properties and return them into a java.util.Properties.
+	 * @param doc to parse
+	 * @param sectionName which section to extract
+	 * @return Properties map
+	 */
+	private Properties parseXML(Document doc, String sectionName) {
+		int found = -1;
+		Properties results = new Properties();
+		NodeList config = null;
+		if (sectionName == null){
+			config = doc.getElementsByTagName("default-config");
+			found = 0;
+		} else {
+			config = doc.getElementsByTagName("named-config");
+			if(config != null && config.getLength() > 0) {
+				for (int i = 0; i < config.getLength(); i++) {
+					Node node = config.item(i);
+					if(node.getNodeType() == Node.ELEMENT_NODE ){
+						NamedNodeMap attributes = node.getAttributes();
+						if (attributes != null && attributes.getLength() > 0){
+							Node name = attributes.getNamedItem("name");
+							if (name.getNodeValue().equalsIgnoreCase(sectionName)){
+								found = i;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (found == -1){
+				config = null;
+				logger.warn("Did not find "+sectionName+" section in config file. Reverting to defaults.");
+			}
+		}
+
+		if(config != null && config.getLength() > 0) {
+			Node node = config.item(found);
+			if(node.getNodeType() == Node.ELEMENT_NODE){
+				Element elementEntry = (Element)node;
+				NodeList childNodeList = elementEntry.getChildNodes();
+				for (int j = 0; j < childNodeList.getLength(); j++) {
+					Node node_j = childNodeList.item(j);
+					if (node_j.getNodeType() == Node.ELEMENT_NODE) {
+						Element piece = (Element) node_j;
+						NamedNodeMap attributes = piece.getAttributes();
+						if (attributes != null && attributes.getLength() > 0){
+							results.put(attributes.item(0).getNodeValue(), piece.getTextContent());
+						}
+					}
+				}
+			}
+		}
+
+		return results;
+	}
+	
+	/**
+	 * Performs validation on the config object.
+	 *
+	 */
+	public void sanitize(){
+		if (this.configFile != null){
+			loadProperties(this.configFile);
+		}
+
+		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
+			this.poolAvailabilityThreshold = 20;
+		}
+
+		if (this.defaultTransactionIsolation != null){
+			this.defaultTransactionIsolation = this.defaultTransactionIsolation.trim().toUpperCase();
+			
+			if (this.defaultTransactionIsolation.equals("NONE")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_NONE;
+			} else if (this.defaultTransactionIsolation.equals("READ_COMMITTED") || this.defaultTransactionIsolation.equals("READ COMMITTED")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_COMMITTED;
+			} else if (this.defaultTransactionIsolation.equals("REPEATABLE_READ") || this.defaultTransactionIsolation.equals("REPEATABLE READ")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_REPEATABLE_READ;
+			} else if (this.defaultTransactionIsolation.equals("READ_UNCOMMITTED") || this.defaultTransactionIsolation.equals("READ UNCOMMITTED")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_READ_UNCOMMITTED;
+			} else if (this.defaultTransactionIsolation.equals("SERIALIZABLE")){
+				this.defaultTransactionIsolationValue = Connection.TRANSACTION_SERIALIZABLE;
+			} else {
+				logger.warn("Unrecognized defaultTransactionIsolation value. Using driver default.");
+				this.defaultTransactionIsolationValue = -1;
+			}
+		}
+		if (this.maxConnectionsPerPartition < 2) {
+			logger.warn("Max Connections < 2. Setting to 50");
+			this.maxConnectionsPerPartition = 50;
+		}
+		if (this.minConnectionsPerPartition < 0) {
+			logger.warn("Min Connections < 0. Setting to 1");
+			this.minConnectionsPerPartition = 1;
+		}
+
+		if (this.minConnectionsPerPartition > this.maxConnectionsPerPartition) {
+			logger.warn("Min Connections > max connections");
+			this.minConnectionsPerPartition = this.maxConnectionsPerPartition;
+		}
+		if (this.acquireIncrement <= 0) {
+			logger.warn("acquireIncrement <= 0. Setting to 1.");
+			this.acquireIncrement = 1;
+		}
+		if (this.partitionCount < 1) {
+			logger.warn("partitions < 1! Setting to 1");
+			this.partitionCount = 1;
+		}
+
+		if (this.releaseHelperThreads < 0){
+			logger.warn("releaseHelperThreads < 0! Setting to 3");
+			this.releaseHelperThreads = 3;
+		}
+
+		if (this.statementReleaseHelperThreads < 0){
+			logger.warn("statementReleaseHelperThreads < 0! Setting to 3");
+			this.statementReleaseHelperThreads = 3;
+		}
+
+		if (this.statementsCacheSize < 0) {
+			logger.warn("preparedStatementsCacheSize < 0! Setting to 0");
+			this.statementsCacheSize = 0;
+		}
+
+		if (this.acquireRetryDelayInMs <= 0) {
+			this.acquireRetryDelayInMs = 1000;
+		}
+
+		if (this.datasourceBean == null && this.driverProperties == null 
+				&& (this.jdbcUrl == null || this.jdbcUrl.trim().equals(""))){
+			logger.warn("JDBC url was not set in config!");
+		}
+
+		if (this.datasourceBean == null && this.driverProperties == null && 
+				(this.username == null || this.username.trim().equals(""))){
+			logger.warn("JDBC username was not set in config!");
+		}
+
+		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
+			logger.warn("JDBC password was not set in config!");
+		}
+
+
+		// if no datasource and we have driver properties set...
+		if (this.datasourceBean == null && this.driverProperties != null){
+			if ((this.driverProperties.get("user") == null) && this.username == null){
+				logger.warn("JDBC username not set in driver properties and not set in pool config either");
+			} else if ((this.driverProperties.get("user") == null) && this.username != null){
+				logger.warn("JDBC username not set in driver properties, copying it from pool config");
+				this.driverProperties.setProperty("user", this.username);
+			} else if (this.username != null && !this.driverProperties.get("user").equals(this.username)){
+				logger.warn("JDBC username set in driver properties does not match the one set in the pool config.  Overriding it with pool config.");
+				this.driverProperties.setProperty("user", this.username);
+			}  
+		}
+
+		// if no datasource and we have driver properties set...
+		if (this.datasourceBean == null && this.driverProperties != null){
+			if ((this.driverProperties.get("password") == null) && this.password == null){
+				logger.warn("JDBC password not set in driver properties and not set in pool config either");
+			} else if ((this.driverProperties.get("password") == null) && this.password != null){
+				logger.warn("JDBC password not set in driver properties, copying it from pool config");
+				this.driverProperties.setProperty("password", this.password);
+			} else if (this.password != null && !this.driverProperties.get("password").equals(this.password)){
+				logger.warn("JDBC password set in driver properties does not match the one set in the pool config. Overriding it with pool config.");
+				this.driverProperties.setProperty("password", this.password);
+			}
+
+			// maintain sanity between the two states 
+			this.username = this.driverProperties.getProperty("user");
+			this.password = this.driverProperties.getProperty("password");
+		}
+
+		if (this.username != null){
+			this.username = this.username.trim();
+		}
+		if (this.jdbcUrl != null){
+			this.jdbcUrl = this.jdbcUrl.trim();
+		}
+		if (this.password != null){
+			this.password = this.password.trim();
+		}
+
+		if (this.connectionTestStatement != null) { 
+			this.connectionTestStatement = this.connectionTestStatement.trim();
+		}
+		
+		this.serviceOrder = this.serviceOrder != null ? this.serviceOrder.toUpperCase() : "FIFO";
+		
+		if (!(this.serviceOrder.equals("FIFO") || this.serviceOrder.equals("LIFO"))){
+			logger.warn("Queue service order is not set to FIFO or LIFO. Defaulting to FIFO.");
+			this.serviceOrder = "FIFO";
+		}
+		
+	}
+
+	/**
+	 * Loads the given properties file using the classloader.
+	 * @param filename Config filename to load
+	 * 
+	 */
+	protected void loadProperties(String filename) {
+		URL url = ClassLoader.getSystemResource(filename);
+		if (url != null){
+			try {
+				this.setXMLProperties(url.openStream(), null);
+			} catch (Exception e) {
+				// do nothing
+			}
+		}
+	}
+
+	@Override
+	public String toString() {
+		return String.format(CONFIG_TOSTRING, this.jdbcUrl,
+				this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
+				this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
+				getIdleConnectionTestPeriodInMinutes());
+	}
+	
+	/** Loads the given class, respecting the given classloader.
+	 * @param clazz class to load
+	 * @return Loaded class
+	 * @throws ClassNotFoundException
+	 */
+	protected Class<?> loadClass(String clazz) throws ClassNotFoundException {
+		if (this.classLoader == null){
+			return Class.forName(clazz);
+		}
+
+		return Class.forName(clazz, true, this.classLoader);
+
+	}
+	/** Returns the currently active classloader. 
+	 * @return the classLoader
+	 */
+	public ClassLoader getClassLoader() {
+		return this.classLoader;
+	}
+
+	/** Sets the classloader to use to load JDBC driver and hooks (set to null to use default).
+	 * @param classLoader the classLoader to set
+	 */ 
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+	
+	@Override
+	public BoneCPConfig clone() throws CloneNotSupportedException {
+
+		BoneCPConfig clone = (BoneCPConfig)super.clone();
+		Field[] fields = this.getClass().getDeclaredFields();
+		for (Field field: fields){
+			try {
+				field.set(clone, field.get(this));
+			} catch (Exception e) {
+				// should never happen
+			}
+		}
+		return clone;
+	}
+
+	@Override
+	public boolean equals(Object obj){
+		if (obj == this) { 
+			return true; 
+		}
+
+		if (obj == null || obj.getClass() != getClass()){ 
+			return false; 
+		}
+
+
+		BoneCPConfig that = (BoneCPConfig)obj;
+		if ( Objects.equal(this.acquireIncrement, that.getAcquireIncrement())
+				&& Objects.equal(this.acquireRetryDelayInMs, that.getAcquireRetryDelayInMs())
+				&& Objects.equal(this.closeConnectionWatch, that.isCloseConnectionWatch())
+				&& Objects.equal(this.logStatementsEnabled, that.isLogStatementsEnabled())
+				&& Objects.equal(this.connectionHook, that.getConnectionHook())
+				&& Objects.equal(this.connectionTestStatement, that.getConnectionTestStatement())
+				&& Objects.equal(this.idleConnectionTestPeriodInSeconds, that.getIdleConnectionTestPeriod(TimeUnit.SECONDS))
+				&& Objects.equal(this.idleMaxAgeInSeconds, that.getIdleMaxAge(TimeUnit.SECONDS))
+				&& Objects.equal(this.initSQL, that.getInitSQL())
+				&& Objects.equal(this.jdbcUrl, that.getJdbcUrl())
+				&& Objects.equal(this.maxConnectionsPerPartition, that.getMaxConnectionsPerPartition())
+				&& Objects.equal(this.minConnectionsPerPartition, that.getMinConnectionsPerPartition())
+				&& Objects.equal(this.partitionCount, that.getPartitionCount())
+				&& Objects.equal(this.releaseHelperThreads, that.getReleaseHelperThreads())
+				&& Objects.equal(this.statementsCacheSize, that.getStatementsCacheSize())
+				&& Objects.equal(this.username, that.getUsername())
+				&& Objects.equal(this.password, that.getPassword())
+				&& Objects.equal(this.lazyInit, that.isLazyInit())
+				&& Objects.equal(this.transactionRecoveryEnabled, that.isTransactionRecoveryEnabled())
+				&& Objects.equal(this.acquireRetryAttempts, that.getAcquireRetryAttempts())
+				&& Objects.equal(this.statementReleaseHelperThreads, that.getStatementReleaseHelperThreads())
+				&& Objects.equal(this.closeConnectionWatchTimeoutInMs, that.getCloseConnectionWatchTimeout())
+				&& Objects.equal(this.connectionTimeoutInMs, that.getConnectionTimeoutInMs())
+				&& Objects.equal(this.datasourceBean, that.getDatasourceBean())
+				&& Objects.equal(this.getQueryExecuteTimeLimitInMs(), that.getQueryExecuteTimeLimitInMs())
+				&& Objects.equal(this.poolAvailabilityThreshold, that.getPoolAvailabilityThreshold())
+				&& Objects.equal(this.poolName, that.getPoolName())
+				&& Objects.equal(this.disableConnectionTracking, that.isDisableConnectionTracking())
+
+		){
+			return true;
+		} 
+
+		return false;
+	}
+
+	@Override
+	public int hashCode(){
+		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelayInMs, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
+				this.connectionTestStatement, this.idleConnectionTestPeriodInSeconds, this.idleMaxAgeInSeconds, this.initSQL, this.jdbcUrl, 
+				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
+				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit, this.transactionRecoveryEnabled,
+				this.acquireRetryAttempts);
+	}
 }

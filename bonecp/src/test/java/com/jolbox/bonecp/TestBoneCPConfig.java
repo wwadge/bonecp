@@ -63,6 +63,8 @@ public class TestBoneCPConfig {
 	@Test
 	public void testXMLConfig() throws Exception{
 		// read off from the default bonecp-config.xml
+		System.out
+				.println(BoneCPConfig.class.getResource("/bonecp-config.xml"));
 		BoneCPConfig config = new BoneCPConfig("specialApp");
 		assertEquals(99, config.getMinConnectionsPerPartition());
 	}
@@ -193,13 +195,18 @@ public class TestBoneCPConfig {
 		String lifo = "LIFO";
 		config.setServiceOrder(lifo);
 		config.setConfigFile("abc");
-
+		config.setIdleConnectionTestPeriodInMinutes(1);
+		config.setConnectionTimeoutInMs(1000);
+		config.setCloseConnectionWatchTimeoutInMs(1000);
+		
 		assertEquals("abc", config.getInitSQL());
 		assertEquals(hook, config.getConnectionHook());
-
+		assertEquals(1000, config.getConnectionTimeoutInMs());
+		assertEquals(1000, config.getCloseConnectionWatchTimeoutInMs());
+		assertEquals(1, config.getIdleConnectionTestPeriodInMinutes());
 		assertEquals(lifo, config.getServiceOrder());
 		assertEquals("abc", config.getConfigFile());
-		assertEquals(Long.MAX_VALUE, config.getCloseConnectionWatchTimeout());
+		assertEquals(1000, config.getCloseConnectionWatchTimeout());
 		assertEquals("foo", config.getPoolName());
 		assertEquals(CommonTestUtils.url, config.getJdbcUrl());
 		assertEquals(CommonTestUtils.username, config.getUsername());
@@ -212,7 +219,7 @@ public class TestBoneCPConfig {
 		assertEquals(5, config.getMaxConnectionsPerPartition());
 		assertEquals(5, config.getMinConnectionsPerPartition());
 		assertEquals(6, config.getAcquireIncrement());
-		assertEquals(9999, config.getConnectionTimeout());
+		assertEquals(1000, config.getConnectionTimeout());
 		assertEquals(true, config.isDisableConnectionTracking());
 		assertEquals(7, config.getStatementsCachedPerConnection());
 		assertEquals(123, config.getQueryExecuteTimeLimit());
@@ -237,16 +244,16 @@ public class TestBoneCPConfig {
 		config.setPassword(null);
 		config.setPoolAvailabilityThreshold(-50);
 		config.setStatementReleaseHelperThreads(-50);
-		config.setConnectionTimeout(0);
+		config.setConnectionTimeoutInMs(0);
 		config.setServiceOrder("something non-sensical");
-		config.setAcquireRetryDelay(-1);
+		config.setAcquireRetryDelayInMs(-1);
 		
 		config.setReleaseHelperThreads(-1);
 		config.sanitize();
 
-		assertEquals(1000, config.getAcquireRetryDelay());
+		assertEquals(1000, config.getAcquireRetryDelayInMs());
 		assertEquals("FIFO", config.getServiceOrder());
-		assertEquals(0, config.getConnectionTimeout());
+		assertEquals(0, config.getConnectionTimeoutInMs());
 		assertNotNull(config.toString());
 		assertEquals(3, config.getStatementReleaseHelperThreads());
 		assertFalse(config.getAcquireIncrement() == 0);

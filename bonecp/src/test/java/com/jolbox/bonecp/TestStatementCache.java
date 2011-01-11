@@ -89,8 +89,8 @@ public class TestStatementCache {
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
 		config.setPassword(CommonTestUtils.password);
-		config.setIdleConnectionTestPeriod(0);
-		config.setIdleMaxAge(0);
+		config.setIdleConnectionTestPeriodInMinutes(0);
+		config.setIdleMaxAgeInMinutes(0);
 		config.setStatementsCacheSize(0);
 		config.setReleaseHelperThreads(0);
 		config.setDisableConnectionTracking(true);

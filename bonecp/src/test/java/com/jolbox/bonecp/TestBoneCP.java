@@ -142,7 +142,7 @@ public class TestBoneCP {
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
@@ -151,10 +151,10 @@ public class TestBoneCP {
 		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
 		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		expect(mockConfig.getConnectionTimeout()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
 		expect(mockConfig.getServiceOrder()).andReturn("LIFO").anyTimes();
 
-		expect(mockConfig.getAcquireRetryDelay()).andReturn(1000).anyTimes();
+		expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
 		expect(mockConfig.getPoolAvailabilityThreshold()).andReturn(20).anyTimes();
 
@@ -675,7 +675,7 @@ public class TestBoneCP {
 //		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 
 		// should reset last connection use
-		mockConnection.setConnectionLastUsed(anyLong());
+		mockConnection.setConnectionLastUsedInMs(anyLong());
 		expectLastCall().once();
 		replay(mockConnection, mockPartition, mockConnectionHandles);
 		testClass.releaseConnection(mockConnection);
@@ -737,7 +737,7 @@ public class TestBoneCP {
 	public void testInternalReleaseConnection() throws InterruptedException, SQLException {
 		// Test #1: Test normal case where connection is considered to be not broken
 		// should reset last connection use
-		mockConnection.setConnectionLastUsed(anyLong());
+		mockConnection.setConnectionLastUsedInMs(anyLong());
 		expectLastCall().once();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
@@ -994,7 +994,7 @@ public class TestBoneCP {
 		expect(config.getMaxConnectionsPerPartition()).andReturn(20).anyTimes();
 		expect(config.getPartitionCount()).andReturn(1).anyTimes();
 		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
-		expect(config.getMaxConnectionAge()).andReturn(100000L).anyTimes();
+		expect(config.getMaxConnectionAgeInSeconds()).andReturn(100000L).anyTimes();
 		replay(config);
 		try{
 			BoneCP pool = new BoneCP(config);

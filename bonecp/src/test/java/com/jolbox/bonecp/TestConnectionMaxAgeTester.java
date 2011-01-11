@@ -70,7 +70,7 @@ public class TestConnectionMaxAgeTester {
 		
 		makeThreadSafe(mockLogger, true);
 		config = new BoneCPConfig();
-		config.setMaxConnectionAge(1);
+		config.setMaxConnectionAgeInSeconds(1);
 		
 		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000);
 	}
