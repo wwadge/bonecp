@@ -73,10 +73,10 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 	public boolean onAcquireFail(Throwable t, AcquireFailConfig acquireConfig) {
 		boolean tryAgain = false;
 		String log = acquireConfig.getLogMessage();
-		logger.error(log+" Sleeping for "+acquireConfig.getAcquireRetryDelay()+"ms and trying again. Attempts left: "+acquireConfig.getAcquireRetryAttempts()+". Exception: "+t.getCause());
+		logger.error(log+" Sleeping for "+acquireConfig.getAcquireRetryDelayInMs()+"ms and trying again. Attempts left: "+acquireConfig.getAcquireRetryAttempts()+". Exception: "+t.getCause());
 
 		try {
-			Thread.sleep(acquireConfig.getAcquireRetryDelay());
+			Thread.sleep(acquireConfig.getAcquireRetryDelayInMs());
 			if (acquireConfig.getAcquireRetryAttempts().get() > 0){
 				tryAgain = (acquireConfig.getAcquireRetryAttempts().decrementAndGet()) > 0;
 			}

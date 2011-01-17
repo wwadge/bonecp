@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.sql.Connection;
 import java.util.Properties;
@@ -1347,12 +1346,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	
-	/** Uppercases the first character.
+	/** Lowercases the first character.
 	 * @param name
-	 * @return the same string with the first letter in uppercase
+	 * @return the same string with the first letter in lowercase
 	 */
-	private String upFirst(String name) {
-		return name.substring(0, 1).toUpperCase()+name.substring(1);
+	private String lowerFirst(String name) {
+		return name.substring(0, 1).toLowerCase()+name.substring(1);
 	}
 
 
@@ -1363,11 +1362,17 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setProperties(Properties props) throws Exception {
 		// Use reflection to read in all possible properties of int, String or boolean.
-		for (Field field: BoneCPConfig.class.getDeclaredFields()){
-			String tmp = field.getName();
-			if (!Modifier.isFinal(field.getModifiers())){ // avoid logger etc.
-				if (field.getType().equals(int.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), int.class);
+		for (Method method: BoneCPConfig.class.getDeclaredMethods()){
+			String tmp = null;
+			if (method.getName().startsWith("is")){
+				tmp = lowerFirst(method.getName().substring(2));
+			} else if (method.getName().startsWith("set")){
+				tmp = lowerFirst(method.getName().substring(3));
+			} else {
+				continue;
+			}
+			 
+				if (method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(int.class)){
 					String val = props.getProperty(tmp);
 					if (val == null){
 						val = props.getProperty("bonecp."+tmp); // hibernate provider style
@@ -1379,8 +1384,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 							// do nothing, use the default value
 						}
 					}
-				} if (field.getType().equals(long.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), long.class);
+				} else if (method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(long.class)){
 					String val = props.getProperty(tmp);
 					if (val == null){
 						val = props.getProperty("bonecp."+tmp); // hibernate provider style
@@ -1392,8 +1396,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 							// do nothing, use the default value
 						}
 					}
-				} else if (field.getType().equals(String.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), String.class);
+				} else if (method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(String.class)){
 					String val = props.getProperty(tmp);
 					if (val == null){
 						val = props.getProperty("bonecp."+tmp); // hibernate provider style
@@ -1401,8 +1404,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 					if (val != null) {
 						method.invoke(this, val);
 					}
-				} else if (field.getType().equals(boolean.class)){
-					Method method = BoneCPConfig.class.getDeclaredMethod("set"+upFirst(tmp), boolean.class);
+				} if (method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(boolean.class)){
 					String val = props.getProperty(tmp);
 					if (val == null){
 						val = props.getProperty("bonecp."+tmp); // hibernate provider style
@@ -1411,7 +1413,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 						method.invoke(this, Boolean.parseBoolean(val));
 					}
 				}
-			}
 		}
 	}
 

@@ -192,8 +192,8 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(5, config.getAcquireIncrement());
 		assertEquals(5, config.getPartitionCount());
 		assertEquals(3, config.getReleaseHelperThreads());
-		assertEquals(60, config.getIdleConnectionTestPeriod());
-		assertEquals(240, config.getIdleMaxAge()); 
+		assertEquals(60, config.getIdleConnectionTestPeriodInMinutes());
+		assertEquals(240, config.getIdleMaxAgeInMinutes()); 
 		assertEquals(URL, config.getJdbcUrl());
 		assertEquals(USERNAME, config.getUsername());
 		assertEquals(PASSWORD, config.getPassword());
@@ -274,7 +274,7 @@ public class TestBoneCPConnectionProvider {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(100L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn("somethingbad").anyTimes();
 		expect(mockConfig.getPassword()).andReturn("somethingbad").anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("invalid").anyTimes();
@@ -295,7 +295,7 @@ public class TestBoneCPConnectionProvider {
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
-		expect(mockConfig.getIdleConnectionTestPeriod()).andReturn(10000L).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(100L).anyTimes();
 		expect(mockConfig.getUsername()).andReturn(USERNAME).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(PASSWORD).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(URL).anyTimes();
