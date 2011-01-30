@@ -1,24 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ |  Copyright 2009-2011 Wallace Wadge
+ |
+ |  Licensed under the Apache License, Version 2.0 (the "License");
+ |  you may not use this file except in compliance with the License.
+ |  You may obtain a copy of the License at
+ |
+ |      http://www.apache.org/licenses/LICENSE-2.0
+ |
+ |  Unless required by applicable law or agreed to in writing, software
+ |  distributed under the License is distributed on an "AS IS" BASIS,
+ |  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ |  See the License for the specific language governing permissions and
+ |  limitations under the License.
+-->
 <assembly>
-	<id>project</id>
-	<formats>
-		<format>tar.gz</format>
-		<format>tar.bz2</format>
-		<format>zip</format>
-	</formats>
-	<fileSets>
-		<fileSet>
-			<directory>.</directory>
-			<outputDirectory></outputDirectory>
-			<useDefaultExcludes>true</useDefaultExcludes>
-			<excludes>
-				<exclude>**/.git/**</exclude>
-				<exclude>**/target/**</exclude>
-				<exclude>**/documentation/**</exclude>
-				<exclude>**/benchmark*.xlsx</exclude>
-				<exclude>**/benchmark*.csv</exclude>
-				<exclude>**/pom.xml.orig/**</exclude>
-				<exclude>**/pom.xml.versionsBackup</exclude>
-			</excludes>
-		</fileSet>
-	</fileSets>
+    <id>project</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>tar.bz2</format>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>.</directory>
+            <outputDirectory></outputDirectory>
+            <useDefaultExcludes>true</useDefaultExcludes>
+            <excludes>
+                <exclude>**/.classpath</exclude>
+                <exclude>**/.project</exclude>
+                <exclude>**/.settings/**</exclude>
+                <exclude>**/.git/**</exclude>
+                <exclude>**/target/**</exclude>
+                <exclude>**/documentation/**</exclude>
+                <exclude>**/benchmark*.xlsx</exclude>
+                <exclude>**/benchmark*.csv</exclude>
+                <exclude>**/pom.xml.orig/**</exclude>
+                <exclude>**/pom.xml.versionsBackup</exclude>
+            </excludes>
+        </fileSet>
+    </fileSets>
 </assembly>

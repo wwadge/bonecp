@@ -1,458 +1,559 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.jolbox</groupId>
-	<artifactId>bonecp-parent</artifactId>
-	<packaging>pom</packaging>
-	<name>Bone Connection Pool - Parent</name>
-	<description>The fast Java JDBC Database Connection pool</description>
-	<url>http://jolbox.com</url>
-	<inceptionYear>2009</inceptionYear>
-	<licenses>
-		<license>
-			<name>Apache v2</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-	<issueManagement>
-		<system>Launchpad</system>
-		<url>https://launchpad.net/bonecp</url>
-	</issueManagement>
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ |  Copyright 2009-2011 Wallace Wadge
+ |
+ |  Licensed under the Apache License, Version 2.0 (the "License");
+ |  you may not use this file except in compliance with the License.
+ |  You may obtain a copy of the License at
+ |
+ |      http://www.apache.org/licenses/LICENSE-2.0
+ |
+ |  Unless required by applicable law or agreed to in writing, software
+ |  distributed under the License is distributed on an "AS IS" BASIS,
+ |  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ |  See the License for the specific language governing permissions and
+ |  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<version>0.7.1-rc2</version>
-	<modules>
-		<module>bonecp</module>
-		<module>bonecp-hbnprovider</module>
-		<module>bonecp-spring</module>
-		<module>bonecp-test-commons</module>
-		<module>bonecp-benchmark</module>
-	</modules>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.jolbox</groupId>
+    <artifactId>bonecp-parent</artifactId>
+    <version>0.7.1-rc2</version>
+    <packaging>pom</packaging>
+    <name>BoneCP</name>
+    <description>The fast Java JDBC Database Connection pool</description>
+    <url>http://jolbox.com</url>
+    <inceptionYear>2009</inceptionYear>
 
-	<developers>
-		<developer>
-			<id>wwadge</id>
-			<name>Wallace Wadge</name>
-			<roles>
-				<role>Architect</role>
-			</roles>
-			<timezone>+1</timezone>
-		</developer>
-	</developers>
+    <organization>
+        <name>JolBox</name>
+        <url>http://jolbox.com</url>
+    </organization>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>commons-cli</groupId>
-				<artifactId>commons-cli</artifactId>
-				<version>1.2</version>
-			</dependency>
+    <licenses>
+        <license>
+            <name>Apache v2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring</artifactId>
-				<version>2.5.6</version>
-			</dependency>
+    <issueManagement>
+        <system>Launchpad</system>
+        <url>https://launchpad.net/bonecp</url>
+    </issueManagement>
 
-			<dependency>
-				<groupId>com.jolbox</groupId>
-				<artifactId>bonecp-test-commons</artifactId>
-				<version>0.7.1-rc2</version>
-			</dependency>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
 
-			<!-- <dependency> <groupId>hsqldb</groupId> <artifactId>hsqldb</artifactId> 
-				<version>1.8.0.10</version> <scope>test</scope> </dependency> -->
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>1.5.10</version>
-			</dependency>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-log4j12</artifactId>
-				<version>1.5.10</version>
-			</dependency>
+    <developers>
+        <developer>
+            <id>wwadge</id>
+            <name>Wallace Wadge</name>
+            <roles>
+                <role>Architect</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
 
-			<dependency>
-				<groupId>log4j</groupId>
-				<artifactId>log4j</artifactId>
-				<version>1.2.14</version>
-			</dependency>
+    <contributors>
+        <contributor>
+            <name>Simone Tripodi</name>
+            <email>simone[dot]tripodi[at]gmail[dot]com</email>
+            <timezone>+1</timezone>
+        </contributor>
+    </contributors>
 
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>r07</version>
-			</dependency>
+    <modules>
+        <module>bonecp</module>
+        <module>bonecp-hbnprovider</module>
+        <module>bonecp-spring</module>
+        <module>bonecp-test-commons</module>
+        <module>bonecp-benchmark</module>
+    </modules>
 
-			<dependency>
-				<groupId>c3p0</groupId>
-				<artifactId>c3p0</artifactId>
-				<version>0.9.1.2</version>
-				<scope>test</scope>
-			</dependency>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-cli</artifactId>
+                <version>1.2</version>
+            </dependency>
 
-			<dependency>
-				<groupId>commons-dbcp</groupId>
-				<artifactId>commons-dbcp</artifactId>
-				<version>1.2.2</version>
-				<scope>test</scope>
-			</dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring</artifactId>
+                <version>2.5.6</version>
+            </dependency>
 
+            <dependency>
+                <groupId>com.jolbox</groupId>
+                <artifactId>bonecp-test-commons</artifactId>
+                <version>0.7.1-rc2</version>
+            </dependency>
 
-			<dependency>
-				<groupId>org.easymock</groupId>
-				<artifactId>easymockclassextension</artifactId>
-				<version>2.4</version>
-				<scope>test</scope>
-			</dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.5.10</version>
+            </dependency>
 
-			<dependency>
-				<groupId>org.easymock</groupId>
-				<artifactId>easymock</artifactId>
-				<version>2.4</version>
-				<scope>test</scope>
-			</dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>1.5.10</version>
+            </dependency>
 
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate</artifactId>
-				<version>3.2.6.ga</version>
-				<scope>provided</scope>
-			</dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.14</version>
+            </dependency>
 
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.7</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.thoughtworks.qdox</groupId>
-				<artifactId>qdox</artifactId>
-				<version>1.9</version>
-				<scope>test</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>r07</version>
+            </dependency>
 
-	<profiles>
-		<profile>
-			<id>JDK5</id>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-jar-plugin</artifactId>
-						<configuration>
-							<classifier>jdk5</classifier>
-						</configuration>
-					</plugin>
-					<plugin>
-						<artifactId>maven-jar-plugin</artifactId>
-						<executions>
-							<execution>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-								<configuration>
-									<classifier>jdk5</classifier>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>com.google.code.maven-replacer-plugin</groupId>
-						<artifactId>maven-replacer-plugin</artifactId>
-						<version>1.3.1</version>
-						<executions>
-							<execution>
-								<phase>process-sources</phase>
-								<goals>
-									<goal>replace</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<regex>false</regex>
-							<includes>
-								<include>src/main/java/**/*.java</include>
-								<include>src/test/java/**/*.java</include>
-							</includes>
-							<replacements>
+            <dependency>
+                <groupId>c3p0</groupId>
+                <artifactId>c3p0</artifactId>
+                <version>0.9.1.2</version>
+                <scope>test</scope>
+            </dependency>
 
-								<replacement>
-									<token>// #ifdef JDK6</token>
-									<value>/* #ifdef JDK6</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK6</token>
-									<value>#endif JDK6 */</value>
-								</replacement>
-								<replacement>
-									<token>/* #ifdef JDK5</token>
-									<value>// #ifdef JDK5</value>
-								</replacement>
-								<replacement>
-									<token>#endif JDK5 */</token>
-									<value>// #endif JDK5</value>
-								</replacement>
-							</replacements>
-						</configuration>
-					</plugin>
+            <dependency>
+                <groupId>commons-dbcp</groupId>
+                <artifactId>commons-dbcp</artifactId>
+                <version>1.2.2</version>
+                <scope>test</scope>
+            </dependency>
 
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<version>2.0.1</version>
-						<configuration>
-							<verbose>false</verbose>
-							<fork>true</fork>
-							<executable>${jdk5home}/bin/javac</executable>
-							<source>1.5</source>
-							<target>1.5</target>
-						</configuration>
-					</plugin>
+            <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymockclassextension</artifactId>
+                <version>2.4</version>
+                <scope>test</scope>
+            </dependency>
 
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>JDK6</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<version>2.0.1</version>
-						<configuration>
-							<verbose>false</verbose>
-							<source>1.6</source>
-							<target>1.6</target>
-						</configuration>
-					</plugin>
+            <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymock</artifactId>
+                <version>2.4</version>
+                <scope>test</scope>
+            </dependency>
 
-					<plugin>
-						<groupId>com.google.code.maven-replacer-plugin</groupId>
-						<artifactId>maven-replacer-plugin</artifactId>
-						<version>1.3.1</version>
-						<executions>
-							<execution>
-								<phase>process-sources</phase>
-								<goals>
-									<goal>replace</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<regex>false</regex>
-							<includes>
-								<include>src/main/java/**/*.java</include>
-								<include>src/test/java/**/*.java</include>
-							</includes>
-							<replacements>
-								<replacement>
-									<token>/* #ifdef JDK6</token>
-									<value>// #ifdef JDK6</value>
-								</replacement>
-								<replacement>
-									<token>#endif JDK6 */</token>
-									<value>// #endif JDK6</value>
-								</replacement>
-								<replacement>
-									<token>// #ifdef JDK5</token>
-									<value>/* #ifdef JDK5</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK5 </token>
-									<value>#endif JDK5 */</value>
-								</replacement>
-							</replacements>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate</artifactId>
+                <version>3.2.6.ga</version>
+                <scope>provided</scope>
+            </dependency>
 
-	</profiles>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.7</version>
+                <scope>test</scope>
+            </dependency>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>2.1.0</version>
-				<extensions>true</extensions>
-				<configuration>
-					<instructions>
-						<Public-Package>com.jolbox.*</Public-Package>
-						<Private-Package>jsr166y.*</Private-Package>
-					</instructions>
-				</configuration>
-			</plugin>
+            <dependency>
+                <groupId>com.thoughtworks.qdox</groupId>
+                <artifactId>qdox</artifactId>
+                <version>1.9</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-2</version>
-				<configuration>
-					<tarLongFileMode>gnu</tarLongFileMode>
-					<descriptors>
-						<descriptor>src/main/assembly/assembly.xml</descriptor>
-					</descriptors>
-				</configuration>
-			</plugin>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <javac.src.version>1.6</javac.src.version>
+        <javac.target.version>1.6</javac.target.version>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
+        <implementation.build>${maven.build.timestamp}</implementation.build>
+    </properties>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-site-plugin</artifactId>
-				<version>2.0-beta-7</version>
-				<configuration>
-					<inputDirectory>${project.reporting.outputDirectory}/apidocs
-					</inputDirectory>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<inherited>false</inherited>
-				<configuration>
-					<forkMode>once</forkMode>
-					<reportFormat>html</reportFormat>
-					<classesDirectory>${project.build.directory}/generated-classes/emma/classes
-					</classesDirectory>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.mycila.maven-license-plugin</groupId>
-				<artifactId>maven-license-plugin</artifactId>
-				<version>1.5.1</version>
-				<configuration>
-					<header>docs/apache-header.txt</header>
-					<includes>
-						<include>**/*.java</include>
-					</includes>
-					<excludes>
-						<exclude>**/jsr166y/*</exclude>
-					</excludes>
-				</configuration>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
 
-				<executions>
-					<execution>
-						<phase>test</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ftp</artifactId>
-				<version>1.0-alpha-6</version>
-			</extension>
-		</extensions>
-	</build>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.1.0</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <manifestLocation>${project.build.directory}/osgi</manifestLocation>
+                        <instructions>
+                            <Public-Package>com.jolbox.*</Public-Package>
+                            <Private-Package>jsr166y.*</Private-Package>
+                        </instructions>
+                    </configuration>
+                </plugin>
 
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.6.1</version>
-				<configuration>
-					<show>public</show>
-					<excludePackageNames>com.jolbox.bonecp.benchmark.*
-					</excludePackageNames>
-				</configuration>
-			</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.3.1</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Build>${implementation.build}</Implementation-Build>
+                                <X-Compile-Source-JDK>${javac.src.version}</X-Compile-Source-JDK>
+                                <X-Compile-Target-JDK>${javac.target.version}</X-Compile-Target-JDK>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
 
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>emma-maven-plugin</artifactId>
-				<version>1.0-alpha-2</version>
-				<inherited>true</inherited>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>surefire-report-maven-plugin</artifactId>
-				<!--  <version>2.6</version>  -->
-				<inherited>true</inherited>
-			</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <attach>false</attach>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <tarLongFileMode>gnu</tarLongFileMode>
+                    </configuration>
+                </plugin>
 
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.4.2</version>
-			</plugin>
-		</plugins>
-	</reporting>
+                <plugin>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>maven-replacer-plugin</artifactId>
+                    <version>1.3.5</version>
+                    <executions>
+                        <execution>
+                            <phase>process-sources</phase>
+                            <goals>
+                                <goal>replace</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <regex>false</regex>
+                        <includes>
+                            <include>${basedir}/src/main/java/**/*.java</include>
+                            <include>${basedir}src/test/java/**/*.java</include>
+                        </includes>
+                    </configuration>
+                </plugin>
 
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.1</version>
+                    <configuration>
+                        <mavenExecutorId>forked-path</mavenExecutorId>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <arguments>-Prelease</arguments>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <verbose>false</verbose>
+                    <source>${javac.src.version}</source>
+                    <target>${javac.target.version}</target>
+                </configuration>
+            </plugin>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>maven-replacer-plugin reposoitory</id>
-			<url>
-            http://maven-replacer-plugin.googlecode.com/svn/release-repo
-        </url>
-		</pluginRepository>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>maven-replacer-plugin</artifactId>
+                <configuration>
+                    <replacements>
+                        <replacement>
+                            <token>/* #ifdef JDK6</token>
+                            <value>// #ifdef JDK6</value>
+                        </replacement>
+                        <replacement>
+                            <token>#endif JDK6 */</token>
+                            <value>// #endif JDK6</value>
+                        </replacement>
+                        <replacement>
+                            <token>// #ifdef JDK5</token>
+                            <value>/* #ifdef JDK5</value>
+                        </replacement>
+                        <replacement>
+                            <token>// #endif JDK5 </token>
+                            <value>#endif JDK5 */</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
 
-		<pluginRepository>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<id>ibiblio</id>
-			<name>Ibiblio</name>
-			<url>http://mirrors.ibiblio.org/pub/mirrors/maven2/</url>
-		</pluginRepository>
-	</pluginRepositories>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>2.0-beta-7</version>
+                <configuration>
+                    <inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
+                </configuration>
+            </plugin>
 
-	<repositories>
-		<repository>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<id>maven2-repository.dev.java.net</id>
-			<name>Java.net Repository for Maven</name>
-			<url>http://download.java.net/maven/2/</url>
-		</repository>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <forkMode>once</forkMode>
+                    <reportFormat>html</reportFormat>
+                    <classesDirectory>${project.build.directory}/generated-classes/emma/classes
+                    </classesDirectory>
+                </configuration>
+            </plugin>
 
+            <plugin>
+                <groupId>com.mycila.maven-license-plugin</groupId>
+                <artifactId>maven-license-plugin</artifactId>
+                <version>1.5.1</version>
+                <configuration>
+                    <header>docs/apache-header.txt</header>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/jsr166y/*</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
-		<repository>
-			<id>mc-release</id>
-			<name>Local Maven repository of releases</name>
-			<url>http://repo2.maven.org/maven2</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
+    <profiles>
+        <profile>
+            <id>JDK5</id>
 
-	<distributionManagement>
-		<repository>
-			<id>bonecp-ftp-repository</id>
-			<url>ftp://ftp.jolbox.com/maven</url>
-		</repository>
-	</distributionManagement>
+            <properties>
+                <javac.src.version>1.5</javac.src.version>
+                <javac.target.version>1.5</javac.target.version>
+            </properties>
+
+            <build>
+                <plugins>
+                    <!--
+                     | Make sure we only use Java5 methods
+                    -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>animal-sniffer-maven-plugin</artifactId>
+                        <version>1.6</version>
+                        <configuration>
+                            <signature>
+                                <groupId>org.codehaus.mojo.signature</groupId>
+                                <artifactId>java15</artifactId>
+                                <version>1.0</version>
+                            </signature>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>check-java-1.5-compat</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <classifier>jdk5</classifier>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>com.google.code.maven-replacer-plugin</groupId>
+                        <artifactId>maven-replacer-plugin</artifactId>
+                        <configuration>
+                            <replacements>
+                                <replacement>
+                                    <token>// #ifdef JDK6</token>
+                                    <value>/* #ifdef JDK6</value>
+                                </replacement>
+                                <replacement>
+                                    <token>// #endif JDK6</token>
+                                    <value>#endif JDK6 */</value>
+                                </replacement>
+                                <replacement>
+                                    <token>/* #ifdef JDK5</token>
+                                    <value>// #ifdef JDK5</value>
+                                </replacement>
+                                <replacement>
+                                    <token>#endif JDK5 */</token>
+                                    <value>// #endif JDK5</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <fork>true</fork>
+                            <executable>${jdk5home}/bin/javac</executable>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.1.2</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                                <configuration>
+                                    <archive>
+                                        <manifest>
+                                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                        </manifest>
+                                        <manifestEntries>
+                                            <Implementation-Build>${implementation.build}</Implementation-Build>
+                                            <X-Compile-Source-JDK>${javac.src.version}</X-Compile-Source-JDK>
+                                            <X-Compile-Target-JDK>${javac.target.version}</X-Compile-Target-JDK>
+                                        </manifestEntries>
+                                    </archive>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <archive>
+                                        <manifest>
+                                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                        </manifest>
+                                        <manifestEntries>
+                                            <Implementation-Build>${implementation.build}</Implementation-Build>
+                                            <X-Compile-Source-JDK>${javac.src.version}</X-Compile-Source-JDK>
+                                            <X-Compile-Target-JDK>${javac.target.version}</X-Compile-Target-JDK>
+                                        </manifestEntries>
+                                    </archive>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.6.1</version>
+                <configuration>
+                    <show>public</show>
+                    <excludePackageNames>com.jolbox.bonecp.benchmark.*</excludePackageNames>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>emma-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <inherited>true</inherited>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>surefire-report-maven-plugin</artifactId>
+                <!--  <version>2.6</version>  -->
+                <inherited>true</inherited>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4.2</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>
