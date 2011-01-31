@@ -109,7 +109,7 @@
             <dependency>
                 <groupId>com.jolbox</groupId>
                 <artifactId>bonecp-test-commons</artifactId>
-                <version>0.7.1-rc2-SNAPSHOT</version>
+                <version>0.7.1-rc3-SNAPSHOT</version>
             </dependency>
 
             <dependency>
