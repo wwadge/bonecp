@@ -115,7 +115,6 @@ public class TestMemorizeTransactionProxy {
 		
 		Statement stmt = con.createStatement();
 		
-		
 		InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler( ((ConnectionHandle) con).getInternalConnection());
 		assertEquals(MemorizeTransactionProxy.class, handler.getClass());
 		

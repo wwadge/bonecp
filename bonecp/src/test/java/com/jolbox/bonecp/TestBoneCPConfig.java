@@ -63,8 +63,8 @@ public class TestBoneCPConfig {
 	@Test
 	public void testXMLConfig() throws Exception{
 		// read off from the default bonecp-config.xml
-		System.out
-				.println(BoneCPConfig.class.getResource("/bonecp-config.xml"));
+//		System.out
+//				.println(BoneCPConfig.class.getResource("/bonecp-config.xml"));
 		BoneCPConfig config = new BoneCPConfig("specialApp");
 		assertEquals(99, config.getMinConnectionsPerPartition());
 	}
