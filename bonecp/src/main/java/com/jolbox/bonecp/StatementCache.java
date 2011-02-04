@@ -262,4 +262,9 @@ public class StatementCache implements IStatementCache {
 		}		
 	}
 
+	@Override
+	public void putIfAbsent(String cacheKey, StatementHandle statementHandle) {
+		this.cache.putIfAbsent(cacheKey, statementHandle);
+	}
+
 }

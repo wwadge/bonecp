@@ -171,5 +171,7 @@ public interface IStatementCache {
 	 */
 	void checkForProperClosure();
 
+	void putIfAbsent(String cacheKey, StatementHandle statementHandle);
+
 
 }

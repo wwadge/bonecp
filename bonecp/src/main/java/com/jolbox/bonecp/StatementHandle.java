@@ -150,9 +150,9 @@ public class StatementHandle implements Statement{
 //			this.connectionHook = null;
 			this.queryExecuteTimeLimit = 0; 
 		}
-		// store it in the cache if caching is enabled(unless it's already there). FIXME: make this a direct call to putIfAbsent.
+		// store it in the cache if caching is enabled(unless it's already there). 
 		if (this.cache != null){
-			this.cache.put(this.cacheKey, this);
+			this.cache.putIfAbsent(this.cacheKey, this);
 		}
 	}
 
