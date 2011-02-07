@@ -206,11 +206,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				}  
 
 				// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
-				if (t instanceof InvocationTargetException) {
-				    InvocationTargetException it = (InvocationTargetException) t;
-				    throw it.getTargetException();
-				} 
-				    throw t.getCause();
+				throw t.getCause();
 
 			}
 
