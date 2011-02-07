@@ -131,7 +131,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	}
 
 	// @Override 
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+	public Object invoke(Object proxy, Method method, Object[] args) throws SQLException,Throwable {
 
 		Object result = null;
 		ConnectionHandle con = this.connectionHandle.get();
