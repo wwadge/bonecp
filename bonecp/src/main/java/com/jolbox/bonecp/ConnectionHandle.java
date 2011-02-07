@@ -223,8 +223,8 @@ public class ConnectionHandle implements Connection{
 
 					try {
 						Thread.sleep(acquireRetryDelayInMs);
-						if (acquireRetryAttempts > 0){
-							tryAgain = (--acquireRetryAttempts) != 0;
+						if (acquireRetryAttempts > -1){
+							tryAgain = (acquireRetryAttempts--) != 0;
 						}
 					} catch (InterruptedException e1) {
 						tryAgain=false;

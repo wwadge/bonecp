@@ -39,8 +39,6 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * @version $Revision$
  */
 public class StatementHandle implements Statement{
-	/** For logging purposes - stores parameters to be used for execution. */
-	protected Map<Object, Object> logParams;
 	/** Set to true if the connection has been "closed". */
 	protected AtomicBoolean logicallyClosed = new AtomicBoolean();
 	/** A handle to the actual statement. */
@@ -55,8 +53,6 @@ public class StatementHandle implements Statement{
 	private String cacheKey ;
 	/** If enabled, log all statements being executed. */
 	protected boolean logStatementsEnabled;
-	/** for logging of addBatch. */
-	protected StringBuilder batchSQL;
 	/** If true, this statement is in the cache. */
 	public volatile boolean inCache = false;
 	/** Stack trace capture of where this statement was opened. */ 
@@ -77,7 +73,47 @@ public class StatementHandle implements Statement{
 	private boolean statisticsEnabled;
 	/** Statistics handle. */
 	private Statistics statistics;
-
+	/** If true, logging is enabled. */
+	protected boolean batchSQLLoggingEnabled;
+	
+	/** For logging purposes - stores parameters to be used for execution. */
+	protected final ThreadLocal < Map<Object, Object> > logParams = 
+         new ThreadLocal < Map<Object, Object> > () {
+             @Override 
+             protected Map<Object, Object> initialValue() {
+                 return new TreeMap<Object, Object>();
+         }
+     };
+ 
+     /** Retrieves the thread-local log params map. 
+     * @return Map of log params. */ 
+     protected Map<Object, Object> getLogParams() {
+         return this.logParams.get();
+     }
+     
+     /** for logging of addBatch. */
+ 	protected final ThreadLocal < StringBuilder > batchSQL = 
+          new ThreadLocal < StringBuilder > () {
+              @Override 
+              protected StringBuilder initialValue() {
+                  return new StringBuilder();
+          }
+      };
+  
+      /** Retrieves the thread-local batch SQL setting 
+      * @return thread-local batch SQL setting. */ 
+      protected StringBuilder getBatchSQL() {
+          return this.batchSQL.get();
+      }
+      
+      /** Sets the the thread-local batch SQL setting 
+       * @param sb batchSQL to set.
+       * */ 
+      protected void setBatchSQL(StringBuilder sb) {
+    	  this.batchSQL.set(sb);
+       }
+       
+     
 	/**
 	 * Constructor to statement handle wrapper. 
 	 *
@@ -101,11 +137,8 @@ public class StatementHandle implements Statement{
 		this.connectionHook = config.getConnectionHook();
 		this.statistics = connectionHandle.getPool().getStatistics();
 		this.statisticsEnabled = config.isStatisticsEnabled();
-		if (this.logStatementsEnabled || this.connectionHook != null){
-			 this.logParams = new TreeMap<Object, Object>();
-			 this.batchSQL = new StringBuilder();
-		}
 
+		this.batchSQLLoggingEnabled = this.logStatementsEnabled || this.connectionHook != null;
 		this.statementReleaseHelperEnabled = connectionHandle.getPool().isStatementReleaseHelperThreadsConfigured();
 		if (this.statementReleaseHelperEnabled){
 			this.statementsPendingRelease = connectionHandle.getPool().getStatementsPendingRelease();
@@ -117,9 +150,9 @@ public class StatementHandle implements Statement{
 //			this.connectionHook = null;
 			this.queryExecuteTimeLimit = 0; 
 		}
-		// store it in the cache if caching is enabled(unless it's already there). FIXME: make this a direct call to putIfAbsent.
+		// store it in the cache if caching is enabled(unless it's already there). 
 		if (this.cache != null){
-			this.cache.put(this.cacheKey, this);
+			this.cache.putIfAbsent(this.cacheKey, this);
 		}
 	}
 
@@ -143,7 +176,7 @@ public class StatementHandle implements Statement{
 	protected void closeStatement() throws SQLException {
 		this.logicallyClosed.set(true);
 		if (this.logStatementsEnabled || this.connectionHook != null){
-			this.logParams.clear();
+			getLogParams().clear();
 		}
 		if (this.cache == null || !this.inCache){ // no cache = throw it away right now
 			internalClose();
@@ -192,7 +225,7 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			if (this.logStatementsEnabled || this.connectionHook != null){
-				this.batchSQL.append(sql);
+				getBatchSQL().append(sql);
 			}
 
 			this.internalStatement.addBatch(sql);
@@ -245,7 +278,7 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			if (this.logStatementsEnabled || this.connectionHook != null){
-				this.batchSQL = new StringBuilder();
+				setBatchSQL(new StringBuilder());
 			}
 			this.internalStatement.clearBatch();
 		} catch (SQLException e) {
@@ -284,16 +317,16 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 			long timer = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.execute(sql);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			queryTimerEnd(sql, timer);
 
@@ -314,7 +347,7 @@ public class StatementHandle implements Statement{
 	protected void queryTimerEnd(String sql, long queryStartTime) {
 		if ((this.queryExecuteTimeLimit != 0) 
 				&& (this.connectionHook != null) && (System.nanoTime() - queryStartTime) > this.queryExecuteTimeLimit){
-			this.connectionHook.onQueryExecuteTimeLimitExceeded(this.connectionHandle, this, sql, this.logParams);
+			this.connectionHook.onQueryExecuteTimeLimitExceeded(this.connectionHandle, this, sql, getLogParams());
 		}
 		
 		if (this.statisticsEnabled){
@@ -337,18 +370,18 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled  && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.execute(sql, autoGeneratedKeys);
 
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -379,13 +412,13 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			
 			result = this.internalStatement.execute(sql, columnIndexes);
@@ -393,7 +426,7 @@ public class StatementHandle implements Statement{
 			if (this.connectionHook != null){
 				// compiler is smart enough to remove this call if it's a no-op as is the default
 				// case with the abstract class
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			queryTimerEnd(sql, queryStartTime);
 
@@ -416,16 +449,16 @@ public class StatementHandle implements Statement{
 		boolean result = false;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.execute(sql, columnNames);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -448,21 +481,21 @@ public class StatementHandle implements Statement{
 		int[] result = null;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(this.batchSQL.toString(), this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(this.batchSQL.get().toString(), getLogParams()));
 			}
 			long queryStartTime = queryTimerStart();
-			String query = this.batchSQL == null ? "" : this.batchSQL.toString();
+			String query = this.batchSQLLoggingEnabled ? this.batchSQL.get().toString() : "";
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, query, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, query, getLogParams());
 			}
 			result = this.internalStatement.executeBatch();
 
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, query, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, query, getLogParams());
 			}
 
-			queryTimerEnd(this.batchSQL == null ? "" : this.batchSQL.toString(), queryStartTime);
+			queryTimerEnd(this.batchSQLLoggingEnabled ? this.batchSQL.get().toString() : "", queryStartTime);
 
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -483,16 +516,16 @@ public class StatementHandle implements Statement{
 		ResultSet result = null;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.executeQuery(sql);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -516,16 +549,16 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.executeUpdate(sql);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -549,16 +582,16 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.executeUpdate(sql, autoGeneratedKeys);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -582,16 +615,16 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams), columnIndexes);
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()), columnIndexes);
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.executeUpdate(sql, columnIndexes);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -615,16 +648,16 @@ public class StatementHandle implements Statement{
 		int result = 0;
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams), columnNames);
+			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+				logger.debug(PoolUtil.fillLogParams(sql, getLogParams()), columnNames);
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 			result = this.internalStatement.executeUpdate(sql, columnNames);
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, this.logParams);
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, sql, getLogParams());
 			}
 
 			queryTimerEnd(sql, queryStartTime);
@@ -1125,8 +1158,8 @@ public class StatementHandle implements Statement{
 	 */
 	protected void internalClose() throws SQLException {
 		if (this.logStatementsEnabled || this.connectionHook != null){
-			this.logParams.clear();
-			this.batchSQL = new StringBuilder();
+			getLogParams().clear();
+			setBatchSQL(new StringBuilder());
 		}
 		this.internalStatement.close();
 	}
