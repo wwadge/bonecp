@@ -342,7 +342,15 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						}
 					}
 					if (!tryAgain){
-						throw new SQLException(PoolUtil.stringifyException(t));
+						// #ifdef JDK6
+						throw new SQLException(t.getMessage(), t);
+						// #endif
+						/* #ifdef JDK5
+		  				throw new SQLException(PoolUtil.stringifyException(t));
+						#endif JDK5 */
+
+						
+						
 					}
 					break;
 				}
