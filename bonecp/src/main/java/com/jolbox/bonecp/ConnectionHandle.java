@@ -298,7 +298,9 @@ public class ConnectionHandle implements Connection{
 		//         'W', 'X', 'Y', or 'Z' are reserved for implementation-specified
 		//         conditions.
 
-
+		// FIXME: We should look into this.connection.getMetaData().getSQLStateType();
+		// to determine if we have SQL:92 or X/OPEN sqlstatus codes.
+		
 		//		char firstChar = state.charAt(0);
 		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
