@@ -38,6 +38,8 @@ public class ConnectionMaxAgeThread implements Runnable {
 	private ScheduledExecutorService scheduler;
 	/** Handle to connection pool. */
 	private BoneCP pool;
+	/** If true, we're operating in a LIFO fashion. */ 
+	private boolean lifoMode;
 	/** Logger handle. */
 	protected static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
 
@@ -46,13 +48,15 @@ public class ConnectionMaxAgeThread implements Runnable {
 	 * @param scheduler Scheduler handler.
 	 * @param pool pool handle
 	 * @param maxAgeInMs Threads older than this are killed off 
+	 * @param lifoMode if true, we're running under a lifo fashion.
 	 */
 	protected ConnectionMaxAgeThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
-			BoneCP pool, long maxAgeInMs){
+			BoneCP pool, long maxAgeInMs, boolean lifoMode){
 		this.partition = connectionPartition;
 		this.scheduler = scheduler;
 		this.maxAgeInMs = maxAgeInMs;
 		this.pool = pool;
+		this.lifoMode = lifoMode;
 	}
 
 
@@ -84,7 +88,16 @@ public class ConnectionMaxAgeThread implements Runnable {
 					}
 
 
-					this.pool.putConnectionBackInPartition(connection);
+					
+					if (this.lifoMode){
+						// we can't put it back normally or it will end up in front again.
+						if (!((LIFOQueue<ConnectionHandle>)connection.getOriginatingPartition().getFreeConnections()).offerLast(connection)){
+							connection.internalClose();
+						}
+					} else {
+						this.pool.putConnectionBackInPartition(connection);
+					}
+
 
 					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
 				}
