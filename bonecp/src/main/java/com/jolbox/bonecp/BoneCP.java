@@ -209,8 +209,12 @@ public class BoneCP implements Serializable {
 	protected void postDestroyConnection(ConnectionHandle handle){
 		ConnectionPartition partition = handle.getOriginatingPartition();
 		partition.updateCreatedConnections(-1);
-		partition.setUnableToCreateMoreTransactions(false); // we can create new ones now
+		partition.setUnableToCreateMoreTransactions(false); // we can create new ones now, this is an optimization
 
+		if (this.finalizableRefQueue != null){
+			this.finalizableRefs.remove(handle);
+		}
+		
 		// "Destroying" for us means: don't put it back in the pool.
 		if (handle.getConnectionHook() != null){
 			handle.getConnectionHook().onDestroy(handle);
