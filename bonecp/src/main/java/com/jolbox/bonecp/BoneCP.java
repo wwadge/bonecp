@@ -377,7 +377,7 @@ public class BoneCP implements Serializable {
 			}
 
 			if (config.getMaxConnectionAgeInSeconds() > 0){
-				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge(TimeUnit.MILLISECONDS));
+				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge(TimeUnit.MILLISECONDS), queueLIFO);
 				this.maxAliveScheduler.schedule(connectionMaxAgeTester, config.getMaxConnectionAgeInSeconds(), TimeUnit.SECONDS);
 			}
 			// watch this partition for low no of threads
