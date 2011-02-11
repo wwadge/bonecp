@@ -15,6 +15,7 @@
  */
 package com.jolbox.bonecp;
 
+import java.lang.ref.Reference;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -108,8 +109,6 @@ public class ConnectionHandle implements Connection{
 	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
 	/** Connection url. */
 	protected String url;	
-	/** If true, we have release helper threads. */
-	private boolean releaseHelperThreadsEnabled;
 	/** Keep track of the thread. */
 	protected Thread threadUsingConnection;
 	/** Configured max connection age. */
@@ -118,6 +117,14 @@ public class ConnectionHandle implements Connection{
 	private boolean statisticsEnabled;
 	/** Statistics handle. */
 	private Statistics statistics;
+	/** Pointer to a thread that is monitoring this connection (for the case where closeConnectionWatch) is
+	 * enabled.
+	 */
+	private volatile Thread threadWatch;
+	/** Handle to pool.finalizationRefs. */
+	private Map<Connection, Reference<ConnectionHandle>> finalizableRefs;
+	/** If true, connection tracking is disabled in the config. */
+	private boolean connectionTrackingDisabled;
 
 	
 	/*
@@ -159,6 +166,8 @@ public class ConnectionHandle implements Connection{
 		this.pool = pool;
 		this.url = url;
 		this.connection = obtainInternalConnection();
+		this.finalizableRefs = this.pool.getFinalizableRefs(); 
+		this.connectionTrackingDisabled = pool.getConfig().isDisableConnectionTracking();
 		this.statisticsEnabled = pool.getConfig().isStatisticsEnabled();
 		this.statistics = pool.getStatistics();
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
@@ -175,10 +184,6 @@ public class ConnectionHandle implements Connection{
 			this.preparedStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
 			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
 			this.statementCachingEnabled = true;
-		}
-
-		if (pool.getConfig().getReleaseHelperThreads() > 0){
-			this.releaseHelperThreadsEnabled = true;
 		}
 	}
 
@@ -354,6 +359,12 @@ public class ConnectionHandle implements Connection{
 			if (!this.logicallyClosed) {
 				this.logicallyClosed = true;
 				this.threadUsingConnection = null;
+				if (this.threadWatch != null){
+					this.threadWatch.interrupt(); // if we returned the connection to the pool, terminate thread watch thread if it's
+												  // running even if thread is still alive (eg thread has been recycled for use in some
+												  // container).
+					this.threadWatch = null;
+				}
 				this.pool.releaseConnection(this);
 
 				if (this.doubleCloseCheck){
@@ -381,8 +392,9 @@ public class ConnectionHandle implements Connection{
 			clearStatementCaches(true);
 			if (this.connection != null){ // safety!
 				this.connection.close();
-				if (this.releaseHelperThreadsEnabled){
-					this.pool.getFinalizableRefs().remove(this.connection);
+				
+				if (!this.connectionTrackingDisabled && this.finalizableRefs != null){
+					this.finalizableRefs.remove(this.connection);
 				}
 			}
 			this.logicallyClosed = true;
@@ -1382,5 +1394,22 @@ public class ConnectionHandle implements Connection{
 	protected boolean isExpired(long currentTime) {
 		return this.maxConnectionAgeInMs > 0 && (currentTime - this.connectionCreationTimeInMs) > this.maxConnectionAgeInMs;
 	}
+
+	/**
+	 * Sets the thread watching over this connection.
+	 * @param threadWatch the threadWatch to set
+	 */
+	protected void setThreadWatch(Thread threadWatch) {
+		this.threadWatch = threadWatch;
+	}
+
+	/**
+	 * Returns the thread watching over this connection.
+	 * @return threadWatch
+	 */
+	public Thread getThreadWatch() {
+		return this.threadWatch;
+	}
+	
 
 }

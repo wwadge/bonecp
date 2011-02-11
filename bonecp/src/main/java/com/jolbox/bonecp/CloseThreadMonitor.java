@@ -61,6 +61,7 @@ public class CloseThreadMonitor implements Runnable {
 //	@Override
 	public void run() {
 		try {
+			this.connectionHandle.setThreadWatch(Thread.currentThread());
 			// wait for the thread we're monitoring to die off.
 			this.threadToMonitor.join(this.closeConnectionWatchTimeout);
 			if (!this.connectionHandle.isClosed() 
@@ -70,6 +71,9 @@ public class CloseThreadMonitor implements Runnable {
 			}
 		} catch (Exception e) {
 			// just kill off this thread
+			if (this.connectionHandle != null){ // safety
+				this.connectionHandle.setThreadWatch(null);
+			}
 		} 
 	}
 
