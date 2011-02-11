@@ -48,6 +48,7 @@ public class TestAcquireFailConfig {
 
 		assertEquals(1, config.getAcquireRetryAttempts().get());
 		assertEquals(123, config.getAcquireRetryDelayInMs());
+		assertEquals(123, config.getAcquireRetryDelay());
 		assertEquals("test", config.getLogMessage());
 		assertEquals(obj, config.getDebugHandle());
 		

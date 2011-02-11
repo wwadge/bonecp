@@ -220,6 +220,7 @@ public class TestStatementCache {
 		config.setPartitionCount(1);
 		config.setStatementsCacheSize(5);
 		config.setStatementReleaseHelperThreads(0);
+		config.setStatisticsEnabled(true);
 		dsb = new BoneCP(config);
 		Connection conn = dsb.getConnection();
 		Statement statement = conn.prepareStatement(sql);
@@ -227,6 +228,7 @@ public class TestStatementCache {
 		Field statementCache = conn.getClass().getDeclaredField("preparedStatementCache");
 		statementCache.setAccessible(true);
 		IStatementCache cache = (IStatementCache) statementCache.get(conn);
+		
 		statement = cache.get(sql);
 		assertNotNull(statement);
 		// Calling again should not provide the same object
@@ -270,7 +272,7 @@ public class TestStatementCache {
 		Connection conn = dsb.getConnection();
 		StatementHandle statement = (StatementHandle)conn.prepareStatement(sql);
 
-		StatementCache cache = new StatementCache(5, false, null);
+		StatementCache cache = new StatementCache(5, true, new Statistics(dsb));
 		cache.put("test1", statement);
 		cache.put("test2", statement);
 		cache.put("test3", statement);
