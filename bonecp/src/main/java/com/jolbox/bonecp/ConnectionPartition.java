@@ -93,6 +93,8 @@ public class ConnectionPartition implements Serializable{
 	private BlockingQueue<Object> poolWatchThreadSignalQueue = new ArrayBlockingQueue<Object>(1);
 	/** Store the unit translation here to avoid recalculating it in statement handles. */
 	private long queryExecuteTimeLimitInNanoSeconds;
+	/** Cached copy of the config-specified pool name. */
+	private String poolName;
 
 
 
@@ -157,12 +159,12 @@ public class ConnectionPartition implements Serializable{
 			final Connection internalDBConnection = con;
 			final BoneCP pool = connectionHandle.getPool();
 			connectionHandle.getPool().getFinalizableRefs().put(con, new FinalizableWeakReference<ConnectionHandle>(connectionHandle, connectionHandle.getPool().getFinalizableRefQueue()) {
+				@SuppressWarnings("synthetic-access")
 				public void finalizeReferent() {
 					try {
 						pool.getFinalizableRefs().remove(internalDBConnection);
 						if (internalDBConnection != null && !internalDBConnection.isClosed()){ // safety!
-							String poolName = pool.getConfig().getPoolName() != null ? "(in pool '"+pool.getConfig().getPoolName()+"') " : "";
-							logger.warn("BoneCP detected an unclosed connection "+poolName + "and will now attempt to close it for you. " +
+							logger.warn("BoneCP detected an unclosed connection "+ConnectionPartition.this.poolName + "and will now attempt to close it for you. " +
 							"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
 							//	if (!(internalDBConnection instanceof Proxy)){ // this is just a safety against finding EasyMock proxies at this point.
 							internalDBConnection.close();
@@ -205,6 +207,8 @@ public class ConnectionPartition implements Serializable{
 		this.url = config.getJdbcUrl();
 		this.username = config.getUsername();
 		this.password = config.getPassword();
+		this.poolName = config.getPoolName() != null ? "(in pool '"+config.getPoolName()+"') " : "";
+		
 		this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 		this.disableTracking = config.isDisableConnectionTracking();
 		this.queryExecuteTimeLimitInNanoSeconds = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimitInMs(), TimeUnit.MILLISECONDS);

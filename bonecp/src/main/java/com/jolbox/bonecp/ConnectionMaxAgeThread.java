@@ -99,7 +99,7 @@ public class ConnectionMaxAgeThread implements Runnable {
 					}
 
 
-					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with...
+					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with (avoid CPU spikes)...
 				}
 
 			} catch (Exception e) {
