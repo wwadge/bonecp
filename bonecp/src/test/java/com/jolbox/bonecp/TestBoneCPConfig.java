@@ -350,6 +350,30 @@ public class TestBoneCPConfig {
 		config.sanitize();
 	}
 	
+	
+	/**
+	 * Tests that setting driver properties handles username/password correctly.
+	 */
+	@Test
+	public void testDriverPropertiesConfigSanitize2(){
+		config.setDatasourceBean(null);
+		config.setUsername("foo");
+		config.setPassword("bar");
+		config.setMaxConnectionsPerPartition(2);
+		config.setMinConnectionsPerPartition(2);
+		config.setJdbcUrl("test");
+		
+		config.sanitize();
+		
+		Properties props = new Properties();
+		config.setDriverProperties(props);
+		config.sanitize();
+		
+		// if username/pass properties have been forgotten in driverProperties, set them
+		assertEquals("foo", config.getDriverProperties().getProperty("user"));
+		assertEquals("bar", config.getDriverProperties().getProperty("password"));
+}
+	
 	/**
 	 * Tests general methods.
 	 * @throws CloneNotSupportedException 
