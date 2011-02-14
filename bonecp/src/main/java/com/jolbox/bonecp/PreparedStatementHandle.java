@@ -71,7 +71,7 @@ PreparedStatement {
 	/** Handle to the real prepared statement. */
 	private PreparedStatement internalPreparedStatement;
 	/** Class logger. */
-	private static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
+	protected static Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
 	/** If true, we need to keep track of the parameters given by setString etc. */
 	protected boolean fillInParams;
 

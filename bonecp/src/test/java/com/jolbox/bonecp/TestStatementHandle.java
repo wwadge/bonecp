@@ -43,6 +43,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
@@ -83,8 +84,14 @@ public class TestStatementHandle {
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		replay(mockConnection, mockPool, mockConfig);
 		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "testSQL", true);
-		reset(mockConnection, mockPool, mockConfig);
+		StatementHandle.logger = createNiceMock(Logger.class);
+		expect(StatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
+		PreparedStatementHandle.logger = createNiceMock(Logger.class);
+		expect(PreparedStatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
 		
+		reset(mockConnection, mockPool, mockConfig);
+		replay(StatementHandle.logger);
+		replay(PreparedStatementHandle.logger);
 
 	}
 
@@ -94,6 +101,7 @@ public class TestStatementHandle {
 	@Before
 	public void setUp() throws Exception {
 		reset(mockClass, mockCallableStatementCache, mockConnection, mockPool);
+		
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)

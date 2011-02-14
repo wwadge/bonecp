@@ -271,6 +271,10 @@ public class TestConnectionHandle {
 
 	}
 
+	/** Test. */
+	boolean interrupted = false;
+	/** Test. */
+	boolean started = false;
 	/** Closing a connection handle should release that connection back in the pool and mark it as closed.
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException
@@ -279,9 +283,10 @@ public class TestConnectionHandle {
 	 * @throws InvocationTargetException
 	 * @throws NoSuchMethodException
 	 * @throws SQLException
+	 * @throws InterruptedException 
 	 */
 	@Test 
-	public void testClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException{
+	public void testClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException, InterruptedException{
 
 		Field field = this.testClass.getClass().getDeclaredField("doubleCloseCheck");
 		field.setAccessible(true);
@@ -291,9 +296,34 @@ public class TestConnectionHandle {
 		this.mockPool.releaseConnection((Connection)anyObject());
 		expectLastCall().once().andThrow(new SQLException()).once();
 		replay(this.mockPool);
+		
+		// create a thread so that we can check that thread.interrupt was called during connection close.
+//		final Thread thisThread = Thread.currentThread();
+		Thread testThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					TestConnectionHandle.this.started = true;
+					while(true){
+						Thread.sleep(20);
+					}
+//				} catch (InterruptedException e) {
+//					TestConnectionHandle.this.interrupted = true;
+				} catch (Exception e) {
+					TestConnectionHandle.this.interrupted = true;
 
+				}
+			}
+		});
+		testThread.start();
+		while (!this.started){
+			Thread.sleep(20);
+		}
+		this.testClass.setThreadWatch(testThread);
 		this.testClass.close();
-
+		testThread.join();
+		assertTrue(this.interrupted); // thread should have been interrupted 
 
 		// logically mark the connection as closed
 		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
@@ -387,9 +417,6 @@ public class TestConnectionHandle {
 		ConcurrentLinkedQueue<Statement> mockStatementHandles = createNiceMock(ConcurrentLinkedQueue.class);
 		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
 		
-		Field f = this.testClass.getClass().getDeclaredField("releaseHelperThreadsEnabled");
-		f.setAccessible(true);
-		f.setBoolean(this.testClass, true);
 		this.mockConnection.close();
 		expectLastCall().once().andThrow(new SQLException()).once();
 		
@@ -400,6 +427,9 @@ public class TestConnectionHandle {
     	expect(this.mockPool.getFinalizableRefQueue()).andReturn(finalizableRefQueue).anyTimes();
     	expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 
+		Field f = this.testClass.getClass().getDeclaredField("finalizableRefs");
+		f.setAccessible(true);
+		f.set(this.testClass, refs);
     	
 		replay(mockStatement, this.mockConnection, mockStatementHandles, this.mockPool);
 		this.testClass.internalClose();
@@ -523,6 +553,10 @@ public class TestConnectionHandle {
 		
 		this.testClass.threadUsingConnection = Thread.currentThread();
 		assertEquals(Thread.currentThread(), this.testClass.getThreadUsingConnection());
+		
+		this.testClass.setThreadWatch(Thread.currentThread());
+		assertEquals(Thread.currentThread(), this.testClass.getThreadWatch());
+		
 	}
 
 	/**
@@ -846,7 +880,7 @@ public class TestConnectionHandle {
 		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
 		ConnectionHook mockConnectionHook = createNiceMock(CoverageHook.class);
 		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
-		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once();
+//		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once();
 		expect(mockConfig.getConnectionHook()).andReturn(mockConnectionHook).once();
 		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
 		replay(this.mockPool, mockConfig, mockConnectionHook);

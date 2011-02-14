@@ -58,7 +58,7 @@ public class StatementHandle implements Statement{
 	/** Stack trace capture of where this statement was opened. */ 
 	public String openStackTrace;
 	/** Class logger. */
-	private static final Logger logger = LoggerFactory.getLogger(StatementHandle.class);
+	protected static Logger logger = LoggerFactory.getLogger(StatementHandle.class);
 	/** Config setting converted to nanoseconds. */
 	protected long queryExecuteTimeLimit;
 	/** Config setting. */

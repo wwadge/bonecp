@@ -72,7 +72,7 @@ public class TestConnectionMaxAgeTester {
 		config = new BoneCPConfig();
 		config.setMaxConnectionAgeInSeconds(1);
 		
-		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000);
+		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, false);
 	}
 
 	/**
@@ -114,6 +114,38 @@ public class TestConnectionMaxAgeTester {
 		testClass.run();
 		verify(mockConnectionExpired);
 	}
+
+
+	/**
+	 * Tests that a partition with expired connections should those connections killed off.
+	 * @throws SQLException 
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testConnectionNotExpiredLifoMode() throws SQLException{
+		 
+		LIFOQueue<ConnectionHandle> mockQueue = createNiceMock(LIFOQueue.class);
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
+		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
+		expect(mockQueue.poll()).andReturn(mockConnection).once();
+			
+		expect(mockConnection.isExpired(anyLong())).andReturn(false).once();
+
+		expect(mockExecutor.isShutdown()).andReturn(false).once();
+		
+
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockConnectionPartition).anyTimes();
+		expect(mockQueue.offerLast(mockConnection)).andReturn(false).anyTimes();
+		mockConnection.internalClose();
+		
+		replay(mockQueue, mockExecutor, mockConnectionPartition, mockConnection, mockPool);
+		ConnectionMaxAgeThread testClass2 = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, true);
+		testClass2.run();
+
+		verify(mockConnection, mockPool);
+		
+	}
 	
 	/**
 	 * Tests that a partition with expired connections should those connections killed off.
@@ -139,7 +171,7 @@ public class TestConnectionMaxAgeTester {
 		
 		replay(mockQueue, mockExecutor, mockConnectionPartition, mockConnection, mockPool);
 		testClass.run();
-		verify(mockConnection);
+		verify(mockConnection, mockPool);
 		
 	}
 	

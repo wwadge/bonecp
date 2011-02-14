@@ -131,7 +131,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	}
 
 	// @Override 
-	public Object invoke(Object proxy, Method method, Object[] args) throws SQLException,Throwable {
+	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
 		Object result = null;
 		ConnectionHandle con = this.connectionHandle.get();
@@ -142,7 +142,12 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			} 
 
 			if (con.isInReplayMode()){ // go straight through when flagged as in playback (replay) mode.
-				return method.invoke(this.target, args);
+				try{
+					return method.invoke(this.target, args);
+				} catch (InvocationTargetException t){
+					throw t.getCause(); // we tried running it, but playback mode also blew up. Throw out the cause, not the
+										// wrapped invocationtargetexception.
+				}
 			}
 
 
@@ -337,7 +342,15 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						}
 					}
 					if (!tryAgain){
-						throw new SQLException(PoolUtil.stringifyException(t));
+						// #ifdef JDK6
+						throw new SQLException(t.getMessage(), t);
+						// #endif
+						/* #ifdef JDK5
+		  				throw new SQLException(PoolUtil.stringifyException(t));
+						#endif JDK5 */
+
+						
+						
 					}
 					break;
 				}

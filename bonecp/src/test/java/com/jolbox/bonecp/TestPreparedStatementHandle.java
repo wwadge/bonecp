@@ -49,6 +49,7 @@ import org.easymock.classextension.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;
 
@@ -86,6 +87,11 @@ public class TestPreparedStatementHandle {
 		EasyMock.replay(this.mockConnection, this.mockPool);
 		this.testClass = new PreparedStatementHandle(this.mockClass, "", this.mockConnection, "TestSQL", this.mockCallableStatementCache);
 		EasyMock.reset(this.mockConnection, this.mockPool);
+		PreparedStatementHandle.logger = createNiceMock(Logger.class);
+		expect(PreparedStatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
+		PreparedStatementHandle.logger.debug((String)org.easymock.EasyMock.anyObject());
+		org.easymock.EasyMock.expectLastCall().anyTimes();
+		EasyMock.replay(PreparedStatementHandle.logger );
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)

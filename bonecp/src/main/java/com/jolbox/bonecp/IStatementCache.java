@@ -171,7 +171,8 @@ public interface IStatementCache {
 	 */
 	void checkForProperClosure();
 
-	/** Wrapper around map.putIfAbsent. 
+	/**
+	 * Wrapper for map putIfAbsent.
 	 * @param cacheKey
 	 * @param statementHandle
 	 */

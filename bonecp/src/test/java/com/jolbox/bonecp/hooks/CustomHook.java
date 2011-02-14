@@ -65,7 +65,6 @@ public class CustomHook extends AbstractConnectionHook{
 		if (this.fail < 3){
 			return true; // try 3 times
 		} 
-		
 		return false;
 
 	}
