@@ -147,7 +147,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				} catch (InvocationTargetException t){
 					throw t.getCause(); // we tried running it, but playback mode also blew up. Throw out the cause, not the
 										// wrapped invocationtargetexception.
-				}
+				} 
 			}
 
 
@@ -198,7 +198,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					// let's try and recover
 					try{
 						con.recoveryResult = attemptRecovery(oldReplayLog); // this might also fail
-						con.setReplayLog(oldReplayLog); // markPossiblyBroken will probably destroy our original connection handle
+						con.setReplayLog(oldReplayLog); // attemptRecovery will probably destroy our original connection handle
 						con.setInReplayMode(false); // start recording again
 						logger.error("Recovery succeeded on Thread #" + Thread.currentThread().getId());
 						con.possiblyBroken = false;
@@ -206,9 +206,14 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						// return the original result the application was expecting
 						return con.recoveryResult.getResult();
 					} catch(Throwable t2){
+						con.setInReplayMode(false); // start recording again
+						con.getReplayLog().clear();
 						throw new SQLException("Could not recover transaction. Original exception follows." + t.getCause());
 					}
-				}  
+				} else {
+					con.setInReplayMode(false); // start recording again
+					con.getReplayLog().clear();
+				}
 
 				// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
 				throw t.getCause();
