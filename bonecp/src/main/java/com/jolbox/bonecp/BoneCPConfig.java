@@ -46,6 +46,10 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * @author wallacew
  */
 public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable {
+	/** Constant. */
+	private static final String USER = "user";
+	/** Constant. */
+	private static final String PASSWORD = "password";
 	/** Serialization UID. */
 	private static final long serialVersionUID = 6090570773474131622L;
 	/** For toString(). */
@@ -1564,32 +1568,40 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 		// if no datasource and we have driver properties set...
 		if (this.datasourceBean == null && this.driverProperties != null){
-			if ((this.driverProperties.get("user") == null) && this.username == null){
+			if ((this.driverProperties.get(USER) == null) && this.username == null){
 				logger.warn("JDBC username not set in driver properties and not set in pool config either");
-			} else if ((this.driverProperties.get("user") == null) && this.username != null){
+			} else if ((this.driverProperties.get(USER) == null) && this.username != null){
 				logger.warn("JDBC username not set in driver properties, copying it from pool config");
-				this.driverProperties.setProperty("user", this.username);
-			} else if (this.username != null && !this.driverProperties.get("user").equals(this.username)){
+				this.driverProperties.setProperty(USER, this.username);
+			} else if (this.username != null && !this.driverProperties.get(USER).equals(this.username)){
 				logger.warn("JDBC username set in driver properties does not match the one set in the pool config.  Overriding it with pool config.");
-				this.driverProperties.setProperty("user", this.username);
+				this.driverProperties.setProperty(USER, this.username);
 			}  
 		}
 
 		// if no datasource and we have driver properties set...
 		if (this.datasourceBean == null && this.driverProperties != null){
-			if ((this.driverProperties.get("password") == null) && this.password == null){
+			if ((this.driverProperties.get(PASSWORD) == null) && this.password == null){
 				logger.warn("JDBC password not set in driver properties and not set in pool config either");
-			} else if ((this.driverProperties.get("password") == null) && this.password != null){
+			} else if ((this.driverProperties.get(PASSWORD) == null) && this.password != null){
 				logger.warn("JDBC password not set in driver properties, copying it from pool config");
-				this.driverProperties.setProperty("password", this.password);
-			} else if (this.password != null && !this.driverProperties.get("password").equals(this.password)){
+				this.driverProperties.setProperty(PASSWORD, this.password);
+			} else if (this.password != null && !this.driverProperties.get(PASSWORD).equals(this.password)){
 				logger.warn("JDBC password set in driver properties does not match the one set in the pool config. Overriding it with pool config.");
-				this.driverProperties.setProperty("password", this.password);
+				this.driverProperties.setProperty(PASSWORD, this.password);
 			}
 
+			if (this.driverProperties.get(PASSWORD) == null && this.password != null){
+				this.driverProperties.put(PASSWORD, this.password);
+			}
+			
+			if (this.driverProperties.get(USER) == null && this.username!= null){
+				this.driverProperties.put(USER, this.username);
+			}
+			
 			// maintain sanity between the two states 
-			this.username = this.driverProperties.getProperty("user");
-			this.password = this.driverProperties.getProperty("password");
+			this.username = this.driverProperties.getProperty(USER);
+			this.password = this.driverProperties.getProperty(PASSWORD);
 		}
 
 		if (this.username != null){

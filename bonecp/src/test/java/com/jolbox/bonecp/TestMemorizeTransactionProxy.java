@@ -627,4 +627,28 @@ public class TestMemorizeTransactionProxy {
 		mockDriver.disable();
 	}
 	
+	
+	@Test
+	public void testHSQLDB() throws ClassNotFoundException, SQLException{
+		Class.forName("org.hsqldb.jdbcDriver" );
+		config.setTransactionRecoveryEnabled(true);
+		config.setJdbcUrl("jdbc:hsqldb:mem");
+		config.setUsername("sa");
+		config.setPassword("");
+		config.setMinConnectionsPerPartition(1);
+		config.setMaxConnectionsPerPartition(1);
+		config.setAcquireRetryAttempts(1);
+		config.setAcquireRetryDelayInMs(1);
+
+		config.setReleaseHelperThreads(0);
+		BoneCP pool = new BoneCP(config);
+		Connection c = pool.getConnection();
+		Statement st = c.createStatement();
+		try {
+			st.execute("alter table foo");
+		} catch(SQLException e){
+		}
+		st.execute("CREATE TABLE foo");
+		
+	}
 }
