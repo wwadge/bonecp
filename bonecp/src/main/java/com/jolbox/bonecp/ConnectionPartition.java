@@ -158,17 +158,17 @@ public class ConnectionPartition implements Serializable{
 			}
 			final Connection internalDBConnection = con;
 			final BoneCP pool = connectionHandle.getPool();
-			connectionHandle.getPool().getFinalizableRefs().put(con, new FinalizableWeakReference<ConnectionHandle>(connectionHandle, connectionHandle.getPool().getFinalizableRefQueue()) {
+			connectionHandle.getPool().getFinalizableRefs().put(internalDBConnection, new FinalizableWeakReference<ConnectionHandle>(connectionHandle, connectionHandle.getPool().getFinalizableRefQueue()) {
 				@SuppressWarnings("synthetic-access")
 				public void finalizeReferent() {
 					try {
 						pool.getFinalizableRefs().remove(internalDBConnection);
 						if (internalDBConnection != null && !internalDBConnection.isClosed()){ // safety!
+							
 							logger.warn("BoneCP detected an unclosed connection "+ConnectionPartition.this.poolName + "and will now attempt to close it for you. " +
 							"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
-							//	if (!(internalDBConnection instanceof Proxy)){ // this is just a safety against finding EasyMock proxies at this point.
+
 							internalDBConnection.close();
-							//}
 							updateCreatedConnections(-1);
 						}
 					} catch (Throwable t) {

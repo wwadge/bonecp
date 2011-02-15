@@ -21,6 +21,7 @@ import static org.easymock.classextension.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
@@ -37,6 +38,54 @@ public class TestStatistics {
 	/** stats handle. */
 	private Statistics stats = new Statistics(this.mockPool);
 
+	
+
+	@Test
+	public void testStat2() throws ClassNotFoundException, SQLException, InterruptedException{
+		Class.forName("org.hsqldb.jdbcDriver" );
+		BoneCPConfig config = new BoneCPConfig();
+		config.setTransactionRecoveryEnabled(false);
+		config.setJdbcUrl("jdbc:hsqldb:mem");
+		config.setUsername("sa");
+		config.setPassword("");
+		config.setMinConnectionsPerPartition(1);
+		config.setMaxConnectionsPerPartition(2);
+		config.setPartitionCount(1);
+		config.setAcquireRetryAttempts(1);
+		config.setAcquireRetryDelayInMs(1);
+		config.setDisableConnectionTracking(false);
+		config.setMaxConnectionAgeInSeconds(5);
+		config.setReleaseHelperThreads(0);
+		final BoneCP pool = new BoneCP(config);
+		System.out.println("Pre : "+pool.getTotalCreatedConnections());
+
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					pool.getConnection();
+					System.out.println("In thread: "+pool.getTotalCreatedConnections());
+
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		System.out.println("Post: "+pool.getTotalCreatedConnections());
+		Thread.sleep(6000);
+		System.out.println("Final: "+pool.getTotalCreatedConnections());
+		System.gc();System.gc();System.gc();System.gc();System.gc();System.gc();System.gc();System.gc();System.gc();System.gc();
+		Thread.sleep(6000);
+		
+//		t.start();
+//		t.join();
+//		t=null;
+
+	}
+
+	
 	/**	Test that the values start off at zero initially
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
@@ -119,6 +168,7 @@ public class TestStatistics {
 		checkValuesSetToZero(this.stats);
 	}
 
+	
 }
 
 
