@@ -95,6 +95,8 @@ public class ConnectionPartition implements Serializable{
 	private long queryExecuteTimeLimitInNanoSeconds;
 	/** Cached copy of the config-specified pool name. */
 	private String poolName;
+	/** Handle to the pool. */
+	private BoneCP pool;
 
 
 
@@ -113,6 +115,8 @@ public class ConnectionPartition implements Serializable{
 		try{
 			this.statsLock.writeLock().lock();
 			this.createdConnections+=increment;
+			assert this.createdConnections >= 0 : "Created connections < 0!";
+			
 		} finally { 
 			this.statsLock.writeLock().unlock();
 		}
@@ -126,10 +130,23 @@ public class ConnectionPartition implements Serializable{
 	 */
 	protected void addFreeConnection(ConnectionHandle connectionHandle) throws SQLException{
 		connectionHandle.setOriginatingPartition(this);
-		if (this.freeConnections.offer(connectionHandle)){ 
-			updateCreatedConnections(1);
-			trackConnectionFinalizer(connectionHandle);
-		} else {
+		// assume success to avoid racing where we insert an item in a queue and having that item immediately
+		// taken and closed off thus decrementing the created connection count.
+		updateCreatedConnections(1);
+		if (!this.disableTracking){
+			trackConnectionFinalizer(connectionHandle); 
+		}
+		
+		// the instant the following line is executed, consumers can start making use of this 
+		// connection.
+		if (!this.freeConnections.offer(connectionHandle)){
+			// we failed. rollback.
+			updateCreatedConnections(-1); // compensate our createdConnection count.
+			
+			if (!this.disableTracking){
+				this.pool.getFinalizableRefs().remove(connectionHandle.getInternalConnection());
+			}
+			// terminate the internal handle.
 			connectionHandle.internalClose();
 		}
 	}
@@ -145,7 +162,7 @@ public class ConnectionPartition implements Serializable{
 	 */ 
 	protected void trackConnectionFinalizer(ConnectionHandle connectionHandle) {
 		if (!this.disableTracking){
-
+			assert !connectionHandle.getPool().getFinalizableRefs().containsKey(connectionHandle) : "Already tracking this handle";
 			Connection con = connectionHandle.getInternalConnection();
 			if (con != null && con instanceof Proxy && Proxy.getInvocationHandler(con) instanceof MemorizeTransactionProxy){
 				try {
@@ -208,6 +225,7 @@ public class ConnectionPartition implements Serializable{
 		this.username = config.getUsername();
 		this.password = config.getPassword();
 		this.poolName = config.getPoolName() != null ? "(in pool '"+config.getPoolName()+"') " : "";
+		this.pool = pool;
 		
 		this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 		this.disableTracking = config.isDisableConnectionTracking();
