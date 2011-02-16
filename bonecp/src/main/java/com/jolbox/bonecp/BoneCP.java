@@ -212,7 +212,7 @@ public class BoneCP implements Serializable {
 		partition.setUnableToCreateMoreTransactions(false); // we can create new ones now, this is an optimization
 
 		if (this.finalizableRefQueue != null){
-			this.finalizableRefs.remove(handle);
+			this.finalizableRefs.remove(handle.getInternalConnection());
 		}
 		
 		// "Destroying" for us means: don't put it back in the pool.
