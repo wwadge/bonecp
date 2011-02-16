@@ -43,6 +43,7 @@ import java.sql.Statement;
 import org.easymock.classextension.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.CoverageHook;
@@ -627,7 +628,7 @@ public class TestMemorizeTransactionProxy {
 		mockDriver.disable();
 	}
 	
-	
+	@Ignore
 	@Test
 	public void testHSQLDB() throws ClassNotFoundException, SQLException{
 		Class.forName("org.hsqldb.jdbcDriver" );

@@ -209,9 +209,9 @@ public class BoneCP implements Serializable {
 	protected void postDestroyConnection(ConnectionHandle handle){
 		ConnectionPartition partition = handle.getOriginatingPartition();
 	
-		if (this.finalizableRefQueue != null){
-			Object o = this.finalizableRefs.remove(handle.getInternalConnection()); // FIXME: this should be handle.getInternalConnection. I'm putting it back to handle for now to trace the negative connection numbers
-			assert o != null : "Did not manage to remove connection from finalizable ref queue";
+		if (this.finalizableRefQueue != null){ //safety
+			this.finalizableRefs.remove(handle.getInternalConnection()); 
+//			assert o != null : "Did not manage to remove connection from finalizable ref queue";
 		}
 		
 		partition.updateCreatedConnections(-1);

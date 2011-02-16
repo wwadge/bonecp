@@ -50,7 +50,7 @@ import com.jolbox.bonecp.proxy.ConnectionProxy;
  */
 public class TestConnectionPartition {
 	/** mock handle. */
-	private BoneCP mockPool;
+	private BoneCP mockPool = createNiceMock(BoneCP.class);
 	/** mock handle. */
 	private static Logger mockLogger;
 	/** mock handle. */
@@ -78,7 +78,6 @@ public class TestConnectionPartition {
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(3).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("Junit test").anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(false).anyTimes();
-		this.mockPool = createNiceMock(BoneCP.class);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
@@ -113,7 +112,18 @@ public class TestConnectionPartition {
 		int count = testClass.getCreatedConnections();
 		testClass.updateCreatedConnections(5);
 		assertEquals(count+5, testClass.getCreatedConnections());
+	}
 
+	/**
+	 * Test method for created connections.
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	@Test
+	public void testUpdateCreatedConnectionsWithException() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+	
 		// Test #2: Same test but fake an exception 
 		ReentrantReadWriteLock mockLock = createNiceMock(ReentrantReadWriteLock.class);
 		WriteLock mockWriteLock = createNiceMock(WriteLock.class);
@@ -151,7 +161,7 @@ public class TestConnectionPartition {
 		makeThreadSafe(freeConnections, true);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
-		this.mockPool = createNiceMock(BoneCP.class);
+		reset(this.mockPool);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
@@ -181,20 +191,24 @@ public class TestConnectionPartition {
 
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
-		this.mockPool = createNiceMock(BoneCP.class);
+		reset(this.mockPool);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
+		
 		FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 		expect(this.mockPool.getFinalizableRefQueue()).andReturn(finalizableRefQueue).anyTimes();
-
 		ConnectionHandle mockConnectionHandle = createNiceMock(ConnectionHandle.class);
 		expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(freeConnections.offer(mockConnectionHandle)).andReturn(false);
+		
 		mockConnectionHandle.internalClose();
 		expectLastCall().once();
-		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
 
-		replay(mockConnectionHandle, freeConnections, this.mockPool);
+		expect(freeConnections.remainingCapacity()).andReturn(1).anyTimes();
+		Connection mockRealConnection = createNiceMock(Connection.class);
+		expect(mockConnectionHandle.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+		testClass.pool = this.mockPool;
+		replay(mockConnectionHandle, mockRealConnection, freeConnections, this.mockPool);
 		testClass.addFreeConnection(mockConnectionHandle);
 		verify(mockConnectionHandle, freeConnections);
 		assertEquals(count, testClass.getCreatedConnections());
@@ -270,7 +284,7 @@ public class TestConnectionPartition {
 		expect(mockConnectionHandle.getInternalConnection()).andReturn(connection).anyTimes();
 		mockConnection.close();
 		expectLastCall().once();
-		this.mockPool = createNiceMock(BoneCP.class);
+		reset(this.mockPool);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
@@ -313,14 +327,14 @@ public class TestConnectionPartition {
 		expect(mockConnectionHandle.getInternalConnection()).andReturn(mockConnection).anyTimes();
 		mockConnection.close();
 		expectLastCall().andThrow(new SQLException("fake reason")).once();
-		BoneCP mockPool = createNiceMock(BoneCP.class);
+		reset(this.mockPool);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
-		expect(mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
+		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
-		expect(mockPool.getFinalizableRefQueue()).andReturn(finalizableRefQueue).anyTimes();
-		expect(mockConnectionHandle.getPool()).andReturn(mockPool).anyTimes();
+		expect(this.mockPool.getFinalizableRefQueue()).andReturn(finalizableRefQueue).anyTimes();
+		expect(mockConnectionHandle.getPool()).andReturn(this.mockPool).anyTimes();
 
-		replay(mockConnectionHandle, mockConnection, mockPool);
+		replay(mockConnectionHandle, mockConnection, this.mockPool);
 		testClass.trackConnectionFinalizer(mockConnectionHandle);
 		testClass.statsLock = null; // this makes it blow up.
 		reset(mockLogger);
@@ -361,7 +375,7 @@ public class TestConnectionPartition {
 		makeThreadSafe(mockConnection, true);
 		reset(mockLogger);
 		makeThreadSafe(mockLogger, true);
-		this.mockPool = createNiceMock(BoneCP.class);
+		reset(this.mockPool);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();

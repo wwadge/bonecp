@@ -96,7 +96,7 @@ public class ConnectionPartition implements Serializable{
 	/** Cached copy of the config-specified pool name. */
 	private String poolName;
 	/** Handle to the pool. */
-	private BoneCP pool;
+	protected BoneCP pool;
 
 
 
