@@ -156,6 +156,7 @@ public class TestBoneCPConfig {
 		config.setAcquireRetryDelay(1, TimeUnit.MINUTES);
 		config.setConnectionTimeout(1, TimeUnit.MINUTES);
 		config.setIdleMaxAge(1, TimeUnit.MINUTES);
+		config.setIdleMaxAgeInSeconds(60);
 		config.setIdleConnectionTestPeriod(1, TimeUnit.MINUTES);
 		config.setMaxConnectionAge(1, TimeUnit.MINUTES);
 		config.setDefaultReadOnly(true);
@@ -191,6 +192,7 @@ public class TestBoneCPConfig {
 		config.setDisableJMX(false);
 		config.setDatasourceBean(mockDataSource);
 		config.setQueryExecuteTimeLimit(123);
+		config.setQueryExecuteTimeLimitInMs(123);
 		config.setDisableConnectionTracking(true);
 		config.setConnectionTimeout(9999);
 		config.setDriverProperties(driverProperties);

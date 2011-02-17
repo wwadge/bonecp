@@ -45,6 +45,9 @@ public class MockJDBCDriver  implements Driver {
 		DriverManager.registerDriver(this);
 	}
 
+	/** Stop intercepting requests.
+	 * @throws SQLException
+	 */
 	public void unregister() throws SQLException{
 		DriverManager.deregisterDriver(this);
 	}
