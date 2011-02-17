@@ -313,7 +313,7 @@ public class ConnectionHandle implements Connection{
 		char firstChar = state.charAt(0);
 		if (state.equals("40001") || 
 				state.equals("HY000") ||
-				state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') || (firstChar >='I' && firstChar <= 'Z')){
+				state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') /*|| (firstChar >='I' && firstChar <= 'Z')*/){
 			this.possiblyBroken = true;
 		}
 
