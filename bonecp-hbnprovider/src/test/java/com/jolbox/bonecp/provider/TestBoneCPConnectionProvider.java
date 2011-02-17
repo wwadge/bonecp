@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,6 +75,8 @@ public class TestBoneCPConnectionProvider {
 	private static String DRIVER = "com.jolbox.bonecp.MockJDBCDriver";
 	/** A dummy query for HSQLDB. */
 	public static final String TEST_QUERY = "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
+	/** Mock driver handler. */
+	private MockJDBCDriver driver;
 	
 	/** Class setup.
 	 * @throws SecurityException
@@ -97,9 +100,10 @@ public class TestBoneCPConnectionProvider {
 	 * @throws IllegalArgumentException 
 	 * @throws NoSuchFieldException 
 	 * @throws SecurityException 
+	 * @throws SQLException 
 	 */
 	@Before
-	public void before() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException{
+	public void before() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, SQLException{
 		testClass = new BoneCPConnectionProvider();
 
 		// wire in our mock
@@ -109,8 +113,26 @@ public class TestBoneCPConnectionProvider {
 		
 		
 		reset(mockPool, mockConnection, mockProperties);
+		
+		// load the driver.
+		this.driver = new MockJDBCDriver(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
 	}
 
+	/**
+	 * Cleanup
+	 * @throws SQLException
+	 */
+	@After
+	public void deregisterDriver() throws SQLException{
+		if (this.driver != null){
+			this.driver.unregister();
+		}
+	}
 	/**
 	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#close()}.
 	 */
@@ -148,13 +170,7 @@ public class TestBoneCPConnectionProvider {
 	 */
 	@Test
 	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException, SQLException {
-		// load the driver.
-		new MockJDBCDriver(new MockJDBCAnswer() {
-			
-			public Connection answer() throws SQLException {
-				return new MockConnection();
-			}
-		});
+		
 		Class.forName("com.jolbox.bonecp.MockJDBCDriver");
 		expect(mockProperties.getProperty("bonecp.statementsCacheSize")).andReturn("40").anyTimes();
 		expect(mockProperties.getProperty("bonecp.minConnectionsPerPartition")).andReturn("20").anyTimes();
@@ -270,6 +286,7 @@ public class TestBoneCPConnectionProvider {
 	 */
 	@Test
 	public void testCreatePool() throws SQLException, ClassNotFoundException {
+	
 		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
@@ -343,7 +360,68 @@ public class TestBoneCPConnectionProvider {
 		verify(mockPool, mockConnection);
 
 	}
+	
+	/**
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#getConnection()}.
+	 * @throws SQLException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	@Test
+	public void testGetConnectionWithException() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
 
+		Field field = testClass.getClass().getDeclaredField("isolation");
+		field.setAccessible(true);
+		field.set(testClass, 8);
+
+
+		expect(mockPool.getConnection()).andReturn(mockConnection).once();
+		expect(mockConnection.getTransactionIsolation()).andThrow(new SQLException()).once();
+		mockConnection.close();
+		expectLastCall().once();
+		replay(mockPool, mockConnection);
+		try{
+			testClass.getConnection();
+			fail("Should throw an exception");
+		} catch(SQLException e){
+			// do nothing
+		}
+		verify(mockPool, mockConnection);
+
+	}
+
+	/**
+	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#getConnection()}.
+	 * @throws SQLException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	@Test
+	public void testGetConnectionWithExceptionEvenInFinally() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+
+		Field field = testClass.getClass().getDeclaredField("isolation");
+		field.setAccessible(true);
+		field.set(testClass, 8);
+
+
+		expect(mockPool.getConnection()).andReturn(mockConnection).once();
+		expect(mockConnection.getTransactionIsolation()).andThrow(new SQLException()).once();
+		mockConnection.close();
+		expectLastCall().andThrow(new SQLException()).once();
+		replay(mockPool, mockConnection);
+		try{
+			testClass.getConnection();
+			fail("Should throw an exception");
+		} catch(SQLException e){
+			// do nothing
+		}
+		verify(mockPool, mockConnection);
+
+	}
 	/**
 	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#supportsAggressiveRelease()}.
 	 */

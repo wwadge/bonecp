@@ -44,7 +44,11 @@ public class MockJDBCDriver  implements Driver {
 		// default constructor
 		DriverManager.registerDriver(this);
 	}
-	
+
+	public void unregister() throws SQLException{
+		DriverManager.deregisterDriver(this);
+	}
+
 	/** Connection handle to return
 	 * @param mockJDBCAnswer answer class
 	 * @throws SQLException 

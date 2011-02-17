@@ -194,6 +194,64 @@ public class TestConnectionThreadTester {
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
 	}
 
+	/** Tests that a connection gets to receive a keep-alive. 
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws CloneNotSupportedException */
+	@Test
+	public void testIdleMaxAge() throws SQLException, InterruptedException, CloneNotSupportedException {
+		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		fakeFreeConnections.add(mockConnection);
+		BoneCPConfig localconfig = config.clone();
+		localconfig.setIdleConnectionTestPeriodInMinutes(0);
+		localconfig.setIdleMaxAgeInMinutes(1);
+		expect(mockPool.getConfig()).andReturn(localconfig).anyTimes();
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(fakeFreeConnections).anyTimes();
+//		expect(mockConnectionPartition.getMinConnections()).andReturn(10).once();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2).anyTimes();
+		
+		expect(mockConnection.isPossiblyBroken()).andReturn(false);
+		expect(mockConnection.getConnectionLastUsedInMs()).andReturn(Long.MAX_VALUE);
+		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
+		mockPool.putConnectionBackInPartition((ConnectionHandle)anyObject());
+		
+
+		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, localconfig.getIdleMaxAgeInMinutes(), localconfig.getIdleConnectionTestPeriodInMinutes(), false);
+		this.testClass.run();
+		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
+	}
+
+	/** Tests that a connection gets to receive a keep-alive. 
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws CloneNotSupportedException */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testIdleMaxAgeLifoMode() throws SQLException, InterruptedException, CloneNotSupportedException {
+		LIFOQueue<ConnectionHandle> mockFreeConnections = createNiceMock(LIFOQueue.class);
+		expect(mockFreeConnections.poll()).andReturn(mockConnection).once();
+		BoneCPConfig localconfig = config.clone();
+		localconfig.setIdleConnectionTestPeriodInMinutes(0);
+		localconfig.setIdleMaxAgeInMinutes(1);
+		expect(mockPool.getConfig()).andReturn(localconfig).anyTimes();
+		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockFreeConnections).anyTimes();
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockConnectionPartition).once();
+		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2).anyTimes();
+		expect(mockFreeConnections.offerLast((ConnectionHandle)anyObject())).andReturn(false).anyTimes();
+		mockConnection.internalClose();
+		expectLastCall().once();
+		expect(mockConnection.isPossiblyBroken()).andReturn(false);
+		expect(mockConnection.getConnectionLastUsedInMs()).andReturn(Long.MAX_VALUE);
+		expect(mockPool.isConnectionHandleAlive((ConnectionHandle)anyObject())).andReturn(true).anyTimes();
+		//mockPool.putConnectionBackInPartition((ConnectionHandle)anyObject());
+		
+
+		replay(mockPool, mockFreeConnections, mockConnection, mockConnectionPartition, mockExecutor);
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, localconfig.getIdleMaxAgeInMinutes(), localconfig.getIdleConnectionTestPeriodInMinutes(), true);
+		this.testClass.run();
+		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection);
+	}
 	/** Tests that an active connection that fails the connection is alive test will get closed. 
 	 * @throws SQLException 
 	 * @throws InterruptedException 

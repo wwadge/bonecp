@@ -176,12 +176,10 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	 *
 	 * @see org.hibernate.connection.ConnectionProvider#getConnection()
 	 */
-	public Connection getConnection()
-	throws SQLException {
+	public Connection getConnection() throws SQLException {
 		Connection connection = this.pool.getConnection();
 
 		// set the Transaction Isolation if defined
-		boolean success = false;
 		try {
 			// set the Transaction Isolation if defined
 			if ((this.isolation != null) && (connection.getTransactionIsolation() != this.isolation.intValue())) {
@@ -193,17 +191,16 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 				connection.setAutoCommit(this.autocommit);
 			}
 
-			success = true;
 			return connection;
-		} finally {
-			if (!success) {
-				try {
-					connection.close();
-				} catch (Exception e) {
-					logger.warn("Failed to close a connection", e);
-				}
+		} catch (SQLException e){
+			try {
+				connection.close();
+			} catch (Exception e2) {
+				logger.warn("Setting connection properties failed and closing this connection failed again", e);
 			}
-		}
+			
+			throw e;
+		} 
 	}
 
 	/**

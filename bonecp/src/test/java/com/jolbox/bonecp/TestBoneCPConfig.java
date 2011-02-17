@@ -337,7 +337,10 @@ public class TestBoneCPConfig {
 		
 		
 		config.setDriverProperties(new Properties());
+		config.getDriverProperties().remove("user");
+		config.getDriverProperties().remove("password");
 		config.sanitize();
+		
 		
 		// if not found, copied over from pool config
 		assertEquals("foo", config.getDriverProperties().getProperty("user"));

@@ -1591,13 +1591,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				this.driverProperties.setProperty(PASSWORD, this.password);
 			}
 
-			if (this.driverProperties.get(PASSWORD) == null && this.password != null){
-				this.driverProperties.put(PASSWORD, this.password);
-			}
-			
-			if (this.driverProperties.get(USER) == null && this.username!= null){
-				this.driverProperties.put(USER, this.username);
-			}
+		
 			
 			// maintain sanity between the two states 
 			this.username = this.driverProperties.getProperty(USER);

@@ -115,7 +115,7 @@ public class ConnectionPartition implements Serializable{
 		try{
 			this.statsLock.writeLock().lock();
 			this.createdConnections+=increment;
-			assert this.createdConnections >= 0 : "Created connections < 0!";
+	//		assert this.createdConnections >= 0 : "Created connections < 0!";
 			
 		} finally { 
 			this.statsLock.writeLock().unlock();
@@ -162,7 +162,7 @@ public class ConnectionPartition implements Serializable{
 	 */ 
 	protected void trackConnectionFinalizer(ConnectionHandle connectionHandle) {
 		if (!this.disableTracking){
-			assert !connectionHandle.getPool().getFinalizableRefs().containsKey(connectionHandle) : "Already tracking this handle";
+		//	assert !connectionHandle.getPool().getFinalizableRefs().containsKey(connectionHandle) : "Already tracking this handle";
 			Connection con = connectionHandle.getInternalConnection();
 			if (con != null && con instanceof Proxy && Proxy.getInvocationHandler(con) instanceof MemorizeTransactionProxy){
 				try {
