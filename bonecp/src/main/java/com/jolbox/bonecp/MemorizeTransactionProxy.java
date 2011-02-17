@@ -193,7 +193,10 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					con.markPossiblyBroken((SQLException)t.getCause());
 				}
 
-				if (con.isPossiblyBroken()){ // connection is possibly recoverable...
+				if (!con.isPossiblyBroken()){ // connection is possibly recoverable...
+					con.setInReplayMode(false); // start recording again
+					con.getReplayLog().clear();
+				} else { // connection is possibly recoverable...
 					logger.error("Connection failed. Attempting to recover transaction on Thread #"+ Thread.currentThread().getId());
 					// let's try and recover
 					try{
@@ -210,11 +213,10 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						con.getReplayLog().clear();
 						throw new SQLException("Could not recover transaction. Original exception follows." + t.getCause());
 					}
-				} else {
-					con.setInReplayMode(false); // start recording again
-					con.getReplayLog().clear();
-				}
-
+				} 
+				
+					
+				
 				// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
 				throw t.getCause();
 
@@ -257,6 +259,8 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	 */
 	private TransactionRecoveryResult attemptRecovery(List<ReplayLog> oldReplayLog) throws SQLException{
 		boolean tryAgain = false;
+		Throwable failedThrowable = null;
+		
 		ConnectionHandle con = this.connectionHandle.get();
 		TransactionRecoveryResult recoveryResult = con.recoveryResult;
 		ConnectionHook connectionHook = con.getPool().getConfig().getConnectionHook();
@@ -347,15 +351,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						}
 					}
 					if (!tryAgain){
-						// #ifdef JDK6
-						throw new SQLException(t.getMessage(), t);
-						// #endif
-						/* #ifdef JDK5
-		  				throw new SQLException(PoolUtil.stringifyException(t));
-						#endif JDK5 */
-
-						
-						
+						failedThrowable = t;
 					}
 					break;
 				}
@@ -370,6 +366,17 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		for (ReplayLog replay: oldReplayLog){
 			replay.setTarget(replaceTarget.get(replay.getTarget())); // fix our log
 		}
+		
+		if (failedThrowable != null){
+		// #ifdef JDK6
+		throw new SQLException(failedThrowable.getMessage(), failedThrowable);
+		// #endif
+		/* #ifdef JDK5
+			throw new SQLException(PoolUtil.stringifyException(t));
+		#endif JDK5 */
+		}
+		
+		
 		return recoveryResult;
 	}
 
