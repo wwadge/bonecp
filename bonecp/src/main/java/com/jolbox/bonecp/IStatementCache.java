@@ -54,14 +54,6 @@ public interface IStatementCache {
 	StatementHandle get(String sql);
 
 	/**
-	 * Stores the given Statement in a cache.
-	 *
-	 * @param key SQL statement
-	 * @param value JDBC Statement
-	 */
-	void put(String key, StatementHandle value);
-
-	/**
 	 * Returns size of the cache.  
 	 *
 	 * @return cache size

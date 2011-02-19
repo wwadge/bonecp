@@ -190,7 +190,7 @@ public class TestStatementCache {
 
 		
 		StatementCache cache = new StatementCache(5, false, null);
-		cache.put("test1", (StatementHandle)statement);
+		cache.putIfAbsent("test1", (StatementHandle)statement);
 		assertNotNull(cache.get("test1"));
 		
 		assertNull(cache.get("test1", 1));
@@ -273,17 +273,17 @@ public class TestStatementCache {
 		StatementHandle statement = (StatementHandle)conn.prepareStatement(sql);
 
 		StatementCache cache = new StatementCache(5, true, new Statistics(dsb));
-		cache.put("test1", statement);
-		cache.put("test2", statement);
-		cache.put("test3", statement);
-		cache.put("test4", statement);
-		cache.put("test5", statement);
+		cache.putIfAbsent("test1", statement);
+		cache.putIfAbsent("test2", statement);
+		cache.putIfAbsent("test3", statement);
+		cache.putIfAbsent("test4", statement);
+		cache.putIfAbsent("test5", statement);
 
 
 		conn.close();
 
 		for (int i=0; i < 5000000; i++){
-			cache.put("test"+i, statement);
+			cache.putIfAbsent("test"+i, statement);
 			if ((i % 10000) == 0){
 				System.gc();
 			}

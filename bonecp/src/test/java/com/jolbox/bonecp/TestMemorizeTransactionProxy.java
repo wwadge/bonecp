@@ -95,8 +95,8 @@ public class TestMemorizeTransactionProxy {
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 */
-	@Ignore
 	@Test
+	@Ignore
 	public void testHSQLDB() throws ClassNotFoundException, SQLException{
 		Class.forName("org.hsqldb.jdbcDriver" );
 		config.setTransactionRecoveryEnabled(true);
@@ -107,18 +107,32 @@ public class TestMemorizeTransactionProxy {
 		config.setMaxConnectionsPerPartition(1);
 		config.setAcquireRetryAttempts(1);
 		config.setAcquireRetryDelayInMs(1);
-
+		config.setStatementsCacheSize(100);
 		config.setReleaseHelperThreads(0);
+		config.setTransactionRecoveryEnabled(true);
 		BoneCP pool = new BoneCP(config);
 		Connection c = pool.getConnection();
 		Statement st = c.createStatement();
+		try{
+			st.execute("CREATE TABLE foo(id INTEGER)");
+		} catch (SQLException e){
+			//
+		}
+		PreparedStatement ps = c.prepareStatement("insert into foo(id) values (1)");
 		try {
+			
+			ps.execute();
+			ps.close();
 			st.execute("alter table foo");
 		} catch(SQLException e){
-			e.printStackTrace();
+//			e.printStackTrace();
 			// do nothing
 		}
-		st.execute("CREATE TABLE foo(id INTEGER)");
+		PreparedStatement ps2 = c.prepareStatement("insert into foo(id) values (1)");
+
+		ps2.execute();
+		
+		//st.execute("CREATE TABLE foo(id INTEGER)");
 		
 	}
 	

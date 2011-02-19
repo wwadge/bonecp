@@ -206,26 +206,6 @@ public class StatementCache implements IStatementCache {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see com.jolbox.bonecp.IStatementCache#put(java.lang.String, com.jolbox.bonecp.StatementHandle)
-	 */
-	// @Override
-	public void put(String key, StatementHandle handle){
-		
-		if (this.cache.size() <=  this.cacheSize && key != null){ // perhaps use LRU in future?? Worth the overhead? Hmm....
-			if (this.cache.putIfAbsent(key, handle) == null){
-				handle.inCache = true;
-				if (this.maintainStats){
-					this.statistics.incrementStatementsCached();
-				}
-			}
-		}
-		
-	}
-
-
-	/**
-	 * {@inheritDoc}
-	 *
 	 * @see com.jolbox.bonecp.IStatementCache#size()
 	 */
 	// @Override
@@ -263,8 +243,16 @@ public class StatementCache implements IStatementCache {
 	}
 
 	@Override
-	public void putIfAbsent(String cacheKey, StatementHandle statementHandle) {
-		this.cache.putIfAbsent(cacheKey, statementHandle);
+	public void putIfAbsent(String key, StatementHandle handle) {
+		if (this.cache.size() <=  this.cacheSize && key != null){ // perhaps use LRU in future?? Worth the overhead? Hmm....
+			if (this.cache.putIfAbsent(key, handle) == null){
+				handle.inCache = true;
+				if (this.maintainStats){
+					this.statistics.incrementStatementsCached();
+				}
+			}
+		}
+
 	}
 
 }
