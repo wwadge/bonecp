@@ -81,9 +81,19 @@ public interface ConnectionHook {
 	 * @param statement statement handle.
 	 * @param sql SQL statement that was used.
 	 * @param logParams Parameters used in this statement.
+	 * @param timeElapsedInMs actual time the query took (in milliseconds) 
 	 */
-	void onQueryExecuteTimeLimitExceeded(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> logParams);
+	void onQueryExecuteTimeLimitExceeded(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> logParams, long timeElapsedInMs);
 	 
+	/** Deprecated. Use the similarly named hook having more parameters instead.
+	 * @param conn handle to the connection
+	 * @param statement statement handle.
+	 * @param sql SQL statement that was used.
+	 * @param logParams Parameters used in this statement.
+	 */
+	@Deprecated
+	void onQueryExecuteTimeLimitExceeded(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> logParams);
+	
 	/** Deprecated. Use the similarly named hook having more parameters instead.
 	 * 
 	 * Called when a query execute time limit has been set and an executing query took longer
