@@ -177,7 +177,6 @@ public class StatementHandle implements Statement{
 	 */
 	protected void closeStatement() throws SQLException {
 		this.logicallyClosed.set(true);
-		this.enqueuedForClosure = false; 
 		if (this.logStatementsEnabled || this.connectionHook != null){
 			getLogParams().clear();
 		}
@@ -196,6 +195,7 @@ public class StatementHandle implements Statement{
 		boolean result = true;
 		// if we are using a normal LinkedTransferQueue instead of a bounded one, tryTransfer
 		// will never fail.
+		assert e.enqueuedForClosure : "Statement is not enqueued";
 		if (!this.statementsPendingRelease.tryTransfer(e)){
 			result = this.statementsPendingRelease.offer(e);
 		}
@@ -208,10 +208,10 @@ public class StatementHandle implements Statement{
 			this.enqueuedForClosure = true; // stop warning later on.
 			// try moving onto queue so that a separate thread will handle it....
 			if (!tryTransferOffer(this)){
-				this.enqueuedForClosure = false;
+				this.enqueuedForClosure = false; // we failed to enqueue it.
 				// closing off the statement if that fails....
 				closeStatement();
-			}
+			} 
 		} else {
 			// otherwise just close it off straight away
 			closeStatement();
@@ -351,8 +351,12 @@ public class StatementHandle implements Statement{
 	 */
 	protected void queryTimerEnd(String sql, long queryStartTime) {
 		if ((this.queryExecuteTimeLimit != 0) 
-				&& (this.connectionHook != null) && (System.nanoTime() - queryStartTime) > this.queryExecuteTimeLimit){
-			this.connectionHook.onQueryExecuteTimeLimitExceeded(this.connectionHandle, this, sql, getLogParams());
+				&& (this.connectionHook != null)){
+			long timeElapsed = (System.nanoTime() - queryStartTime);
+			
+			if (timeElapsed > this.queryExecuteTimeLimit){
+				this.connectionHook.onQueryExecuteTimeLimitExceeded(this.connectionHandle, this, sql, getLogParams(), timeElapsed);
+			}
 		}
 		
 		if (this.statisticsEnabled){
@@ -1167,6 +1171,7 @@ public class StatementHandle implements Statement{
 			setBatchSQL(new StringBuilder());
 		}
 		this.internalStatement.close();
+		this.enqueuedForClosure = false;
 	}
 
 	/**

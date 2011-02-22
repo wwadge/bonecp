@@ -58,6 +58,8 @@ public class StatementReleaseHelperThread implements Runnable {
 		while (!interrupted) {
 			try {
 				StatementHandle statement = this.queue.take();
+				assert !statement.isClosed() : "Statement is already closed";
+				assert statement.isEnqueuedForClosure() : "Statement is not enqueued";
 				statement.closeStatement();
 			} catch (InterruptedException e) {
 				if (this.pool.poolShuttingDown){
@@ -75,7 +77,7 @@ public class StatementReleaseHelperThread implements Runnable {
 				interrupted = true;
 			}			
 			catch (Exception e) {
-				logger.error("Count not close statement.", e);
+				logger.error("Could not close statement.", e);
 			}
 		}
 	}
