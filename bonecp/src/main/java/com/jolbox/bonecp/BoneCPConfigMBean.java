@@ -188,7 +188,7 @@ public interface BoneCPConfigMBean {
 	/** Returns the no of ms to wait when close connection watch threads are enabled. 0 = wait forever.
 	 * @return the watchTimeout currently set.
 	 */
-	long getCloseConnectionWatchTimeout();
+	long getCloseConnectionWatchTimeoutInMs();
 	
 	/**
 	 * Returns the statementHelperThreads field.
@@ -200,7 +200,7 @@ public interface BoneCPConfigMBean {
 	 * Returns the maxConnectionAge field.
 	 * @return maxConnectionAge
 	 */
-	long getMaxConnectionAge();
+	long getMaxConnectionAgeInSeconds();
 	
 	/**
 	 * Returns the configFile field.
