@@ -4,19 +4,25 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * @author wallacew
+ *
+ */
 public class TestStressTest {
 
-	@Test
+	/** Just a random blob to test bonecp. 
+	 * @throws SQLException
+	 * @throws InterruptedException
+	 */
 	@Ignore
+	@Test
 	public void testStress() throws SQLException, InterruptedException{
-MockJDBCDriver driver = new MockJDBCDriver(new MockJDBCAnswer() {
+		new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			public Connection answer() throws SQLException {
 				return new MockConnection();
@@ -34,6 +40,9 @@ MockJDBCDriver driver = new MockJDBCDriver(new MockJDBCAnswer() {
 		config.setPassword("foo");
 		config.setJdbcUrl("jdbc:mock");
 		config.setStatementsCacheSize(100);
+		config.setStatementReleaseHelperThreads(3);
+		config.setReleaseHelperThreads(3);
+		config.setCloseConnectionWatch(true);
 		final BoneCP pool = new BoneCP(config);
 		final Random rand = new Random();
 		while (true){
@@ -44,7 +53,6 @@ MockJDBCDriver driver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
 				try {
 					Connection c = pool.getConnection();
 					PreparedStatement ps = c.prepareStatement("FOO");

@@ -25,6 +25,7 @@ import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
@@ -245,6 +246,12 @@ public class TestStatementHandle {
 		assertEquals(mockStatement, testClass.getInternalStatement());
 		
 		assertEquals(obj, testClass.getDebugHandle());
+		
+		boolean old = testClass.enqueuedForClosure;
+		testClass.enqueuedForClosure = true;
+		assertTrue(testClass.isEnqueuedForClosure());
+		testClass.enqueuedForClosure = old;
+		
 	}
 	
 	/**

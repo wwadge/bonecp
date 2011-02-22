@@ -75,6 +75,8 @@ public class StatementHandle implements Statement{
 	private Statistics statistics;
 	/** If true, logging is enabled. */
 	protected boolean batchSQLLoggingEnabled;
+	/** If true, this statement is being closed off by a separate thread. */
+	protected volatile boolean enqueuedForClosure; 
 	
 	/** For logging purposes - stores parameters to be used for execution. */
 	protected final ThreadLocal < Map<Object, Object> > logParams = 
@@ -175,6 +177,7 @@ public class StatementHandle implements Statement{
 	 */
 	protected void closeStatement() throws SQLException {
 		this.logicallyClosed.set(true);
+		this.enqueuedForClosure = false; 
 		if (this.logStatementsEnabled || this.connectionHook != null){
 			getLogParams().clear();
 		}
@@ -202,8 +205,10 @@ public class StatementHandle implements Statement{
 	public void close() throws SQLException {
 		
 		if (this.statementReleaseHelperEnabled){
+			this.enqueuedForClosure = true; // stop warning later on.
 			// try moving onto queue so that a separate thread will handle it....
 			if (!tryTransferOffer(this)){
+				this.enqueuedForClosure = false;
 				// closing off the statement if that fails....
 				closeStatement();
 			}
@@ -1237,6 +1242,15 @@ public class StatementHandle implements Statement{
 	public Object getDebugHandle() {
 		return this.debugHandle;
 	}
+
+	/**
+	 * Returns the enqueuedForClosure field.
+	 * @return enqueuedForClosure
+	 */
+	public boolean isEnqueuedForClosure() {
+		return this.enqueuedForClosure;
+	}
+	
 
 
 }
