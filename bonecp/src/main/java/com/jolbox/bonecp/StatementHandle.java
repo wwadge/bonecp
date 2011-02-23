@@ -179,10 +179,12 @@ public class StatementHandle implements Statement{
 		this.logicallyClosed.set(true);
 		if (this.logStatementsEnabled || this.connectionHook != null){
 			getLogParams().clear();
+			setBatchSQL(new StringBuilder());
 		}
 		if (this.cache == null || !this.inCache){ // no cache = throw it away right now
-			internalClose();
+			this.internalStatement.close();
 		}
+		this.enqueuedForClosure = false;
 	}
 
 	/** Tries to move the item to a waiting consumer. If there's no consumer waiting,
@@ -1155,24 +1157,8 @@ public class StatementHandle implements Statement{
 			throw this.connectionHandle.markPossiblyBroken(e);
 
 		}
-
 	}
 
-
-
-	/**
-	 * @throws SQLException 
-	 * 
-	 *
-	 */
-	protected void internalClose() throws SQLException {
-		if (this.logStatementsEnabled || this.connectionHook != null){
-			getLogParams().clear();
-			setBatchSQL(new StringBuilder());
-		}
-		this.internalStatement.close();
-		this.enqueuedForClosure = false;
-	}
 
 	/**
 	 * Clears out the cache of statements.

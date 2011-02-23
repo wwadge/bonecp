@@ -224,7 +224,9 @@ public class StatementCache implements IStatementCache {
 	public void clear() {
 		for (StatementHandle statement: this.cache.values()){
 			try {
-				statement.internalClose();
+				if (!statement.isEnqueuedForClosure()){ // this might race with statement release helper but nothing bad should occur 
+					statement.close();
+				}
 			} catch (SQLException e) {
 				// don't log, we might fail if the connection link has died
 				// logger.error("Error closing off statement", e);

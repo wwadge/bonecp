@@ -170,7 +170,7 @@ public class TestStatementHandle {
 		expectLastCall();
 		replay(mockStatement, mockCache); 
 
-		handle.internalClose();
+		handle.close();
 		verify(mockStatement);
 		reset(mockStatement, mockCache);
 

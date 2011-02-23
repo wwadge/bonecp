@@ -19,6 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Ignore;
@@ -48,14 +49,14 @@ public class TestStressTest {
 		config.setMinConnectionsPerPartition(40);
 		config.setMaxConnectionsPerPartition(100);
 		config.setPartitionCount(1);
-		config.setMaxConnectionAgeInSeconds(5);
-		config.setIdleMaxAgeInSeconds(1);
+//		config.setMaxConnectionAge(1000, TimeUnit.MICROSECONDS);
+//		config.setIdleMaxAgeInSeconds(1);
 		config.setUsername("foo");
 		config.setPassword("foo");
 		config.setJdbcUrl("jdbc:mock");
 		config.setStatementsCacheSize(100);
 		config.setStatementReleaseHelperThreads(3);
-		config.setReleaseHelperThreads(3);
+//		config.setReleaseHelperThreads(3);
 		config.setCloseConnectionWatch(true);
 		config.setServiceOrder("LIFO");
 		final BoneCP pool = new BoneCP(config);

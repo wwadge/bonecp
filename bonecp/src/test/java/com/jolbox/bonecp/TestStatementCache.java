@@ -324,7 +324,7 @@ public class TestStatementCache {
 		expect(mockStatementCollections.iterator()).andReturn(mockIterator).anyTimes();
 		expect(mockIterator.hasNext()).andReturn(true).times(2).andReturn(false).once();
 		expect(mockIterator.next()).andReturn(mockStatement).anyTimes();
-		mockStatement.internalClose();
+		mockStatement.close();
 		expectLastCall().once().andThrow(new SQLException()).once();
 		
 		mockCache.clear();
