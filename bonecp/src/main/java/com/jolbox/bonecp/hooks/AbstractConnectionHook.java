@@ -89,7 +89,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 
 
 	
-	public void onQueryExecuteTimeLimitExceeded(ConnectionHandle handle, Statement statement, String sql, Map<Object, Object> logParams, long timeElapsedInMs){
+	public void onQueryExecuteTimeLimitExceeded(ConnectionHandle handle, Statement statement, String sql, Map<Object, Object> logParams, long timeElapsedInNs){
 		onQueryExecuteTimeLimitExceeded(sql, logParams);
 	}
 

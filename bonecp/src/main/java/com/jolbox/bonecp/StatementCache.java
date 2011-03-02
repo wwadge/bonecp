@@ -159,7 +159,7 @@ public class StatementCache implements IStatementCache {
 	public StatementHandle get(String key){
 		StatementHandle statement = this.cache.get(key);
 		
-		if (statement != null && !statement.logicallyClosed.compareAndSet(true, false)){
+		if (statement != null && !statement.isEnqueuedForClosure() && !statement.logicallyClosed.compareAndSet(true, false)){
 			statement = null;
 		}
 		
@@ -224,7 +224,7 @@ public class StatementCache implements IStatementCache {
 	public void clear() {
 		for (StatementHandle statement: this.cache.values()){
 			try {
-				if (!statement.isEnqueuedForClosure()){ // this might race with statement release helper but nothing bad should occur 
+				if (!statement.isClosed() && !statement.isEnqueuedForClosure()){ // this might race with statement release helper but nothing bad should occur
 					statement.close();
 				}
 			} catch (SQLException e) {
@@ -248,7 +248,7 @@ public class StatementCache implements IStatementCache {
 	public void putIfAbsent(String key, StatementHandle handle) {
 		if (this.cache.size() <=  this.cacheSize && key != null){ // perhaps use LRU in future?? Worth the overhead? Hmm....
 			if (this.cache.putIfAbsent(key, handle) == null){
-				handle.inCache = true;
+			//	handle.inCache = true;
 				if (this.maintainStats){
 					this.statistics.incrementStatementsCached();
 				}
