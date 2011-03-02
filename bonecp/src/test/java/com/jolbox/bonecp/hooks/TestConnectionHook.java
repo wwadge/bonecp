@@ -33,6 +33,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import junit.framework.Assert;
+
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,6 +43,7 @@ import org.junit.Test;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.CommonTestUtils;
+import com.jolbox.bonecp.ConnectionState;
 import com.jolbox.bonecp.MockConnection;
 import com.jolbox.bonecp.MockJDBCAnswer;
 import com.jolbox.bonecp.MockJDBCDriver;
@@ -66,6 +69,8 @@ public class TestConnectionHook {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException, ClassNotFoundException{
+		ConnectionState.valueOf(ConnectionState.NOP.toString()); // coverage BS.
+		
 	driver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			public Connection answer() throws SQLException {

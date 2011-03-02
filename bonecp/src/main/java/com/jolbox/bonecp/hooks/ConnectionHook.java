@@ -16,10 +16,12 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
 import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.ConnectionState;
 import com.jolbox.bonecp.StatementHandle;
 
 /**
@@ -151,4 +153,17 @@ public interface ConnectionHook {
 	 * when the connection is closed (your application will still receive the original exception that was thrown).
 	 */
 	boolean onConnectionException(ConnectionHandle connection, String state, Throwable t);
+
+	/** Called to give you a chance to override the logic on whether a connection can be considered
+	 * broken or not.
+	 * 
+	 * Note: You may use pool.isConnectionHandleAlive(connection) to verify if the connection is in a usable state again.
+	 * Note 2: As in all interceptor hooks, this method may be called concurrently so any implementation must be thread-safe.
+ 
+	 * @param connection The handle that triggered this error
+	 * @param state the SQLState error code.
+	 * @param e Exception that caused us to call this hook.
+	 * @return ConnectionState enum to signal back to the pool what action you intend to take. 
+	 */
+	ConnectionState onMarkPossiblyBroken(ConnectionHandle connection, String state, SQLException e);
 }

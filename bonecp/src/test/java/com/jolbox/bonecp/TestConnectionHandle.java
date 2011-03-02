@@ -657,8 +657,8 @@ public class TestConnectionHandle {
 		// fetching a statement that is found in cache. Statement should be returned and marked as being (logically) open
 		doStatementMock(this.mockPreparedStatementCache, mockStatement, params, args);
 
-		mockStatement.setLogicallyOpen();
-		expectLastCall();
+//		mockStatement.setLogicallyOpen();
+//		expectLastCall();
 		replay(mockStatement, this.mockPreparedStatementCache);
 		prepStatementMethod.invoke(this.testClass, params);
 		verify(mockStatement, this.mockPreparedStatementCache);
@@ -780,8 +780,8 @@ public class TestConnectionHandle {
 
 		//		expect(this.mockCallableStatementCache.get((String)anyObject())).andReturn(mockStatement).anyTimes();
 
-		((StatementHandle)mockStatement).setLogicallyOpen();
-		expectLastCall();
+//		((StatementHandle)mockStatement).setLogicallyOpen();
+//		expectLastCall();
 		replay(mockStatement, this.mockCallableStatementCache);
 		prepCallMethod.invoke(this.testClass, params);
 		verify(mockStatement, this.mockCallableStatementCache);

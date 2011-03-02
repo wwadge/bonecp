@@ -286,12 +286,12 @@ public class ConnectionHandle implements Connection{
 	 */
 	protected SQLException markPossiblyBroken(SQLException e) {
 		String state = e.getSQLState();
-		
+		ConnectionState connectionState = this.getConnectionHook() != null ? this.getConnectionHook().onMarkPossiblyBroken(this, state, e) : ConnectionState.NOP; 
 		if (state == null){ // safety;
 			state = "08999"; 
 		}
 
-		if (sqlStateDBFailureCodes.contains(state) && this.pool != null){
+		if ((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.terminateAllConnections();
 		}
@@ -311,7 +311,7 @@ public class ConnectionHandle implements Connection{
 		// state == 40001 is mysql specific triggered when a deadlock is detected
 		// state == HY000 is firebird specific triggered when a connection is broken
 		char firstChar = state.charAt(0);
-		if (state.equals("40001") || 
+		if (connectionState.equals(ConnectionState.CONNECTION_POSSIBLY_BROKEN) || state.equals("40001") || 
 				state.equals("HY000") ||
 				state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') /*|| (firstChar >='I' && firstChar <= 'Z')*/){
 			this.possiblyBroken = true;

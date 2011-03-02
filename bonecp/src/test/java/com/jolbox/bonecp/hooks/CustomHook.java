@@ -16,9 +16,11 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.sql.SQLException;
 import java.util.Map;
 
 import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.ConnectionState;
 
 /** JUnit helper.
  * @author wallacew
@@ -37,7 +39,8 @@ public class CustomHook extends AbstractConnectionHook{
 	public int fail;
 	/** junit helper.*/
 	public int queryTimeout;
-
+	/** junit helper.*/
+	public int markPossiblyBroken;
 
 	@Override
 	public synchronized void onAcquire(ConnectionHandle connection) {
@@ -72,5 +75,12 @@ public class CustomHook extends AbstractConnectionHook{
 	@Override
 	public synchronized void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
 		this.queryTimeout++;
+	}
+	
+	@Override
+	public ConnectionState onMarkPossiblyBroken(ConnectionHandle connection,
+			String state, SQLException e) {
+		this.markPossiblyBroken++;
+		return ConnectionState.NOP;
 	}
 }

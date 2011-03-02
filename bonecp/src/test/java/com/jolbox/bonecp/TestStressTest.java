@@ -35,6 +35,7 @@ public class TestStressTest {
 	 * @throws SQLException
 	 * @throws InterruptedException
 	 */
+	@Ignore
 	@Test
 	public void testStress() throws SQLException, InterruptedException{
 		new MockJDBCDriver(new MockJDBCAnswer() {

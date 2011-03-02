@@ -16,6 +16,7 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.jolbox.bonecp.ConnectionHandle;
+import com.jolbox.bonecp.ConnectionState;
 import com.jolbox.bonecp.PoolUtil;
 import com.jolbox.bonecp.StatementHandle;
 
@@ -90,7 +92,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 
 	
 	public void onQueryExecuteTimeLimitExceeded(ConnectionHandle handle, Statement statement, String sql, Map<Object, Object> logParams, long timeElapsedInNs){
-		onQueryExecuteTimeLimitExceeded(sql, logParams);
+		onQueryExecuteTimeLimitExceeded(handle, statement, sql, logParams);
 	}
 
 	/**
@@ -125,4 +127,8 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 		// do nothing
 	}
 
+	@Override
+	public ConnectionState onMarkPossiblyBroken(ConnectionHandle connection, String state, SQLException e) {
+		return ConnectionState.NOP;
+	}
 }
