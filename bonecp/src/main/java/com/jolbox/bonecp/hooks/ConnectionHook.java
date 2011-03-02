@@ -21,7 +21,6 @@ import java.sql.Statement;
 import java.util.Map;
 
 import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ConnectionState;
 import com.jolbox.bonecp.StatementHandle;
 
 /**

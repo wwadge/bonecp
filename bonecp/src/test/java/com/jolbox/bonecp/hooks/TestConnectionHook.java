@@ -43,7 +43,6 @@ import org.junit.Test;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.CommonTestUtils;
-import com.jolbox.bonecp.ConnectionState;
 import com.jolbox.bonecp.MockConnection;
 import com.jolbox.bonecp.MockJDBCAnswer;
 import com.jolbox.bonecp.MockJDBCDriver;

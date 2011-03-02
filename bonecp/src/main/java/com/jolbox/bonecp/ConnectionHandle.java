@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.hooks.ConnectionState;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
 
 import java.util.concurrent.TimeUnit;

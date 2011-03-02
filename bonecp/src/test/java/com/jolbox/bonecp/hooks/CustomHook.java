@@ -20,7 +20,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import com.jolbox.bonecp.ConnectionHandle;
-import com.jolbox.bonecp.ConnectionState;
 
 /** JUnit helper.
  * @author wallacew
