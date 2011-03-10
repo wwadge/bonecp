@@ -209,11 +209,18 @@ public class StatementHandle implements Statement{
 		if (this.statementReleaseHelperEnabled){
 			this.enqueuedForClosure = true; // stop warning later on.
 			// try moving onto queue so that a separate thread will handle it....
-			if (!tryTransferOffer(this)){
+			try {
+				this.statementsPendingRelease.transfer(this);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		/*	if (!tryTransferOffer(this)){
 				this.enqueuedForClosure = false; // we failed to enqueue it.
 				// closing off the statement if that fails....
 				closeStatement();
 			} 
+		 */
 		} else {
 			// otherwise just close it off straight away
 			closeStatement();

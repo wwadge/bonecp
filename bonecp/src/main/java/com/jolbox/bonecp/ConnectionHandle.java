@@ -816,9 +816,9 @@ public class ConnectionHandle implements Connection{
 
 			if (result == null){
 				result =  new PreparedStatementHandle(this.connection.prepareStatement(sql), sql, this, cacheKey, this.preparedStatementCache);
+				result.setLogicallyOpen();
 			}
 
-			result.setLogicallyOpen();
 
 			if (this.pool.closeConnectionWatch && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));

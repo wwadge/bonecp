@@ -224,7 +224,8 @@ public class StatementCache implements IStatementCache {
 	public void clear() {
 		for (StatementHandle statement: this.cache.values()){
 			try {
-				if (!statement.isEnqueuedForClosure()){ // this might race with statement release helper but nothing bad should occur 
+				
+				if (!statement.isEnqueuedForClosure()){ 
 					statement.close();
 				}
 			} catch (SQLException e) {
