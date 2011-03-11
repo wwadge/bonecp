@@ -60,7 +60,7 @@
     <dependencies>
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate</artifactId>
+            <artifactId>hibernate-core</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -108,8 +108,7 @@
         <dependency>
             <groupId>com.jolbox</groupId>
             <artifactId>bonecp</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
+            <version>0.7.1-rc5-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
