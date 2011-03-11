@@ -18,8 +18,6 @@ package com.jolbox.bonecp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Ignore;
@@ -61,7 +59,7 @@ public class TestStressTest {
 		config.setCloseConnectionWatch(true);
 		config.setServiceOrder("LIFO");
 		final BoneCP pool = new BoneCP(config);
-		final Random rand = new Random();
+//		final Random rand = new Random();
 		while (true){
 		final AtomicInteger count = new AtomicInteger();
 		for (int i=0; i < 200; i++){

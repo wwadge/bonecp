@@ -437,6 +437,8 @@ public class TestBoneCP {
 		verify(mockConfig, mockDataSource);
 	}
 
+
+
 	/**
 	 * Test method.
 	 * @throws SQLException 
