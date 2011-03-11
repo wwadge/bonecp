@@ -33,7 +33,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.Assert;
 
 import org.easymock.IAnswer;
 import org.junit.AfterClass;

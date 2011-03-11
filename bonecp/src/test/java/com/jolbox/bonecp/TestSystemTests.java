@@ -167,13 +167,9 @@ public class TestSystemTests {
 		} catch (UnsupportedOperationException e) {
 			// do nothing
 		}
-		try {
-			dsb.getConnection("test", "test");
-			fail("Should throw exception");
-		} catch (UnsupportedOperationException e) {
-			// do nothing
-		}
-
+	
+			Connection c = dsb.getConnection("test", "test");
+			assertNotNull(c);
 		
 		BoneCPDataSource dsb2 = new BoneCPDataSource(); // empty constructor test
 		dsb2.setDriverClass("inexistent");

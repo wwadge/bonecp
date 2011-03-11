@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -35,6 +36,9 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.MapMaker;
 
 /**
  * DataSource for use with LazyConnection Provider etc.
@@ -54,6 +58,25 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	private String driverClass;
 	/** Class logger. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPDataSource.class);
+	/**
+	 * Constructs (and caches) a datasource on the fly based on the given username/password.
+	 */
+	private Map<UsernamePassword, BoneCPDataSource> multiDataSource = new MapMaker().makeComputingMap(new Function<UsernamePassword, BoneCPDataSource>() {
+
+		@Override
+		public BoneCPDataSource apply(UsernamePassword key) {
+			BoneCPDataSource ds = null;
+			ds = new BoneCPDataSource(getConfig());
+
+			ds.setUsername(key.getUsername());
+			ds.setPassword(key.getPassword());
+
+			return ds;
+		}
+
+	});
+
+
 	/**
 	 * Default empty constructor.
 	 *
@@ -141,7 +164,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 */
 	public Connection getConnection(String username, String password)
 	throws SQLException {
-		throw new UnsupportedOperationException("getConnection(String username, String password) is not supported");
+		return this.multiDataSource.get(new UsernamePassword(username, password)).getConnection();
 	}
 
 	/**
@@ -262,13 +285,13 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		BoneCPConfig config = new BoneCPConfig(props);
 
 		return new BoneCPDataSource(config);
-}
+	}
 
 	@Override
 	public boolean equals(Object obj) {
 		return super.equals(obj);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return super.hashCode();
