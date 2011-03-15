@@ -1289,9 +1289,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public BoneCPConfig(){
 		// try to load the default config file, if available from somewhere in the classpath
-		loadProperties("bonecp-default-config.xml");
+		loadProperties("/bonecp-default-config.xml");
 		// try to override with app specific config, if available
-		loadProperties("bonecp-config.xml");
+		loadProperties("/bonecp-config.xml");
 	}
 
 	/** Creates a new config using the given properties.
@@ -1627,7 +1627,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 */
 	protected void loadProperties(String filename) {
-		URL url = ClassLoader.getSystemResource(filename);
+	    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		URL url = classLoader.getResource(filename);
 		if (url != null){
 			try {
 				this.setXMLProperties(url.openStream(), null);
