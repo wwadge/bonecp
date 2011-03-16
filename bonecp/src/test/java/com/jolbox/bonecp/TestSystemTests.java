@@ -387,14 +387,13 @@ public class TestSystemTests {
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		BoneCPDataSource clone = (BoneCPDataSource) dsb.clone();
 		
-		assertTrue(clone.equals(dsb));
-		assertEquals(clone.hashCode(), dsb.hashCode());
+		assertTrue(clone.hasSameConfiguration(dsb));
 		
-		assertFalse(clone.equals(null));
-		assertTrue(clone.equals(dsb));
+		assertFalse(clone.hasSameConfiguration(null));
+		assertTrue(clone.hasSameConfiguration(dsb));
 		
 		clone.setJdbcUrl("something else");
-		assertFalse(clone.equals(dsb));
+		assertFalse(clone.hasSameConfiguration(dsb));
 	}
 	
 	@Test

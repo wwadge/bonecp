@@ -8,14 +8,14 @@
 
 		<!-- Sets the minimum number of connections that will be contained in every partition. 
 		     -->
-		<property name="minConnectionsPerPartition">20</property>
+		<property name="minConnectionsPerPartition">0</property>
 
 		<!-- Sets the maximum number of connections that will be contained in every partition. 
 		     Setting this to 5 with 3 partitions means you will have 15 unique 
 		     connections to the database. Note that the connection pool will not create all 
 		     these connections in one go but rather start off with minConnectionsPerPartition and gradually 
 		     increase connections as required. -->
-		<property name="maxConnectionsPerPartition">30</property>
+		<property name="maxConnectionsPerPartition">0</property>
 
 		<!-- Sets the acquireIncrement property.  When the available connections are about to run 
 		     out, BoneCP will dynamically create new ones in batches. This property controls how 

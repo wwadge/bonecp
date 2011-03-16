@@ -1703,7 +1703,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @return true if the instance has the same config, false otherwise.
 	 */
 	public boolean hasSameConfiguration(BoneCPConfig that){
-		if ( Objects.equal(this.acquireIncrement, that.getAcquireIncrement())
+		if ( that != null && Objects.equal(this.acquireIncrement, that.getAcquireIncrement())
 				&& Objects.equal(this.acquireRetryDelayInMs, that.getAcquireRetryDelayInMs())
 				&& Objects.equal(this.closeConnectionWatch, that.isCloseConnectionWatch())
 				&& Objects.equal(this.logStatementsEnabled, that.isLogStatementsEnabled())

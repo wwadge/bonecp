@@ -33,7 +33,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -143,7 +142,6 @@ public class TestConnectionHook {
 		assertEquals(5, hookClass.destroy);
 	}
 
-	
 	
 	/** Just to do code coverage of abstract class.
 	 * @throws SQLException

@@ -53,6 +53,7 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  * @author Wallace
  *
  */
+@Ignore
 public class TestMemorizeTransactionProxy {
 	/** Mock handle. */
 	static ConnectionHandle mockConnection;
