@@ -143,8 +143,9 @@ public class ConnectionHandle implements Connection{
 	 */
 	/** SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
 	  Anything else will be taken as the *connection* (not the db) being broken. Note: 08S01 is considered as connection failure in MySQL. 
+          57P01 means that postgresql was restarted.
 	 */
-	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01"); 
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01", "57P01"); 
 
 	/**
 	 * Connection wrapper constructor
