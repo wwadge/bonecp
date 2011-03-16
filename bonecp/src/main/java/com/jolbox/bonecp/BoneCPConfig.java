@@ -1696,18 +1696,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return clone;
 	}
 
-	@Override
-	public boolean equals(Object obj){
-		if (obj == this) { 
-			return true; 
-		}
-
-		if (obj == null || obj.getClass() != getClass()){ 
-			return false; 
-		}
-
-
-		BoneCPConfig that = (BoneCPConfig)obj;
+	
+	/** Returns true if this instance has the same config as a given config.
+	 * @param that
+	 * @return true if the instance has the same config, false otherwise.
+	 */
+	public boolean hasSameConfiguration(BoneCPConfig that){
 		if ( Objects.equal(this.acquireIncrement, that.getAcquireIncrement())
 				&& Objects.equal(this.acquireRetryDelayInMs, that.getAcquireRetryDelayInMs())
 				&& Objects.equal(this.closeConnectionWatch, that.isCloseConnectionWatch())
@@ -1743,13 +1737,5 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 		return false;
 	}
-
-	@Override
-	public int hashCode(){
-		return Objects.hashCode(this.acquireIncrement, this.acquireRetryDelayInMs, this.closeConnectionWatch, this.logStatementsEnabled, this.connectionHook,
-				this.connectionTestStatement, this.idleConnectionTestPeriodInSeconds, this.idleMaxAgeInSeconds, this.initSQL, this.jdbcUrl, 
-				this.maxConnectionsPerPartition, this.minConnectionsPerPartition, this.partitionCount, this.releaseHelperThreads, 
-				this.statementsCachedPerConnection, this.statementsCacheSize, this.username, this.password, this.lazyInit, this.transactionRecoveryEnabled,
-				this.acquireRetryAttempts);
-	}
+	
 }
