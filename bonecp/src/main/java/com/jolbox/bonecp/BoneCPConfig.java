@@ -1627,8 +1627,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 */
 	protected void loadProperties(String filename) {
-	    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		URL url = classLoader.getResource(filename);
+		URL url = this.classLoader.getResource(filename);
 		if (url != null){
 			try {
 				this.setXMLProperties(url.openStream(), null);
