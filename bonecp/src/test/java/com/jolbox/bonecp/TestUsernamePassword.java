@@ -16,6 +16,9 @@
 package com.jolbox.bonecp;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -36,8 +39,12 @@ public class TestUsernamePassword {
 		assertEquals("bar", up.getPassword());
 		
 		UsernamePassword up2 = new UsernamePassword("foo", "bar");
-		assertEquals(up, up2);
+		assertTrue(up.equals( up2 ) );
 		
 		
+		UsernamePassword up3 = new UsernamePassword("foo", "bar");
+		assertFalse(up3.equals(new String()));
+		
+		assertNotNull(up.hashCode());
 	}
 }

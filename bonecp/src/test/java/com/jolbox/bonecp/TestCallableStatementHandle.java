@@ -49,7 +49,6 @@ import java.util.Set;
 import org.easymock.classextension.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 /**
  * @author Wallace

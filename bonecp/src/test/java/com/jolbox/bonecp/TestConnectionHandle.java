@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -50,7 +51,6 @@ import junit.framework.Assert;
 
 import org.easymock.classextension.EasyMock;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -59,8 +59,6 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
-// #ifdef JDK6
-import java.sql.SQLClientInfoException;
 // #endif JDK6 
 /**
  * Mock unit testing for Connection Handle class.

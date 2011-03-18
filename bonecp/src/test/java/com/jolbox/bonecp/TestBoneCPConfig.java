@@ -32,7 +32,6 @@ import javax.sql.DataSource;
 
 import org.easymock.EasyMock;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;

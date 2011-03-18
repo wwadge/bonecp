@@ -42,7 +42,6 @@ import java.sql.Statement;
 
 import org.easymock.classextension.EasyMock;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -156,8 +155,6 @@ public class TestMemorizeTransactionProxy {
 		CallableStatement cs = con.prepareCall("");
 		
 		Statement stmt = con.createStatement();
-		System.out
-				.println(java.lang.reflect.Proxy.isProxyClass(((ConnectionHandle) con).getInternalConnection().getClass()));
 		InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler( ((ConnectionHandle) con).getInternalConnection());
 		assertEquals(MemorizeTransactionProxy.class, handler.getClass());
 		
