@@ -39,11 +39,13 @@ public class TestUsernamePassword {
 		assertEquals("bar", up.getPassword());
 		
 		UsernamePassword up2 = new UsernamePassword("foo", "bar");
+		UsernamePassword up3 = new UsernamePassword("foo", "bar2");
 		assertTrue(up.equals( up2 ) );
+		assertFalse(up.equals( up3 ) );
 		
 		
-		UsernamePassword up3 = new UsernamePassword("foo", "bar");
-		assertFalse(up3.equals(new String()));
+		UsernamePassword up4 = new UsernamePassword("foo", "bar");
+		assertFalse(up4.equals(new String()));
 		
 		assertNotNull(up.hashCode());
 	}
