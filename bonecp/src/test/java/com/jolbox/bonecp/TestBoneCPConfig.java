@@ -204,6 +204,8 @@ public class TestBoneCPConfig {
 		config.setConnectionTimeoutInMs(1000);
 		config.setCloseConnectionWatchTimeoutInMs(1000);
 		
+		config.setExternalAuth(true);
+		assertEquals(true, config.isExternalAuth());
 		assertEquals("abc", config.getInitSQL());
 		assertEquals(hook, config.getConnectionHook());
 		assertEquals(1000, config.getConnectionTimeoutInMs());
@@ -235,6 +237,8 @@ public class TestBoneCPConfig {
 		assertEquals("test", config.getConnectionTestStatement());
 		assertEquals(mockDataSource, config.getDatasourceBean());
 		assertEquals(driverProperties, config.getDriverProperties());
+		
+		config.setExternalAuth(false);
 	}
 	/**
 	 * Config file scrubbing

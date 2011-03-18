@@ -144,6 +144,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private String defaultCatalog;
 	/** The parsed transaction isolation value. Default = driver value*/
 	private int defaultTransactionIsolationValue = -1;
+	/** If true, stop caring about username/password when obtaining raw connections. */
+	private boolean externalAuth;
+	
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1480,6 +1483,26 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
+	 * Returns the current externalAuth setting.
+	 * @return externalAuth setting
+	 */
+	public boolean isExternalAuth() {
+		return this.externalAuth;
+	}
+	
+
+	/**
+	 * If set to true, no attempts at passing in a username/password will be attempted
+	 * when trying to obtain a raw (driver) connection. Useful for cases when you already have
+	 * another mechanism on authentication eg NTLM.
+	 * 
+	 * @param externalAuth True to enable external auth.
+	 */
+	public void setExternalAuth(boolean externalAuth) {
+		this.externalAuth = externalAuth;
+	}
+
+	/**
 	 * Performs validation on the config object.
 	 *
 	 */
@@ -1551,23 +1574,23 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.acquireRetryDelayInMs = 1000;
 		}
 
-		if (this.datasourceBean == null && this.driverProperties == null 
+		if (!this.externalAuth && this.datasourceBean == null && this.driverProperties == null 
 				&& (this.jdbcUrl == null || this.jdbcUrl.trim().equals(""))){
 			logger.warn("JDBC url was not set in config!");
 		}
 
-		if (this.datasourceBean == null && this.driverProperties == null && 
+		if (!this.externalAuth && this.datasourceBean == null && this.driverProperties == null && 
 				(this.username == null || this.username.trim().equals(""))){
 			logger.warn("JDBC username was not set in config!");
 		}
 
-		if ((this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
+		if (!this.externalAuth && (this.datasourceBean == null) && (this.driverProperties == null) && (this.password == null)){ 
 			logger.warn("JDBC password was not set in config!");
 		}
 
 
-		// if no datasource and we have driver properties set...
-		if (this.datasourceBean == null && this.driverProperties != null){
+		// if not external auth and no datasource and we have driver properties set...
+		if (!this.externalAuth && this.datasourceBean == null && this.driverProperties != null){
 			if ((this.driverProperties.get(USER) == null) && this.username == null){
 				logger.warn("JDBC username not set in driver properties and not set in pool config either");
 			} else if ((this.driverProperties.get(USER) == null) && this.username != null){
@@ -1580,7 +1603,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 
 		// if no datasource and we have driver properties set...
-		if (this.datasourceBean == null && this.driverProperties != null){
+		if (!this.externalAuth && this.datasourceBean == null && this.driverProperties != null){
 			if ((this.driverProperties.get(PASSWORD) == null) && this.password == null){
 				logger.warn("JDBC password not set in driver properties and not set in pool config either");
 			} else if ((this.driverProperties.get(PASSWORD) == null) && this.password != null){
