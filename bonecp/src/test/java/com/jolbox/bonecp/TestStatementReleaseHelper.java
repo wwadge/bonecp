@@ -25,6 +25,7 @@ import static org.easymock.classextension.EasyMock.createNiceMock;
 import java.sql.SQLException;
 import java.util.concurrent.BlockingQueue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 

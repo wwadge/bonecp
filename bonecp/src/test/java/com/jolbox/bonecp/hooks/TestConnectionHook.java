@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.BoneCP;
@@ -101,16 +102,10 @@ public class TestConnectionHook {
 	@AfterClass
 	public static void destroy() throws SQLException{
 		driver.disable();
-	}
-	/**
-	 * Killoff pool
-	 * @throws SQLException 
-	 */
-	@AfterClass
-	public static void shutdown() throws SQLException{
-		driver.disable();
 		poolClass.shutdown();
+		poolClass = null;
 	}
+	
 
 	
 	/**

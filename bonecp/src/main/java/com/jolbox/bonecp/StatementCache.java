@@ -239,7 +239,7 @@ public class StatementCache implements IStatementCache {
 	public void checkForProperClosure() {
 		for (StatementHandle statement: this.cache.values()){
 			if (!(statement.isClosed() || statement.isEnqueuedForClosure())){
-				logger.warn(statement.isClosed()+" " + statement.isEnqueuedForClosure()+"Statement not closed properly in application\n\n"+statement.getOpenStackTrace());
+				logger.error(statement.isClosed()+" " + statement.isEnqueuedForClosure()+"Statement not closed properly in application\n\n"+statement.getOpenStackTrace());
 			}
 		}		
 	}

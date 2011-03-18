@@ -53,10 +53,9 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  * @author Wallace
  *
  */
-@Ignore
 public class TestMemorizeTransactionProxy {
 	/** Mock handle. */
-	static ConnectionHandle mockConnection;
+	static Connection mockConnection;
 	/** Mock handle. */
 	static Connection mockConnection2;
 	/** Mock handle. */
@@ -68,27 +67,23 @@ public class TestMemorizeTransactionProxy {
 	/** Mock handle. */
 	static Connection mockConnection3;
 	/** Config handle. */
-	private static BoneCPConfig config; 
+	private BoneCPConfig config; 
+	
 	/**
-	 * Test setup.
+	 * Test reset.
 	 */
-	@BeforeClass
-	public static void beforeClass(){
-		config = CommonTestUtils.getConfigClone();
-		config.setDisableConnectionTracking(true);
-		mockConnection = createNiceMock(ConnectionHandle.class);
+	@Before
+	public void before(){
+		
+		this.config =  new BoneCPConfig();
+		this.config.setDisableConnectionTracking(true);
+		mockConnection = createNiceMock(Connection.class);
 		// make it return a new connection when asked for again
 		mockConnection2 = createNiceMock(Connection.class);
 		mockConnection3 = createNiceMock(Connection.class);
 		mockCallableStatement = createNiceMock(CallableStatement.class);
 		mockStatement = createNiceMock(Statement.class);
 		mockPreparedStatement = createNiceMock(PreparedStatement.class);
-	}
-	/**
-	 * Test reset.
-	 */
-	@Before
-	public void before(){
 		reset(mockConnection, mockConnection2, mockConnection3, mockCallableStatement, mockPreparedStatement, mockStatement);
 	}
 	
@@ -100,18 +95,18 @@ public class TestMemorizeTransactionProxy {
 	@Ignore
 	public void testHSQLDB() throws ClassNotFoundException, SQLException{
 		Class.forName("org.hsqldb.jdbcDriver" );
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:hsqldb:mem");
-		config.setUsername("sa");
-		config.setPassword("");
-		config.setMinConnectionsPerPartition(1);
-		config.setMaxConnectionsPerPartition(1);
-		config.setAcquireRetryAttempts(1);
-		config.setAcquireRetryDelayInMs(1);
-		config.setStatementsCacheSize(100);
-		config.setReleaseHelperThreads(0);
-		config.setTransactionRecoveryEnabled(true);
-		BoneCP pool = new BoneCP(config);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:hsqldb:mem");
+		this.config.setUsername("sa");
+		this.config.setPassword("");
+		this.config.setMinConnectionsPerPartition(1);
+		this.config.setMaxConnectionsPerPartition(1);
+		this.config.setAcquireRetryAttempts(1);
+		this.config.setAcquireRetryDelayInMs(1);
+		this.config.setStatementsCacheSize(100);
+		this.config.setReleaseHelperThreads(0);
+		this.config.setTransactionRecoveryEnabled(true);
+		BoneCP pool = new BoneCP(this.config);
 		Connection c = pool.getConnection();
 		Statement st = c.createStatement();
 		try{
@@ -148,13 +143,12 @@ public class TestMemorizeTransactionProxy {
 	@Test
 	public void testProxies() throws SQLException, SecurityException, IllegalArgumentException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException{
 		
-
 		MockJDBCDriver mockDriver = new MockJDBCDriver(mockConnection);
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver2");
-		config.setReleaseHelperThreads(0);
-		BoneCP pool = new BoneCP(config);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver3");
+		this.config.setReleaseHelperThreads(0);
+		BoneCP pool = new BoneCP(this.config);
+		this.config.setTransactionRecoveryEnabled(true);
 		expect(mockConnection.prepareCall("")).andReturn(mockCallableStatement).anyTimes();
 		replay(mockConnection);
 		Connection con = pool.getConnection();
@@ -162,7 +156,8 @@ public class TestMemorizeTransactionProxy {
 		CallableStatement cs = con.prepareCall("");
 		
 		Statement stmt = con.createStatement();
-		
+		System.out
+				.println(java.lang.reflect.Proxy.isProxyClass(((ConnectionHandle) con).getInternalConnection().getClass()));
 		InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler( ((ConnectionHandle) con).getInternalConnection());
 		assertEquals(MemorizeTransactionProxy.class, handler.getClass());
 		
@@ -240,13 +235,13 @@ public class TestMemorizeTransactionProxy {
 		}); 
 		
 		
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver");
-		config.setMinConnectionsPerPartition(2);
-		config.setMaxConnectionsPerPartition(2);
-		BoneCP pool = new BoneCP(config);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver");
+		this.config.setMinConnectionsPerPartition(2);
+		this.config.setMaxConnectionsPerPartition(2);
+		BoneCP pool = new BoneCP(this.config);
 		reset(mockConnection);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(false);
 
 		EasyMock.makeThreadSafe(mockConnection, true);
 		String prepCall = "whatever2";
@@ -325,13 +320,13 @@ public class TestMemorizeTransactionProxy {
 		}); 
 		
 		
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver");
-		config.setMinConnectionsPerPartition(2);
-		config.setMaxConnectionsPerPartition(2);
-		BoneCP pool = new BoneCP(config);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver");
+		this.config.setMinConnectionsPerPartition(2);
+		this.config.setMaxConnectionsPerPartition(2);
+		BoneCP pool = new BoneCP(this.config);
 		reset(mockConnection);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(false);
 
 		EasyMock.makeThreadSafe(mockConnection, true);
 		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).anyTimes();
@@ -381,16 +376,16 @@ public class TestMemorizeTransactionProxy {
 		}); 
 		
 		
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver");
-		config.setMinConnectionsPerPartition(2);
-		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelayInMs(1);
-		config.setAcquireRetryAttempts(2);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver");
+		this.config.setMinConnectionsPerPartition(2);
+		this.config.setMaxConnectionsPerPartition(2);
+		this.config.setAcquireRetryDelayInMs(1);
+		this.config.setAcquireRetryAttempts(2);
 //		config.setConnectionHook(new CoverageHook());
-		BoneCP pool = new BoneCP(config);
+		BoneCP pool = new BoneCP(this.config);
 		reset(mockConnection);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(false);
 
 		EasyMock.makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
@@ -457,16 +452,16 @@ public class TestMemorizeTransactionProxy {
 		}); 
 		
 		
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver");
-		config.setMinConnectionsPerPartition(2);
-		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelayInMs(1L);
-		config.setAcquireRetryAttempts(1);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver");
+		this.config.setMinConnectionsPerPartition(2);
+		this.config.setMaxConnectionsPerPartition(2);
+		this.config.setAcquireRetryDelayInMs(1L);
+		this.config.setAcquireRetryAttempts(1);
 //		config.setConnectionHook(new CoverageHook());
-		BoneCP pool = new BoneCP(config);
+		BoneCP pool = new BoneCP(this.config);
 		reset(mockConnection);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(false);
 
 		EasyMock.makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
@@ -532,16 +527,16 @@ public class TestMemorizeTransactionProxy {
 		}); 
 		
 		
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver");
-		config.setMinConnectionsPerPartition(2);
-		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelayInMs(10000L);
-		config.setAcquireRetryAttempts(2);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver");
+		this.config.setMinConnectionsPerPartition(2);
+		this.config.setMaxConnectionsPerPartition(2);
+		this.config.setAcquireRetryDelayInMs(10000L);
+		this.config.setAcquireRetryAttempts(2);
 //		config.setConnectionHook(new CoverageHook());
-		BoneCP pool = new BoneCP(config);
+		BoneCP pool = new BoneCP(this.config);
 		reset(mockConnection);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(false);
 
 		EasyMock.makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
@@ -622,16 +617,16 @@ public class TestMemorizeTransactionProxy {
 		}); 
 		
 		
-		config.setTransactionRecoveryEnabled(true);
-		config.setJdbcUrl("jdbc:mock:driver");
-		config.setMinConnectionsPerPartition(2);
-		config.setMaxConnectionsPerPartition(2);
-		config.setAcquireRetryDelayInMs(1);
-		config.setAcquireRetryAttempts(2);
-		config.setConnectionHook(new CoverageHook());
-		BoneCP pool = new BoneCP(config);
+		this.config.setTransactionRecoveryEnabled(true);
+		this.config.setJdbcUrl("jdbc:mock:driver");
+		this.config.setMinConnectionsPerPartition(2);
+		this.config.setMaxConnectionsPerPartition(2);
+		this.config.setAcquireRetryDelayInMs(1);
+		this.config.setAcquireRetryAttempts(2);
+		this.config.setConnectionHook(new CoverageHook());
+		BoneCP pool = new BoneCP(this.config);
 		reset(mockConnection);
-		config.setTransactionRecoveryEnabled(false);
+		this.config.setTransactionRecoveryEnabled(false);
 
 		EasyMock.makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it

@@ -50,6 +50,7 @@ import junit.framework.Assert;
 
 import org.easymock.classextension.EasyMock;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 

@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -366,6 +367,7 @@ public class TestStatementCache {
 		expect(mockIterator.hasNext()).andReturn(true).once().andReturn(false).once();
 		expect(mockIterator.next()).andReturn(mockStatement).anyTimes();
 		expect(mockStatement.isClosed()).andReturn(false).once();
+
 		mockLogger.error((String)anyObject());
 		expectLastCall().once();
 		replay(mockCache, mockStatementCollections, mockIterator,mockStatement, mockLogger);

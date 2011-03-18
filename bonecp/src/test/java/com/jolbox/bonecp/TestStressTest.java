@@ -27,13 +27,13 @@ import org.junit.Test;
  * @author wallacew
  *
  */
+@Ignore
 public class TestStressTest {
 
 	/** Just a random blob to test bonecp. 
 	 * @throws SQLException
 	 * @throws InterruptedException
 	 */
-	@Ignore
 	@Test
 	public void testStress() throws SQLException, InterruptedException{
 		new MockJDBCDriver(new MockJDBCAnswer() {
@@ -62,7 +62,7 @@ public class TestStressTest {
 //		final Random rand = new Random();
 		while (true){
 		final AtomicInteger count = new AtomicInteger();
-		for (int i=0; i < 200; i++){
+		for (int i=0; i < 5; i++){
 			Thread t = 
 			new Thread(new Runnable() {
 			
@@ -86,7 +86,7 @@ public class TestStressTest {
 		
 		t.start();
 		}
-		   while (count.get() != 200){
+		   while (count.get() != 5){
 			   Thread.sleep(200);
 		   }
 		   System.out.println("Restarting...");
