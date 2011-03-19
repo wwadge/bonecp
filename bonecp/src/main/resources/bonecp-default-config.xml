@@ -204,6 +204,11 @@
 		     or SERIALIZABLE. If not set, will use driver default. -->
 		<!-- <property name="defaultTransactionIsolation">(null or no default value)</property> -->
 
+		<!-- If set to true, no attempts at passing in a username/password will be 
+		     attempted when trying to obtain a raw (driver) connection. Useful for cases when 
+		     you already have another mechanism on authentication eg NTLM. -->
+		<property name="externalAuth">false</property>
+
 		<!-- Sets the classloader to use to load JDBC driver and hooks (set to 
 		     null to use default). -->
 		<!-- <property name="classLoader">(null or no default value)</property> -->
