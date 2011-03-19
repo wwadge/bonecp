@@ -58,7 +58,7 @@ public class StatementReleaseHelperThread implements Runnable {
 		while (!interrupted) {
 			try {
 				StatementHandle statement = this.queue.take();
-				assert statement.enqueuedForClosure : "Not enqueued!";	
+//				assert statement.enqueuedForClosure : "Not enqueued!";	
 				statement.closeStatement();
 			} catch (InterruptedException e) {
 				if (this.pool.poolShuttingDown){

@@ -61,6 +61,7 @@ import static org.easymock.classextension.EasyMock.verify;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.CoverageHook;
@@ -167,13 +168,9 @@ public class TestSystemTests {
 		} catch (UnsupportedOperationException e) {
 			// do nothing
 		}
-		try {
-			dsb.getConnection("test", "test");
-			fail("Should throw exception");
-		} catch (UnsupportedOperationException e) {
-			// do nothing
-		}
-
+	
+			Connection c = dsb.getConnection("test", "test");
+			assertNotNull(c);
 		
 		BoneCPDataSource dsb2 = new BoneCPDataSource(); // empty constructor test
 		dsb2.setDriverClass("inexistent");
@@ -391,14 +388,13 @@ public class TestSystemTests {
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		BoneCPDataSource clone = (BoneCPDataSource) dsb.clone();
 		
-		assertTrue(clone.equals(dsb));
-		assertEquals(clone.hashCode(), dsb.hashCode());
+		assertTrue(clone.hasSameConfiguration(dsb));
 		
-		assertFalse(clone.equals(null));
-		assertTrue(clone.equals(dsb));
+		assertFalse(clone.hasSameConfiguration(null));
+		assertTrue(clone.hasSameConfiguration(dsb));
 		
 		clone.setJdbcUrl("something else");
-		assertFalse(clone.equals(dsb));
+		assertFalse(clone.hasSameConfiguration(dsb));
 	}
 	
 	@Test

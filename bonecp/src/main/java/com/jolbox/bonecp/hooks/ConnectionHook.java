@@ -16,6 +16,7 @@
 
 package com.jolbox.bonecp.hooks;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
@@ -81,9 +82,9 @@ public interface ConnectionHook {
 	 * @param statement statement handle.
 	 * @param sql SQL statement that was used.
 	 * @param logParams Parameters used in this statement.
-	 * @param timeElapsedInMs actual time the query took (in milliseconds) 
+	 * @param timeElapsedInNs actual time the query took (in nanoseconds) 
 	 */
-	void onQueryExecuteTimeLimitExceeded(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> logParams, long timeElapsedInMs);
+	void onQueryExecuteTimeLimitExceeded(ConnectionHandle conn, Statement statement, String sql, Map<Object, Object> logParams, long timeElapsedInNs);
 	 
 	/** Deprecated. Use the similarly named hook having more parameters instead.
 	 * @param conn handle to the connection
@@ -151,4 +152,17 @@ public interface ConnectionHook {
 	 * when the connection is closed (your application will still receive the original exception that was thrown).
 	 */
 	boolean onConnectionException(ConnectionHandle connection, String state, Throwable t);
+
+	/** Called to give you a chance to override the logic on whether a connection can be considered
+	 * broken or not.
+	 * 
+	 * Note: You may use pool.isConnectionHandleAlive(connection) to verify if the connection is in a usable state again.
+	 * Note 2: As in all interceptor hooks, this method may be called concurrently so any implementation must be thread-safe.
+ 
+	 * @param connection The handle that triggered this error
+	 * @param state the SQLState error code.
+	 * @param e Exception that caused us to call this hook.
+	 * @return ConnectionState enum to signal back to the pool what action you intend to take. 
+	 */
+	ConnectionState onMarkPossiblyBroken(ConnectionHandle connection, String state, SQLException e);
 }

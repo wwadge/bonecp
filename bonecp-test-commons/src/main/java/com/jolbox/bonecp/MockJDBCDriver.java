@@ -32,9 +32,9 @@ import java.util.Properties;
  */
 public class MockJDBCDriver  implements Driver {
 	/** Connection handle to return. */
-	private Connection connection = null;
+	private volatile Connection connection = null;
 	/** called to return. */
-	private MockJDBCAnswer mockJDBCAnswer;
+	private volatile MockJDBCAnswer mockJDBCAnswer;
 
 	/**
 	 * Default constructor
@@ -49,6 +49,8 @@ public class MockJDBCDriver  implements Driver {
 	 * @throws SQLException
 	 */
 	public void unregister() throws SQLException{
+		this.connection = null;
+		this.mockJDBCAnswer = null;
 		DriverManager.deregisterDriver(this);
 	}
 
@@ -73,7 +75,7 @@ public class MockJDBCDriver  implements Driver {
 	 * @see java.sql.Driver#acceptsURL(java.lang.String)
 	 */
 //	@Override
-	public boolean acceptsURL(String url) throws SQLException {
+	public synchronized boolean acceptsURL(String url) throws SQLException {
 		return url.startsWith("jdbc:mock"); // accept anything
 	}
 
@@ -81,7 +83,7 @@ public class MockJDBCDriver  implements Driver {
 	 * @see java.sql.Driver#connect(java.lang.String, java.util.Properties)
 	 */
 	// @Override
-	public Connection connect(String url, Properties info) throws SQLException {
+	public synchronized Connection connect(String url, Properties info) throws SQLException {
 		if (url.startsWith("invalid") || url.equals("")){
 			throw new SQLException("Mock Driver rejecting invalid URL");
 		}
@@ -116,7 +118,7 @@ public class MockJDBCDriver  implements Driver {
 	 * @see java.sql.Driver#getPropertyInfo(java.lang.String, java.util.Properties)
 	 */
 	// @Override
-	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
+	public synchronized DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
 			throws SQLException {
 		return new DriverPropertyInfo[0];
 	}
@@ -134,35 +136,37 @@ public class MockJDBCDriver  implements Driver {
 	 * @throws SQLException 
 	 * @throws SQLException 
 	 */
-	public void disable() throws SQLException{
+	public synchronized void disable() throws SQLException{
+		this.connection = null;
+		this.mockJDBCAnswer = null;
 		DriverManager.deregisterDriver(this);
 	}
 
 	/**
 	 * @return the connection
 	 */
-	public Connection getConnection() {
+	public synchronized Connection getConnection() {
 		return this.connection;
 	}
 
 	/**
 	 * @param connection the connection to set
 	 */
-	public void setConnection(Connection connection) {
+	public synchronized  void setConnection(Connection connection) {
 		this.connection = connection;
 	}
 
 	/** Return the jdbc answer class
 	 * @return the mockJDBCAnswer
 	 */
-	public MockJDBCAnswer getMockJDBCAnswer() {
+	public synchronized  MockJDBCAnswer getMockJDBCAnswer() {
 		return this.mockJDBCAnswer;
 	}
 
 	/** Sets the jdbc mock answer.
 	 * @param mockJDBCAnswer the mockJDBCAnswer to set
 	 */
-	public void setMockJDBCAnswer(MockJDBCAnswer mockJDBCAnswer) {
+	public synchronized void setMockJDBCAnswer(MockJDBCAnswer mockJDBCAnswer) {
 		this.mockJDBCAnswer = mockJDBCAnswer;
 	}
 }

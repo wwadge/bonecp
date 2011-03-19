@@ -47,6 +47,7 @@ import jsr166y.TransferQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.FinalizableReferenceQueue;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 
@@ -143,6 +144,8 @@ public class BoneCP implements Serializable {
 	private int defaultTransactionIsolationValue;
 	/** Config setting. */
 	private Boolean defaultAutoCommit;
+	/** Config setting. */
+	@VisibleForTesting protected boolean externalAuth;
 	
 	/**
 	 * Closes off this connection pool.
@@ -239,6 +242,10 @@ public class BoneCP implements Serializable {
 		String password = this.config.getPassword();
 		Properties props = this.config.getDriverProperties();
 
+		if (this.externalAuth && props == null){
+			props = new Properties();
+		}
+		
 		if (datasourceBean != null){
 			return (username == null ? datasourceBean.getConnection() : datasourceBean.getConnection(username, password));
 		} 
@@ -278,6 +285,8 @@ public class BoneCP implements Serializable {
 		this.closeConnectionWatchTimeoutInMs = config.getCloseConnectionWatchTimeoutInMs();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeoutInMs = config.getConnectionTimeoutInMs();
+		this.externalAuth = config.isExternalAuth();
+		
 		if (this.connectionTimeoutInMs == 0){
 			this.connectionTimeoutInMs = Long.MAX_VALUE;
 		}
@@ -380,7 +389,7 @@ public class BoneCP implements Serializable {
 			}
 
 			if (config.getMaxConnectionAgeInSeconds() > 0){
-				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.keepAliveScheduler, this, config.getMaxConnectionAge(TimeUnit.MILLISECONDS), queueLIFO);
+				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.maxAliveScheduler, this, config.getMaxConnectionAge(TimeUnit.MILLISECONDS), queueLIFO);
 				this.maxAliveScheduler.schedule(connectionMaxAgeTester, config.getMaxConnectionAgeInSeconds(), TimeUnit.SECONDS);
 			}
 			// watch this partition for low no of threads

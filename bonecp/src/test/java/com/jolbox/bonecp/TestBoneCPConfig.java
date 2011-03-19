@@ -204,6 +204,8 @@ public class TestBoneCPConfig {
 		config.setConnectionTimeoutInMs(1000);
 		config.setCloseConnectionWatchTimeoutInMs(1000);
 		
+		config.setExternalAuth(true);
+		assertEquals(true, config.isExternalAuth());
 		assertEquals("abc", config.getInitSQL());
 		assertEquals(hook, config.getConnectionHook());
 		assertEquals(1000, config.getConnectionTimeoutInMs());
@@ -235,6 +237,8 @@ public class TestBoneCPConfig {
 		assertEquals("test", config.getConnectionTestStatement());
 		assertEquals(mockDataSource, config.getDatasourceBean());
 		assertEquals(driverProperties, config.getDriverProperties());
+		
+		config.setExternalAuth(false);
 	}
 	/**
 	 * Config file scrubbing
@@ -384,16 +388,15 @@ public class TestBoneCPConfig {
 	 * @throws CloneNotSupportedException 
 	 */
 	@Test
-	public void testCloneEqualsHashCode() throws CloneNotSupportedException{
+	public void testCloneEqualsConfigHashCode() throws CloneNotSupportedException{
 		BoneCPConfig clone = config.clone();
-		assertTrue(clone.equals(config));
-		assertEquals(clone.hashCode(), config.hashCode());
+		assertTrue(clone.hasSameConfiguration(config));
 		
-		assertFalse(clone.equals(null));
-		assertTrue(clone.equals(clone));
+		assertFalse(clone.hasSameConfiguration(null));
+		assertTrue(clone.hasSameConfiguration(clone));
 		
 		clone.setJdbcUrl("something else");
-		assertFalse(clone.equals(config));
+		assertFalse(clone.hasSameConfiguration(config));
 	}
 	
 	/**
@@ -407,7 +410,7 @@ public class TestBoneCPConfig {
 		BoneCPConfig clone = config.clone();
 		
 		config.loadProperties("invalid-property-file.xml");
-		assertEquals(config, clone);
+		assertTrue(config.hasSameConfiguration(clone));
 	}
 
 	/** See how the config handles a garbage filled file.
@@ -420,7 +423,7 @@ public class TestBoneCPConfig {
 		BoneCPConfig clone = config.clone();
 		
 		config.loadProperties("java/lang/String.class");
-		assertEquals(config, clone);
+		assertTrue(config.hasSameConfiguration(clone));
 	}
 
 

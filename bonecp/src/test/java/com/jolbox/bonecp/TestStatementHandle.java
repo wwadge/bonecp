@@ -137,6 +137,7 @@ public class TestStatementHandle {
 	 * @throws NoSuchMethodException
 	 * @throws NoSuchFieldException
 	 */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testRemainingForCoverage() throws SQLException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException{
 		Statement mockStatement = createNiceMock(Statement.class);
@@ -168,7 +169,16 @@ public class TestStatementHandle {
 		
 		mockStatement.close();
 		expectLastCall();
-		replay(mockStatement, mockCache); 
+		
+		LinkedTransferQueue<StatementHandle> mockQueue = createNiceMock(LinkedTransferQueue.class); 
+		Field field = handle.getClass().getDeclaredField("statementsPendingRelease");
+		field.setAccessible(true);
+		field.set(handle, mockQueue);
+		expect(mockQueue.tryTransfer(handle)).andReturn(false).once();
+		expect(mockQueue.offer(handle)).andReturn(false).once();
+		
+		
+		replay(mockStatement, mockCache, mockQueue); 
 
 		handle.close();
 		verify(mockStatement);

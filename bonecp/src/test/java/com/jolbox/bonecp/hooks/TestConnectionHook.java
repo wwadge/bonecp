@@ -66,6 +66,8 @@ public class TestConnectionHook {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException, ClassNotFoundException{
+		ConnectionState.valueOf(ConnectionState.NOP.toString()); // coverage BS.
+		
 	driver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			public Connection answer() throws SQLException {
@@ -99,16 +101,10 @@ public class TestConnectionHook {
 	@AfterClass
 	public static void destroy() throws SQLException{
 		driver.disable();
-	}
-	/**
-	 * Killoff pool
-	 * @throws SQLException 
-	 */
-	@AfterClass
-	public static void shutdown() throws SQLException{
-		driver.disable();
 		poolClass.shutdown();
+		poolClass = null;
 	}
+	
 
 	
 	/**
@@ -140,7 +136,6 @@ public class TestConnectionHook {
 		assertEquals(5, hookClass.destroy);
 	}
 
-	
 	
 	/** Just to do code coverage of abstract class.
 	 * @throws SQLException

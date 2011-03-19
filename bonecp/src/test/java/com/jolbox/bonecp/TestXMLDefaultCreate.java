@@ -130,10 +130,7 @@ public class TestXMLDefaultCreate {
 		try{
 			field = BoneCPConfig.class.getDeclaredField(prop);
 		} catch (NoSuchFieldException e){
-		
-			if (field == null){
-				return BoneCPConfig.class.getDeclaredMethod("get"+prop.substring(0, 1).toUpperCase()+prop.substring(1)).invoke(config);
-			}
+			return BoneCPConfig.class.getDeclaredMethod("get"+prop.substring(0, 1).toUpperCase()+prop.substring(1)).invoke(config);
 		}
 		
 		field.setAccessible(true);

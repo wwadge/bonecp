@@ -197,7 +197,7 @@ public class StatementHandle implements Statement{
 		boolean result = true;
 		// if we are using a normal LinkedTransferQueue instead of a bounded one, tryTransfer
 		// will never fail.
-		assert e.enqueuedForClosure : "Statement is not enqueued";
+//		assert e.enqueuedForClosure : "Statement is not enqueued";
 		if (!this.statementsPendingRelease.tryTransfer(e)){
 			result = this.statementsPendingRelease.offer(e);
 		}

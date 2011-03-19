@@ -366,6 +366,7 @@ public class TestStatementCache {
 		expect(mockIterator.hasNext()).andReturn(true).once().andReturn(false).once();
 		expect(mockIterator.next()).andReturn(mockStatement).anyTimes();
 		expect(mockStatement.isClosed()).andReturn(false).once();
+
 		mockLogger.error((String)anyObject());
 		expectLastCall().once();
 		replay(mockCache, mockStatementCollections, mockIterator,mockStatement, mockLogger);

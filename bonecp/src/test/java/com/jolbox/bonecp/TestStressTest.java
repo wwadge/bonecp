@@ -18,8 +18,6 @@ package com.jolbox.bonecp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Ignore;
@@ -29,6 +27,7 @@ import org.junit.Test;
  * @author wallacew
  *
  */
+@Ignore
 public class TestStressTest {
 
 	/** Just a random blob to test bonecp. 
@@ -60,10 +59,10 @@ public class TestStressTest {
 		config.setCloseConnectionWatch(true);
 		config.setServiceOrder("LIFO");
 		final BoneCP pool = new BoneCP(config);
-		final Random rand = new Random();
+//		final Random rand = new Random();
 		while (true){
 		final AtomicInteger count = new AtomicInteger();
-		for (int i=0; i < 200; i++){
+		for (int i=0; i < 5; i++){
 			Thread t = 
 			new Thread(new Runnable() {
 			
@@ -87,7 +86,7 @@ public class TestStressTest {
 		
 		t.start();
 		}
-		   while (count.get() != 200){
+		   while (count.get() != 5){
 			   Thread.sleep(200);
 		   }
 		   System.out.println("Restarting...");

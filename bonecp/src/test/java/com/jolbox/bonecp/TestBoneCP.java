@@ -437,6 +437,30 @@ public class TestBoneCP {
 		verify(mockConfig, mockDataSource);
 	}
 
+	
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 */
+	@Test
+	public void testGetConnectionWithExternalAuth() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		boolean oldValue = testClass.externalAuth;
+		testClass.externalAuth = true;
+		expect(mockConfig.getDriverProperties()).andReturn(null).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
+		replay(mockConfig);
+		assertNotNull(testClass.obtainRawInternalConnection());
+		verify(mockConfig);
+		testClass.externalAuth = oldValue;
+	}
+
+
 	/**
 	 * Test method.
 	 * @throws SQLException 
