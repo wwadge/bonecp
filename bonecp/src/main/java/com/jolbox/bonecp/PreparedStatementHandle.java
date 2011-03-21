@@ -90,7 +90,7 @@ PreparedStatement {
 		checkClosed();
 		try {
 			if (this.fillInParams){
-				getBatchSQL().append(this.sql);
+				this.batchSQL.append(this.sql);
 			}
 			this.internalPreparedStatement.addBatch();
 		} catch (SQLException e) {
@@ -111,7 +111,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.clearParameters();
 			if (this.fillInParams){
-				getLogParams().clear();
+				this.logParams.clear();
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -130,18 +130,18 @@ PreparedStatement {
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled && logger.isDebugEnabled()){
-				logger.debug(PoolUtil.fillLogParams(this.sql, getLogParams()));
+				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, getLogParams());
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 
 			boolean result = this.internalPreparedStatement.execute();
 
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, getLogParams());
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 
 
@@ -166,15 +166,15 @@ PreparedStatement {
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled && logger.isDebugEnabled()){
-				logger.debug(PoolUtil.fillLogParams(this.sql, getLogParams()));
+				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, getLogParams());
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 			ResultSet result = this.internalPreparedStatement.executeQuery();
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, getLogParams());
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 
 			queryTimerEnd(this.sql, queryStartTime);
@@ -197,15 +197,15 @@ PreparedStatement {
 		checkClosed();
 		try {
 			if (this.logStatementsEnabled && logger.isDebugEnabled()){
-				logger.debug(PoolUtil.fillLogParams(this.sql, getLogParams()));
+				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
-				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, getLogParams());
+				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 			int result = this.internalPreparedStatement.executeUpdate();
 			if (this.connectionHook != null){
-				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, getLogParams());
+				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, this.sql, this.logParams);
 			}
 
 			queryTimerEnd(this.sql, queryStartTime);
@@ -263,7 +263,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setArray(parameterIndex, x);
 			if (this.fillInParams) {
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -280,7 +280,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -296,7 +296,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -312,7 +312,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, inputStream);
+				this.logParams.put(parameterIndex, inputStream);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -328,7 +328,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -343,7 +343,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -358,7 +358,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setRowId(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -374,7 +374,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setSQLXML(parameterIndex, xmlObject);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, xmlObject);
+				this.logParams.put(parameterIndex, xmlObject);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -390,7 +390,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 
 		} catch (SQLException e) {
@@ -407,7 +407,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, value);
+				this.logParams.put(parameterIndex, value);
 			}
 
 		} catch (SQLException e) {
@@ -424,7 +424,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNCharacterStream(parameterIndex, value, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, value);
+				this.logParams.put(parameterIndex, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -439,7 +439,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, value);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, value);
+				this.logParams.put(parameterIndex, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -454,7 +454,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -470,7 +470,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNClob(parameterIndex, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -486,7 +486,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNString(parameterIndex, value);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, value);
+				this.logParams.put(parameterIndex, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -502,7 +502,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -517,7 +517,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -533,7 +533,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, inputStream, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, inputStream);
+				this.logParams.put(parameterIndex, inputStream);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -549,7 +549,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex, reader);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -573,7 +573,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setAsciiStream(parameterIndex, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -594,7 +594,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBigDecimal(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -617,7 +617,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBinaryStream(parameterIndex, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -637,7 +637,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBlob(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -658,7 +658,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBoolean(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -678,7 +678,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setByte(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -698,7 +698,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setBytes(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -722,7 +722,7 @@ PreparedStatement {
 			this.internalPreparedStatement.setCharacterStream(parameterIndex,
 					reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, reader);
+				this.logParams.put(parameterIndex, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -743,7 +743,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setClob(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -764,7 +764,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -786,7 +786,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setDate(parameterIndex, x, cal);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -806,7 +806,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setDouble(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -826,7 +826,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setFloat(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -846,7 +846,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setInt(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -866,7 +866,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setLong(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -886,7 +886,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, "[SQL NULL of type "+sqlType+"]");
+				this.logParams.put(parameterIndex, "[SQL NULL of type "+sqlType+"]");
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -907,7 +907,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setNull(parameterIndex, sqlType, typeName);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, PoolUtil.safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint("[SQL NULL of type ", sqlType, ", type = ", typeName, "]"));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -927,7 +927,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -948,7 +948,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -970,7 +970,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -990,7 +990,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setRef(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1011,7 +1011,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setShort(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1031,7 +1031,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setString(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1051,7 +1051,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1073,7 +1073,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setTime(parameterIndex, x, cal);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1094,7 +1094,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1116,7 +1116,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setTimestamp(parameterIndex, x, cal);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterIndex, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1136,7 +1136,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setURL(parameterIndex, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1159,7 +1159,7 @@ PreparedStatement {
 		try {
 			this.internalPreparedStatement.setUnicodeStream(parameterIndex, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterIndex, x);
+				this.logParams.put(parameterIndex, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);

@@ -440,7 +440,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setAsciiStream(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -455,7 +455,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -471,7 +471,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setBinaryStream(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -486,7 +486,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			try {
 				this.internalCallableStatement.setBinaryStream(parameterName, x, length);
 				if (this.fillInParams){
-					getLogParams().put(parameterName, x);
+					this.logParams.put(parameterName, x);
 				}
 			} catch (SQLException e) {
 				throw this.connectionHandle.markPossiblyBroken(e);
@@ -501,7 +501,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			try {
 				this.internalCallableStatement.setBlob(parameterName, x);
 				if (this.fillInParams){
-					getLogParams().put(parameterName, x);
+					this.logParams.put(parameterName, x);
 				}
 			} catch (SQLException e) {
 				throw this.connectionHandle.markPossiblyBroken(e);
@@ -517,7 +517,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			try {
 				this.internalCallableStatement.setBlob(parameterName, inputStream);
 				if (this.fillInParams){
-					getLogParams().put(parameterName, inputStream);
+					this.logParams.put(parameterName, inputStream);
 				}
 			} catch (SQLException e) {
 				throw this.connectionHandle.markPossiblyBroken(e);
@@ -533,7 +533,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 			try {
 				this.internalCallableStatement.setBlob(parameterName, inputStream, length);
 				if (this.fillInParams){
-					getLogParams().put(parameterName, inputStream);
+					this.logParams.put(parameterName, inputStream);
 				}
 			} catch (SQLException e) {
 				throw this.connectionHandle.markPossiblyBroken(e);
@@ -550,7 +550,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setCharacterStream(parameterName, reader);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -565,7 +565,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setCharacterStream(parameterName, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -579,7 +579,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setClob(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -594,7 +594,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setClob(parameterName, reader);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -609,7 +609,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setClob(parameterName, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -623,7 +623,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNCharacterStream(parameterName, value);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, value);
+				this.logParams.put(parameterName, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -638,7 +638,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNCharacterStream(parameterName, value, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, value);
+				this.logParams.put(parameterName, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -652,7 +652,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNClob(parameterName, value);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, value);
+				this.logParams.put(parameterName, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -667,7 +667,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNClob(parameterName, reader);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -682,7 +682,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNClob(parameterName, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -697,7 +697,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNString(parameterName, value);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, value);
+				this.logParams.put(parameterName, value);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -711,7 +711,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setRowId(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -727,7 +727,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setSQLXML(parameterName, xmlObject);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, xmlObject);
+				this.logParams.put(parameterName, xmlObject);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1452,7 +1452,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setAsciiStream(parameterName, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1475,7 +1475,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setBigDecimal(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1498,7 +1498,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setBinaryStream(parameterName, x, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1517,7 +1517,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setBoolean(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1537,7 +1537,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setByte(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1557,7 +1557,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setBytes(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1580,7 +1580,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setCharacterStream(parameterName, reader, length);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, reader);
+				this.logParams.put(parameterName, reader);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1600,7 +1600,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setDate(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1621,7 +1621,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setDate(parameterName, x, cal);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1640,7 +1640,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setDouble(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1659,7 +1659,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setFloat(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1678,7 +1678,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setInt(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1697,7 +1697,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setLong(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1716,7 +1716,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNull(parameterName, sqlType);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, "]"));
+				this.logParams.put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, "]"));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1737,7 +1737,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setNull(parameterName, sqlType, typeName);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, ", type=", typeName+"]"));
+				this.logParams.put(parameterName, PoolUtil.safePrint("[SQL NULL type ", sqlType, ", type=", typeName+"]"));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1757,7 +1757,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setObject(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1778,7 +1778,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setObject(parameterName, x, targetSqlType);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1799,7 +1799,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setObject(parameterName, x, targetSqlType, scale);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1813,7 +1813,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setShort(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1833,7 +1833,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setString(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1852,7 +1852,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setTime(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1873,7 +1873,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setTime(parameterName, x, cal);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1894,7 +1894,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setTimestamp(parameterName, x);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, x);
+				this.logParams.put(parameterName, x);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1915,7 +1915,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setTimestamp(parameterName, x, cal);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
+				this.logParams.put(parameterName, PoolUtil.safePrint(x, ", cal=", cal));
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
@@ -1934,7 +1934,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		try {
 			this.internalCallableStatement.setURL(parameterName, val);
 			if (this.fillInParams){
-				getLogParams().put(parameterName, val);
+				this.logParams.put(parameterName, val);
 			}
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
