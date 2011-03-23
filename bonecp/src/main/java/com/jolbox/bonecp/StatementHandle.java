@@ -73,8 +73,6 @@ public class StatementHandle implements Statement{
 	private boolean statisticsEnabled;
 	/** Statistics handle. */
 	private Statistics statistics;
-	/** If true, logging is enabled. */
-	protected boolean batchSQLLoggingEnabled;
 	/** If true, this statement is being closed off by a separate thread. */
 	protected volatile boolean enqueuedForClosure; 
 	
@@ -109,7 +107,6 @@ public class StatementHandle implements Statement{
 		this.statistics = connectionHandle.getPool().getStatistics();
 		this.statisticsEnabled = config.isStatisticsEnabled();
 
-		this.batchSQLLoggingEnabled = this.logStatementsEnabled || this.connectionHook != null;
 		this.statementReleaseHelperEnabled = connectionHandle.getPool().isStatementReleaseHelperThreadsConfigured();
 		if (this.statementReleaseHelperEnabled){
 			this.statementsPendingRelease = connectionHandle.getPool().getStatementsPendingRelease();
@@ -146,7 +143,7 @@ public class StatementHandle implements Statement{
 	 */
 	protected void closeStatement() throws SQLException {
 		this.logicallyClosed.set(true);
-		if (this.logStatementsEnabled || this.connectionHook != null){
+		if (this.logStatementsEnabled){
 			this.logParams.clear();
 			this.batchSQL = new StringBuilder();
 		}
@@ -200,7 +197,7 @@ public class StatementHandle implements Statement{
 	throws SQLException {
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				this.batchSQL.append(sql);
 			}
 
@@ -253,7 +250,7 @@ public class StatementHandle implements Statement{
 	throws SQLException {
 		checkClosed();
 		try{
-			if (this.logStatementsEnabled || this.connectionHook != null){
+			if (this.logStatementsEnabled){
 				this.batchSQL = new StringBuilder();
 			}
 			this.internalStatement.clearBatch();
@@ -465,7 +462,7 @@ public class StatementHandle implements Statement{
 				logger.debug(PoolUtil.fillLogParams(this.batchSQL.toString(), this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
-			String query = this.batchSQLLoggingEnabled ? this.batchSQL.toString() : "";
+			String query = this.logStatementsEnabled ? this.batchSQL.toString() : "";
 			if (this.connectionHook != null){
 				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, query, this.logParams);
 			}
@@ -475,7 +472,7 @@ public class StatementHandle implements Statement{
 				this.connectionHook.onAfterStatementExecute(this.connectionHandle, this, query, this.logParams);
 			}
 
-			queryTimerEnd(this.batchSQLLoggingEnabled ? this.batchSQL.toString() : "", queryStartTime);
+			queryTimerEnd(this.logStatementsEnabled ? this.batchSQL.toString() : "", queryStartTime);
 
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);

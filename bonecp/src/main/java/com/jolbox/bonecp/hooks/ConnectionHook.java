@@ -137,7 +137,7 @@ public interface ConnectionHook {
 	 *	<p>08007	Transaction resolution unknown.
 	 *	<p>08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
 	 *	<p>08504	An error was encountered while processing the specified path rename configuration file.
-	 * <p>SQL Failure codes 08001 & 08007 indicate that the database is broken/died (and thus all remaining connections are killed off). 
+	 * <p>SQL Failure codes 08001, 08007 & 57P01 indicate that the database is broken/died (and thus all remaining connections are killed off). 
 	 * <p>Anything else will be taken as the connection (not the db) being broken. 
 	 * <p>
 	 * 

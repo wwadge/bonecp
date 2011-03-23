@@ -296,7 +296,6 @@ public class TestStatementHandle {
 	public void testAssortedCoverage() throws SQLException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		// using a null batchSQL statement...
 		Statement mockStatement = createNiceMock(Statement.class);
-		testClass.batchSQLLoggingEnabled = false; // new StringBuilder();
 		testClass.logStatementsEnabled = false;
 		Field field = testClass.getClass().getDeclaredField("internalStatement");
 		field.setAccessible(true);
