@@ -27,7 +27,6 @@ import org.junit.Test;
  * @author wallacew
  *
  */
-@Ignore
 public class TestStressTest {
 
 	/** Just a random blob to test bonecp. 
@@ -35,6 +34,7 @@ public class TestStressTest {
 	 * @throws InterruptedException
 	 */
 	@Test
+	@Ignore
 	public void testStress() throws SQLException, InterruptedException{
 		new MockJDBCDriver(new MockJDBCAnswer() {
 			
@@ -55,7 +55,7 @@ public class TestStressTest {
 		config.setJdbcUrl("jdbc:mock");
 		config.setStatementsCacheSize(100);
 		config.setStatementReleaseHelperThreads(3);
-//		config.setReleaseHelperThreads(3);
+		config.setReleaseHelperThreads(1);
 		config.setCloseConnectionWatch(true);
 		config.setServiceOrder("LIFO");
 		final BoneCP pool = new BoneCP(config);

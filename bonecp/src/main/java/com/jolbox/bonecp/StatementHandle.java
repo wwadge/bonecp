@@ -64,7 +64,7 @@ public class StatementHandle implements Statement{
 	/** Config setting. */
 	protected ConnectionHook connectionHook;
 	/** If true, we will close off statements in a separate thread. */
-	private boolean statementReleaseHelperEnabled;
+	private volatile boolean statementReleaseHelperEnabled;
 	/** Scratch queue of statments awaiting to be closed. */
 	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	/** An opaque object. */
@@ -1207,7 +1207,13 @@ public class StatementHandle implements Statement{
 	public boolean isEnqueuedForClosure() {
 		return this.enqueuedForClosure;
 	}
-	
+
+	/** Return true if statement is closed or is enqueued for closure.
+	 * @return true if this statement is closed or about to close.
+	 */
+	public boolean isClosedOrEnqueuedForClosure(){
+		return this.enqueuedForClosure || this.isClosed();
+	}
 
 
 }
