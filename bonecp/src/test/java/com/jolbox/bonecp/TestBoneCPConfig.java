@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -413,6 +414,20 @@ public class TestBoneCPConfig {
 		assertTrue(config.hasSameConfiguration(clone));
 	}
 
+	
+	/**
+	 * Tries to load an invalid property file.
+	 * @throws CloneNotSupportedException 
+	 * @throws IOException 
+	 * @throws URISyntaxException 
+	 */
+	@Test
+	public void testLoadPropertyFileValid() throws CloneNotSupportedException, IOException, URISyntaxException{
+		BoneCPConfig config = new BoneCPConfig();
+		//coverage
+		config.loadProperties("bonecp-config.xml");
+	}
+	
 	/** See how the config handles a garbage filled file.
 	 * @throws CloneNotSupportedException
 	 * @throws IOException

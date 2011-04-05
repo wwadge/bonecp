@@ -335,4 +335,18 @@ public class TestStatementHandle {
 		testClass.close();
 		verify(mockStatement);
 	}
+	
+	/**
+	 * Test for isClosedOrEnqueuedForClosure.
+	 */
+	@Test
+	public void testIsClosedOrEnqueuedForClosure(){
+		testClass.enqueuedForClosure = true;
+		testClass.logicallyClosed.set(false);
+		assertTrue(testClass.isClosedOrEnqueuedForClosure());
+		testClass.enqueuedForClosure = false;
+		testClass.logicallyClosed.set(true);
+		
+		assertTrue(testClass.isClosedOrEnqueuedForClosure());
+	}
 }
