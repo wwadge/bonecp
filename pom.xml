@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jolbox</groupId>
     <artifactId>bonecp-parent</artifactId>
-    <version>0.7.1-SNAPSHOT</version>
+    <version>0.7.1.RELEASE</version>
     <packaging>pom</packaging>
     <name>BoneCP</name>
     <description>The fast Java JDBC Database Connection pool</description>
@@ -109,13 +109,13 @@
             <dependency>
                 <groupId>com.jolbox</groupId>
                 <artifactId>bonecp-test-commons</artifactId>
-                <version>0.7.1-SNAPSHOT</version>
+                <version>0.7.1.RELEASE</version>
             </dependency>
 
   			<dependency>
                 <groupId>com.jolbox</groupId>
                 <artifactId>bonecp</artifactId>
-                <version>0.7.1-SNAPSHOT</version>
+                <version>0.7.1.RELEASE</version>
             </dependency>
             
             <dependency>
