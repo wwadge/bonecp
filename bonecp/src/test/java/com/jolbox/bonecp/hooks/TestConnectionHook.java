@@ -263,6 +263,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
 		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		Connection mockConnection = createNiceMock(Connection.class);
@@ -283,7 +284,7 @@ public class TestConnectionHook {
 			
 		
 		assertEquals(1, hookClass.queryTimeout);
-		reset(mockConfig, mockPreparedStatement, mockConnection);
+		reset(mockPreparedStatement, mockConnection);
 		poolClass.close();
 	}
 	

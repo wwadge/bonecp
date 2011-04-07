@@ -286,5 +286,4 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 
 		return new BoneCPDataSource(config);
 	}
-	
 }

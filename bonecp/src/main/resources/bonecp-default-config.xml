@@ -213,5 +213,9 @@
 		     null to use default). -->
 		<!-- <property name="classLoader">(null or no default value)</property> -->
 
+		<!-- If set to true, try to unregister the JDBC driver when pool is 
+		     shutdown. -->
+		<property name="deregisterDriverOnClose">false</property>
+
 	</default-config>
 </bonecp-config>

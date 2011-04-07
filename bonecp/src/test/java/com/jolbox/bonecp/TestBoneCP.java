@@ -37,6 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -59,6 +60,7 @@ import javax.sql.DataSource;
 
 import jsr166y.LinkedTransferQueue;
 import jsr166y.TransferQueue;
+import junit.framework.Assert;
 
 import org.easymock.EasyMock;
 import org.junit.AfterClass;
@@ -158,7 +160,7 @@ public class TestBoneCP {
 		expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
 		expect(mockConfig.getPoolAvailabilityThreshold()).andReturn(20).anyTimes();
-
+		
 		replay(mockConfig);
 
 		// once for no {statement, connection} release threads, once with release threads....
@@ -215,7 +217,9 @@ public class TestBoneCP {
 	public void testShutdown() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testShutdownClose(true);
 	}
-
+	
+	
+	
 
 
 	/**
@@ -227,6 +231,8 @@ public class TestBoneCP {
 	 * @throws IllegalArgumentException 
 	 */
 	private void testShutdownClose(boolean doShutdown) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
+
 		expect(mockKeepAliveScheduler.shutdownNow()).andReturn(null).once();
 		expect(mockConnectionsScheduler.shutdownNow()).andReturn(null).once();
 
@@ -246,11 +252,12 @@ public class TestBoneCP {
 
 		ExecutorService mockStatementCloseHelperExecutor = createNiceMock(ExecutorService.class);
 		testClass.setStatementCloseHelperExecutor(mockStatementCloseHelperExecutor);
+		
 		expect(mockStatementCloseHelperExecutor.shutdownNow()).andReturn(null).once();
 
 
-		replay(mockConnectionsScheduler, mockStatementCloseHelperExecutor, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
-
+		replay(mockConfig, mockConnectionsScheduler, mockStatementCloseHelperExecutor, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
+		
 		if (doShutdown){
 			testClass.shutdown();
 		} else {
@@ -1228,5 +1235,32 @@ public class TestBoneCP {
 		testClass.initStmtReleaseHelper("test");
 		assertNotNull(testClass.getStatementCloseHelperExecutor());
 	}
+	
+	/**
+	 * @throws SQLException 
+	 * 
+	 */
+	@Test
+	public void testUnregisterDriver() {
+		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(true).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
+
+		replay(mockConfig);
+		try {
+			Assert.assertNotNull(DriverManager.getDriver("jdbc:mock"));
+		} catch (SQLException e1) {
+			fail("SQLException thrown");
+		}
+		testClass.unregisterDriver();
+		try{
+			DriverManager.getDriver("jdbc:mock");
+			fail("Should throw exception");
+		} catch (SQLException e){
+			// success
+		}
+		
+		testClass.unregisterDriver(); // should log a message (nothing to unregister)
+	}
+
 
 }

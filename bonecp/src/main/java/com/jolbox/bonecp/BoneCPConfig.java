@@ -146,6 +146,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int defaultTransactionIsolationValue = -1;
 	/** If true, stop caring about username/password when obtaining raw connections. */
 	private boolean externalAuth;
+	/** If true, try to unregister the JDBC driver when pool is shutdown. */
+	private boolean deregisterDriverOnClose;
 	
 
 	/** Returns the name of the pool for JMX and thread names.
@@ -1760,6 +1762,23 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		} 
 
 		return false;
+	}
+
+	/**
+	 * Returns the deregisterDriverOnClose setting.
+	 * @return deregisterDriverOnClose
+	 */
+	public boolean isDeregisterDriverOnClose() {
+		return this.deregisterDriverOnClose;
+	}
+	
+
+	/**
+	 * If set to true, try to unregister the JDBC driver when pool is shutdown. 
+	 * @param deregisterDriverOnClose the deregisterDriverOnClose setting.
+	 */
+	public void setDeregisterDriverOnClose(boolean deregisterDriverOnClose) {
+		this.deregisterDriverOnClose = deregisterDriverOnClose;
 	}
 	
 }

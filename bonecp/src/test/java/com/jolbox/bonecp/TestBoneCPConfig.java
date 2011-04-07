@@ -164,8 +164,10 @@ public class TestBoneCPConfig {
 		config.setDefaultCatalog("foo");
 		config.setDefaultAutoCommit(true);
 		config.setStatisticsEnabled(true);
+		config.setDeregisterDriverOnClose(true);
 		
 		assertEquals("foo", config.getDefaultCatalog());
+		assertTrue(config.isDeregisterDriverOnClose());
 		assertTrue(config.getDefaultAutoCommit());
 		assertTrue(config.isStatisticsEnabled());
 		assertTrue(config.getDefaultReadOnly());
