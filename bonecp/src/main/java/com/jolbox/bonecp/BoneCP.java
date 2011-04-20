@@ -146,6 +146,8 @@ public class BoneCP implements Serializable {
 	private Boolean defaultAutoCommit;
 	/** Config setting. */
 	@VisibleForTesting protected boolean externalAuth;
+	/** Config setting. */
+	@VisibleForTesting protected boolean nullOnConnectionTimeout;
 
 	/**
 	 * Closes off this connection pool.
@@ -308,7 +310,8 @@ public class BoneCP implements Serializable {
 		this.defaultCatalog = config.getDefaultCatalog();
 		this.defaultTransactionIsolationValue = config.getDefaultTransactionIsolationValue();
 		this.defaultAutoCommit = config.getDefaultAutoCommit();
-
+		this.nullOnConnectionTimeout = config.isNullOnConnectionTimeout();
+		
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelayInMs(0);
@@ -513,11 +516,17 @@ public class BoneCP implements Serializable {
 			try {
 				result = connectionPartition.getFreeConnections().poll(this.connectionTimeoutInMs, TimeUnit.MILLISECONDS);
 				if (result == null){
+					if (this.nullOnConnectionTimeout){
+						return null;
+					}
 					// 08001 = The application requester is unable to establish the connection.
 					throw new SQLException("Timed out waiting for a free available connection.", "08001");
 				}
 			}
 			catch (InterruptedException e) {
+				if (this.nullOnConnectionTimeout){
+					return null;
+				}
 				throw new SQLException(e.getMessage());
 			}
 		}

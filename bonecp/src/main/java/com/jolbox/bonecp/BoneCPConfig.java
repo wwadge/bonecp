@@ -148,6 +148,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private boolean externalAuth;
 	/** If true, try to unregister the JDBC driver when pool is shutdown. */
 	private boolean deregisterDriverOnClose;
+	/** If true, return null on connection timeout rather than throw an exception. */
+	private boolean nullOnConnectionTimeout;
 	
 
 	/** Returns the name of the pool for JMX and thread names.
@@ -1779,6 +1781,27 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setDeregisterDriverOnClose(boolean deregisterDriverOnClose) {
 		this.deregisterDriverOnClose = deregisterDriverOnClose;
+	}
+
+	/**
+	 * Returns the nullOnConnectionTimeout field.
+	 * @return nullOnConnectionTimeout
+	 */
+	public boolean isNullOnConnectionTimeout() {
+		return this.nullOnConnectionTimeout;
+	}
+	
+
+	/**
+	 * Sets the nullOnConnectionTimeout.  
+	 * 
+	 * If true, return null on connection timeout rather than throw an exception. This performs
+	 * better but must be handled differently in your application. This only
+	 * makes sense when using the connectionTimeout config option. 
+	 * @param nullOnConnectionTimeout the nullOnConnectionTimeout to set
+	 */
+	public void setNullOnConnectionTimeout(boolean nullOnConnectionTimeout) {
+		this.nullOnConnectionTimeout = nullOnConnectionTimeout;
 	}
 	
 }

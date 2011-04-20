@@ -217,5 +217,10 @@
 		     shutdown. -->
 		<property name="deregisterDriverOnClose">false</property>
 
+		<!-- Sets the nullOnConnectionTimeout.  If true, return null on connection timeout rather than 
+		     throw an exception. This only makes sense when using the connectionTimeout config option 
+		     -->
+		<property name="nullOnConnectionTimeout">false</property>
+
 	</default-config>
 </bonecp-config>

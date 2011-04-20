@@ -1237,7 +1237,6 @@ public class TestBoneCP {
 	}
 	
 	/**
-	 * @throws SQLException 
 	 * 
 	 */
 	@Test
