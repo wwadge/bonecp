@@ -279,6 +279,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
+	 * Sets username to use for connections. Just delegates to setUsername for clients hardcoded
+	 * with "setUser" instead. 
+	 *
+	 * @param username to set
+	 */
+	public void setUser(String username) {
+		setUsername(username);
+	}
+
+	/** Just delegates to getUsername for clients hardcoded to "getUser". 
+	 * @return configured username
+	 */
+	public String getUser() {
+		return getUsername();
+	}
+	/**
 	 * Gets password to use for connections
 	 *
 	 * @return password

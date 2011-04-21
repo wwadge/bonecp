@@ -39,6 +39,10 @@
 		<!-- Sets username to use for connections. -->
 		<!-- <property name="username">(null or no default value)</property> -->
 
+		<!-- Sets username to use for connections. Just delegates to setUsername for clients hardcoded 
+		     with "setUser" instead. -->
+		<!-- <property name="user">(null or no default value)</property> -->
+
 		<!-- Sets password to use for connections. -->
 		<!-- <property name="password">(null or no default value)</property> -->
 
@@ -218,8 +222,8 @@
 		<property name="deregisterDriverOnClose">false</property>
 
 		<!-- Sets the nullOnConnectionTimeout.  If true, return null on connection timeout rather than 
-		     throw an exception. This only makes sense when using the connectionTimeout config option 
-		     -->
+		     throw an exception. This performs better but must be handled differently in your 
+		     application. This only makes sense when using the connectionTimeout config option. -->
 		<property name="nullOnConnectionTimeout">false</property>
 
 	</default-config>
