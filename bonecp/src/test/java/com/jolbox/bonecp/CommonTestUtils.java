@@ -176,6 +176,12 @@ public class CommonTestUtils {
 		if (method.getReturnType() == void.class){
 			method.invoke(mockClass, args);
 			expectLastCall().once().andThrow(new SQLException()).once();
+		} else if (method.getReturnType() == int.class){ 
+			expect(method.invoke(mockClass, args)).andReturn(0).once().andThrow(new SQLException()).once();
+		} else if (method.getReturnType() == boolean.class){ 
+			expect(method.invoke(mockClass, args)).andReturn(false).once().andThrow(new SQLException()).once();
+		} else if (method.getReturnType() == byte.class || method.getReturnType() == short.class || method.getReturnType() == long.class || method.getReturnType() == float.class || method.getReturnType() == double.class){ 
+			expect(method.invoke(mockClass, args)).andReturn(0).once().andThrow(new SQLException()).once();
 		} else {
 			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new SQLException()).once();
 		}
