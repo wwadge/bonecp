@@ -150,6 +150,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private boolean deregisterDriverOnClose;
 	/** If true, return null on connection timeout rather than throw an exception. */
 	private boolean nullOnConnectionTimeout;
+	/** If true, issue a reset (rollback) on connection close in case client forgot it. */
+	private boolean resetConnectionOnClose;
+	/** Detect uncommitted transactions. If true, and resetConnectionOnClose is also true, the pool will print out a stack 
+	 * trace of the location where you had a connection that specified setAutoCommit(false)
+	 * but then forgot to call commit/rollback before closing it off. This feature is intended 
+	 * for debugging only.*/
+	private boolean detectUnresolvedTransactions;
 	
 
 	/** Returns the name of the pool for JMX and thread names.
@@ -1818,6 +1825,43 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setNullOnConnectionTimeout(boolean nullOnConnectionTimeout) {
 		this.nullOnConnectionTimeout = nullOnConnectionTimeout;
+	}
+
+	/**
+	 * Returns the resetConnectionOnClose setting.
+	 * @return resetConnectionOnClose
+	 */
+	public boolean isResetConnectionOnClose() {
+		return this.resetConnectionOnClose;
+	}
+	
+
+	/**
+	 * If true, issue a reset (rollback) on connection close in case client forgot it.
+	 * @param resetConnectionOnClose the resetConnectionOnClose to set
+	 */
+	public void setResetConnectionOnClose(boolean resetConnectionOnClose) {
+		this.resetConnectionOnClose = resetConnectionOnClose;
+	}
+
+	/**
+	 * Returns the detectUnresolvedTransactions field.
+	 * @return detectUnresolvedTransactions
+	 */
+	public boolean isDetectUnresolvedTransactions() {
+		return this.detectUnresolvedTransactions;
+	}
+	
+
+	/**
+	 * If true, and resetConnectionOnClose is also true, the pool will print out a stack 
+	 * trace of the location where you had a connection that specified setAutoCommit(false)
+	 * but then forgot to call commit/rollback before closing it off. This feature is intended 
+	 * for debugging only. 
+	 * @param detectUnresolvedTransactions the detectUnresolvedTransactions to set
+	 */
+	public void setDetectUnresolvedTransactions(boolean detectUnresolvedTransactions) {
+		this.detectUnresolvedTransactions = detectUnresolvedTransactions;
 	}
 	
 }

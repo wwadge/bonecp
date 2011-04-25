@@ -60,6 +60,8 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
  */
 public class BoneCP implements Serializable {
 	/** Warning message. */
+	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
+	/** Warning message. */
 	private static final String THREAD_CLOSE_CONNECTION_WARNING = "Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!";
 	/** Serialization UID */
 	private static final long serialVersionUID = -8386816681977604817L;
@@ -148,6 +150,9 @@ public class BoneCP implements Serializable {
 	@VisibleForTesting protected boolean externalAuth;
 	/** Config setting. */
 	@VisibleForTesting protected boolean nullOnConnectionTimeout;
+	/** Config setting. */
+	@VisibleForTesting 
+	protected boolean resetConnectionOnClose;
 
 	/**
 	 * Closes off this connection pool.
@@ -311,6 +316,7 @@ public class BoneCP implements Serializable {
 		this.defaultTransactionIsolationValue = config.getDefaultTransactionIsolationValue();
 		this.defaultAutoCommit = config.getDefaultAutoCommit();
 		this.nullOnConnectionTimeout = config.isNullOnConnectionTimeout();
+		this.resetConnectionOnClose = config.isResetConnectionOnClose();
 		
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
@@ -669,7 +675,17 @@ public class BoneCP implements Serializable {
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
 		TransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
-
+		
+		if (this.resetConnectionOnClose && !connectionHandle.getInternalConnection().getAutoCommit() && !connectionHandle.isTxResolved()){
+			if (connectionHandle.getAutoCommitStackTrace() != null){
+				logger.warn(connectionHandle.getAutoCommitStackTrace());
+				connectionHandle.setAutoCommitStackTrace(null); 
+			} else {
+				logger.warn(DISABLED_AUTO_COMMIT_WARNING);
+			}
+			connectionHandle.getInternalConnection().rollback();
+			connectionHandle.getInternalConnection().setAutoCommit(true);
+		}
 		if (!queue.tryTransfer(connectionHandle)){
 			if (!queue.offer(connectionHandle)){
 				connectionHandle.internalClose();

@@ -58,6 +58,8 @@ import java.sql.SQLXML;
  * 
  */
 public class ConnectionHandle implements Connection{
+	/** Warning message. */
+	private static final String SET_AUTO_COMMIT_FALSE_WAS_CALLED_MESSAGE = "setAutoCommit(false) was called but transaction was not COMMITted or ROLLBACKed properly before it was closed.\n";
 	/** Exception message. */
 	private static final String STATEMENT_NOT_CLOSED = "Stack trace of location where statement was opened follows:\n%s";
 	/** Exception message. */
@@ -126,7 +128,12 @@ public class ConnectionHandle implements Connection{
 	private Map<Connection, Reference<ConnectionHandle>> finalizableRefs;
 	/** If true, connection tracking is disabled in the config. */
 	private boolean connectionTrackingDisabled;
-
+	/** If true, transaction has been marked as COMMITed or ROLLBACKed. */
+	private boolean txResolved = true;
+	/** Config setting. */
+	private boolean detectUnresolvedTransactions;
+	/** Stack track dump. */
+	protected String autoCommitStackTrace;
 	
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -172,6 +179,7 @@ public class ConnectionHandle implements Connection{
 		this.connectionTrackingDisabled = pool.getConfig().isDisableConnectionTracking();
 		this.statisticsEnabled = pool.getConfig().isStatisticsEnabled();
 		this.statistics = pool.getStatistics();
+		this.detectUnresolvedTransactions = pool.getConfig().isDetectUnresolvedTransactions();
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
 			this.replayLog = new ArrayList<ReplayLog>(30);
 			// this kick-starts recording everything
@@ -409,6 +417,7 @@ public class ConnectionHandle implements Connection{
 		checkClosed();
 		try {
 			this.connection.commit();
+			this.txResolved = true;
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
 		}
@@ -590,6 +599,7 @@ public class ConnectionHandle implements Connection{
 		}
 		return result;
 	}
+	
 
 	public String getCatalog() throws SQLException {
 		String result = null;
@@ -1043,6 +1053,7 @@ public class ConnectionHandle implements Connection{
 		checkClosed();
 		try {
 			this.connection.rollback();
+			this.txResolved = true;
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
 		}
@@ -1052,6 +1063,7 @@ public class ConnectionHandle implements Connection{
 		checkClosed();
 		try {
 			this.connection.rollback(savepoint);
+			this.txResolved = true;
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
 		}
@@ -1061,6 +1073,10 @@ public class ConnectionHandle implements Connection{
 		checkClosed();
 		try {
 			this.connection.setAutoCommit(autoCommit);
+			this.txResolved = autoCommit;
+			if (this.detectUnresolvedTransactions && !autoCommit){
+				this.autoCommitStackTrace = this.pool.captureStackTrace(SET_AUTO_COMMIT_FALSE_WAS_CALLED_MESSAGE);
+			}
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
 		}
@@ -1413,6 +1429,30 @@ public class ConnectionHandle implements Connection{
 	public Thread getThreadWatch() {
 		return this.threadWatch;
 	}
+
+	/** If true, autocommit is set to true or else commit/rollback has been called.
+	 * @return true/false
+	 */
+	protected boolean isTxResolved() {
+		return this.txResolved;
+	}
+
+	/**
+	 * Returns the autoCommitStackTrace field.
+	 * @return autoCommitStackTrace
+	 */
+	protected String getAutoCommitStackTrace() {
+		return this.autoCommitStackTrace;
+	}
+
+	/**
+	 * Sets the autoCommitStackTrace.
+	 * @param autoCommitStackTrace the autoCommitStackTrace to set
+	 */
+	protected void setAutoCommitStackTrace(String autoCommitStackTrace) {
+		this.autoCommitStackTrace = autoCommitStackTrace;
+	}
+	
 	
 
 }

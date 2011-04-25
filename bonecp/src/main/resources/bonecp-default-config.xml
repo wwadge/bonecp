@@ -226,5 +226,15 @@
 		     application. This only makes sense when using the connectionTimeout config option. -->
 		<property name="nullOnConnectionTimeout">false</property>
 
+		<!-- If true, issue a reset (rollback) on connection close in case client forgot 
+		     it. -->
+		<property name="resetConnectionOnClose">false</property>
+
+		<!-- If true, and resetConnectionOnClose is also true, the pool will print out a 
+		     stack trace of the location where you had a connection that specified setAutoCommit(false) 
+		     but then forgot to call commit/rollback before closing it off. This feature is 
+		     intended for debugging only. -->
+		<property name="detectUnresolvedTransactions">false</property>
+
 	</default-config>
 </bonecp-config>
