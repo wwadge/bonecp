@@ -28,6 +28,7 @@ import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -626,6 +627,32 @@ public class TestBoneCP {
 		verify(mockPartition, mockConnectionHandles, mockConnection);
 	}
 
+	/** Simulate an interrupted exception elsewhere.
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testGetConnectionSimulateInterruptedExceptionWithNullReturn()
+	throws NoSuchFieldException, IllegalAccessException,
+	InterruptedException {
+		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		testClass.nullOnConnectionTimeout = true;
+		expect(mockConnectionHandles.poll()).andReturn(null).once();
+		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andThrow(new InterruptedException()).once();
+
+		replay(mockPartition, mockConnectionHandles, mockConnection);
+		try{
+			assertNull(testClass.getConnection());
+		} catch (SQLException e){
+			fail("Should not have throw an SQL Exception");
+			// do nothing
+		}
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
+	
 
 	/**	Test #3: Like test #2 but simulate an interrupted exception
 	 * @throws NoSuchFieldException
@@ -653,7 +680,34 @@ public class TestBoneCP {
 		verify(mockPartition, mockConnectionHandles, mockConnection);
 	}
 
+	/**	Test #3: Like test #2 but simulate an interrupted exception
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testGetConnectionWithNullReturn()
+	throws NoSuchFieldException, IllegalAccessException,
+	InterruptedException {
+		reset(mockPartition, mockConnectionHandles, mockConnection);
+		expect(mockPartition.getMaxConnections()).andReturn(100).anyTimes();
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockConnectionHandles.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS)).andReturn(null).once();
+		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
+		bq.add(new Object());
+		testClass.nullOnConnectionTimeout = true;
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq);
+		replay(mockPartition, mockConnectionHandles, mockConnection);
+		try{ 
+			assertNull(testClass.getConnection());
+		} catch (SQLException e){
+			fail("Should have throw an SQL Exception");
+			// do nothing
+		}
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+	}
 
+	
 	/** Get connection, not finding any available block to wait for one
 	 * @throws InterruptedException
 	 * @throws SQLException
@@ -844,6 +898,61 @@ public class TestBoneCP {
 
 	}
 
+	/**
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#putConnectionBackInPartition(com.jolbox.bonecp.ConnectionHandle)}.
+	 * @throws InterruptedException 
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testPutConnectionBackInPartitionWithResetConnectionOnClose() throws InterruptedException, SQLException {
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
+
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
+		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
+		expect(mockConnection.isTxResolved()).andReturn(false).once();
+		Connection mockInternalConnection = createNiceMock(Connection.class);
+		expect(mockInternalConnection.getAutoCommit()).andReturn(false).once();
+		expect(mockConnection.getInternalConnection()).andReturn(mockInternalConnection).anyTimes();
+		mockInternalConnection.rollback();
+		mockInternalConnection.setAutoCommit(true);
+		replay(mockInternalConnection, mockPartition, mockConnectionHandles, mockConnection);
+		testClass.resetConnectionOnClose = true;
+		testClass.putConnectionBackInPartition(mockConnection);
+		verify(mockPartition, mockConnectionHandles);
+
+	}
+
+	/**
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#putConnectionBackInPartition(com.jolbox.bonecp.ConnectionHandle)}.
+	 * @throws InterruptedException 
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testPutConnectionBackInPartitionWithResetConnectionOnCloseWithStackTrace() throws InterruptedException, SQLException {
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
+
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
+		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
+		expect(mockConnection.isTxResolved()).andReturn(false).once();
+		expect(mockConnection.getAutoCommitStackTrace()).andReturn("Foo").once();
+		mockConnection.setAutoCommitStackTrace(null);
+		Connection mockInternalConnection = createNiceMock(Connection.class);
+		expect(mockInternalConnection.getAutoCommit()).andReturn(false).once();
+		expect(mockConnection.getInternalConnection()).andReturn(mockInternalConnection).anyTimes();
+		mockInternalConnection.rollback();
+		mockInternalConnection.setAutoCommit(true);
+		replay(mockInternalConnection, mockPartition, mockConnectionHandles, mockConnection);
+		testClass.resetConnectionOnClose = true;
+		testClass.putConnectionBackInPartition(mockConnection);
+		verify(mockPartition, mockConnectionHandles, mockConnection);
+
+	}
+
+	
 	/**
 	 * Test method for com.jolbox.bonecp.BoneCP isConnectionHandleAlive.
 	 * @throws SQLException 

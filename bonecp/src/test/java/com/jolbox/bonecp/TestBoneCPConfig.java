@@ -141,6 +141,7 @@ public class TestBoneCPConfig {
 		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
+		config.setUser(CommonTestUtils.username);
 		config.setPassword(CommonTestUtils.password);
 		config.setIdleConnectionTestPeriod(60);
 		config.setIdleMaxAge(60);
@@ -165,7 +166,14 @@ public class TestBoneCPConfig {
 		config.setDefaultAutoCommit(true);
 		config.setStatisticsEnabled(true);
 		config.setDeregisterDriverOnClose(true);
+		config.setNullOnConnectionTimeout(true);
+		config.setDetectUnresolvedTransactions(true);
+		config.setResetConnectionOnClose(true);
 		
+		assertTrue(config.isDetectUnresolvedTransactions());
+		assertTrue(config.isNullOnConnectionTimeout());
+		assertTrue(config.isResetConnectionOnClose());
+		assertEquals(config.getUser(), config.getUsername());
 		assertEquals("foo", config.getDefaultCatalog());
 		assertTrue(config.isDeregisterDriverOnClose());
 		assertTrue(config.getDefaultAutoCommit());

@@ -28,6 +28,7 @@ import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.State;
@@ -923,4 +924,28 @@ public class TestConnectionHandle {
 
 	}
 
+	/**
+	 * 
+	 */
+	@Test
+	public void testStackTraceAndTxResolve(){
+		this.testClass.setAutoCommitStackTrace("foo");
+		this.testClass.getAutoCommitStackTrace();
+		assertEquals("foo", this.testClass.getAutoCommitStackTrace());
+		this.testClass.txResolved = true;
+		assertTrue(this.testClass.isTxResolved());
+	}
+	
+	/**
+	 * @throws SQLException 
+	 * 
+	 */
+	@Test
+	public void testAutoCommitSetToFalse() throws SQLException{
+		this.testClass.detectUnresolvedTransactions = true;
+		expect(this.mockPool.captureStackTrace((String)anyObject())).andReturn("foo").once();
+		replay(this.mockPool);
+		this.testClass.setAutoCommit(false);
+		assertNotNull(this.testClass.getAutoCommitStackTrace());
+	}
 }

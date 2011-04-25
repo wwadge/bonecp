@@ -32,6 +32,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
@@ -129,9 +130,9 @@ public class ConnectionHandle implements Connection{
 	/** If true, connection tracking is disabled in the config. */
 	private boolean connectionTrackingDisabled;
 	/** If true, transaction has been marked as COMMITed or ROLLBACKed. */
-	private boolean txResolved = true;
+	@VisibleForTesting protected boolean txResolved = true;
 	/** Config setting. */
-	private boolean detectUnresolvedTransactions;
+	@VisibleForTesting protected boolean detectUnresolvedTransactions;
 	/** Stack track dump. */
 	protected String autoCommitStackTrace;
 	
