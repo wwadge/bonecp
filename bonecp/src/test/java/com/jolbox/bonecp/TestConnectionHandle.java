@@ -18,15 +18,7 @@ package com.jolbox.bonecp;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.easymock.EasyMock.anyInt;
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.aryEq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.verify;
+import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -50,7 +42,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import junit.framework.Assert;
 
-import org.easymock.classextension.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -100,7 +91,7 @@ public class TestConnectionHandle {
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		EasyMock.replay(this.mockConnection, this.mockPool);
+		replay(this.mockConnection, this.mockPool);
 
 		this.config.setReleaseHelperThreads(0);
 		this.config.setTransactionRecoveryEnabled(false);
