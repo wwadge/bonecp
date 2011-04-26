@@ -154,12 +154,12 @@ public class TestBoneCPConfig {
 		config.setInitSQL("abc");
 		config.setDefaultTransactionIsolation("foo");
 		config.setDefaultTransactionIsolationValue(123);
-		config.setAcquireRetryDelay(1, TimeUnit.MINUTES);
-		config.setConnectionTimeout(1, TimeUnit.MINUTES);
-		config.setIdleMaxAge(1, TimeUnit.MINUTES);
+		config.setAcquireRetryDelay(60, TimeUnit.SECONDS);
+		config.setConnectionTimeout(60, TimeUnit.SECONDS);
+		config.setIdleMaxAge(60, TimeUnit.SECONDS);
 		config.setIdleMaxAgeInSeconds(60);
-		config.setIdleConnectionTestPeriod(1, TimeUnit.MINUTES);
-		config.setMaxConnectionAge(1, TimeUnit.MINUTES);
+		config.setIdleConnectionTestPeriod(60, TimeUnit.SECONDS);
+		config.setMaxConnectionAge(60, TimeUnit.SECONDS);
 		config.setDefaultReadOnly(true);
 		config.setDefaultCatalog("foo");
 		config.setDefaultAutoCommit(true);

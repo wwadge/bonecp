@@ -56,18 +56,18 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	private ReadWriteLock rwl = new ReentrantReadWriteLock();
 	/** JDBC driver to use. */
 	private String driverClass;
-	/** Class logger. */
+	/** Class logger. */ 
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPDataSource.class);
 	/**
 	 * Constructs (and caches) a datasource on the fly based on the given username/password.
 	 */
 	private Map<UsernamePassword, BoneCPDataSource> multiDataSource = new MapMaker().makeComputingMap(new Function<UsernamePassword, BoneCPDataSource>() {
 
-		@Override
+//		@Override
 		public BoneCPDataSource apply(UsernamePassword key) {
 			BoneCPDataSource ds = null;
 			ds = new BoneCPDataSource(getConfig());
-
+ 
 			ds.setUsername(key.getUsername());
 			ds.setPassword(key.getPassword());
 

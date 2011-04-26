@@ -86,10 +86,10 @@
 
     <modules>
         <module>bonecp</module>
-        <module>bonecp-benchmark</module>
         <module>bonecp-spring</module>
         <module>bonecp-test-commons</module>
         <module>bonecp-hbnprovider</module>
+<!--         <module>bonecp-benchmark</module>  -->
     </modules>
 
     <dependencyManagement>
@@ -420,7 +420,7 @@
                 <plugins>
                     <!--
                      | Make sure we only use Java5 methods
-                    -->
+                    
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>animal-sniffer-maven-plugin</artifactId>
@@ -442,7 +442,7 @@
                             </execution>
                         </executions>
                     </plugin>
-
+-->
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
                         <configuration>
