@@ -333,10 +333,10 @@ public class BoneCP implements Serializable {
 				}
 				// #ifdef JDK6
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)), e);
-				// #endif
+				// #endif JDK6
 				/* #ifdef JDK5
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
-#endif JDK5 */
+				#endif JDK5 */
 
 			}
 		}
@@ -408,7 +408,7 @@ public class BoneCP implements Serializable {
 				if (config.getIdleMaxAgeInMinutes() != 0 && config.getIdleConnectionTestPeriodInMinutes() != 0 && config.getIdleMaxAgeInMinutes() < delayInMinutes){
 					delayInMinutes = config.getIdleMaxAgeInMinutes();
 				}
-				this.keepAliveScheduler.schedule(connectionTester, delayInMinutes, TimeUnit.MINUTES);
+				this.keepAliveScheduler.schedule(connectionTester, delayInMinutes*60, TimeUnit.SECONDS);
 			}
 
 			if (config.getMaxConnectionAgeInSeconds() > 0){

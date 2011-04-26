@@ -340,14 +340,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod) {
 		logger.warn("Please use setIdleConnectionTestPeriodInMinutes in place of setIdleConnectionTestPeriod. This method has been deprecated.");
-		setIdleConnectionTestPeriod(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		setIdleConnectionTestPeriod(idleConnectionTestPeriod*60, TimeUnit.SECONDS);
 	}
 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getIdleConnectionTestPeriodInMinutes()
 	 */
 	public long getIdleConnectionTestPeriodInMinutes() {
-		return TimeUnit.MINUTES.convert(this.idleConnectionTestPeriodInSeconds, TimeUnit.SECONDS);
+		return this.idleConnectionTestPeriodInSeconds / 60;
 	}
 
 	/**
@@ -373,7 +373,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleConnectionTestPeriod to set 
 	 */
 	public void setIdleConnectionTestPeriodInMinutes(long idleConnectionTestPeriod) {
-		setIdleConnectionTestPeriod(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		// we use TimeUnit.SECONDS instead of TimeUnit.MINUTES because it's not supported
+		// by JDK5
+		setIdleConnectionTestPeriod(idleConnectionTestPeriod*60, TimeUnit.SECONDS);
 	}
 
 	/**
@@ -425,7 +427,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @return idleMaxAge in minutes
 	 */
 	public long getIdleMaxAgeInMinutes() {
-		return TimeUnit.MINUTES.convert(this.idleMaxAgeInSeconds, TimeUnit.SECONDS);
+		return this.idleMaxAgeInSeconds / 60;
 	}
 
 	/**
@@ -450,7 +452,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleMaxAge to set
 	 */
 	public void setIdleMaxAgeInMinutes(long idleMaxAge) {
-		setIdleMaxAge(idleMaxAge, TimeUnit.MINUTES); 
+		setIdleMaxAge(idleMaxAge*60, TimeUnit.SECONDS); 
 	}
 
 	/**

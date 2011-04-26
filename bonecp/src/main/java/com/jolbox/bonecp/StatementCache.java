@@ -244,7 +244,7 @@ public class StatementCache implements IStatementCache {
 		}		
 	}
 
-	@Override
+//	@Override
 	public void putIfAbsent(String key, StatementHandle handle) {
 		if (this.cache.size() <=  this.cacheSize && key != null){ // perhaps use LRU in future?? Worth the overhead? Hmm....
 			if (this.cache.putIfAbsent(key, handle) == null){

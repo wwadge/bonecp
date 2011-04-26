@@ -19,7 +19,7 @@ package com.jolbox.bonecp;
 /* #ifdef JDK5
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-#endif JDK5 */
+#endif JDK5 */ 
 
 import jsr166y.TransferQueue;
 
@@ -87,7 +87,7 @@ public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueu
 	
 
 }
-// #endif JDK6
+ // #endif JDK6
 
 /* #ifdef JDK5
 // for JDK5, there's no dequeue implementation so we fall back on a simple linkedblockingqueue
@@ -125,7 +125,7 @@ public class LIFOQueue<E> extends LinkedBlockingQueue<E> implements TransferQueu
 
 	
 	public boolean offer(E e) {
-		return super.insert(e, 0);
+		return super.offer(e);
 	}
 
 	public boolean offerLast(E e) {

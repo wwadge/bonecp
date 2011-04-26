@@ -66,7 +66,7 @@ public class TestStressTest {
 			Thread t = 
 			new Thread(new Runnable() {
 			
-			@Override
+//			@Override
 			public void run() {
 				try {
 					Connection c = pool.getConnection();
