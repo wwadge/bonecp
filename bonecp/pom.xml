@@ -24,7 +24,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bonecp</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>bundle</packaging> 
     <name>BoneCP :: Core Library</name>
     <description>Lightweight connection pool.</description>
 
@@ -44,10 +44,11 @@
                     </archive>
                 </configuration>
             </plugin>
-
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                
                 <configuration>
                     <descriptors>
                         <descriptor>${basedir}/../src/main/assembly/assembly.xml</descriptor>
