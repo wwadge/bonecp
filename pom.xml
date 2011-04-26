@@ -289,8 +289,8 @@
                     <configuration>
                         <regex>false</regex>
                         <includes>
-                            <include>${basedir}/src/main/java/**/*.java</include>
-                            <include>${basedir}src/test/java/**/*.java</include>
+                            <include>**/*.java</include>
+                            <include>**/*.java</include>
                         </includes>
                     </configuration>
                 </plugin>
@@ -410,7 +410,6 @@
     <profiles>
         <profile>
             <id>JDK5</id>
-
             <properties>
                 <javac.src.version>1.5</javac.src.version>
                 <javac.target.version>1.5</javac.target.version>
@@ -444,12 +443,21 @@
                     </plugin>
 -->
                     <plugin>
+                    	<groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-jar-plugin</artifactId>
                         <configuration>
                             <classifier>jdk5</classifier>
                         </configuration>
                     </plugin>
 
+   					<plugin>
+                    	<groupId>org.apache.felix</groupId>
+                    	<artifactId>maven-bundle-plugin</artifactId>
+                        <configuration>
+                            <classifier>jdk5</classifier>
+                        </configuration>
+                    </plugin>
+                    
                     <plugin>
                         <groupId>com.google.code.maven-replacer-plugin</groupId>
                         <artifactId>maven-replacer-plugin</artifactId>
