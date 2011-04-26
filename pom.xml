@@ -270,7 +270,7 @@
                 <plugin>
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
                     <artifactId>maven-replacer-plugin</artifactId>
-                    <version>1.3.5</version>
+                    <version>1.3.7</version>
                     <executions>
                         <execution>
                             <phase>process-sources</phase>
@@ -282,8 +282,7 @@
                     <configuration>
                         <regex>false</regex>
                         <includes>
-                            <include>${basedir}/src/main/java/**/*.java</include>
-                            <include>${basedir}src/test/java/**/*.java</include>
+                            <include>**/*.java</include>
                         </includes>
                     </configuration>
                 </plugin>
