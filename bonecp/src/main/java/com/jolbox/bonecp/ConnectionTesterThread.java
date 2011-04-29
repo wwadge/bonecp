@@ -111,8 +111,8 @@ public class ConnectionTesterThread implements Runnable {
 							}
 						} else {
 							// determine the next time to wake up (connection test time or idle Max age?) 
-							tmp = this.idleConnectionTestPeriodInMs-(currentTimeInMs - connection.getConnectionLastResetInMs());
-							long tmp2 = this.idleMaxAgeInMs - (currentTimeInMs-connection.getConnectionLastUsedInMs());
+							tmp = Math.abs(this.idleConnectionTestPeriodInMs-(currentTimeInMs - connection.getConnectionLastResetInMs()));
+							long tmp2 = Math.abs(this.idleMaxAgeInMs - (currentTimeInMs-connection.getConnectionLastUsedInMs()));
 							if (this.idleMaxAgeInMs > 0){
 								tmp = Math.min(tmp, tmp2);
 							}
@@ -135,6 +135,8 @@ public class ConnectionTesterThread implements Runnable {
 					}
 
 				} // throw it back on the queue
+//				System.out.println("Scheduling for " + nextCheckInMs);
+				// offset by a bit to avoid firing a lot for slightly offset connections
 				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){

@@ -76,6 +76,7 @@ public class PoolWatchThread implements Runnable {
 					}
 					this.partition.getPoolWatchThreadSignalQueue().take();
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
+					
 				}
 
 				if (maxNewConnections > 0 && !this.lazyInit){

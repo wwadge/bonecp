@@ -26,6 +26,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -398,18 +400,19 @@ public class BoneCP implements Serializable {
 			}
 
 
-			if (config.getIdleConnectionTestPeriodInMinutes() > 0 || config.getIdleMaxAgeInMinutes() > 0){
+			if (config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) > 0 || config.getIdleMaxAge(TimeUnit.SECONDS) > 0){
 
 				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler, this, config.getIdleMaxAge(TimeUnit.MILLISECONDS), config.getIdleConnectionTestPeriod(TimeUnit.MILLISECONDS), queueLIFO);
-				long delayInMinutes = config.getIdleConnectionTestPeriodInMinutes();
-				if (delayInMinutes == 0L){
-					delayInMinutes = config.getIdleMaxAgeInMinutes();
+				long delayInSeconds = config.getIdleConnectionTestPeriod(TimeUnit.SECONDS);
+				if (delayInSeconds == 0L){
+					delayInSeconds = config.getIdleMaxAge(TimeUnit.SECONDS);
 				}
-				if (config.getIdleMaxAgeInMinutes() != 0 && config.getIdleConnectionTestPeriodInMinutes() != 0 && config.getIdleMaxAgeInMinutes() < delayInMinutes){
-					delayInMinutes = config.getIdleMaxAgeInMinutes();
+				if (config.getIdleMaxAge(TimeUnit.SECONDS) != 0 && config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) != 0 && config.getIdleMaxAge(TimeUnit.SECONDS) < delayInSeconds){
+					delayInSeconds = config.getIdleMaxAge(TimeUnit.SECONDS);
 				}
-				this.keepAliveScheduler.schedule(connectionTester, delayInMinutes*60, TimeUnit.SECONDS);
+				this.keepAliveScheduler.schedule(connectionTester, delayInSeconds, TimeUnit.SECONDS);
 			}
+
 
 			if (config.getMaxConnectionAgeInSeconds() > 0){
 				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this.maxAliveScheduler, this, config.getMaxConnectionAge(TimeUnit.MILLISECONDS), queueLIFO);
