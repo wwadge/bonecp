@@ -474,6 +474,11 @@ public class StatementHandle implements Statement{
 
 			queryTimerEnd(this.logStatementsEnabled ? this.batchSQL.toString() : "", queryStartTime);
 
+			if (this.logStatementsEnabled){
+				this.logParams.clear();
+				this.batchSQL = new StringBuilder();
+			}
+			
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
 

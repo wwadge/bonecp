@@ -1403,7 +1403,7 @@ public class ConnectionHandle implements Connection{
 	 * @return true if the connection has expired.
 	 */
 	public boolean isExpired() {
-		return isExpired(System.currentTimeMillis());
+		return this.maxConnectionAgeInMs > 0 && isExpired(System.currentTimeMillis());
 	}
 
 	/** Returns true if the given connection has exceeded the maxConnectionAge.

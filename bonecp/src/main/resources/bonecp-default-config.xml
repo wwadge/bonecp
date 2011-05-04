@@ -11,26 +11,26 @@
 		<property name="minConnectionsPerPartition">0</property>
 
 		<!-- Sets the maximum number of connections that will be contained in every partition. 
-		     Setting this to 5 with 3 partitions means you will have 15 unique 
-		     connections to the database. Note that the connection pool will not create all 
-		     these connections in one go but rather start off with minConnectionsPerPartition and gradually 
-		     increase connections as required. -->
+		      Setting this to 5 with 3 partitions means you will have 15 
+		     unique connections to the database.  Note that the connection pool will not 
+		     create all these connections in one go but rather start off  with 
+		     minConnectionsPerPartition and gradually increase connections as required. -->
 		<property name="maxConnectionsPerPartition">0</property>
 
-		<!-- Sets the acquireIncrement property.  When the available connections are about to run 
-		     out, BoneCP will dynamically create new ones in batches. This property controls how 
-		     many new connections to create in one go (up to a maximum of 
-		     maxConnectionsPerPartition). Note: This is a per partition setting. -->
+		<!-- Sets the acquireIncrement property.   When the available connections are about to 
+		     run out, BoneCP will dynamically create new ones in batches.  This property 
+		     controls how many new connections to create in one go (up to a 
+		     maximum of maxConnectionsPerPartition).  Note: This is a per partition setting. -->
 		<property name="acquireIncrement">2</property>
 
-		<!-- Sets number of partitions to use.  In order to reduce lock contention 
-		     and thus improve performance, each incoming connection request picks off a connection from 
-		     a pool that has thread-affinity, i.e. pool[threadId % partition_count]. The higher this number, 
-		     the better your performance will be for the case when you have plenty 
-		     of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
-		     to have a negative effect on performance (and only for the case when 
-		     connections on a partition start running out).  Default: 1, minimum: 1, recommended: 
-		     2-4 (but very app specific) -->
+		<!-- Sets number of partitions to use.   In order to reduce lock 
+		     contention and thus improve performance,  each incoming connection request picks off a 
+		     connection from a pool that has thread-affinity,  i.e. pool[threadId % partition_count]. The 
+		     higher this number, the better your performance will be for the case  
+		     when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of 
+		     these pools will start  to have a negative effect on performance (and 
+		     only for the case when connections on a partition start running out).  
+		     Default: 1, minimum: 1, recommended: 2-4 (but very app specific) -->
 		<property name="partitionCount">1</property>
 
 		<!-- Sets the JDBC connection URL. -->
@@ -47,37 +47,38 @@
 		<!-- <property name="password">(null or no default value)</property> -->
 
 		<!-- Sets the idleConnectionTestPeriod.  This sets the time (in minutes), for a connection 
-		     to remain idle before sending a test query to the DB. This is 
-		     useful to prevent a DB from timing out connections on its end. Do 
-		     not use aggressive values here!   Default: 240 min, set to 0 
-		     to disable -->
+		     to remain idle before sending  a test query to the DB. This 
+		     is useful to prevent a DB from timing out connections  on its 
+		     end. Do not use aggressive values here!    Default: 240 min, 
+		     set to 0 to disable -->
 		<property name="idleConnectionTestPeriodInMinutes">240</property>
 
 		<!-- Sets the idleConnectionTestPeriod.  This sets the time (in seconds), for a connection 
-		     to remain idle before sending a test query to the DB. This is 
-		     useful to prevent a DB from timing out connections on its end. Do 
-		     not use aggressive values here!   Default: 240 min, set to 0 
-		     to disable -->
+		     to remain idle before sending  a test query to the DB. This 
+		     is useful to prevent a DB from timing out connections  on its 
+		     end. Do not use aggressive values here!    Default: 240 min, 
+		     set to 0 to disable -->
 		<property name="idleConnectionTestPeriodInSeconds">14400</property>
 
 		<!-- Sets Idle max age (in min).  The time (in minutes), for a 
 		     connection to remain unused before it is closed off. Do not use aggressive 
-		     values here!  Default: 60 minutes, set to 0 to disable. -->
+		     values here!   Default: 60 minutes, set to 0 to disable. -->
 		<property name="idleMaxAgeInMinutes">60</property>
 
 		<!-- Sets Idle max age (in seconds).  The time (in seconds), for a 
 		     connection to remain unused before it is closed off. Do not use aggressive 
-		     values here!  Default: 60 minutes, set to 0 to disable. -->
+		     values here!   Default: 60 minutes, set to 0 to disable. -->
 		<property name="idleMaxAgeInSeconds">3600</property>
 
 		<!-- Sets the connection test statement.  The query to send to the DB 
-		     to maintain keep-alives and test for dead connections. This is database specific and 
-		     should be set to a query that consumes the minimal amount of load 
-		     on the server. Examples: MySQL: "/* ping *\/ SELECT 1", PostgreSQL: "SELECT NOW()". 
-		     If you do not set this, then BoneCP will issue a metadata request 
-		     instead that should work on all databases but is probably slower.  (Note: 
-		     In MySQL, prefixing the statement by /* ping *\/ makes the driver issue 
-		     1 fast packet instead. See http://blogs.sun.com/SDNChannel/entry/mysql_tips_for_java_developers ) Default: Use metadata request -->
+		     to maintain keep-alives and test for dead connections.  This is database specific 
+		     and should be set to a query that consumes the minimal amount of 
+		     load on the server.  Examples: MySQL: "/* ping *\/ SELECT 1", PostgreSQL: 
+		     "SELECT NOW()".  If you do not set this, then BoneCP will issue 
+		     a metadata request instead that should work on all databases but is probably 
+		     slower.  (Note: In MySQL, prefixing the statement by /* ping *\/ makes 
+		     the driver issue 1 fast packet instead. See  http://blogs.sun.com/SDNChannel/entry/mysql_tips_for_java_developers ) Default: Use 
+		     metadata request -->
 		<!-- <property name="connectionTestStatement">(null or no default value)</property> -->
 
 		<!-- Sets statementsCacheSize setting.  The number of statements to cache. -->
@@ -86,18 +87,19 @@
 		<!-- Sets number of helper threads to create that will handle releasing a connection. 
 		      When this value is set to zero, the application thread is blocked 
 		     until the pool is able to perform all the necessary cleanup to recycle 
-		     the connection and make it available for another thread.  When a non-zero 
-		     value is set, the pool will create threads that will take care of 
-		     recycling a connection when it is closed (the application dumps the connection into 
-		     a temporary queue to be processed asychronously to the application via the release 
-		     helper threads).  Useful when your application is doing lots of work on 
-		     each connection (i.e. perform an SQL query, do lots of non-DB stuff and 
-		     perform another query), otherwise will probably slow things down. -->
+		     the connection and make it available for another thread.   When a 
+		     non-zero value is set, the pool will create threads that will take care 
+		     of recycling a connection when it is closed (the  application dumps the 
+		     connection into a temporary queue to be processed asychronously to the application via 
+		     the release helper  threads).  Useful when your application is doing lots 
+		     of work on each connection  (i.e. perform an SQL query, do lots 
+		     of non-DB stuff and perform another query),  otherwise will probably slow things 
+		     down. -->
 		<property name="releaseHelperThreads">3</property>
 
 		<!-- Sets the connection hook.  Fully qualified class name that implements the ConnectionHook 
-		     interface (or extends AbstractConnectionHook). BoneCP will callback the specified class according to the 
-		     connection state (onAcquire, onCheckIn, onCheckout, onDestroy). -->
+		     interface (or extends AbstractConnectionHook).  BoneCP will callback the specified class according to 
+		     the connection state (onAcquire, onCheckIn, onCheckout, onDestroy). -->
 		<!-- <property name="connectionHook">(null or no default value)</property> -->
 
 		<!-- Specifies an initial SQL statement that is run only when a connection is 
@@ -105,9 +107,9 @@
 		<!-- <property name="initSQL">(null or no default value)</property> -->
 
 		<!-- Instruct the pool to create a helper thread to watch over connection acquires 
-		     that are never released (or released twice). This is for debugging purposes only 
-		     and will create a new thread for each call to getConnection(). Enabling this 
-		     option will have a big negative impact on pool performance. -->
+		     that are never released (or released twice).  This is for debugging purposes 
+		     only and will create a new thread for each call to getConnection().  
+		     Enabling this option will have a big negative impact on pool performance. -->
 		<property name="closeConnectionWatch">false</property>
 
 		<!-- If enabled, log SQL statements being executed. -->
@@ -155,12 +157,12 @@
 		<!-- If set to true, the pool will not monitor connections for proper closure. 
 		     Enable this option if you only ever obtain your connections via a mechanism 
 		     that is guaranteed to release the connection back to the pool (eg Spring's 
-		     jdbcTemplate, some kind of transaction manager, etc). -->
+		     jdbcTemplate,  some kind of transaction manager, etc). -->
 		<property name="disableConnectionTracking">false</property>
 
 		<!-- Sets the maximum time (in milliseconds) to wait before a call to getConnection 
-		     is timed out.  Setting this to zero is similar to setting it 
-		     to Long.MAX_VALUE  Default: 0 ( = wait forever ) -->
+		     is timed out.   Setting this to zero is similar to setting 
+		     it to Long.MAX_VALUE  Default: 0 ( = wait forever ) -->
 		<property name="connectionTimeoutInMs">0</property>
 
 		<!-- Sets the no of ms to wait when close connection watch threads are 
@@ -170,10 +172,10 @@
 		<!-- Sets number of statement helper threads to create that will handle releasing a 
 		     statement.  When this value is set to zero, the application thread is 
 		     blocked until the pool and JDBC driver are able to close off the 
-		     statement.  When a non-zero value is set, the pool will create threads 
-		     that will take care of closing off the statement asychronously to the application 
-		     via the release helper threads).  Useful when your application is opening up 
-		     lots of statements otherwise will probably slow things down. -->
+		     statement.   When a non-zero value is set, the pool will create 
+		     threads that will take care of closing off the statement asychronously to the 
+		     application via the release helper  threads).  Useful when your application is 
+		     opening up lots of statements otherwise will probably slow things down. -->
 		<property name="statementReleaseHelperThreads">0</property>
 
 		<!-- Sets the maxConnectionAge in seconds. Any connections older than this setting will be 
@@ -204,8 +206,8 @@
 		     default. -->
 		<!-- <property name="defaultCatalog">(null or no default value)</property> -->
 
-		<!-- Sets the defaultTransactionIsolation. Should be set to one of: NONE, READ_COMMITTED, READ_UNCOMMITTED, REPEATABLE_READ 
-		     or SERIALIZABLE. If not set, will use driver default. -->
+		<!-- Sets the defaultTransactionIsolation. Should be set to one of: NONE, READ_COMMITTED, READ_UNCOMMITTED,  
+		      REPEATABLE_READ or SERIALIZABLE. If not set, will use driver default. -->
 		<!-- <property name="defaultTransactionIsolation">(null or no default value)</property> -->
 
 		<!-- If set to true, no attempts at passing in a username/password will be 
@@ -221,9 +223,10 @@
 		     shutdown. -->
 		<property name="deregisterDriverOnClose">false</property>
 
-		<!-- Sets the nullOnConnectionTimeout.  If true, return null on connection timeout rather than 
-		     throw an exception. This performs better but must be handled differently in your 
-		     application. This only makes sense when using the connectionTimeout config option. -->
+		<!-- Sets the nullOnConnectionTimeout.    If true, return null on connection timeout 
+		     rather than throw an exception. This performs better but must be handled differently 
+		     in your application. This only makes sense when using the connectionTimeout config option. 
+		     -->
 		<property name="nullOnConnectionTimeout">false</property>
 
 		<!-- If true, issue a reset (rollback) on connection close in case client forgot 
@@ -231,9 +234,9 @@
 		<property name="resetConnectionOnClose">false</property>
 
 		<!-- If true, and resetConnectionOnClose is also true, the pool will print out a 
-		     stack trace of the location where you had a connection that specified setAutoCommit(false) 
-		     but then forgot to call commit/rollback before closing it off. This feature is 
-		     intended for debugging only. -->
+		     stack  trace of the location where you had a connection that specified 
+		     setAutoCommit(false) but then forgot to call commit/rollback before closing it off. This feature 
+		     is intended  for debugging only. -->
 		<property name="detectUnresolvedTransactions">false</property>
 
 	</default-config>
