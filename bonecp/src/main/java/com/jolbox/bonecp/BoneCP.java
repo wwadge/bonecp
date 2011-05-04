@@ -26,15 +26,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -51,6 +51,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.FinalizableReferenceQueue;
+import com.google.common.collect.MapEvictionListener;
+import com.google.common.collect.MapMaker;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 
 
@@ -155,6 +157,25 @@ public class BoneCP implements Serializable {
 	/** Config setting. */
 	@VisibleForTesting 
 	protected boolean resetConnectionOnClose;
+	/** Config setting. */
+	protected volatile boolean cachedPoolStrategy;
+
+	/** Reference to all TL connections. */
+	private CachedConnectionStrategy tlConnections;
+	
+	public ConcurrentMap<Thread, ConnectionHandle> reservedConnections = new MapMaker()
+	.evictionListener(new MapEvictionListener<Thread, ConnectionHandle>() {
+		@Override
+		public void onEviction(Thread arg0, ConnectionHandle handle) {
+//			try {
+				System.out.println("Closed");
+//				handle.close();
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}
+		}
+	} 
+	).makeMap();
 
 	/**
 	 * Closes off this connection pool.
@@ -210,22 +231,33 @@ public class BoneCP implements Serializable {
 	protected void terminateAllConnections(){
 		this.terminationLock.lock();
 		try{
+			ConnectionHandle conn;
+			for (ConnectionHandle c: this.reservedConnections.values()){
+				destroyConnection(c);
+			}
+				
 			// close off all connections.
 			for (int i=0; i < this.partitionCount; i++) {
-				ConnectionHandle conn;
 				while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
-					postDestroyConnection(conn);
-					conn.setInReplayMode(true); // we're dead, stop attempting to replay anything
-					try {
-						conn.internalClose();
-					} catch (SQLException e) {
-						logger.error("Error in attempting to close connection", e);
-					}
+					destroyConnection(conn);
 				}
 
 			}
 		} finally {
 			this.terminationLock.unlock();
+		}
+	}
+
+	/**
+	 * @param conn
+	 */
+	private void destroyConnection(ConnectionHandle conn) {
+		postDestroyConnection(conn);
+		conn.setInReplayMode(true); // we're dead, stop attempting to replay anything
+		try {
+			conn.internalClose();
+		} catch (SQLException e) {
+			logger.error("Error in attempting to close connection", e);
 		}
 	}
 
@@ -319,7 +351,7 @@ public class BoneCP implements Serializable {
 		this.defaultAutoCommit = config.getDefaultAutoCommit();
 		this.nullOnConnectionTimeout = config.isNullOnConnectionTimeout();
 		this.resetConnectionOnClose = config.isResetConnectionOnClose();
-		
+
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelayInMs(0);
@@ -370,6 +402,7 @@ public class BoneCP implements Serializable {
 
 		this.partitionCount = config.getPartitionCount();
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
+		this.cachedPoolStrategy = config.getPoolStrategy().equalsIgnoreCase("CACHED");
 		boolean queueLIFO = config.getServiceOrder() != null && config.getServiceOrder().equalsIgnoreCase("LIFO");
 		if (this.closeConnectionWatch){
 			logger.warn(THREAD_CLOSE_CONNECTION_WARNING);
@@ -426,6 +459,11 @@ public class BoneCP implements Serializable {
 
 		if (!this.config.isDisableJMX()){
 			initJMX();
+		}
+
+		if (this.cachedPoolStrategy){
+			this.tlConnections =  new CachedConnectionStrategy(this);
+
 		}
 	}
 
@@ -486,7 +524,18 @@ public class BoneCP implements Serializable {
 	 * @throws SQLException 
 	 */
 	public Connection getConnection() throws SQLException {
-		ConnectionHandle result;
+		return getConnectionInternal(false);
+	}
+
+	/**
+	 * Returns a free connection. Broken here into a separate method to be able to avoid
+	 * recursion in the case of a thread local cache storage strategy.
+	 * @param cacheRequest 
+	 * @return Connection handle.
+	 * @throws SQLException 
+	 */
+	protected Connection getConnectionInternal(boolean cacheRequest) throws SQLException {
+		ConnectionHandle result = null;
 		long statsObtainTime = 0;
 
 		if (this.poolShuttingDown){
@@ -500,7 +549,14 @@ public class BoneCP implements Serializable {
 			statsObtainTime = System.nanoTime();
 			this.statistics.incrementConnectionsRequested();
 		}
-		result = connectionPartition.getFreeConnections().poll();
+
+		if (this.cachedPoolStrategy && !cacheRequest){
+			result = this.tlConnections.get();
+		} 
+
+		if (result == null){
+			result = connectionPartition.getFreeConnections().poll();
+		}
 
 		if (result == null) { 
 			// we ran out of space on this partition, pick another free one
@@ -523,9 +579,10 @@ public class BoneCP implements Serializable {
 		// we still didn't find an empty one, wait forever (or as per config) until our partition is free
 		if (result == null) {
 			try {
-				result = connectionPartition.getFreeConnections().poll(this.connectionTimeoutInMs, TimeUnit.MILLISECONDS);
+				long timeout = cacheRequest ? 0 : this.connectionTimeoutInMs; 
+				result = connectionPartition.getFreeConnections().poll(timeout, TimeUnit.MILLISECONDS);
 				if (result == null){
-					if (this.nullOnConnectionTimeout){
+					if (this.nullOnConnectionTimeout || cacheRequest){
 						return null;
 					}
 					// 08001 = The application requester is unable to establish the connection.
@@ -628,7 +685,7 @@ public class BoneCP implements Serializable {
 
 		// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
 		// close off the connection right away because the helper threads have gone away.
-		if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured){
+		if (!this.poolShuttingDown && this.releaseHelperThreadsConfigured && !this.cachedPoolStrategy){
 			if (!handle.getOriginatingPartition().getConnectionsPendingRelease().tryTransfer(handle)){
 				handle.getOriginatingPartition().getConnectionsPendingRelease().put(handle);
 			}
@@ -642,7 +699,9 @@ public class BoneCP implements Serializable {
 	 * @throws SQLException 
 	 **/
 	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws SQLException {
-		connectionHandle.clearStatementCaches(false);
+		if (!this.cachedPoolStrategy){
+			connectionHandle.clearStatementCaches(false);
+		}
 
 		if (connectionHandle.getReplayLog() != null){
 			connectionHandle.getReplayLog().clear();
@@ -677,8 +736,7 @@ public class BoneCP implements Serializable {
 	 * @throws SQLException on error
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
-		TransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
-		
+
 		if (this.resetConnectionOnClose && !connectionHandle.getInternalConnection().getAutoCommit() && !connectionHandle.isTxResolved()){
 			if (connectionHandle.getAutoCommitStackTrace() != null){
 				logger.warn(connectionHandle.getAutoCommitStackTrace());
@@ -689,9 +747,17 @@ public class BoneCP implements Serializable {
 			connectionHandle.getInternalConnection().rollback();
 			connectionHandle.getInternalConnection().setAutoCommit(true);
 		}
-		if (!queue.tryTransfer(connectionHandle)){
-			if (!queue.offer(connectionHandle)){
-				connectionHandle.internalClose();
+
+		if (this.cachedPoolStrategy && connectionHandle.inUseInThreadLocalContext.get()){
+			// this might fail if we have a thread that takes up more than one thread 
+			// (we only track one)
+			connectionHandle.inUseInThreadLocalContext.set(false);
+		} else {
+			TransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+			if (!queue.tryTransfer(connectionHandle)){
+				if (!queue.offer(connectionHandle)){
+					connectionHandle.internalClose();
+				}
 			}
 		}
 
@@ -876,6 +942,14 @@ public class BoneCP implements Serializable {
 	 */
 	public Statistics getStatistics() {
 		return this.statistics;
+	}
+
+	/**
+	 * Returns the reservedConnections field.
+	 * @return reservedConnections
+	 */
+	protected ConcurrentMap<Thread, ConnectionHandle> getReservedConnections() {
+		return this.reservedConnections;
 	}
 
 }

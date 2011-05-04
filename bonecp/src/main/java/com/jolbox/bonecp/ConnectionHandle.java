@@ -17,17 +17,28 @@ package com.jolbox.bonecp;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.Proxy;
+import java.sql.Array;
+import java.sql.Blob;
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,18 +49,6 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.ConnectionState;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-// #ifdef JDK6
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Struct;
-import java.util.Properties;
-import java.sql.NClob;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLXML;
 // #endif JDK6
 
 /**
@@ -135,6 +134,9 @@ public class ConnectionHandle implements Connection{
 	@VisibleForTesting protected boolean detectUnresolvedTransactions;
 	/** Stack track dump. */
 	protected String autoCommitStackTrace;
+	/** If true, this connection is in use in a thread-local context. */
+	protected AtomicBoolean inUseInThreadLocalContext = new AtomicBoolean();
+	
 	
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -1403,7 +1405,7 @@ public class ConnectionHandle implements Connection{
 	 * @return true if the connection has expired.
 	 */
 	public boolean isExpired() {
-		return isExpired(System.currentTimeMillis());
+		return this.maxConnectionAgeInMs > 0 && isExpired(System.currentTimeMillis());
 	}
 
 	/** Returns true if the given connection has exceeded the maxConnectionAge.

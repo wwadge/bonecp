@@ -157,7 +157,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * but then forgot to call commit/rollback before closing it off. This feature is intended 
 	 * for debugging only.*/
 	private boolean detectUnresolvedTransactions;
-	
+	/** Determines pool operation Recognised strategies are: DEFAULT, CACHED. */
+	private String poolStrategy;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1540,6 +1541,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			loadProperties(this.configFile);
 		}
 
+		if (this.poolStrategy == null){
+			this.poolStrategy = "DEFAULT";
+		}
 		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
 			this.poolAvailabilityThreshold = 20;
 		}
@@ -1865,5 +1869,24 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setDetectUnresolvedTransactions(boolean detectUnresolvedTransactions) {
 		this.detectUnresolvedTransactions = detectUnresolvedTransactions;
 	}
+
+	/**
+	 * Returns the poolStrategy field.
+	 * @return poolStrategy
+	 */
+	public String getPoolStrategy() {
+		return this.poolStrategy;
+	}
+	
+
+	/**
+	 * Sets the poolStrategy.
+	 * @param poolStrategy the poolStrategy to set
+	 */
+	public void setPoolStrategy(String poolStrategy) {
+		this.poolStrategy = poolStrategy;
+	}
+	
+	
 	
 }
