@@ -88,6 +88,7 @@ public class TestConnectionHandle {
 		reset(this.mockConnection, this.mockPreparedStatementCache, this.mockPool, this.mockCallableStatementCache);
 		
 		this.config = CommonTestUtils.getConfigClone();
+		this.mockPool.connectionStrategy = DefaultConnectionStrategy.getInstance(this.mockPool);
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
@@ -255,7 +256,7 @@ public class TestConnectionHandle {
 		Assert.assertTrue(field.getBoolean(this.testClass));
 
 		// Test that a db fatal error will lead to the pool being instructed to terminate all connections (+ log)
-		this.mockPool.terminateAllConnections();
+		this.mockPool.connectionStrategy.terminateAllConnections();
 		this.mockLogger.error((String)anyObject(), anyObject());
 		replay(this.mockPool);
 		this.testClass.markPossiblyBroken(new SQLException("test", "08001"));

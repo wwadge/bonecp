@@ -288,7 +288,7 @@ public class TestBoneCP {
 		replay(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
 
 		// test.
-		testClass.terminateAllConnections();
+		testClass.connectionStrategy.terminateAllConnections();
 		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
 	}
 
@@ -313,7 +313,7 @@ public class TestBoneCP {
 
 		// test.
 		try{
-			testClass.terminateAllConnections();
+			testClass.connectionStrategy.terminateAllConnections();
 			fail("Should throw exception");
 		} catch (RuntimeException e){
 			// do nothing

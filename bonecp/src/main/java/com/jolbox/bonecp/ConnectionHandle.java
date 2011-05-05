@@ -307,7 +307,7 @@ public class ConnectionHandle implements Connection{
 
 		if ((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
-			this.pool.terminateAllConnections();
+			this.pool.connectionStrategy.terminateAllConnections();
 		}
 
 		// SQL-92 says:

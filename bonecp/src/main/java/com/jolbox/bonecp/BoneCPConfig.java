@@ -53,9 +53,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Serialization UID. */
 	private static final long serialVersionUID = 6090570773474131622L;
 	/** For toString(). */
-	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min";
+	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
 	/** For toString(). */
-	private static final String CONFIG_DS_TOSTRING = "JDBC URL = (via datasource bean), Username = (via datasource bean), partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min";
+	private static final String CONFIG_DS_TOSTRING = "JDBC URL = (via datasource bean), Username = (via datasource bean), partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
 	/** Logger class. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
@@ -158,7 +158,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * for debugging only.*/
 	private boolean detectUnresolvedTransactions;
 	/** Determines pool operation Recognised strategies are: DEFAULT, CACHED. */
-	private String poolStrategy;
+	private String poolStrategy = "DEFAULT";
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1541,9 +1541,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			loadProperties(this.configFile);
 		}
 
-		if (this.poolStrategy == null){
+		if (this.poolStrategy == null || !(this.poolStrategy.equalsIgnoreCase("DEFAULT") || this.poolStrategy.equalsIgnoreCase("CACHED"))){
+			logger.warn("Unrecognised pool strategy. Allowed values are DEFAULT and CACHED. Setting to DEFAULT.");
 			this.poolStrategy = "DEFAULT";
-		}
+		} 
+		
+		this.poolStrategy = this.poolStrategy.toUpperCase();
+		
 		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
 			this.poolAvailabilityThreshold = 20;
 		}
@@ -1700,12 +1704,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if (this.datasourceBean != null){
 			result = String.format(CONFIG_DS_TOSTRING, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
 					this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
-					getIdleConnectionTestPeriodInMinutes());
+					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		} else {
 			result = String.format(CONFIG_TOSTRING, this.jdbcUrl,
 					this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
 					this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
-					getIdleConnectionTestPeriodInMinutes());
+					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		}
 
 		return result;
@@ -1880,7 +1884,33 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	
 
 	/**
-	 * Sets the poolStrategy.
+	 * Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED.
+	 *
+	 * DEFAULT strategy operates in a manner that has been used in the pool since the very first
+	 * version: it tries to obtain a connection from a queue.
+	 *  
+	 * CACHED stores each connection in a thread-local variable so that next time the same thread
+	 * asks for a connection, it gets the same one assigned to it. This is very fast but you must
+	 * ensure that the number of threads asking for a connection is less than or equal to the number
+	 * of connections you have made available. Should you exceed this limit, the pool will switch
+	 * back (permanently) to the DEFAULT strategy which will cause a one-time performance hit. Use this
+	 * strategy if your threads are managed eg in a Tomcat environment where you can limit the 
+	 * number of threads that it can handle. A typical use case would be a web service that always requires
+	 * some form of database access, therefore a service would have little point in accepting a new
+	 * incoming socket connection if it still has to wait in order to obtain a connection. 
+	 * Essentially this means that you are pushing back the lock down to the socket or thread layer. 
+	 * While the first few thread hits will be slower than in the DEFAULT strategy, significant performance 
+	 * gains are to be expected as the thread gets increasingly re-used (i.e. initially you should expect
+	 * the first few rounds to be measurably slower than the DEFAULT strategy but once the caches
+	 * get more hits you should get >2x better performance).
+	 * 
+	 * Threads that are killed off are detected during the next garbage collection and result in 
+	 * their allocated connections from being taken back though since GC timing is not guaranteed
+	 * you should ideally set your minimum pool size to be equal to the maximum pool size.
+	 * 
+	 * Therefore for best results, make sure that the configured minConnectionPerPartition = maxConnectionPerPartition = min Threads = max Threads.
+	 *   
+	 *   
 	 * @param poolStrategy the poolStrategy to set
 	 */
 	public void setPoolStrategy(String poolStrategy) {
