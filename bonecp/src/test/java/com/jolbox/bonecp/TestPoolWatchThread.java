@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
@@ -78,6 +79,7 @@ public class TestPoolWatchThread {
 		expect(mockConfig.isLazyInit()).andReturn(true).anyTimes();
 		
     	mockPool = createNiceMock(BoneCP.class);
+    	expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockConfig);
 		testClass = new PoolWatchThread(mockPartition, mockPool);
@@ -190,6 +192,7 @@ public class TestPoolWatchThread {
 
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
+		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockPartition, mockLogger);
 		testClass.run();
@@ -262,7 +265,7 @@ public class TestPoolWatchThread {
 
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall(); 
-		
+		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		replay(mockPartition, mockPool, mockLogger, mockConfig);
 		testClass.run();
 		verify(mockPartition);

@@ -33,6 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -153,6 +154,8 @@ public class BoneCP implements Serializable {
 	/** Config setting. */
 	@VisibleForTesting 
 	protected boolean resetConnectionOnClose;
+	/** If true, there are no connections to be taken. */
+	private AtomicBoolean dbIsDown = new AtomicBoolean();
 
 	/**
 	 * Closes off this connection pool.
@@ -204,18 +207,33 @@ public class BoneCP implements Serializable {
 		shutdown();
 	}
 
+	/**
+	 * Add a poison connection handle so that waiting threads are terminated.
+	 */
+	protected void poisonAndRepopulatePartitions(){
+		for (int i=0; i < this.partitionCount; i++) {
+			this.partitions[i].getFreeConnections().offer(ConnectionHandle.createPoisonConnectionHandle());
+			// send a signal to try re-populating again.
+			this.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
+		}
+	}
+	
 	/** Closes off all connections in all partitions. */
 	protected void terminateAllConnections(){
 		this.terminationLock.lock();
+		
 		try{
 			// close off all connections.
 			for (int i=0; i < this.partitionCount; i++) {
 				ConnectionHandle conn;
+				this.partitions[i].setUnableToCreateMoreTransactions(false); // we can create new ones now, this is an optimization
 				while ((conn = this.partitions[i].getFreeConnections().poll()) != null){
 					postDestroyConnection(conn);
 					conn.setInReplayMode(true); // we're dead, stop attempting to replay anything
 					try {
-						conn.internalClose();
+						if (!conn.isPoison()){
+							conn.internalClose();
+						}
 					} catch (SQLException e) {
 						logger.error("Error in attempting to close connection", e);
 					}
@@ -537,6 +555,13 @@ public class BoneCP implements Serializable {
 				throw new SQLException(e.getMessage());
 			}
 		}
+		if (result.isPoison()){
+			if (this.dbIsDown.get() && connectionPartition.getFreeConnections().hasWaitingConsumer()){
+				// poison other waiting threads.
+				connectionPartition.getFreeConnections().offer(result);
+			}
+			throw new SQLException("Pool connections have been terminated. Aborting getConnection() request.", "08001");
+		}
 		result.renewConnection(); // mark it as being logically "open"
 
 		// Give an application a chance to do something with it.
@@ -651,9 +676,9 @@ public class BoneCP implements Serializable {
 				&& !isConnectionHandleAlive(connectionHandle))){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
-			maybeSignalForMoreConnections(connectionPartition);
-
 			postDestroyConnection(connectionHandle);
+
+			maybeSignalForMoreConnections(connectionPartition);
 			connectionHandle.clearStatementCaches(true);
 			return; // don't place back in queue - connection is broken or expired.
 		}
@@ -875,5 +900,14 @@ public class BoneCP implements Serializable {
 	public Statistics getStatistics() {
 		return this.statistics;
 	}
+
+	/**
+	 * Returns the dbIsDown field.
+	 * @return dbIsDown
+	 */
+	public AtomicBoolean getDbIsDown() {
+		return this.dbIsDown;
+	}
+	
 
 }

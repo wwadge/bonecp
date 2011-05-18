@@ -17,17 +17,27 @@ package com.jolbox.bonecp;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.Proxy;
+import java.sql.Array;
+import java.sql.Blob;
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,19 +48,6 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.ConnectionState;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-// #ifdef JDK6
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Struct;
-import java.util.Properties;
-import java.sql.NClob;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLXML;
-// #endif JDK6
 
 /**
  * Connection handle wrapper around a JDBC connection.
@@ -135,6 +132,10 @@ public class ConnectionHandle implements Connection{
 	@VisibleForTesting protected boolean detectUnresolvedTransactions;
 	/** Stack track dump. */
 	protected String autoCommitStackTrace;
+	/** If true, this is a poison dummy connection used to unblock threads that are currently
+	 * waiting on getConnection() for nothing while the pool is trying to revive itself. 
+	 */
+	private boolean poison;
 	
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -224,6 +225,9 @@ public class ConnectionHandle implements Connection{
 				if (acquireRetryAttempts != this.pool.getConfig().getAcquireRetryAttempts()){
 					logger.info("Successfully re-established connection to DB");
 				}
+
+				this.pool.getDbIsDown().set(false);
+				
 				// call the hook, if available.
 				if (this.connectionHook != null){
 					this.connectionHook.onAcquire(this);
@@ -274,6 +278,20 @@ public class ConnectionHandle implements Connection{
 		}
 	}
 
+	/** Create a dummy handle that is marked as poison (i.e. causes receiving thread to terminate).
+	 * @return connection handle.
+	 */
+	public static ConnectionHandle createPoisonConnectionHandle(){
+		ConnectionHandle handle = new ConnectionHandle();
+		handle.setPoison(true);
+		return handle;
+	}
+	/**
+	 * Create a dummy handle. 
+	 */
+	private ConnectionHandle(){
+		// for poison.
+	}
 	/** Sends any configured SQL init statement. 
 	 * @throws SQLException on error
 	 */
@@ -303,9 +321,11 @@ public class ConnectionHandle implements Connection{
 			state = "08999"; 
 		}
 
-		if ((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null){
+		if (((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null) && this.pool.getDbIsDown().compareAndSet(false, true) ){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.terminateAllConnections();
+			this.pool.poisonAndRepopulatePartitions();
+			 
 		}
 
 		// SQL-92 says:
@@ -1452,7 +1472,32 @@ public class ConnectionHandle implements Connection{
 	protected void setAutoCommitStackTrace(String autoCommitStackTrace) {
 		this.autoCommitStackTrace = autoCommitStackTrace;
 	}
+
+	/**
+	 * Returns the poison field.
+	 * @return poison
+	 */
+	protected boolean isPoison() {
+		return this.poison;
+	}
 	
+
+	/**
+	 * Sets the poison.
+	 * @param poison the poison to set
+	 */
+	protected void setPoison(boolean poison) {
+		this.poison = poison;
+	}
+
 	
+	/**
+	 * Destroys the internal connection handle and creates a new one. 
+	 * @throws SQLException 
+	 */
+	public void refreshConnection() throws SQLException{
+		this.connection.close(); // if it's still in use, close it.
+		this.connection = this.pool.obtainRawInternalConnection();
+	}
 
 }
