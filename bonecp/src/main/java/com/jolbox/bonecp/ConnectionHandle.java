@@ -136,7 +136,10 @@ public class ConnectionHandle implements Connection{
 	protected String autoCommitStackTrace;
 	/** If true, this connection is in use in a thread-local context. */
 	protected AtomicBoolean inUseInThreadLocalContext = new AtomicBoolean();
-	
+	/** If true, this is a poison dummy connection used to unblock threads that are currently
+	 * waiting on getConnection() for nothing while the pool is trying to revive itself. 
+	 */
+	private boolean poison;
 	
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -226,6 +229,9 @@ public class ConnectionHandle implements Connection{
 				if (acquireRetryAttempts != this.pool.getConfig().getAcquireRetryAttempts()){
 					logger.info("Successfully re-established connection to DB");
 				}
+				
+				this.pool.getDbIsDown().set(false);
+				
 				// call the hook, if available.
 				if (this.connectionHook != null){
 					this.connectionHook.onAcquire(this);
@@ -275,6 +281,21 @@ public class ConnectionHandle implements Connection{
 			this.statementCachingEnabled = true;
 		}
 	}
+	
+	/** Create a dummy handle that is marked as poison (i.e. causes receiving thread to terminate).
+		 * @return connection handle.
+		 */
+		public static ConnectionHandle createPoisonConnectionHandle(){
+			ConnectionHandle handle = new ConnectionHandle();
+			handle.setPoison(true);
+			return handle;
+		}
+		/**
+		 * Create a dummy handle. 
+		 */
+		private ConnectionHandle(){
+			// for poison.
+		}
 
 	/** Sends any configured SQL init statement. 
 	 * @throws SQLException on error
@@ -305,9 +326,10 @@ public class ConnectionHandle implements Connection{
 			state = "08999"; 
 		}
 
-		if ((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null){
+		if (((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null) && this.pool.getDbIsDown().compareAndSet(false, true) ){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.connectionStrategy.terminateAllConnections();
+			this.pool.poisonAndRepopulatePartitions();
 		}
 
 		// SQL-92 says:
@@ -1455,6 +1477,29 @@ public class ConnectionHandle implements Connection{
 		this.autoCommitStackTrace = autoCommitStackTrace;
 	}
 	
+	/**
+	 * Returns the poison field.
+	 * @return poison
+	 */
+	protected boolean isPoison() {
+		return this.poison;
+	}
 	
-
+	/**
+	 * Sets the poison.
+	 * @param poison the poison to set
+	 */
+	protected void setPoison(boolean poison) {
+		this.poison = poison;
+	}
+			
+	/**
+	 * Destroys the internal connection handle and creates a new one. 
+	 * @throws SQLException 
+	 */
+	public void refreshConnection() throws SQLException{
+		this.connection.close(); // if it's still in use, close it.
+		this.connection = this.pool.obtainRawInternalConnection();
+	}
+	
 }

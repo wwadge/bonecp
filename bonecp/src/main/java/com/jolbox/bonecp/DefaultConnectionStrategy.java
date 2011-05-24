@@ -96,6 +96,13 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 			}
 		}
 		
+		if (result != null && result.isPoison()){
+			if (this.pool.getDbIsDown().get() && connectionPartition.getFreeConnections().hasWaitingConsumer()){
+				// poison other waiting threads.
+				connectionPartition.getFreeConnections().offer(result);
+			}
+			throw new SQLException("Pool connections have been terminated. Aborting getConnection() request.", "08001");
+		}
 		return result;
 	}
 	
@@ -104,9 +111,9 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 		this.terminationLock.lock();
 		try{
 			ConnectionHandle conn;
-				
 			// close off all connections.
 			for (int i=0; i < this.pool.partitionCount; i++) {
+				this.pool.partitions[i].setUnableToCreateMoreTransactions(false); // we can create new ones now, this is an optimization
 				while ((conn = this.pool.partitions[i].getFreeConnections().poll()) != null){
 					this.pool.destroyConnection(conn);
 				}

@@ -67,8 +67,9 @@ public abstract class AbstractConnectionStrategy implements ConnectionStrategy{
 		long statsObtainTime = preConnection();
 		
 		ConnectionHandle result = (ConnectionHandle) getConnectionInternal();
-		
-		postConnection(result, statsObtainTime);
+		if (result != null){
+			postConnection(result, statsObtainTime);
+		}
 		
 		return result;
 	}

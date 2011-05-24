@@ -18,7 +18,15 @@ package com.jolbox.bonecp;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.anyInt;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.aryEq;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -29,9 +37,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
-// #ifdef JDK6
 import java.sql.SQLClientInfoException;
-// #endif JDK6
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -41,6 +47,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.Assert;
 
@@ -141,6 +148,7 @@ public class TestConnectionHandle {
 		CustomHook testHook = new CustomHook();
 		this.config.setConnectionHook(testHook);
 		// make it fail the first time and succeed the second time
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
 		replay(this.mockPool);
 		this.testClass.obtainInternalConnection();
@@ -151,6 +159,7 @@ public class TestConnectionHandle {
 		
 		// Test 2: Same thing but without the hooks
 		reset(this.mockPool);
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
 		count=1;
@@ -232,6 +241,7 @@ public class TestConnectionHandle {
 		skipTests.add("renewConnection");
 		skipTests.add("clearStatementCaches");
 		skipTests.add("obtainInternalConnection");
+		skipTests.add("refreshConnection");
 		
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
@@ -256,6 +266,7 @@ public class TestConnectionHandle {
 		Assert.assertTrue(field.getBoolean(this.testClass));
 
 		// Test that a db fatal error will lead to the pool being instructed to terminate all connections (+ log)
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		this.mockPool.connectionStrategy.terminateAllConnections();
 		this.mockLogger.error((String)anyObject(), anyObject());
 		replay(this.mockPool);

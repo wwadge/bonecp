@@ -33,6 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
@@ -154,7 +155,8 @@ public class BoneCP implements Serializable {
 	protected volatile boolean cachedPoolStrategy;
 	/** Currently active get connection strategy class to use. */ 
 	protected volatile ConnectionStrategy connectionStrategy;
-	
+	/** If true, there are no connections to be taken. */
+	private AtomicBoolean dbIsDown = new AtomicBoolean();
 
 	/**
 	 * Closes off this connection pool.
@@ -205,6 +207,17 @@ public class BoneCP implements Serializable {
 	public void close(){
 		shutdown();
 	}
+	
+	/**
+	 * Add a poison connection handle so that waiting threads are terminated.
+	 */
+	protected void poisonAndRepopulatePartitions(){
+		for (int i=0; i < this.partitionCount; i++) {
+			this.partitions[i].getFreeConnections().offer(ConnectionHandle.createPoisonConnectionHandle());
+			// send a signal to try re-populating again.
+			this.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
+		}
+	}
 
 	/**
 	 * @param conn
@@ -213,7 +226,9 @@ public class BoneCP implements Serializable {
 		postDestroyConnection(conn);
 		conn.setInReplayMode(true); // we're dead, stop attempting to replay anything
 		try {
-			conn.internalClose();
+			if (!conn.isPoison()){
+				conn.internalClose();
+			}
 		} catch (SQLException e) {
 			logger.error("Error in attempting to close connection", e);
 		}
@@ -586,9 +601,9 @@ public class BoneCP implements Serializable {
 				&& !isConnectionHandleAlive(connectionHandle))){
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
-			maybeSignalForMoreConnections(connectionPartition);
-
 			postDestroyConnection(connectionHandle);
+			
+			maybeSignalForMoreConnections(connectionPartition);
 			connectionHandle.clearStatementCaches(true);
 			return; // don't place back in queue - connection is broken or expired.
 		}
@@ -816,6 +831,14 @@ public class BoneCP implements Serializable {
 	 */
 	public Statistics getStatistics() {
 		return this.statistics;
+	}
+	
+	/**
+	 * Returns the dbIsDown field.
+	 * @return dbIsDown
+	 */
+	public AtomicBoolean getDbIsDown() {
+		return this.dbIsDown;
 	}
 
 }
