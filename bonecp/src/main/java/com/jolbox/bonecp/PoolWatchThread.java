@@ -100,7 +100,7 @@ public class PoolWatchThread implements Runnable {
 		try {
 			for (int i=0; i < connectionsToCreate; i++){
 				boolean dbDown = this.pool.getDbIsDown().get();
-				ConnectionHandle handle = new ConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool);
+				ConnectionHandle handle = ConnectionHandle.createConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool);
 				
 				if (dbDown && !this.pool.getDbIsDown().get()){ // we've just recovered
 					ConnectionHandle maybePoison = this.partition.getFreeConnections().poll();

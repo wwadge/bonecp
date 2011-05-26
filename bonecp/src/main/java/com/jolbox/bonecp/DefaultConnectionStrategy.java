@@ -96,7 +96,7 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 			}
 		}
 		
-		if (result != null && result.isPoison()){
+		if (result.isPoison()){
 			if (this.pool.getDbIsDown().get() && connectionPartition.getFreeConnections().hasWaitingConsumer()){
 				// poison other waiting threads.
 				connectionPartition.getFreeConnections().offer(result);
