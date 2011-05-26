@@ -405,7 +405,7 @@ public class BoneCP implements Serializable {
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
-					final ConnectionHandle handle = new ConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this);
+					final ConnectionHandle handle = ConnectionHandle.createConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this);
 					this.partitions[p].addFreeConnection(handle);
 				}
 

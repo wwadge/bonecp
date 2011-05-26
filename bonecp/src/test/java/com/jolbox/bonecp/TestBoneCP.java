@@ -273,7 +273,7 @@ public class TestBoneCP {
 	}
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#terminateAllConnections()}.
+	 * Test method.
 	 * @throws SQLException 
 	 */
 	@Test
@@ -294,7 +294,7 @@ public class TestBoneCP {
 
 
 	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#terminateAllConnections()}.
+	 * Test method for.
 	 * @throws SQLException 
 	 */
 	@Test
@@ -1275,7 +1275,7 @@ public class TestBoneCP {
 		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
 		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
 		replay(mockMbs, mockInstance, mockConfig);
-		testClass.initJMX();
+		testClass.registerUnregisterJMX();
 		verify(mockMbs);
 	}
 

@@ -108,7 +108,7 @@ public class TestConnectionHandle {
 		this.config.setStatementsCacheSize(1);
 		this.config.setStatisticsEnabled(true);
 		
-		this.testClass = new ConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
+		this.testClass = ConnectionHandle.createTestConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
 		
 		this.mockPool.closeConnectionWatch=true;
 		
@@ -242,6 +242,7 @@ public class TestConnectionHandle {
 		skipTests.add("clearStatementCaches");
 		skipTests.add("obtainInternalConnection");
 		skipTests.add("refreshConnection");
+		skipTests.add("createConnectionHandle");
 		
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
@@ -890,7 +891,7 @@ public class TestConnectionHandle {
 		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
 		replay(this.mockPool, mockConfig, mockConnectionHook);
 		try{
-			new ConnectionHandle("", "", "", this.mockPool);
+			ConnectionHandle.createConnectionHandle("", "", "", this.mockPool);
 			fail("Should throw an exception");
 		} catch (Throwable t){
 			// do nothing.

@@ -161,6 +161,25 @@ public class ConnectionHandle implements Connection{
 	 */
 	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01", "57P01", "HY000"); 
 
+	/** Create a connection Handle.
+	 *   
+	 * @param url
+	 *            JDBC connection string
+	 * @param username
+	 *            user to use
+	 * @param password
+	 *            password for db
+	 * @param pool
+	 *            pool handle.
+	 * @throws SQLException
+	 *             on error
+	 * @return connection handle.
+	 */
+	public static ConnectionHandle createConnectionHandle(String url, String username, String password, 	BoneCP pool) throws SQLException{
+		return new ConnectionHandle(url, username, password, pool);
+	}
+	
+	
 	/**
 	 * Connection wrapper constructor
 	 * 
@@ -175,7 +194,7 @@ public class ConnectionHandle implements Connection{
 	 * @throws SQLException
 	 *             on error
 	 */
-	public ConnectionHandle(String url, String username, String password,
+	private ConnectionHandle(String url, String username, String password,
 			BoneCP pool) throws SQLException {
 
 
@@ -265,37 +284,43 @@ public class ConnectionHandle implements Connection{
 
 	}
 
-	/** Private constructor used solely for unit testing. 
-	 * @param connection 
-	 * @param preparedStatementCache 
-	 * @param callableStatementCache 
-	 * @param pool */
-	public ConnectionHandle(Connection connection, IStatementCache preparedStatementCache, IStatementCache callableStatementCache, BoneCP pool){
-		this.connection = connection;
-		this.preparedStatementCache = preparedStatementCache;
-		this.callableStatementCache = callableStatementCache;
-		this.pool = pool;
-		this.url=null;
-		int cacheSize = pool.getConfig().getStatementsCacheSize();
-		if (cacheSize > 0) {
-			this.statementCachingEnabled = true;
-		}
+	/** Create a dummy handle that is marked as poison (i.e. causes receiving thread to terminate).
+	 * @return connection handle.
+	 */
+	public static ConnectionHandle createPoisonConnectionHandle(){
+		ConnectionHandle handle = new ConnectionHandle();
+		handle.setPoison(true);
+		return handle;
 	}
 	
-	/** Create a dummy handle that is marked as poison (i.e. causes receiving thread to terminate).
-		 * @return connection handle.
-		 */
-		public static ConnectionHandle createPoisonConnectionHandle(){
-			ConnectionHandle handle = new ConnectionHandle();
-			handle.setPoison(true);
-			return handle;
+	/** Private -- used solely for unit testing. 
+	 * @param connection
+	 * @param preparedStatementCache
+	 * @param callableStatementCache
+	 * @param pool
+	 * @return Connection Handle
+	 */
+	protected static ConnectionHandle createTestConnectionHandle(Connection connection, IStatementCache preparedStatementCache, IStatementCache callableStatementCache, BoneCP pool){
+		ConnectionHandle handle = new ConnectionHandle();
+		handle.connection = connection;
+		handle.preparedStatementCache = preparedStatementCache;
+		handle.callableStatementCache = callableStatementCache;
+		handle.pool = pool;
+		handle.url=null;
+		int cacheSize = pool.getConfig().getStatementsCacheSize();
+		if (cacheSize > 0) {
+			handle.statementCachingEnabled = true;
 		}
-		/**
-		 * Create a dummy handle. 
-		 */
-		private ConnectionHandle(){
-			// for poison.
-		}
+		
+		return handle;
+	}
+		
+	/**
+	 * Create a dummy handle. 
+	 */
+	private ConnectionHandle(){
+		// for static factory.
+	}
 
 	/** Sends any configured SQL init statement. 
 	 * @throws SQLException on error

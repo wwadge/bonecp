@@ -182,7 +182,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
-	 * Sets the minimum number of connections that will be contained in every partition.
+	 * Sets the minimum number of connections that will be contained in every partition. Also refer 
+	 * to {@link #setPoolAvailabilityThreshold(int)}.
 	 *
 	 * @param minConnectionsPerPartition number of connections
 	 */
@@ -244,7 +245,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * i.e. pool[threadId % partition_count]. The higher this number, the better your performance will be for the case 
 	 * when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
 	 * to have a negative effect on performance (and only for the case when connections on a partition start running out).
-	 * 
+	 * Has no effect in a CACHED strategy.
+	 *  
 	 * <p>Default: 1, minimum: 1, recommended: 2-4 (but very app specific)
 	 *
 	 * @param partitionCount to set 
