@@ -186,6 +186,7 @@ public class BoneCP implements Serializable {
 			}
 			this.connectionStrategy.terminateAllConnections();
 			unregisterDriver();
+			registerUnregisterJMX(false);
 			logger.info("Connection pool has been shutdown.");
 		}
 	}
@@ -436,7 +437,7 @@ public class BoneCP implements Serializable {
 		initStmtReleaseHelper(suffix);
 
 		if (!this.config.isDisableJMX()){
-			initJMX();
+			registerUnregisterJMX(true);
 		}
 
 		
@@ -464,8 +465,9 @@ public class BoneCP implements Serializable {
 
 	/**
 	 * Initialises JMX stuff.  
+	 * @param doRegister if true, perform registration, if false unregister
 	 */
-	protected void initJMX() {
+	protected void registerUnregisterJMX(boolean doRegister) {
 		if (this.mbs == null){ // this way makes it easier for mocking.
 			this.mbs = ManagementFactory.getPlatformMBeanServer();
 		}
@@ -480,14 +482,23 @@ public class BoneCP implements Serializable {
 			ObjectName configname = new ObjectName(MBEAN_CONFIG + suffix);
 
 
-			if (!this.mbs.isRegistered(name)){
-				this.mbs.registerMBean(this.statistics, name); 
-			}
-			if (!this.mbs.isRegistered(configname)){
-				this.mbs.registerMBean(this.config, configname); 
+			if (doRegister){
+				if (!this.mbs.isRegistered(name)){
+					this.mbs.registerMBean(this.statistics, name); 
+				}
+				if (!this.mbs.isRegistered(configname)){
+					this.mbs.registerMBean(this.config, configname); 
+				}
+			} else {
+				if (this.mbs.isRegistered(name)){
+					this.mbs.unregisterMBean(name); 
+				}
+				if (this.mbs.isRegistered(configname)){
+					this.mbs.unregisterMBean(configname); 
+				}
 			}
 		} catch (Exception e) {
-			logger.error("Unable to start JMX", e);
+			logger.error("Unable to start/stop JMX", e);
 		}
 	}
 

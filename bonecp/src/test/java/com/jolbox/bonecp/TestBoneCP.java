@@ -1251,7 +1251,7 @@ public class TestBoneCP {
 		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
 		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
 		replay(mockMbs, mockInstance, mockConfig);
-		testClass.initJMX();
+		testClass.registerUnregisterJMX();
 		verify(mockMbs);
 	}
 
