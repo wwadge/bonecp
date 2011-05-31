@@ -659,6 +659,21 @@ public class BoneCP implements Serializable {
 			connectionHandle.getInternalConnection().rollback();
 			connectionHandle.getInternalConnection().setAutoCommit(true);
 		}
+		
+		// restore sanity
+		if (this.defaultAutoCommit != null){
+			connectionHandle.setAutoCommit(this.defaultAutoCommit);
+		}
+		if (this.defaultReadOnly != null){
+			connectionHandle.setReadOnly(this.defaultReadOnly);
+		}
+		if (this.defaultCatalog != null){
+			connectionHandle.setCatalog(this.defaultCatalog);
+		}
+		if (this.defaultTransactionIsolationValue != -1){
+			connectionHandle.setTransactionIsolation(this.defaultTransactionIsolationValue);
+		}
+
 
 		if (this.cachedPoolStrategy && connectionHandle.inUseInThreadLocalContext.get()){
 			// this might fail if we have a thread that takes up more than one thread 
