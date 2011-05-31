@@ -166,23 +166,35 @@ public class BoneCP implements Serializable {
 		if (!this.poolShuttingDown){
 			logger.info("Shutting down connection pool...");
 			this.poolShuttingDown = true;
-
 			this.shutdownStackTrace = captureStackTrace(SHUTDOWN_LOCATION_TRACE);
 			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.maxAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
 
-			if (this.releaseHelperThreadsConfigured){
-				this.releaseHelper.shutdownNow();
-			}
-			if (this.statementReleaseHelperThreadsConfigured){
-				this.statementCloseHelperExecutor.shutdownNow();
-			}
-			if (this.asyncExecutor != null){
-				this.asyncExecutor.shutdownNow();
-			}
-			if (this.closeConnectionExecutor != null){
-				this.closeConnectionExecutor.shutdownNow();
+			try {
+				this.connectionsScheduler.awaitTermination(5, TimeUnit.SECONDS);
+
+				this.maxAliveScheduler.awaitTermination(5, TimeUnit.SECONDS);
+				this.keepAliveScheduler.awaitTermination(5, TimeUnit.SECONDS);
+
+				if (this.releaseHelperThreadsConfigured){
+					this.releaseHelper.shutdownNow();
+					this.releaseHelper.awaitTermination(5, TimeUnit.SECONDS);
+				}
+				if (this.statementReleaseHelperThreadsConfigured){
+					this.statementCloseHelperExecutor.shutdownNow();
+					this.statementCloseHelperExecutor.awaitTermination(5, TimeUnit.SECONDS);
+				}
+				if (this.asyncExecutor != null){
+					this.asyncExecutor.shutdownNow();
+					this.asyncExecutor.awaitTermination(5, TimeUnit.SECONDS);
+				}
+				if (this.closeConnectionExecutor != null){
+					this.closeConnectionExecutor.shutdownNow();
+					this.closeConnectionExecutor.awaitTermination(5, TimeUnit.SECONDS);
+				}
+			} catch (InterruptedException e) {
+				// do nothing
 			}
 			this.connectionStrategy.terminateAllConnections();
 			unregisterDriver();
