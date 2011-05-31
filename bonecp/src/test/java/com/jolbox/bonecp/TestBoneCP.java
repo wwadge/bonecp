@@ -769,7 +769,10 @@ public class TestBoneCP {
 		// should reset last connection use
 		mockConnection.setConnectionLastUsedInMs(anyLong());
 		expectLastCall().once();
-		replay(mockConnection, mockPartition, mockConnectionHandles);
+		Connection mockRealConnection = createNiceMock(Connection.class);
+		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+	
+		replay(mockRealConnection, mockConnection, mockPartition, mockConnectionHandles);
 		testClass.releaseConnection(mockConnection);
 		verify(mockConnection, mockPartition, mockConnectionHandles);
 
@@ -826,11 +829,13 @@ public class TestBoneCP {
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
-
+		Connection mockRealConnection = createNiceMock(Connection.class);
+		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+	
 		//		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 
-		replay(mockConnection,mockPartition, mockConnectionHandles);
+		replay(mockRealConnection, mockConnection,mockPartition, mockConnectionHandles);
 		testClass.internalReleaseConnection(mockConnection);
 		verify(mockConnection,mockPartition, mockConnectionHandles);
 	}
@@ -878,11 +883,13 @@ public class TestBoneCP {
 	public void testPutConnectionBackInPartition() throws InterruptedException, SQLException {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
-
+		Connection mockRealConnection = createNiceMock(Connection.class);
+		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+	
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
-		replay(mockPartition, mockConnectionHandles, mockConnection);
+		replay(mockRealConnection, mockPartition, mockConnectionHandles, mockConnection);
 		testClass.putConnectionBackInPartition(mockConnection);
 		// FIXME
 		//		assertEquals(2, ai.get());
@@ -1352,12 +1359,12 @@ public class TestBoneCP {
 			fail("SQLException thrown");
 		}
 		testClass.unregisterDriver();
-		try{
-			DriverManager.getDriver("jdbc:mock");
-			fail("Should throw exception");
-		} catch (SQLException e){
-			// success
-		}
+//		try{
+//			DriverManager.getDriver("jdbc:mock");
+//			fail("Should throw exception");
+//		} catch (SQLException e){
+//			// success
+//		}
 		
 		testClass.unregisterDriver(); // should log a message (nothing to unregister)
 	}

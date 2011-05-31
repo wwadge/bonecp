@@ -220,7 +220,7 @@ public class BoneCP implements Serializable {
 	public void close(){
 		shutdown();
 	}
-	
+
 	/**
 	 * Add a poison connection handle so that waiting threads are terminated.
 	 */
@@ -452,7 +452,7 @@ public class BoneCP implements Serializable {
 			registerUnregisterJMX(true);
 		}
 
-		
+
 	}
 
 	/** Starts off threads released to statement release helpers.
@@ -625,7 +625,7 @@ public class BoneCP implements Serializable {
 
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			postDestroyConnection(connectionHandle);
-			
+
 			maybeSignalForMoreConnections(connectionPartition);
 			connectionHandle.clearStatementCaches(true);
 			return; // don't place back in queue - connection is broken or expired.
@@ -662,16 +662,16 @@ public class BoneCP implements Serializable {
 		
 		// restore sanity
 		if (this.defaultAutoCommit != null){
-			connectionHandle.setAutoCommit(this.defaultAutoCommit);
+			connectionHandle.getInternalConnection().setAutoCommit(this.defaultAutoCommit);
 		}
 		if (this.defaultReadOnly != null){
-			connectionHandle.setReadOnly(this.defaultReadOnly);
+			connectionHandle.getInternalConnection().setReadOnly(this.defaultReadOnly);
 		}
 		if (this.defaultCatalog != null){
-			connectionHandle.setCatalog(this.defaultCatalog);
+			connectionHandle.getInternalConnection().setCatalog(this.defaultCatalog);
 		}
 		if (this.defaultTransactionIsolationValue != -1){
-			connectionHandle.setTransactionIsolation(this.defaultTransactionIsolationValue);
+			connectionHandle.getInternalConnection().setTransactionIsolation(this.defaultTransactionIsolationValue);
 		}
 
 
@@ -870,7 +870,7 @@ public class BoneCP implements Serializable {
 	public Statistics getStatistics() {
 		return this.statistics;
 	}
-	
+
 	/**
 	 * Returns the dbIsDown field.
 	 * @return dbIsDown
