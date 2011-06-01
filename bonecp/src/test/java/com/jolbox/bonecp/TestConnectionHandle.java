@@ -954,4 +954,5 @@ public class TestConnectionHandle {
 		this.testClass.setAutoCommit(false);
 		assertNotNull(this.testClass.getAutoCommitStackTrace());
 	}
+
 }

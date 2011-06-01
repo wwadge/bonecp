@@ -76,7 +76,7 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 				}
 			}
 		}
-
+		
 		if (!connectionPartition.isUnableToCreateMoreTransactions()){ // unless we can't create any more connections...   
 			this.pool.maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
 		}
