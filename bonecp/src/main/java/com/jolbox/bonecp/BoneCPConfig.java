@@ -1892,14 +1892,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * version: it tries to obtain a connection from a queue.
 	 *  
 	 * CACHED stores each connection in a thread-local variable so that next time the same thread
-	 * asks for a connection, it gets the same one assigned to it. This is very fast but you must
-	 * ensure that the number of threads asking for a connection is less than or equal to the number
-	 * of connections you have made available. Should you exceed this limit, the pool will switch
-	 * back (permanently) to the DEFAULT strategy which will cause a one-time performance hit. Use this
-	 * strategy if your threads are managed eg in a Tomcat environment where you can limit the 
-	 * number of threads that it can handle. A typical use case would be a web service that always requires
-	 * some form of database access, therefore a service would have little point in accepting a new
-	 * incoming socket connection if it still has to wait in order to obtain a connection. 
+	 * asks for a connection, it gets the same one assigned to it (if it asks for more than one, it
+	 * will be allocated a new one). This is very fast but you must ensure that the number of threads 
+	 * asking for a connection is less than or equal to the number  of connections you have made 
+	 * available. Should you exceed this limit, the pool will switch back (permanently) to the DEFAULT 
+	 * strategy which will cause a one-time performance hit. Use this strategy if your threads are 
+	 * managed eg in a Tomcat environment where you can limit the number of threads that it can 
+	 * handle. A typical use case would be a web service that always requires some form of database access, 
+	 * therefore a service would have little point in accepting a new incoming socket connection if it 
+	 * still has to wait in order to obtain a connection.
+	 *  
 	 * Essentially this means that you are pushing back the lock down to the socket or thread layer. 
 	 * While the first few thread hits will be slower than in the DEFAULT strategy, significant performance 
 	 * gains are to be expected as the thread gets increasingly re-used (i.e. initially you should expect
