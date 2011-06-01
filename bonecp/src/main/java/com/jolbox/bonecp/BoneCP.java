@@ -59,8 +59,6 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
  */
 public class BoneCP implements Serializable {
 	/** Warning message. */
-	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
-	/** Warning message. */
 	private static final String THREAD_CLOSE_CONNECTION_WARNING = "Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!";
 	/** Serialization UID */
 	private static final long serialVersionUID = -8386816681977604817L;
@@ -295,19 +293,6 @@ public class BoneCP implements Serializable {
 			result = DriverManager.getConnection(url, props);
 		} else {
 			result = DriverManager.getConnection(url, username, password);
-		}
-
-		if (this.defaultAutoCommit != null){
-			result.setAutoCommit(this.defaultAutoCommit);
-		}
-		if (this.defaultReadOnly != null){
-			result.setReadOnly(this.defaultReadOnly);
-		}
-		if (this.defaultCatalog != null){
-			result.setCatalog(this.defaultCatalog);
-		}
-		if (this.defaultTransactionIsolationValue != -1){
-			result.setTransactionIsolation(this.defaultTransactionIsolationValue);
 		}
 
 		return result;
@@ -648,32 +633,6 @@ public class BoneCP implements Serializable {
 	 * @throws SQLException on error
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
-
-		if (this.resetConnectionOnClose && !connectionHandle.getInternalConnection().getAutoCommit() && !connectionHandle.isTxResolved()){
-			if (connectionHandle.getAutoCommitStackTrace() != null){
-				logger.warn(connectionHandle.getAutoCommitStackTrace());
-				connectionHandle.setAutoCommitStackTrace(null); 
-			} else {
-				logger.warn(DISABLED_AUTO_COMMIT_WARNING);
-			}
-			connectionHandle.getInternalConnection().rollback();
-			connectionHandle.getInternalConnection().setAutoCommit(true);
-		}
-		
-		// restore sanity
-		if (this.defaultAutoCommit != null){
-			connectionHandle.getInternalConnection().setAutoCommit(this.defaultAutoCommit);
-		}
-		if (this.defaultReadOnly != null){
-			connectionHandle.getInternalConnection().setReadOnly(this.defaultReadOnly);
-		}
-		if (this.defaultCatalog != null){
-			connectionHandle.getInternalConnection().setCatalog(this.defaultCatalog);
-		}
-		if (this.defaultTransactionIsolationValue != -1){
-			connectionHandle.getInternalConnection().setTransactionIsolation(this.defaultTransactionIsolationValue);
-		}
-
 
 		if (this.cachedPoolStrategy && connectionHandle.inUseInThreadLocalContext.get()){
 			// this might fail if we have a thread that takes up more than one thread 

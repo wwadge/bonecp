@@ -76,6 +76,16 @@ public class ConnectionHandle implements Connection{
 	private long connectionCreationTimeInMs = System.currentTimeMillis();
 	/** Pool handle. */
 	private BoneCP pool;
+	/** Config setting. */
+	private Boolean defaultReadOnly;
+	/** Config setting. */
+	private String defaultCatalog;
+	/** Config setting. */
+	private int defaultTransactionIsolationValue;
+	/** Config setting. */
+	private Boolean defaultAutoCommit;
+	/** Config setting. */
+	private boolean resetConnectionOnClose;
 	/**
 	 * If true, this connection might have failed communicating with the
 	 * database. We assume that exceptions should be rare here i.e. the normal
@@ -202,6 +212,11 @@ public class ConnectionHandle implements Connection{
 		this.url = url;
 		this.connection = obtainInternalConnection();
 		this.finalizableRefs = this.pool.getFinalizableRefs(); 
+		this.defaultReadOnly = pool.getConfig().getDefaultReadOnly();
+		this.defaultCatalog = pool.getConfig().getDefaultCatalog();
+		this.defaultTransactionIsolationValue = pool.getConfig().getDefaultTransactionIsolationValue();
+		this.defaultAutoCommit = pool.getConfig().getDefaultAutoCommit();
+		this.resetConnectionOnClose = pool.getConfig().isResetConnectionOnClose();
 		this.connectionTrackingDisabled = pool.getConfig().isDisableConnectionTracking();
 		this.statisticsEnabled = pool.getConfig().isStatisticsEnabled();
 		this.statistics = pool.getStatistics();
@@ -221,6 +236,20 @@ public class ConnectionHandle implements Connection{
 			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
 			this.statementCachingEnabled = true;
 		}
+		
+		if (this.defaultAutoCommit != null){
+			setAutoCommit(this.defaultAutoCommit);
+		}
+		if (this.defaultReadOnly != null){
+			setReadOnly(this.defaultReadOnly);
+		}
+		if (this.defaultCatalog != null){
+			setCatalog(this.defaultCatalog);
+		}
+		if (this.defaultTransactionIsolationValue != -1){
+			setTransactionIsolation(this.defaultTransactionIsolationValue);
+		}
+
 	}
 
 	/** Obtains a database connection, retrying if necessary.
@@ -416,6 +445,32 @@ public class ConnectionHandle implements Connection{
 	public void close() throws SQLException {
 		try {
 			if (!this.logicallyClosed) {
+				
+				if (this.resetConnectionOnClose && !getAutoCommit() && !isTxResolved()){
+					if (this.autoCommitStackTrace != null){
+						logger.warn(this.autoCommitStackTrace);
+						this.autoCommitStackTrace = null; 
+					} else {
+						logger.warn(DISABLED_AUTO_COMMIT_WARNING);
+					}
+					rollback();
+					setAutoCommit(true);
+				}
+				
+				// restore sanity
+				if (this.defaultAutoCommit != null){
+					setAutoCommit(this.defaultAutoCommit);
+				}
+				if (this.defaultReadOnly != null){
+					setReadOnly(this.defaultReadOnly);
+				}
+				if (this.defaultCatalog != null){
+					setCatalog(this.defaultCatalog);
+				}
+				if (this.defaultTransactionIsolationValue != -1){
+					this.setTransactionIsolation(this.defaultTransactionIsolationValue);
+				}
+
 				this.logicallyClosed = true;
 				this.threadUsingConnection = null;
 				if (this.threadWatch != null){

@@ -923,34 +923,6 @@ public class TestBoneCP {
 
 	}
 
-	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#putConnectionBackInPartition(com.jolbox.bonecp.ConnectionHandle)}.
-	 * @throws InterruptedException 
-	 * @throws SQLException 
-	 */
-	@Test
-	public void testPutConnectionBackInPartitionWithResetConnectionOnCloseWithStackTrace() throws InterruptedException, SQLException {
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
-
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
-		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
-		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
-		expect(mockConnection.isTxResolved()).andReturn(false).once();
-		expect(mockConnection.getAutoCommitStackTrace()).andReturn("Foo").once();
-		mockConnection.setAutoCommitStackTrace(null);
-		Connection mockInternalConnection = createNiceMock(Connection.class);
-		expect(mockInternalConnection.getAutoCommit()).andReturn(false).once();
-		expect(mockConnection.getInternalConnection()).andReturn(mockInternalConnection).anyTimes();
-		mockInternalConnection.rollback();
-		mockInternalConnection.setAutoCommit(true);
-		replay(mockInternalConnection, mockPartition, mockConnectionHandles, mockConnection);
-		testClass.resetConnectionOnClose = true;
-		testClass.putConnectionBackInPartition(mockConnection);
-		verify(mockPartition, mockConnectionHandles, mockConnection);
-
-	}
-
 	
 	/**
 	 * Test method for com.jolbox.bonecp.BoneCP isConnectionHandleAlive.
