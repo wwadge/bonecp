@@ -265,7 +265,7 @@ public class ConnectionHandle implements Connection{
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
 		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelayInMs);
-		acquireConfig.setLogMessage("Failed to acquire connection");
+		acquireConfig.setLogMessage("Failed to acquire connection to "+this.url);
 
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
 		do{ 
@@ -275,7 +275,7 @@ public class ConnectionHandle implements Connection{
 				tryAgain = false;
 
 				if (acquireRetryAttempts != this.pool.getConfig().getAcquireRetryAttempts()){
-					logger.info("Successfully re-established connection to DB");
+					logger.info("Successfully re-established connection to "+this.url);
 				}
 				
 				this.pool.getDbIsDown().set(false);
@@ -285,6 +285,7 @@ public class ConnectionHandle implements Connection{
 					this.connectionHook.onAcquire(this);
 				}
 
+				
 				sendInitSQL();
 				result = this.connection;
 			} catch (SQLException e) {
@@ -292,7 +293,7 @@ public class ConnectionHandle implements Connection{
 				if (this.connectionHook != null){
 					tryAgain = this.connectionHook.onAcquireFail(e, acquireConfig);
 				} else {
-					logger.error("Failed to acquire connection. Sleeping for "+acquireRetryDelayInMs+"ms. Attempts left: "+acquireRetryAttempts, e);
+					logger.error(String.format("Failed to acquire connection to %s. Sleeping for %d ms. Attempts left: %d", this.url, acquireRetryDelayInMs, acquireRetryAttempts), e);
 
 					try {
 						Thread.sleep(acquireRetryDelayInMs);
