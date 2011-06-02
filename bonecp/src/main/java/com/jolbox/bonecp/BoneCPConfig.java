@@ -159,7 +159,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private boolean detectUnresolvedTransactions;
 	/** Determines pool operation Recognised strategies are: DEFAULT, CACHED. */
 	private String poolStrategy = "DEFAULT";
-
+	/** If true, track statements and close them if application forgot to do so. See also: 
+	 * detectUnclosedStatements. */
+	private boolean closeOpenStatements;
+	/** If true, print out a stack trace of where a statement was opened but not closed before
+	 * the connection was closed. See also: closeOpenStatements. */
+	private boolean detectUnclosedStatements;
+	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
@@ -1919,6 +1925,45 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public void setPoolStrategy(String poolStrategy) {
 		this.poolStrategy = poolStrategy;
+	}
+
+	/**
+	 * Returns the closeOpenStatements field.
+	 * @return closeOpenStatements
+	 */
+	public boolean isCloseOpenStatements() {
+		return this.closeOpenStatements;
+	}
+	
+
+	/**
+	 * If true, track statements and close them if application forgot to do so. See also: 
+	 * {@link BoneCPConfig#detectUnclosedStatements}. Do not set if your connections are managed
+	 * eg via Spring jdbcTemplate or hibernate since those frameworks will always automatically
+	 * close off your statements. This option has a negative performance hit.
+	 * 
+	 * @param closeOpenStatements the closeOpenStatements to set
+	 */
+	public void setCloseOpenStatements(boolean closeOpenStatements) {
+		this.closeOpenStatements = closeOpenStatements;
+	}
+
+	/**
+	 * Returns the detectUnclosedStatements field.
+	 * @return detectUnclosedStatements
+	 */
+	public boolean isDetectUnclosedStatements() {
+		return this.detectUnclosedStatements;
+	}
+	
+
+	/**
+	 * Sets the detectUnclosedStatements. If true, print out a stack trace of where a statement was opened but not closed before
+	 * the connection was closed. {@link BoneCPConfig#closeOpenStatements}. 
+	 * @param detectUnclosedStatements the detectUnclosedStatements to set
+	 */
+	public void setDetectUnclosedStatements(boolean detectUnclosedStatements) {
+		this.detectUnclosedStatements = detectUnclosedStatements;
 	}
 	
 	

@@ -171,7 +171,7 @@ public class StatementHandle implements Statement{
 	}
 	
 	public void close() throws SQLException {
-		
+		this.connectionHandle.untrackStatement(this);
 		if (this.statementReleaseHelperEnabled){
 			this.enqueuedForClosure = true; // stop warning later on.
 			// try moving onto queue so that a separate thread will handle it....
