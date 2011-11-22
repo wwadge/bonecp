@@ -226,7 +226,8 @@ public class TestSystemTests {
 		config.setMinConnectionsPerPartition(30);
 		config.setMaxConnectionsPerPartition(100);
 		config.setPartitionCount(1);
-
+		config.setDisableConnectionTracking(true);
+		config.setReleaseHelperThreads(0);
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
@@ -244,6 +245,7 @@ public class TestSystemTests {
 		config.setMaxConnectionsPerPartition(25);
 		config.setPartitionCount(5);
 		config.setReleaseHelperThreads(0);
+		config.setDisableConnectionTracking(true);
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 		CommonTestUtils.startThreadTest(100, 1000, dsb, 0, false);

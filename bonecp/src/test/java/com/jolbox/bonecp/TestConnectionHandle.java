@@ -151,7 +151,7 @@ public class TestConnectionHandle {
 		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
 		replay(this.mockPool);
-		this.testClass.obtainInternalConnection();
+		this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
 		// get counts on our hooks
 		
 		assertEquals(1, testHook.fail);
@@ -165,7 +165,7 @@ public class TestConnectionHandle {
 		count=1;
 		this.config.setConnectionHook(null);
 		replay(this.mockPool);
-		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection());
+		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock"));
 		
 		// Test 3: Keep failing
 		reset(this.mockPool);
@@ -175,7 +175,7 @@ public class TestConnectionHandle {
 		count=99;
 		this.config.setAcquireRetryAttempts(2);
 		try{
-			this.testClass.obtainInternalConnection();
+			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
 			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// expected behaviour
@@ -202,7 +202,7 @@ public class TestConnectionHandle {
 					currentThread.interrupt();
 				}
 			}).start();
-			this.testClass.obtainInternalConnection();
+			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
 			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// expected behaviour
@@ -242,6 +242,8 @@ public class TestConnectionHandle {
 		skipTests.add("clearStatementCaches");
 		skipTests.add("obtainInternalConnection");
 		skipTests.add("refreshConnection");
+		skipTests.add("recreateConnectionHandle");
+		skipTests.add("fillConnectionFields");
 		skipTests.add("createConnectionHandle");
 		
 		skipTests.add("sendInitSQL");
@@ -301,6 +303,7 @@ public class TestConnectionHandle {
 		this.testClass.renewConnection();
 		this.mockPool.releaseConnection((Connection)anyObject());
 		expectLastCall().once().andThrow(new SQLException()).once();
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
 		
 		// create a thread so that we can check that thread.interrupt was called during connection close.
@@ -347,7 +350,6 @@ public class TestConnectionHandle {
 			// do nothing.
 		}
 
-		verify(this.mockPool);
 	}
 
 	/** Tests sendInitialSQL method.
