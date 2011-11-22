@@ -155,6 +155,8 @@ public class BoneCP implements Serializable {
 	protected volatile ConnectionStrategy connectionStrategy;
 	/** If true, there are no connections to be taken. */
 	private AtomicBoolean dbIsDown = new AtomicBoolean();
+	/** Config setting. */
+	@VisibleForTesting protected Properties clientInfo;
 
 	/**
 	 * Closes off this connection pool.
@@ -295,6 +297,9 @@ public class BoneCP implements Serializable {
 			result = DriverManager.getConnection(url, username, password);
 		}
 
+		if (this.clientInfo != null){
+			result.setClientInfo(this.clientInfo);
+		}
 		return result;
 	}
 
@@ -322,7 +327,7 @@ public class BoneCP implements Serializable {
 		this.defaultAutoCommit = config.getDefaultAutoCommit();
 		this.nullOnConnectionTimeout = config.isNullOnConnectionTimeout();
 		this.resetConnectionOnClose = config.isResetConnectionOnClose();
-
+		this.clientInfo = config.getClientInfo();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelayInMs(0);

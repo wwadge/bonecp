@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.SQLClientInfoException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -165,6 +166,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If true, print out a stack trace of where a statement was opened but not closed before
 	 * the connection was closed. See also: closeOpenStatements. */
 	private boolean detectUnclosedStatements;
+	
+	/** If set, pool will call this for every new connection that's created. */
+	private Properties clientInfo;
 	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -1966,6 +1970,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.detectUnclosedStatements = detectUnclosedStatements;
 	}
 	
+	/** If set, pool will call this for every new connection that's created.
+	 * @param properties Properties to set. 
+	 *  
+	 */
+	public void setClientInfo(Properties properties) {
+		this.clientInfo = properties;
+	}
+
+	/**
+	 * Returns the clientInfo field.
+	 * @return clientInfo
+	 */
+	public Properties getClientInfo() {
+		return this.clientInfo;
+	}
 	
+
 	
 }
