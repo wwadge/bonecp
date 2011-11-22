@@ -286,4 +286,14 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 
 		return new BoneCPDataSource(config);
 	}
+	
+	/**
+	 * Returns a handle to the pool. Useful to obtain a handle to the 
+	 * statistics for example.
+	 * @return pool
+	 */
+	public BoneCP getPool() {
+		return this.pool;
+	}
+	
 }
