@@ -63,7 +63,8 @@ public interface ConnectionHook {
 	/** Called when the connection is about to be completely removed from the
 	 * pool. Careful with this hook; the connection might be marked as being
 	 * broken. Use connection.isPossiblyBroken() to determine if the connection
-	 * has triggered an exception at some point. 
+	 * has triggered an exception at some point. Connection has already been closed by the time you
+	 * receive this callback.
 	 * @param connection
 	 */
 	void onDestroy(ConnectionHandle connection); 

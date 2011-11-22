@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.sql.StatementEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,13 +82,13 @@ public class ConnectionHandle implements Connection{
 	/** Time when this connection was created. */
 	private long connectionCreationTimeInMs = System.currentTimeMillis();
 	/** Pool handle. */
-	private BoneCP pool;
+	private BoneCP pool; 
 	/** Config setting. */
 	private Boolean defaultReadOnly;
 	/** Config setting. */
 	private String defaultCatalog;
 	/** Config setting. */
-	private int defaultTransactionIsolationValue;
+	private int defaultTransactionIsolationValue = -1;
 	/** Config setting. */
 	private Boolean defaultAutoCommit;
 	/** Config setting. */
@@ -223,11 +222,60 @@ public class ConnectionHandle implements Connection{
 	private ConnectionHandle(String url, String username, String password,
 			BoneCP pool) throws SQLException {
 
+		this.pool = pool;
+		this.connection = obtainInternalConnection(pool, url);
+		fillConnectionFields(pool, url);
+	}
+	
+	public ConnectionHandle recreateConnectionHandle() throws SQLException{
+		ConnectionHandle handle = new ConnectionHandle();
+		handle.pool = this.pool;
+		handle.connection = this.connection;
+		handle.originatingPartition = this.originatingPartition;
+		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
+		handle.connectionLastResetInMs = this.connectionLastResetInMs;
+		handle.connectionLastUsedInMs = this.connectionLastUsedInMs;
+		handle.possiblyBroken = this.possiblyBroken;
+		handle.preparedStatementCache = this.preparedStatementCache;
+		handle.callableStatementCache = this.callableStatementCache;
+		handle.debugHandle  = this.debugHandle;
+		handle.connectionHook = this.connectionHook;
+		handle.doubleCloseCheck = this.doubleCloseCheck;
+		handle.doubleCloseException = this.doubleCloseException;
+		handle.logStatementsEnabled = this.logStatementsEnabled;
+		handle.replayLog = this.replayLog;
+		handle.inReplayMode = this.inReplayMode;
+		handle.recoveryResult = this.recoveryResult;
+		handle.url = this.url;
+		handle.threadUsingConnection = this.threadUsingConnection;
+		handle.maxConnectionAgeInMs = this.maxConnectionAgeInMs;
+		handle.statisticsEnabled = this.statisticsEnabled;
+		handle.statistics = this.statistics;
+		handle.threadWatch = this.threadWatch;
+		handle.finalizableRefs = this.finalizableRefs;
+		handle.connectionTrackingDisabled = this.connectionTrackingDisabled;
+		handle.txResolved = this.txResolved;
+		handle.detectUnresolvedTransactions = this.detectUnresolvedTransactions;
+		handle.autoCommitStackTrace = this.autoCommitStackTrace;
+		handle.inUseInThreadLocalContext = this.inUseInThreadLocalContext;
+		handle.poison = this.poison;
+		handle.detectUnclosedStatements = this.detectUnclosedStatements;
+		handle.closeOpenStatements = this.closeOpenStatements;
+		handle.trackedStatement = this.trackedStatement;
+		handle.noStackTrace = "";
+		this.connection = null;
+		return handle;
+	}
 
+	/** Fills in any default fields in this handle.
+	 * @param pool
+	 * @param url
+	 * @throws SQLException 
+	 */
+	private void fillConnectionFields(BoneCP pool, String url) throws SQLException {
 		this.pool = pool;
 		this.url = url;
-		this.connection = obtainInternalConnection();
-		this.finalizableRefs = this.pool.getFinalizableRefs(); 
+		this.finalizableRefs = pool.getFinalizableRefs(); 
 		this.defaultReadOnly = pool.getConfig().getDefaultReadOnly();
 		this.defaultCatalog = pool.getConfig().getDefaultCatalog();
 		this.defaultTransactionIsolationValue = pool.getConfig().getDefaultTransactionIsolationValue();
@@ -239,7 +287,8 @@ public class ConnectionHandle implements Connection{
 		this.detectUnresolvedTransactions = pool.getConfig().isDetectUnresolvedTransactions();
 		this.detectUnclosedStatements = pool.getConfig().isDetectUnclosedStatements();
 		this.closeOpenStatements = pool.getConfig().isCloseOpenStatements();
-		
+		this.threadUsingConnection = null;
+		this.connectionHook = this.pool.getConfig().getConnectionHook();
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
 			this.replayLog = new ArrayList<ReplayLog>(30);
 			// this kick-starts recording everything
@@ -268,36 +317,39 @@ public class ConnectionHandle implements Connection{
 		if (this.defaultTransactionIsolationValue != -1){
 			setTransactionIsolation(this.defaultTransactionIsolationValue);
 		}
-
+		
+		
 	}
 
+
 	/** Obtains a database connection, retrying if necessary.
+	 * @param pool pool handle
+	 * @param url url to obtain connection from
 	 * @return A DB connection.
 	 * @throws SQLException
 	 */
-	protected Connection obtainInternalConnection() throws SQLException {
+	protected Connection obtainInternalConnection(BoneCP pool, String url) throws SQLException {
 		boolean tryAgain = false;
 		Connection result = null;
 
-		int acquireRetryAttempts = this.pool.getConfig().getAcquireRetryAttempts();
-		long acquireRetryDelayInMs = this.pool.getConfig().getAcquireRetryDelayInMs();
+		int acquireRetryAttempts = pool.getConfig().getAcquireRetryAttempts();
+		long acquireRetryDelayInMs = pool.getConfig().getAcquireRetryDelayInMs();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
 		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelayInMs);
-		acquireConfig.setLogMessage("Failed to acquire connection to "+this.url);
-
-		this.connectionHook = this.pool.getConfig().getConnectionHook();
+		acquireConfig.setLogMessage("Failed to acquire connection to "+url);
+		this.connectionHook = pool.getConfig().getConnectionHook();
 		do{ 
 			try { 
 				// keep track of this hook.
-				this.connection = this.pool.obtainRawInternalConnection();
+				this.connection = pool.obtainRawInternalConnection();
 				tryAgain = false;
 
-				if (acquireRetryAttempts != this.pool.getConfig().getAcquireRetryAttempts()){
-					logger.info("Successfully re-established connection to "+this.url);
+				if (acquireRetryAttempts != pool.getConfig().getAcquireRetryAttempts()){
+					logger.info("Successfully re-established connection to "+url);
 				}
 				
-				this.pool.getDbIsDown().set(false);
+				pool.getDbIsDown().set(false);
 				
 				// call the hook, if available.
 				if (this.connectionHook != null){
@@ -312,7 +364,7 @@ public class ConnectionHandle implements Connection{
 				if (this.connectionHook != null){
 					tryAgain = this.connectionHook.onAcquireFail(e, acquireConfig);
 				} else {
-					logger.error(String.format("Failed to acquire connection to %s. Sleeping for %d ms. Attempts left: %d", this.url, acquireRetryDelayInMs, acquireRetryAttempts), e);
+					logger.error(String.format("Failed to acquire connection to %s. Sleeping for %d ms. Attempts left: %d", url, acquireRetryDelayInMs, acquireRetryAttempts), e);
 
 					try {
 						Thread.sleep(acquireRetryDelayInMs);
@@ -493,8 +545,6 @@ public class ConnectionHandle implements Connection{
 					this.setTransactionIsolation(this.defaultTransactionIsolationValue);
 				}
 
-				this.logicallyClosed = true;
-				this.threadUsingConnection = null;
 				if (this.threadWatch != null){
 					this.threadWatch.interrupt(); // if we returned the connection to the pool, terminate thread watch thread if it's
 												  // running even if thread is still alive (eg thread has been recycled for use in some
@@ -512,7 +562,9 @@ public class ConnectionHandle implements Connection{
 					this.trackedStatement.clear();
 				}
 				
-				this.pool.releaseConnection(this);
+				ConnectionHandle handle = this.recreateConnectionHandle();
+				this.logicallyClosed = true;
+				this.pool.releaseConnection(handle);
 
 				if (this.doubleCloseCheck){
 					this.doubleCloseException = this.pool.captureStackTrace(CLOSED_TWICE_EXCEPTION_MESSAGE);
@@ -1668,5 +1720,15 @@ public class ConnectionHandle implements Connection{
 			this.trackedStatement.remove(statement);
 		}
 	}
+
+
+	/**
+	 * Returns the url field.
+	 * @return url
+	 */
+	public String getUrl() {
+		return this.url;
+	}
+	
 	
 }
