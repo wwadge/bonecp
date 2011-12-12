@@ -135,9 +135,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If true, keep track of some statistics. */
 	private boolean statisticsEnabled;
 	/** The default auto-commit state of created connections. */
-	private Boolean defaultAutoCommit;
+	private boolean defaultAutoCommit;
 	/** The default read-only state of created connections. */
-	private Boolean defaultReadOnly;
+	private boolean defaultReadOnly;
 	/** The default transaction isolation state of created connections. */
 	private String defaultTransactionIsolation;
 	/** The default catalog state of created connections. */
@@ -1206,7 +1206,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Returns the defaultAutoCommit field.
 	 * @return defaultAutoCommit
 	 */
-	public Boolean getDefaultAutoCommit() {
+	public boolean getDefaultAutoCommit() {
 		return this.defaultAutoCommit;
 	}
 
@@ -1214,7 +1214,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Sets the defaultAutoCommit setting for newly created connections. If not set, use driver default.
 	 * @param defaultAutoCommit the defaultAutoCommit to set
 	 */
-	public void setDefaultAutoCommit(Boolean defaultAutoCommit) {
+	public void setDefaultAutoCommit(boolean defaultAutoCommit) {
 		this.defaultAutoCommit = defaultAutoCommit;
 	}
 
@@ -1222,7 +1222,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Returns the defaultReadOnly field.
 	 * @return defaultReadOnly
 	 */
-	public Boolean getDefaultReadOnly() {
+	public boolean getDefaultReadOnly() {
 		return this.defaultReadOnly;
 	}
 
@@ -1230,7 +1230,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Sets the defaultReadOnly setting for newly created connections. If not set, use driver default.
 	 * @param defaultReadOnly the defaultReadOnly to set
 	 */
-	public void setDefaultReadOnly(Boolean defaultReadOnly) {
+	public void setDefaultReadOnly(boolean defaultReadOnly) {
 		this.defaultReadOnly = defaultReadOnly;
 	}
 
