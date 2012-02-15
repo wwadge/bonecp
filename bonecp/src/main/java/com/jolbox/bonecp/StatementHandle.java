@@ -1011,7 +1011,7 @@ public class StatementHandle implements Statement{
 	}
   // #endif JDK6
 
-	// #ifdef JDK7
+	/* #ifdef JDK7
   @Override
   public void closeOnCompletion() throws SQLException {
     this.internalStatement.closeOnCompletion();
@@ -1021,7 +1021,7 @@ public class StatementHandle implements Statement{
   public boolean isCloseOnCompletion() throws SQLException {
     return this.internalStatement.isCloseOnCompletion();
   }
-  // #endif JDK7
+  #endif JDK7 */
 	
 	
 	public void setCursorName(String name)

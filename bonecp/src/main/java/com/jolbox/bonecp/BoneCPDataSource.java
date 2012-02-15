@@ -39,8 +39,8 @@ import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// #ifdef JDK7
-// #endif JDK7
+/* #ifdef JDK7
+#endif JDK7 */
 
 /**
  * DataSource for use with LazyConnection Provider etc.
@@ -196,12 +196,12 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		throw new UnsupportedOperationException("getLoginTimeout is unsupported.");
 	}
 
-	// #ifdef JDK7
+	/* #ifdef JDK7
   @Override
   public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
     throw new SQLFeatureNotSupportedException("getParentLogger is unsupported");
   }
-  // #endif JDK7
+  #endif JDK7 */
 
   /**
 	 * Sets the log writer for this DataSource object to the given java.io.PrintWriter object.

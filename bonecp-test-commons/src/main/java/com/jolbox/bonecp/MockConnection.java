@@ -34,9 +34,9 @@ import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
-// #ifdef JDK7
+/* #ifdef JDK7
 import java.util.concurrent.Executor;
-// #endif JDK7
+#endif JDK7 */
 
 /**
  * @author Wallace
@@ -102,29 +102,29 @@ public class MockConnection implements Connection {
 	}
 	// #endif JDK6
 
-  // #ifdef JDK7
-  @Override
+  /* #ifdef JDK7
+//  @Override
   public void setSchema(String schema) throws SQLException {
   }
 
-  @Override
+//  @Override
   public String getSchema() throws SQLException {
     return null;
   }
 
-  @Override
+//  @Override
   public void abort(Executor executor) throws SQLException {
   }
 
-  @Override
+//  @Override
   public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
   }
 
-  @Override
+//  @Override
   public int getNetworkTimeout() throws SQLException {
     return 0;
   }
-  // #endif JDK7
+  #endif JDK7 */
 
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#createStatement()

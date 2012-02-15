@@ -1234,17 +1234,17 @@ public class MockResultSet implements ResultSet {
 	}
 	// #endif JDK6  
 
-  // #ifdef JDK7
-  @Override
+  /* #ifdef JDK7
+//  @Override
   public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
     return null;
   }
 
-  @Override
+//  @Override
   public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
     return null;
   }
-  // #endif JDK7
+  #endif JDK7 */
 
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#updateShort(int, short)

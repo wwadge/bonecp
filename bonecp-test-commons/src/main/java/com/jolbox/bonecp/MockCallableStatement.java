@@ -1366,26 +1366,26 @@ public class MockCallableStatement implements CallableStatement {
 		return false;
 	}
 
-  // #ifdef JDK7
-  @Override
+  /* #ifdef JDK7
+//  @Override
   public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
     return null;
   }
 
-  @Override
+//  @Override
   public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
     return null;
   }
 
-  @Override
+//  @Override
   public void closeOnCompletion() throws SQLException {
   }
 
-  @Override
+//  @Override
   public boolean isCloseOnCompletion() throws SQLException {
     return false;
   }
-  // #endif JDK7
+  #endif JDK7 */
 
   /** {@inheritDoc}
 	 * @see java.sql.Statement#setCursorName(java.lang.String)

@@ -38,9 +38,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
-// #ifdef JDK7
+/* #ifdef JDK7
 import java.util.concurrent.Executor;
-// #endif JDK7
+#endif JDK7 */
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -750,7 +750,7 @@ public class ConnectionHandle implements Connection{
 	}
 	// #endif JDK6
 
-	// #ifdef JDK7
+	/* #ifdef JDK7
   @Override
   public void setSchema(String schema) throws SQLException {
     this.connection.setSchema(schema);
@@ -775,7 +775,7 @@ public class ConnectionHandle implements Connection{
   public int getNetworkTimeout() throws SQLException {
     return this.connection.getNetworkTimeout();
   }
-  // #endif JDK7
+  #endif JDK7 */
 
 	public Statement createStatement() throws SQLException {
 		Statement result = null;
