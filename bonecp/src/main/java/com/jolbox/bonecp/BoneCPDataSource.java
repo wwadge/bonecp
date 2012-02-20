@@ -22,9 +22,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.naming.Context;
@@ -37,8 +36,9 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
  * DataSource for use with LazyConnection Provider etc.
@@ -53,7 +53,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	/** Pool handle. */
 	private transient volatile BoneCP pool = null;
 	/** Lock for init. */
-	private ReadWriteLock rwl = new ReentrantReadWriteLock();
+	private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 	/** JDBC driver to use. */
 	private String driverClass;
 	/** Class logger. */ 
@@ -61,19 +61,18 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	/**
 	 * Constructs (and caches) a datasource on the fly based on the given username/password.
 	 */
-	private Map<UsernamePassword, BoneCPDataSource> multiDataSource = new MapMaker().makeComputingMap(new Function<UsernamePassword, BoneCPDataSource>() {
-
-//		@Override
-		public BoneCPDataSource apply(UsernamePassword key) {
+	private LoadingCache<UsernamePassword, BoneCPDataSource> multiDataSource = CacheBuilder.newBuilder().build(new CacheLoader<UsernamePassword, BoneCPDataSource>() {
+		
+		@Override
+		public BoneCPDataSource load(UsernamePassword key) throws Exception {
 			BoneCPDataSource ds = null;
 			ds = new BoneCPDataSource(getConfig());
- 
+
 			ds.setUsername(key.getUsername());
 			ds.setPassword(key.getPassword());
 
 			return ds;
 		}
-
 	});
 
 
@@ -130,29 +129,35 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 *
 	 */
 	private void maybeInit() throws SQLException {
-		this.rwl.readLock().lock();
-		if (this.pool == null){
-			this.rwl.readLock().unlock();
-			this.rwl.writeLock().lock();
-			if (this.pool == null){ //read might have passed, write might not
-				try {
-					if (this.getDriverClass() != null){
-						loadClass(this.getDriverClass());
+		try{
+			this.rwl.readLock().lock();
+			if (this.pool == null){
+				this.rwl.readLock().unlock();
+				this.rwl.writeLock().lock();
+				if (this.pool == null){ //read might have passed, write might not
+					try {
+						if (this.getDriverClass() != null){
+							loadClass(this.getDriverClass());
+						}
 					}
+					catch (ClassNotFoundException e) {
+						throw new SQLException(PoolUtil.stringifyException(e));
+					}
+
+
+					logger.debug(this.toString());
+
+					this.pool = new BoneCP(this);
 				}
-				catch (ClassNotFoundException e) {
-					throw new SQLException(PoolUtil.stringifyException(e));
-				}
 
-
-				logger.debug(this.toString());
-
-				this.pool = new BoneCP(this);
+				
+			} else {
+				this.rwl.readLock().unlock(); // Unlock read
 			}
-
-			this.rwl.writeLock().unlock(); // Unlock write
-		} else {
-			this.rwl.readLock().unlock(); // Unlock read
+		} finally {
+			while (this.rwl.writeLock().getHoldCount() > 0){
+				this.rwl.writeLock().unlock();
+			}
 		}
 	}
 
@@ -164,7 +169,11 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 */
 	public Connection getConnection(String username, String password)
 	throws SQLException {
-		return this.multiDataSource.get(new UsernamePassword(username, password)).getConnection();
+		try {
+			return this.multiDataSource.get(new UsernamePassword(username, password)).getConnection();
+		} catch (ExecutionException e) {
+			throw new SQLException(e);
+		}
 	}
 
 	/**
@@ -286,7 +295,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 
 		return new BoneCPDataSource(config);
 	}
-	
+
 	/**
 	 * Returns a handle to the pool. Useful to obtain a handle to the 
 	 * statistics for example.
@@ -295,5 +304,5 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	public BoneCP getPool() {
 		return this.pool;
 	}
-	
+
 }
