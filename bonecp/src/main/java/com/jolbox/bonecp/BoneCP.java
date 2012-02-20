@@ -30,7 +30,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,6 +47,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.FinalizableReferenceQueue;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 
 
@@ -102,7 +104,7 @@ public class BoneCP implements Serializable {
 	/** pointer to the service containing the statement close helper threads. */
 	private ExecutorService statementCloseHelperExecutor;
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
-	private ExecutorService asyncExecutor;
+	private ListeningExecutorService asyncExecutor;
 	/** Logger class. */
 	private static Logger logger = LoggerFactory.getLogger(BoneCP.class);
 	/** JMX support. */
@@ -135,14 +137,6 @@ public class BoneCP implements Serializable {
 	/** statistics handle. */
 	protected Statistics statistics = new Statistics(this);
 	/** Config setting. */
-	private Boolean defaultReadOnly;
-	/** Config setting. */
-	private String defaultCatalog;
-	/** Config setting. */
-	private int defaultTransactionIsolationValue;
-	/** Config setting. */
-	private Boolean defaultAutoCommit;
-	/** Config setting. */
 	@VisibleForTesting protected boolean externalAuth;
 	/** Config setting. */
 	@VisibleForTesting protected boolean nullOnConnectionTimeout;
@@ -157,6 +151,8 @@ public class BoneCP implements Serializable {
 	private AtomicBoolean dbIsDown = new AtomicBoolean();
 	/** Config setting. */
 	@VisibleForTesting protected Properties clientInfo;
+	/** If false, we haven't made a dummy driver call first. */
+	private volatile boolean driverInitialized = false;
 
 	/**
 	 * Closes off this connection pool.
@@ -291,6 +287,22 @@ public class BoneCP implements Serializable {
 			return (username == null ? datasourceBean.getConnection() : datasourceBean.getConnection(username, password));
 		} 
 
+		// just force the driver to init first
+		if (!this.driverInitialized ){
+			try{
+				this.driverInitialized = true;
+				if (props != null){
+					result = DriverManager.getConnection(url, props);
+				} else {
+					result = DriverManager.getConnection(url, username, password);
+				}
+				result.close();
+			}catch (SQLException t){
+				// just force the driver to init first
+				// See https://bugs.launchpad.net/bonecp/+bug/876476
+			}
+		}
+		
 		if (props != null){
 			result = DriverManager.getConnection(url, props);
 		} else {
@@ -321,10 +333,6 @@ public class BoneCP implements Serializable {
 		if (this.connectionTimeoutInMs == 0){
 			this.connectionTimeoutInMs = Long.MAX_VALUE;
 		}
-		this.defaultReadOnly = config.getDefaultReadOnly();
-		this.defaultCatalog = config.getDefaultCatalog();
-		this.defaultTransactionIsolationValue = config.getDefaultTransactionIsolationValue();
-		this.defaultAutoCommit = config.getDefaultAutoCommit();
 		this.nullOnConnectionTimeout = config.isNullOnConnectionTimeout();
 		this.resetConnectionOnClose = config.isResetConnectionOnClose();
 		this.clientInfo = config.getClientInfo();
@@ -354,7 +362,7 @@ public class BoneCP implements Serializable {
 			this.finalizableRefQueue = new FinalizableReferenceQueue();
 		}
 
-		this.asyncExecutor = Executors.newCachedThreadPool();
+		this.asyncExecutor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 		int helperThreads = config.getReleaseHelperThreads();
 		this.releaseHelperThreadsConfigured = helperThreads > 0;
 
@@ -550,7 +558,7 @@ public class BoneCP implements Serializable {
 	 *      
 	 * @return A Future task returning a connection. 
 	 */
-	public Future<Connection> getAsyncConnection(){
+	public ListenableFuture<Connection> getAsyncConnection(){
 
 		return this.asyncExecutor.submit(new Callable<Connection>() {
 
