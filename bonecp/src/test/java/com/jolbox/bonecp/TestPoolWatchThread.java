@@ -75,9 +75,10 @@ public class TestPoolWatchThread {
     	expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
     	expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();
     	expect(mockConfig.getDefaultTransactionIsolationValue()).andReturn(-1).anyTimes();
+    	expect(mockConfig.getDefaultAutoCommit()).andReturn(false).anyTimes();
 
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
-		expect(mockConfig.isLazyInit()).andReturn(true).anyTimes();
+		expect(mockConfig.isLazyInit()).andReturn(false).anyTimes();
 		
     	mockPool = createNiceMock(BoneCP.class);
     	expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
@@ -193,6 +194,7 @@ public class TestPoolWatchThread {
 
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
+		expect(mockPool.obtainRawInternalConnection()).andReturn(createNiceMock(ConnectionHandle.class)).anyTimes();
 		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockPartition, mockLogger);

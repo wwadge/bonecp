@@ -19,6 +19,7 @@ import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
@@ -61,7 +62,7 @@ public class TestStatistics {
 		
 		this.stats.addCumulativeConnectionWaitTime(1000000);
 		this.stats.addStatementExecuteTime(1000000);
-		this.stats.addStatementPrepareTime(1000000);
+		this.stats.addStatementPrepareTime(TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS));
 		this.stats.incrementCacheHits();
 		this.stats.incrementCacheMiss();
 		this.stats.incrementConnectionsRequested();
@@ -75,9 +76,9 @@ public class TestStatistics {
 		replay(this.mockPool);
 		
 		assertEquals(1, this.stats.getCumulativeConnectionWaitTime());
-		assertEquals(1, this.stats.getCumulativeStatementPrepareTime());
+		assertEquals(1000, this.stats.getCumulativeStatementPrepareTime());
 		assertEquals(1, this.stats.getStatementExecuteTimeAvg(), 0.5);
-		assertEquals(1, this.stats.getStatementPrepareTimeAvg(), 0.5);
+		assertEquals(1000, this.stats.getStatementPrepareTimeAvg(), 0.5);
 		assertEquals(1, this.stats.getCumulativeStatementExecutionTime());
 		assertEquals(1, this.stats.getConnectionWaitTimeAvg(), 0.5);
 		assertEquals(1, this.stats.getStatementsCached());

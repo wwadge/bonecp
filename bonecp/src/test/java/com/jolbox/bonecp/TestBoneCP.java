@@ -414,22 +414,7 @@ public class TestBoneCP {
 		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once().andReturn(null).once();
 
 
-		Field field = BoneCP.class.getDeclaredField("defaultAutoCommit");
-		field.setAccessible(true);
-		field.set(testClass, true);
-
-		field = BoneCP.class.getDeclaredField("defaultReadOnly");
-		field.setAccessible(true);
-		field.set(testClass, true);
-
-		field = BoneCP.class.getDeclaredField("defaultCatalog");
-		field.setAccessible(true);
-		field.set(testClass, "foo");
-
-		field = BoneCP.class.getDeclaredField("defaultTransactionIsolationValue");
-		field.setAccessible(true);
-		field.set(testClass, 0);
-
+	
 		replay(mockConfig, mockDataSource);
 		testClass.obtainRawInternalConnection();
 		// 2nd path
