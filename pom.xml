@@ -121,13 +121,13 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.6.1</version>
+                <version>1.6.4</version>
             </dependency>
 
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
-                <version>1.6.1</version>
+                <version>1.6.4</version>
             </dependency>
 
             <dependency>
@@ -139,7 +139,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>r09</version>
+                <version>11.0</version>
             </dependency>
 
             <dependency>
@@ -221,6 +221,7 @@
                     <configuration>
                         <manifestLocation>${project.build.directory}/osgi</manifestLocation>
                         <instructions>
+                          	<Import-Package>com.google.*;version="0.8",*</Import-Package>
                             <Public-Package>com.jolbox.*</Public-Package>
                             <Private-Package>jsr166y.*</Private-Package>
                             <Export-Package>com.jolbox.bonecp.*;version="${project.version}"</Export-Package>

@@ -197,11 +197,11 @@
 
 		<!-- Sets the defaultAutoCommit setting for newly created connections. If not set, use driver 
 		     default. -->
-		<!-- <property name="defaultAutoCommit">(null or no default value)</property> -->
+		<property name="defaultAutoCommit">false</property>
 
 		<!-- Sets the defaultReadOnly setting for newly created connections. If not set, use driver 
 		     default. -->
-		<!-- <property name="defaultReadOnly">(null or no default value)</property> -->
+		<property name="defaultReadOnly">false</property>
 
 		<!-- Sets the defaultCatalog setting for newly created connections. If not set, use driver 
 		     default. -->
@@ -245,28 +245,41 @@
 		     very first version: it tries to obtain a connection from a queue.  
 		      CACHED stores each connection in a thread-local variable so that next time 
 		     the same thread asks for a connection, it gets the same one assigned 
-		     to it. This is very fast but you must ensure that the number 
-		     of threads asking for a connection is less than or equal to the 
-		     number of connections you have made available. Should you exceed this limit, the 
-		     pool will switch back (permanently) to the DEFAULT strategy which will cause a 
-		     one-time performance hit. Use this strategy if your threads are managed eg in 
-		     a Tomcat environment where you can limit the  number of threads that 
-		     it can handle. A typical use case would be a web service that 
-		     always requires some form of database access, therefore a service would have little 
-		     point in accepting a new incoming socket connection if it still has to 
-		     wait in order to obtain a connection.  Essentially this means that you 
-		     are pushing back the lock down to the socket or thread layer.  
-		     While the first few thread hits will be slower than in the DEFAULT 
-		     strategy, significant performance  gains are to be expected as the thread gets 
-		     increasingly re-used (i.e. initially you should expect the first few rounds to be 
-		     measurably slower than the DEFAULT strategy but once the caches get more hits 
-		     you should get >2x better performance).  Threads that are killed off are 
-		     detected during the next garbage collection and result in  their allocated connections 
-		     from being taken back though since GC timing is not guaranteed you should 
-		     ideally set your minimum pool size to be equal to the maximum pool 
-		     size.  Therefore for best results, make sure that the configured minConnectionPerPartition = 
-		     maxConnectionPerPartition = min Threads = max Threads. -->
+		     to it (if it asks for more than one, it will be allocated 
+		     a new one). This is very fast but you must ensure that the 
+		     number of threads  asking for a connection is less than or equal 
+		     to the number  of connections you have made  available. Should you 
+		     exceed this limit, the pool will switch back (permanently) to the DEFAULT  
+		     strategy which will cause a one-time performance hit. Use this strategy if your 
+		     threads are  managed eg in a Tomcat environment where you can limit 
+		     the number of threads that it can  handle. A typical use case 
+		     would be a web service that always requires some form of database access, 
+		      therefore a service would have little point in accepting a new incoming 
+		     socket connection if it  still has to wait in order to obtain 
+		     a connection.   Essentially this means that you are pushing back the 
+		     lock down to the socket or thread layer.  While the first few 
+		     thread hits will be slower than in the DEFAULT strategy, significant performance  
+		     gains are to be expected as the thread gets increasingly re-used (i.e. initially 
+		     you should expect the first few rounds to be measurably slower than the 
+		     DEFAULT strategy but once the caches get more hits you should get >2x 
+		     better performance).  Threads that are killed off are detected during the next 
+		     garbage collection and result in  their allocated connections from being taken back 
+		     though since GC timing is not guaranteed you should ideally set your minimum 
+		     pool size to be equal to the maximum pool size.  Therefore for 
+		     best results, make sure that the configured minConnectionPerPartition = maxConnectionPerPartition = min Threads 
+		     = max Threads. -->
 		<property name="poolStrategy">DEFAULT</property>
+
+		<!-- If true, track statements and close them if application forgot to do so. 
+		     See also:  {@link BoneCPConfig#detectUnclosedStatements}. Do not set if your connections are managed 
+		     eg via Spring jdbcTemplate or hibernate since those frameworks will always automatically close 
+		     off your statements. This option has a negative performance hit. -->
+		<property name="closeOpenStatements">false</property>
+
+		<!-- Sets the detectUnclosedStatements. If true, print out a stack trace of where a 
+		     statement was opened but not closed before the connection was closed. {@link BoneCPConfig#closeOpenStatements}. 
+		     -->
+		<property name="detectUnclosedStatements">false</property>
 
 	</default-config>
 </bonecp-config>

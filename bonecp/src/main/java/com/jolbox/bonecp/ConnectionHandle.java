@@ -62,7 +62,7 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  */
 public class ConnectionHandle implements Connection{
 	/** Warning message. */
-	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
+//	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
 	/** Warning message. */
 	private static final String SET_AUTO_COMMIT_FALSE_WAS_CALLED_MESSAGE = "setAutoCommit(false) was called but transaction was not COMMITted or ROLLBACKed properly before it was closed.\n";
 	/** Exception message. */
@@ -227,6 +227,11 @@ public class ConnectionHandle implements Connection{
 		fillConnectionFields(pool, url);
 	}
 	
+	/**
+	 * Creates the connection handle again.
+	 * @return ConnectionHandle
+	 * @throws SQLException
+	 */
 	public ConnectionHandle recreateConnectionHandle() throws SQLException{
 		ConnectionHandle handle = new ConnectionHandle();
 		handle.pool = this.pool;
