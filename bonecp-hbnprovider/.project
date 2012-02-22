@@ -1,6 +1,6 @@
 <projectDescription>
   <name>bonecp-provider</name>
-  <comment>Helper class for easier hibernate intergration. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
+  <comment>Helper class for easier Hibernate intergration. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
   <projects>
     <project>bonecp</project>
     <project>bonecp-test-commons</project>
