@@ -376,7 +376,6 @@ public class BoneCP implements Serializable {
 		}
 
 
-
 		if (this.releaseHelperThreadsConfigured){
 			this.releaseHelper = Executors.newFixedThreadPool(helperThreads*config.getPartitionCount(), new CustomThreadFactory("BoneCP-release-thread-helper-thread"+suffix, true));
 		}
@@ -513,7 +512,6 @@ public class BoneCP implements Serializable {
 	}
 
 
-
 	/**
 	 * Returns a free connection.
 	 * @return Connection handle.
@@ -580,7 +578,9 @@ public class BoneCP implements Serializable {
 	}
 
 	/**
-	 * Releases the given connection back to the pool.
+	 * Releases the given connection back to the pool. This method is not intended to be called by 
+	 * applications (hence set to protected). Call connection.close() instead which will return
+	 * the connection back to the pool.
 	 *
 	 * @param connection to release
 	 * @throws SQLException

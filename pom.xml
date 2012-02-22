@@ -139,7 +139,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>11.0</version>
+                <version>11.0.1</version>
             </dependency>
 
             <dependency>
@@ -267,7 +267,7 @@
                         <tarLongFileMode>gnu</tarLongFileMode>
                     </configuration>
                 </plugin>
-
+<!-- 
                 <plugin>
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
                     <artifactId>maven-replacer-plugin</artifactId>
@@ -287,7 +287,7 @@
                         </includes>
                     </configuration>
                 </plugin>
-
+ -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>

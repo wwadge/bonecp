@@ -228,7 +228,9 @@ public class ConnectionHandle implements Connection{
 	}
 	
 	/**
-	 * Creates the connection handle again.
+	 * Creates the connection handle again. We use this method to create a brand new connection
+	 * handle. That way if the application (wrongly) tries to do something else with the connection
+	 * that has already been "closed", it will fail.
 	 * @return ConnectionHandle
 	 * @throws SQLException
 	 */
