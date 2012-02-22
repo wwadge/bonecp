@@ -17,9 +17,7 @@
 package com.jolbox.bonecp;
 
 import static junit.framework.Assert.assertEquals;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.EasyMock.*;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -162,23 +160,19 @@ public class TestPoolUtil {
 				
 				public ResultSet getResultSet(long index, int count,
 						Map<String, Class<?>> map) throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public ResultSet getResultSet(long index, int count) throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public ResultSet getResultSet(Map<String, Class<?>> map)
 						throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public ResultSet getResultSet() throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
@@ -187,34 +181,28 @@ public class TestPoolUtil {
 				}
 				
 				public int getBaseType() throws SQLException {
-					// TODO Auto-generated method stub
 					return 14;
 				}
 				
 				public Object getArray(long index, int count, Map<String, Class<?>> map)
 						throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public Object getArray(long index, int count) throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public Object getArray(Map<String, Class<?>> map) throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public Object getArray() throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				public void free() throws SQLException {
-					// TODO Auto-generated method stub
-					
+					// nop
 				}
 			});
 				
@@ -222,24 +210,20 @@ public class TestPoolUtil {
 			logParams.put("6", new Ref() {
 				
 				public void setObject(Object value) throws SQLException {
-					// TODO Auto-generated method stub
 					
 				}
 				
 				public Object getObject(Map<String, Class<?>> map) throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				
 				public Object getObject() throws SQLException {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				
 				
 				public String getBaseTypeName() throws SQLException {
-					// TODO Auto-generated method stub
 					return "type";
 				}
 			});

@@ -19,17 +19,13 @@
  */
 package com.jolbox.bonecp.provider;
 
+import static org.easymock.EasyMock.*;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_DRIVER_CLASS;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_PASSWORD;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_URL;
 import static com.jolbox.bonecp.provider.BoneCPConnectionProvider.CONFIG_CONNECTION_USERNAME;
 import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -191,8 +187,8 @@ public class TestBoneCPConnectionProvider {
 
 
 
-		BoneCPConnectionProvider partialTestClass = createNiceMock(BoneCPConnectionProvider.class, 
-				BoneCPConnectionProvider.class.getDeclaredMethod("createPool", BoneCPConfig.class));
+		BoneCPConnectionProvider partialTestClass = createMockBuilder(BoneCPConnectionProvider.class).addMockedMethod( 
+				BoneCPConnectionProvider.class.getDeclaredMethod("createPool", BoneCPConfig.class)).createMock();
 		expect(partialTestClass.createPool((BoneCPConfig)anyObject())).andReturn(mockPool).once();
 		
 		replay(mockProperties, partialTestClass);

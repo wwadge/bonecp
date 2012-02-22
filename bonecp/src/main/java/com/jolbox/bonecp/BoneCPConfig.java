@@ -53,9 +53,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Serialization UID. */
 	private static final long serialVersionUID = 6090570773474131622L;
 	/** For toString(). */
-	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min";
+	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
 	/** For toString(). */
-	private static final String CONFIG_DS_TOSTRING = "JDBC URL = (via datasource bean), Username = (via datasource bean), partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min";
+	private static final String CONFIG_DS_TOSTRING = "JDBC URL = (via datasource bean), Username = (via datasource bean), partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
 	/** Logger class. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
@@ -146,8 +146,29 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private int defaultTransactionIsolationValue = -1;
 	/** If true, stop caring about username/password when obtaining raw connections. */
 	private boolean externalAuth;
+	/** If true, try to unregister the JDBC driver when pool is shutdown. */
+	private boolean deregisterDriverOnClose;
+	/** If true, return null on connection timeout rather than throw an exception. */
+	private boolean nullOnConnectionTimeout;
+	/** If true, issue a reset (rollback) on connection close in case client forgot it. */
+	private boolean resetConnectionOnClose;
+	/** Detect uncommitted transactions. If true, and resetConnectionOnClose is also true, the pool will print out a stack 
+	 * trace of the location where you had a connection that specified setAutoCommit(false)
+	 * but then forgot to call commit/rollback before closing it off. This feature is intended 
+	 * for debugging only.*/
+	private boolean detectUnresolvedTransactions;
+	/** Determines pool operation Recognised strategies are: DEFAULT, CACHED. */
+	private String poolStrategy = "DEFAULT";
+	/** If true, track statements and close them if application forgot to do so. See also: 
+	 * detectUnclosedStatements. */
+	private boolean closeOpenStatements;
+	/** If true, print out a stack trace of where a statement was opened but not closed before
+	 * the connection was closed. See also: closeOpenStatements. */
+	private boolean detectUnclosedStatements;
 	
-
+	/** If set, pool will call this for every new connection that's created. */
+	private Properties clientInfo;
+	
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
@@ -170,7 +191,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
-	 * Sets the minimum number of connections that will be contained in every partition.
+	 * Sets the minimum number of connections that will be contained in every partition. Also refer 
+	 * to {@link #setPoolAvailabilityThreshold(int)}.
 	 *
 	 * @param minConnectionsPerPartition number of connections
 	 */
@@ -232,7 +254,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * i.e. pool[threadId % partition_count]. The higher this number, the better your performance will be for the case 
 	 * when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
 	 * to have a negative effect on performance (and only for the case when connections on a partition start running out).
-	 * 
+	 * Has no effect in a CACHED strategy.
+	 *  
 	 * <p>Default: 1, minimum: 1, recommended: 2-4 (but very app specific)
 	 *
 	 * @param partitionCount to set 
@@ -275,6 +298,22 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
+	 * Sets username to use for connections. Just delegates to setUsername for clients hardcoded
+	 * with "setUser" instead. 
+	 *
+	 * @param username to set
+	 */
+	public void setUser(String username) {
+		setUsername(username);
+	}
+
+	/** Just delegates to getUsername for clients hardcoded to "getUser". 
+	 * @return configured username
+	 */
+	public String getUser() {
+		return getUsername();
+	}
+	/**
 	 * Gets password to use for connections
 	 *
 	 * @return password
@@ -313,14 +352,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod) {
 		logger.warn("Please use setIdleConnectionTestPeriodInMinutes in place of setIdleConnectionTestPeriod. This method has been deprecated.");
-		setIdleConnectionTestPeriod(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		setIdleConnectionTestPeriod(idleConnectionTestPeriod*60, TimeUnit.SECONDS);
 	}
 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getIdleConnectionTestPeriodInMinutes()
 	 */
 	public long getIdleConnectionTestPeriodInMinutes() {
-		return TimeUnit.MINUTES.convert(this.idleConnectionTestPeriodInSeconds, TimeUnit.SECONDS);
+		return this.idleConnectionTestPeriodInSeconds / 60;
 	}
 
 	/**
@@ -346,7 +385,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleConnectionTestPeriod to set 
 	 */
 	public void setIdleConnectionTestPeriodInMinutes(long idleConnectionTestPeriod) {
-		setIdleConnectionTestPeriod(idleConnectionTestPeriod, TimeUnit.MINUTES);
+		// we use TimeUnit.SECONDS instead of TimeUnit.MINUTES because it's not supported
+		// by JDK5
+		setIdleConnectionTestPeriod(idleConnectionTestPeriod*60, TimeUnit.SECONDS);
 	}
 
 	/**
@@ -398,7 +439,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @return idleMaxAge in minutes
 	 */
 	public long getIdleMaxAgeInMinutes() {
-		return TimeUnit.MINUTES.convert(this.idleMaxAgeInSeconds, TimeUnit.SECONDS);
+		return this.idleMaxAgeInSeconds / 60;
 	}
 
 	/**
@@ -423,7 +464,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param idleMaxAge to set
 	 */
 	public void setIdleMaxAgeInMinutes(long idleMaxAge) {
-		setIdleMaxAge(idleMaxAge, TimeUnit.MINUTES); 
+		setIdleMaxAge(idleMaxAge*60, TimeUnit.SECONDS); 
 	}
 
 	/**
@@ -1222,7 +1263,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Returns the defaultReadOnly field.
 	 * @return defaultReadOnly
 	 */
-	public boolean getDefaultReadOnly() {
+	public Boolean getDefaultReadOnly() {
 		return this.defaultReadOnly;
 	}
 
@@ -1230,7 +1271,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * Sets the defaultReadOnly setting for newly created connections. If not set, use driver default.
 	 * @param defaultReadOnly the defaultReadOnly to set
 	 */
-	public void setDefaultReadOnly(boolean defaultReadOnly) {
+	public void setDefaultReadOnly(Boolean defaultReadOnly) {
 		this.defaultReadOnly = defaultReadOnly;
 	}
 
@@ -1511,6 +1552,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			loadProperties(this.configFile);
 		}
 
+		if (this.poolStrategy == null || !(this.poolStrategy.equalsIgnoreCase("DEFAULT") || this.poolStrategy.equalsIgnoreCase("CACHED"))){
+			logger.warn("Unrecognised pool strategy. Allowed values are DEFAULT and CACHED. Setting to DEFAULT.");
+			this.poolStrategy = "DEFAULT";
+		} 
+		
+		this.poolStrategy = this.poolStrategy.toUpperCase();
+		
 		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
 			this.poolAvailabilityThreshold = 20;
 		}
@@ -1667,12 +1715,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		if (this.datasourceBean != null){
 			result = String.format(CONFIG_DS_TOSTRING, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
 					this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
-					getIdleConnectionTestPeriodInMinutes());
+					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		} else {
 			result = String.format(CONFIG_TOSTRING, this.jdbcUrl,
 					this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
 					this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
-					getIdleConnectionTestPeriodInMinutes());
+					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		}
 
 		return result;
@@ -1761,5 +1809,182 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 		return false;
 	}
+
+	/**
+	 * Returns the deregisterDriverOnClose setting.
+	 * @return deregisterDriverOnClose
+	 */
+	public boolean isDeregisterDriverOnClose() {
+		return this.deregisterDriverOnClose;
+	}
+	
+
+	/**
+	 * If set to true, try to unregister the JDBC driver when pool is shutdown. 
+	 * @param deregisterDriverOnClose the deregisterDriverOnClose setting.
+	 */
+	public void setDeregisterDriverOnClose(boolean deregisterDriverOnClose) {
+		this.deregisterDriverOnClose = deregisterDriverOnClose;
+	}
+
+	/**
+	 * Returns the nullOnConnectionTimeout field.
+	 * @return nullOnConnectionTimeout
+	 */
+	public boolean isNullOnConnectionTimeout() {
+		return this.nullOnConnectionTimeout;
+	}
+	
+
+	/**
+	 * Sets the nullOnConnectionTimeout.  
+	 * 
+	 * If true, return null on connection timeout rather than throw an exception. This performs
+	 * better but must be handled differently in your application. This only
+	 * makes sense when using the connectionTimeout config option. 
+	 * @param nullOnConnectionTimeout the nullOnConnectionTimeout to set
+	 */
+	public void setNullOnConnectionTimeout(boolean nullOnConnectionTimeout) {
+		this.nullOnConnectionTimeout = nullOnConnectionTimeout;
+	}
+
+	/**
+	 * Returns the resetConnectionOnClose setting.
+	 * @return resetConnectionOnClose
+	 */
+	public boolean isResetConnectionOnClose() {
+		return this.resetConnectionOnClose;
+	}
+	
+
+	/**
+	 * If true, issue a reset (rollback) on connection close in case client forgot it.
+	 * @param resetConnectionOnClose the resetConnectionOnClose to set
+	 */
+	public void setResetConnectionOnClose(boolean resetConnectionOnClose) {
+		this.resetConnectionOnClose = resetConnectionOnClose;
+	}
+
+	/**
+	 * Returns the detectUnresolvedTransactions field.
+	 * @return detectUnresolvedTransactions
+	 */
+	public boolean isDetectUnresolvedTransactions() {
+		return this.detectUnresolvedTransactions;
+	}
+	
+
+	/**
+	 * If true, and resetConnectionOnClose is also true, the pool will print out a stack 
+	 * trace of the location where you had a connection that specified setAutoCommit(false)
+	 * but then forgot to call commit/rollback before closing it off. This feature is intended 
+	 * for debugging only. 
+	 * @param detectUnresolvedTransactions the detectUnresolvedTransactions to set
+	 */
+	public void setDetectUnresolvedTransactions(boolean detectUnresolvedTransactions) {
+		this.detectUnresolvedTransactions = detectUnresolvedTransactions;
+	}
+
+	/**
+	 * Returns the poolStrategy field.
+	 * @return poolStrategy
+	 */
+	public String getPoolStrategy() {
+		return this.poolStrategy;
+	}
+	
+
+	/**
+	 * Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED.
+	 *
+	 * DEFAULT strategy operates in a manner that has been used in the pool since the very first
+	 * version: it tries to obtain a connection from a queue.
+	 *  
+	 * CACHED stores each connection in a thread-local variable so that next time the same thread
+	 * asks for a connection, it gets the same one assigned to it (if it asks for more than one, it
+	 * will be allocated a new one). This is very fast but you must ensure that the number of threads 
+	 * asking for a connection is less than or equal to the number  of connections you have made 
+	 * available. Should you exceed this limit, the pool will switch back (permanently) to the DEFAULT 
+	 * strategy which will cause a one-time performance hit. Use this strategy if your threads are 
+	 * managed eg in a Tomcat environment where you can limit the number of threads that it can 
+	 * handle. A typical use case would be a web service that always requires some form of database access, 
+	 * therefore a service would have little point in accepting a new incoming socket connection if it 
+	 * still has to wait in order to obtain a connection.
+	 *  
+	 * Essentially this means that you are pushing back the lock down to the socket or thread layer. 
+	 * While the first few thread hits will be slower than in the DEFAULT strategy, significant performance 
+	 * gains are to be expected as the thread gets increasingly re-used (i.e. initially you should expect
+	 * the first few rounds to be measurably slower than the DEFAULT strategy but once the caches
+	 * get more hits you should get >2x better performance).
+	 * 
+	 * Threads that are killed off are detected during the next garbage collection and result in 
+	 * their allocated connections from being taken back though since GC timing is not guaranteed
+	 * you should ideally set your minimum pool size to be equal to the maximum pool size.
+	 * 
+	 * Therefore for best results, make sure that the configured minConnectionPerPartition = maxConnectionPerPartition = min Threads = max Threads.
+	 *   
+	 *   
+	 * @param poolStrategy the poolStrategy to set
+	 */
+	public void setPoolStrategy(String poolStrategy) {
+		this.poolStrategy = poolStrategy;
+	}
+
+	/**
+	 * Returns the closeOpenStatements field.
+	 * @return closeOpenStatements
+	 */
+	public boolean isCloseOpenStatements() {
+		return this.closeOpenStatements;
+	}
+	
+
+	/**
+	 * If true, track statements and close them if application forgot to do so. See also: 
+	 * {@link BoneCPConfig#detectUnclosedStatements}. Do not set if your connections are managed
+	 * eg via Spring jdbcTemplate or hibernate since those frameworks will always automatically
+	 * close off your statements. This option has a negative performance hit.
+	 * 
+	 * @param closeOpenStatements the closeOpenStatements to set
+	 */
+	public void setCloseOpenStatements(boolean closeOpenStatements) {
+		this.closeOpenStatements = closeOpenStatements;
+	}
+
+	/**
+	 * Returns the detectUnclosedStatements field.
+	 * @return detectUnclosedStatements
+	 */
+	public boolean isDetectUnclosedStatements() {
+		return this.detectUnclosedStatements;
+	}
+	
+
+	/**
+	 * Sets the detectUnclosedStatements. If true, print out a stack trace of where a statement was opened but not closed before
+	 * the connection was closed. {@link BoneCPConfig#closeOpenStatements}. 
+	 * @param detectUnclosedStatements the detectUnclosedStatements to set
+	 */
+	public void setDetectUnclosedStatements(boolean detectUnclosedStatements) {
+		this.detectUnclosedStatements = detectUnclosedStatements;
+	}
+	
+	/** If set, pool will call this for every new connection that's created.
+	 * @param properties Properties to set. 
+	 *  
+	 */
+	public void setClientInfo(Properties properties) {
+		this.clientInfo = properties;
+	}
+
+	/**
+	 * Returns the clientInfo field.
+	 * @return clientInfo
+	 */
+	public Properties getClientInfo() {
+		return this.clientInfo;
+	}
+	
+
 	
 }

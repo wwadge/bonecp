@@ -19,11 +19,7 @@
  */
 package com.jolbox.bonecp.hooks;
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
+import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -263,6 +259,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
 		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		Connection mockConnection = createNiceMock(Connection.class);
@@ -283,7 +280,7 @@ public class TestConnectionHook {
 			
 		
 		assertEquals(1, hookClass.queryTimeout);
-		reset(mockConfig, mockPreparedStatement, mockConnection);
+		reset(mockPreparedStatement, mockConnection);
 		poolClass.close();
 	}
 	

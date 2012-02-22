@@ -126,7 +126,7 @@ public abstract class AbstractConnectionHook implements ConnectionHook {
 		// do nothing
 	}
 
-	@Override
+//	@Override
 	public ConnectionState onMarkPossiblyBroken(ConnectionHandle connection, String state, SQLException e) {
 		return ConnectionState.NOP;
 	}

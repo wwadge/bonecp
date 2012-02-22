@@ -24,15 +24,17 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
-import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+// #ifdef JDK6
+import java.sql.NClob;
 import java.sql.RowId;
-import java.sql.SQLException;
 import java.sql.SQLXML;
+// #endif JDK6
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;

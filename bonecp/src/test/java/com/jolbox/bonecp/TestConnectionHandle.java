@@ -21,13 +21,14 @@ import static junit.framework.Assert.assertTrue;
 import static org.easymock.EasyMock.anyInt;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.aryEq;
+import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.verify;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.State;
@@ -46,10 +47,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.Assert;
 
-import org.easymock.classextension.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
-// #endif JDK6 
+
 /**
  * Mock unit testing for Connection Handle class.
  * @author wwadge
@@ -94,19 +95,20 @@ public class TestConnectionHandle {
 		reset(this.mockConnection, this.mockPreparedStatementCache, this.mockPool, this.mockCallableStatementCache);
 		
 		this.config = CommonTestUtils.getConfigClone();
+		this.mockPool.connectionStrategy = DefaultConnectionStrategy.getInstance(this.mockPool);
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		EasyMock.replay(this.mockConnection, this.mockPool);
+		replay(this.mockConnection, this.mockPool);
 
 		this.config.setReleaseHelperThreads(0);
 		this.config.setTransactionRecoveryEnabled(false);
 		this.config.setStatementsCacheSize(1);
 		this.config.setStatisticsEnabled(true);
 		
-		this.testClass = new ConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
+		this.testClass = ConnectionHandle.createTestConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
 		
 		this.mockPool.closeConnectionWatch=true;
 		
@@ -146,9 +148,10 @@ public class TestConnectionHandle {
 		CustomHook testHook = new CustomHook();
 		this.config.setConnectionHook(testHook);
 		// make it fail the first time and succeed the second time
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
 		replay(this.mockPool);
-		this.testClass.obtainInternalConnection();
+		this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
 		// get counts on our hooks
 		
 		assertEquals(1, testHook.fail);
@@ -156,12 +159,13 @@ public class TestConnectionHandle {
 		
 		// Test 2: Same thing but without the hooks
 		reset(this.mockPool);
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
 		count=1;
 		this.config.setConnectionHook(null);
 		replay(this.mockPool);
-		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection());
+		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock"));
 		
 		// Test 3: Keep failing
 		reset(this.mockPool);
@@ -171,7 +175,7 @@ public class TestConnectionHandle {
 		count=99;
 		this.config.setAcquireRetryAttempts(2);
 		try{
-			this.testClass.obtainInternalConnection();
+			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
 			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// expected behaviour
@@ -198,7 +202,7 @@ public class TestConnectionHandle {
 					currentThread.interrupt();
 				}
 			}).start();
-			this.testClass.obtainInternalConnection();
+			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
 			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// expected behaviour
@@ -237,6 +241,10 @@ public class TestConnectionHandle {
 		skipTests.add("renewConnection");
 		skipTests.add("clearStatementCaches");
 		skipTests.add("obtainInternalConnection");
+		skipTests.add("refreshConnection");
+		skipTests.add("recreateConnectionHandle");
+		skipTests.add("fillConnectionFields");
+		skipTests.add("createConnectionHandle");
 		
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
@@ -261,7 +269,8 @@ public class TestConnectionHandle {
 		Assert.assertTrue(field.getBoolean(this.testClass));
 
 		// Test that a db fatal error will lead to the pool being instructed to terminate all connections (+ log)
-		this.mockPool.terminateAllConnections();
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
+		this.mockPool.connectionStrategy.terminateAllConnections();
 		this.mockLogger.error((String)anyObject(), anyObject());
 		replay(this.mockPool);
 		this.testClass.markPossiblyBroken(new SQLException("test", "08001"));
@@ -294,13 +303,14 @@ public class TestConnectionHandle {
 		this.testClass.renewConnection();
 		this.mockPool.releaseConnection((Connection)anyObject());
 		expectLastCall().once().andThrow(new SQLException()).once();
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
 		
 		// create a thread so that we can check that thread.interrupt was called during connection close.
 //		final Thread thisThread = Thread.currentThread();
 		Thread testThread = new Thread(new Runnable() {
 			
-			@Override
+//			@Override
 			public void run() {
 				try {
 					TestConnectionHandle.this.started = true;
@@ -340,7 +350,6 @@ public class TestConnectionHandle {
 			// do nothing.
 		}
 
-		verify(this.mockPool);
 	}
 
 	/** Tests sendInitialSQL method.
@@ -869,7 +878,7 @@ public class TestConnectionHandle {
 		}
 
 	}
-	// #endif JDK6
+	 // #endif JDK6
 	
 	/** Tests that a thrown exception will call the onAcquireFail hook.
 	 * @throws SQLException
@@ -884,7 +893,7 @@ public class TestConnectionHandle {
 		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
 		replay(this.mockPool, mockConfig, mockConnectionHook);
 		try{
-			new ConnectionHandle("", "", "", this.mockPool);
+			ConnectionHandle.createConnectionHandle("", "", "", this.mockPool);
 			fail("Should throw an exception");
 		} catch (Throwable t){
 			// do nothing.
@@ -921,6 +930,31 @@ public class TestConnectionHandle {
 		this.testClass.clearStatementCaches(false);
 		verify(this.mockPreparedStatementCache, this.mockCallableStatementCache);
 
+	}
+
+	/**
+	 * 
+	 */
+	@Test
+	public void testStackTraceAndTxResolve(){
+		this.testClass.setAutoCommitStackTrace("foo");
+		this.testClass.getAutoCommitStackTrace();
+		assertEquals("foo", this.testClass.getAutoCommitStackTrace());
+		this.testClass.txResolved = true;
+		assertTrue(this.testClass.isTxResolved());
+	}
+	
+	/**
+	 * @throws SQLException 
+	 * 
+	 */
+	@Test
+	public void testAutoCommitSetToFalse() throws SQLException{
+		this.testClass.detectUnresolvedTransactions = true;
+		expect(this.mockPool.captureStackTrace((String)anyObject())).andReturn("foo").once();
+		replay(this.mockPool);
+		this.testClass.setAutoCommit(false);
+		assertNotNull(this.testClass.getAutoCommitStackTrace());
 	}
 
 }

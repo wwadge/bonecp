@@ -211,7 +211,13 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					} catch(Throwable t2){
 						con.setInReplayMode(false); // start recording again
 						con.getReplayLog().clear();
-						throw new SQLException("Could not recover transaction. Original exception follows." + t.getCause());
+						// #ifdef JDK6
+						throw new SQLException("Could not recover transaction.", t.getCause());
+						// #endif JDK6
+						/* #ifdef JDK5
+			 			throw new SQLException("Could not recover transaction. Original exception follows." + t.getCause());
+						#endif JDK5 */
+
 					}
 				} 
 				
@@ -293,7 +299,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			} catch(Throwable t){
 				// do nothing - also likely to fail here
 			}
-			con.setInternalConnection(memorize(con.obtainInternalConnection(), con));
+			con.setInternalConnection(memorize(con.obtainInternalConnection(con.getPool(), con.getUrl()), con));
 			con.getOriginatingPartition().trackConnectionFinalizer(con); // track this too.
 
 			for (ReplayLog replay: oldReplayLog){
@@ -370,9 +376,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		if (failedThrowable != null){
 		// #ifdef JDK6
 		throw new SQLException(failedThrowable.getMessage(), failedThrowable);
-		// #endif
+		 // #endif JDK6
 		/* #ifdef JDK5
-			throw new SQLException(PoolUtil.stringifyException(t));
+			throw new SQLException(PoolUtil.stringifyException(failedThrowable));
 		#endif JDK5 */
 		}
 		

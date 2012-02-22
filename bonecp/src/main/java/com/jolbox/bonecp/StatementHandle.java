@@ -171,7 +171,7 @@ public class StatementHandle implements Statement{
 	}
 	
 	public void close() throws SQLException {
-		
+		this.connectionHandle.untrackStatement(this);
 		if (this.statementReleaseHelperEnabled){
 			this.enqueuedForClosure = true; // stop warning later on.
 			// try moving onto queue so that a separate thread will handle it....
@@ -474,6 +474,12 @@ public class StatementHandle implements Statement{
 
 			queryTimerEnd(this.logStatementsEnabled ? this.batchSQL.toString() : "", queryStartTime);
 
+
+			if (this.logStatementsEnabled){
+					this.logParams.clear();
+					this.batchSQL = new StringBuilder();
+			}
+						
 		} catch (SQLException e) {
 			throw this.connectionHandle.markPossiblyBroken(e);
 

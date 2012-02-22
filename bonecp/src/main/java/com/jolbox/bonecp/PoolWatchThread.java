@@ -63,7 +63,6 @@ public class PoolWatchThread implements Runnable {
 
 			try{
 				if (this.lazyInit){ // block the first time if this is on.
-					this.lazyInit = false; 
 					this.partition.getPoolWatchThreadSignalQueue().take();
 				}
  
@@ -76,10 +75,15 @@ public class PoolWatchThread implements Runnable {
 					}
 					this.partition.getPoolWatchThreadSignalQueue().take();
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
+					
 				}
 
-				if (maxNewConnections > 0 && !this.lazyInit){
+				if (maxNewConnections > 0 && !this.pool.poolShuttingDown){
 					fillConnections(Math.min(maxNewConnections, this.partition.getAcquireIncrement()));
+				}
+				
+				if (this.pool.poolShuttingDown){
+					return;
 				}
 
 
@@ -98,7 +102,22 @@ public class PoolWatchThread implements Runnable {
 	private void fillConnections(int connectionsToCreate) throws InterruptedException  {
 		try {
 			for (int i=0; i < connectionsToCreate; i++){
-				this.partition.addFreeConnection(new ConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool));
+				boolean dbDown = this.pool.getDbIsDown().get();
+				if (this.pool.poolShuttingDown){
+					break;
+				}
+				ConnectionHandle handle = ConnectionHandle.createConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool);
+				
+				if (dbDown && !this.pool.getDbIsDown().get()){ // we've just recovered
+					ConnectionHandle maybePoison = this.partition.getFreeConnections().poll();
+					if (maybePoison != null && !maybePoison.isPoison()){
+							// wasn't poison, push it back
+							this.partition.getFreeConnections().offer(maybePoison);
+								// otherwise just consume it.
+						}
+					}
+					this.partition.addFreeConnection(handle);
+
 			}
 		} catch (SQLException e) {
 			logger.error("Error in trying to obtain a connection. Retrying in "+this.acquireRetryDelayInMs+"ms", e);

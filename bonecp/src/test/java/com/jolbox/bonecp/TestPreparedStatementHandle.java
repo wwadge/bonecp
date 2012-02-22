@@ -36,16 +36,13 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.reset;
+import static org.easymock.EasyMock.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.PreparedStatement;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.easymock.classextension.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,14 +81,14 @@ public class TestPreparedStatementHandle {
 			// do nothing
 		});
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
-		EasyMock.replay(this.mockConnection, this.mockPool);
+		replay(this.mockConnection, this.mockPool);
 		this.testClass = new PreparedStatementHandle(this.mockClass, "", this.mockConnection, "TestSQL", this.mockCallableStatementCache);
-		EasyMock.reset(this.mockConnection, this.mockPool);
+		reset(this.mockConnection, this.mockPool);
 		PreparedStatementHandle.logger = createNiceMock(Logger.class);
 		expect(PreparedStatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
 		PreparedStatementHandle.logger.debug((String)org.easymock.EasyMock.anyObject());
 		org.easymock.EasyMock.expectLastCall().anyTimes();
-		EasyMock.replay(PreparedStatementHandle.logger );
+		replay(PreparedStatementHandle.logger );
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)

@@ -19,12 +19,12 @@
     <parent>
         <groupId>com.jolbox</groupId>
         <artifactId>bonecp-parent</artifactId>
-        <version>0.7.2-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bonecp</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>bundle</packaging> 
     <name>BoneCP :: Core Library</name>
     <description>Lightweight connection pool.</description>
 
@@ -51,10 +51,11 @@
                     </archive>
                 </configuration>
             </plugin>
-
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                
                 <configuration>
                     <descriptors>
                         <descriptor>${basedir}/../src/main/assembly/assembly.xml</descriptor>
@@ -87,13 +88,7 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymockclassextension</artifactId>
-            <scope>test</scope>
-        </dependency>
-
+        
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>

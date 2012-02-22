@@ -15,19 +15,13 @@
  */
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.verify;
+import static org.easymock.EasyMock.*;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
@@ -80,11 +74,14 @@ public class TestPoolWatchThread {
 //    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes(); 
     	expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
     	expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();
+    	expect(mockConfig.getDefaultTransactionIsolationValue()).andReturn(-1).anyTimes();
+    	expect(mockConfig.getDefaultAutoCommit()).andReturn(false).anyTimes();
 
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
-		expect(mockConfig.isLazyInit()).andReturn(true).anyTimes();
+		expect(mockConfig.isLazyInit()).andReturn(false).anyTimes();
 		
     	mockPool = createNiceMock(BoneCP.class);
+    	expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockConfig);
 		testClass = new PoolWatchThread(mockPartition, mockPool);
@@ -197,6 +194,8 @@ public class TestPoolWatchThread {
 
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
+		expect(mockPool.obtainRawInternalConnection()).andReturn(createNiceMock(ConnectionHandle.class)).anyTimes();
+		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockPartition, mockLogger);
 		testClass.run();
@@ -269,7 +268,7 @@ public class TestPoolWatchThread {
 
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall(); 
-		
+		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		replay(mockPartition, mockPool, mockLogger, mockConfig);
 		testClass.run();
 		verify(mockPartition);

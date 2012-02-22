@@ -18,12 +18,16 @@ package com.jolbox.bonecp.provider;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.UnknownUnwrapTypeException;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.Stoppable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +41,11 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  *
  * @author wallacew
  */
-public class BoneCPConnectionProvider implements ConnectionProvider {
+public class BoneCPConnectionProvider implements ConnectionProvider,Configurable,Stoppable {
+	/**
+	 * uid
+	 */
+	private static final long serialVersionUID = -5236029951415598543L;
 	/** Config key. */
 	protected static final String CONFIG_CONNECTION_DRIVER_CLASS = "hibernate.connection.driver_class";
 	/** Config key. */
@@ -67,33 +75,23 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/** Class logger. */
 	private static Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
 
+	
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.connection.ConnectionProvider#close()
-	 */
-	public void close() throws HibernateException {
-		if (this.pool != null){
-			this.pool.shutdown();
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.connection.ConnectionProvider#closeConnection(java.sql.Connection)
+	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#closeConnection(java.sql.Connection)
 	 */
 	public void closeConnection(Connection conn) throws SQLException {
 		conn.close();
 	} 
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.connection.ConnectionProvider#configure(java.util.Properties)
+	 * Pool configuration.
+	 * @param props
+	 * @throws HibernateException
 	 */
 	public void configure(Properties props) throws HibernateException {
-		try {
+		try{
 			this.config = new BoneCPConfig(props);
 
 			// old hibernate config
@@ -126,8 +124,8 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 
 
 			// Remember Isolation level
-			this.isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
-			this.autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
+			this.isolation = ConfigurationHelper.getInteger(AvailableSettings.ISOLATION, props);
+			this.autocommit = ConfigurationHelper.getBoolean(AvailableSettings.AUTOCOMMIT, props);
 
 			logger.debug(this.config.toString());
 
@@ -142,7 +140,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 			this.pool = createPool(this.config);
 		} catch (Exception e) {
 			throw new HibernateException(e);
-		} 
+		}
 	}
 
 	/** Loads the given class, respecting the given classloader.
@@ -174,7 +172,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.connection.ConnectionProvider#getConnection()
+	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#getConnection()
 	 */
 	public Connection getConnection() throws SQLException {
 		Connection connection = this.pool.getConnection();
@@ -206,7 +204,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.connection.ConnectionProvider#supportsAggressiveRelease()
+	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
 	 */
 	public boolean supportsAggressiveRelease() {
 		return false;
@@ -234,4 +232,52 @@ public class BoneCPConnectionProvider implements ConnectionProvider {
 		this.classLoader = classLoader;
 	}
 
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType ) ||
+			BoneCPConnectionProvider.class.isAssignableFrom( unwrapType );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.equals( unwrapType ) ||
+				BoneCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+			
+		throw new UnknownUnwrapTypeException( unwrapType );
+	}
+
+	
+	/**
+	 * Legacy conversion.
+	 * @param map
+	 * @return Properties
+	 */
+	private Properties mapToProperties(Map<String, String> map) {
+		   Properties p = new Properties();
+		   for (Map.Entry<String,String> entry : map.entrySet()) {
+		     p.put(entry.getKey(), entry.getValue());
+		   }
+		   return p;
+		 }
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public void configure(Map configurationValues) {
+			configure(mapToProperties(configurationValues));
+	}
+
+	@Override
+	public void stop() {
+		close();
+	}
+
+	/**
+	 * alias for stop.
+	 */
+	public void close(){
+		this.pool.shutdown();
+	}
 }

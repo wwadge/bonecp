@@ -89,7 +89,7 @@ public class ConnectionTesterThread implements Runnable {
 						connection.setOriginatingPartition(this.partition);
 						
 						// check if connection has been idle for too long (or is marked as broken)
-						if (connection.isPossiblyBroken() || 
+						if (!connection.isPoison() && connection.isPossiblyBroken() || 
 								((this.idleMaxAgeInMs > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
 							// kill off this connection - it's broken or it has been idle for too long
 							closeConnection(connection);
@@ -97,7 +97,7 @@ public class ConnectionTesterThread implements Runnable {
 						}
 						
 						// check if it's time to send a new keep-alive test statement.
-						if (this.idleConnectionTestPeriodInMs > 0 && (currentTimeInMs-connection.getConnectionLastUsedInMs() > this.idleConnectionTestPeriodInMs) &&
+						if (!connection.isPoison() && this.idleConnectionTestPeriodInMs > 0 && (currentTimeInMs-connection.getConnectionLastUsedInMs() > this.idleConnectionTestPeriodInMs) &&
 								(currentTimeInMs-connection.getConnectionLastResetInMs() >= this.idleConnectionTestPeriodInMs)) {
 							// send a keep-alive, close off connection if we fail.
 							if (!this.pool.isConnectionHandleAlive(connection)){
@@ -111,8 +111,8 @@ public class ConnectionTesterThread implements Runnable {
 							}
 						} else {
 							// determine the next time to wake up (connection test time or idle Max age?) 
-							tmp = this.idleConnectionTestPeriodInMs-(currentTimeInMs - connection.getConnectionLastResetInMs());
-							long tmp2 = this.idleMaxAgeInMs - (currentTimeInMs-connection.getConnectionLastUsedInMs());
+							tmp = Math.abs(this.idleConnectionTestPeriodInMs-(currentTimeInMs - connection.getConnectionLastResetInMs()));
+							long tmp2 = Math.abs(this.idleMaxAgeInMs - (currentTimeInMs-connection.getConnectionLastUsedInMs()));
 							if (this.idleMaxAgeInMs > 0){
 								tmp = Math.min(tmp, tmp2);
 							}
@@ -135,6 +135,8 @@ public class ConnectionTesterThread implements Runnable {
 					}
 
 				} // throw it back on the queue
+//				System.out.println("Scheduling for " + nextCheckInMs);
+				// offset by a bit to avoid firing a lot for slightly offset connections
 				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
