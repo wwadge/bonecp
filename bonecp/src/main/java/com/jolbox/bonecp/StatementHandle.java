@@ -1008,7 +1008,19 @@ public class StatementHandle implements Statement{
 		return result; 
 
 	}
-	// #endif JDK6
+  // #endif JDK6
+
+	// #ifdef JDK7
+  @Override
+  public void closeOnCompletion() throws SQLException {
+    this.internalStatement.closeOnCompletion();
+  }
+
+  @Override
+  public boolean isCloseOnCompletion() throws SQLException {
+    return this.internalStatement.isCloseOnCompletion();
+  }
+  // #endif JDK7
 	
 	
 	public void setCursorName(String name)

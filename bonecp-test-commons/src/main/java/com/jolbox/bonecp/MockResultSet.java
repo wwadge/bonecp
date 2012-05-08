@@ -1102,7 +1102,7 @@ public class MockResultSet implements ResultSet {
 			throws SQLException {
 	}
 
-	/** {@inheritDoc}
+  /** {@inheritDoc}
 	 * @see java.sql.ResultSet#updateNClob(int, java.io.Reader, long)
 	 */
 	public void updateNClob(int columnIndex, Reader reader, long length)
@@ -1233,6 +1233,19 @@ public class MockResultSet implements ResultSet {
 			throws SQLException {
 	}
 	// #endif JDK6  
+
+  // #ifdef JDK7
+  @Override
+  public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+    return null;
+  }
+
+  @Override
+  public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+    return null;
+  }
+  // #endif JDK7
+
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#updateShort(int, short)
 	 */

@@ -20,6 +20,9 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+// #ifdef JDK7
+import java.sql.SQLFeatureNotSupportedException;
+// #endif JDK7
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -194,7 +197,14 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		throw new UnsupportedOperationException("getLoginTimeout is unsupported.");
 	}
 
-	/**
+	// #ifdef JDK7
+  @Override
+  public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    throw new SQLFeatureNotSupportedException("getParentLogger is unsupported");
+  }
+  // #endif JDK7
+
+  /**
 	 * Sets the log writer for this DataSource object to the given java.io.PrintWriter object.
 	 */
 	public void setLogWriter(PrintWriter out)
