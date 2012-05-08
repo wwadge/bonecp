@@ -27,63 +27,41 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 
-	 /** 
-	  * Singleton pattern.
-	  */
-	private DefaultConnectionStrategy(){ 
-		// singleton
-	}
-	
-	 /** Singleton pattern.
-	 */
-	private static class SingletonHolder { 
-		 /** Singleton pattern.
-		 */
-	     @SuppressWarnings("synthetic-access")
-		public static final DefaultConnectionStrategy INSTANCE = new DefaultConnectionStrategy();
-	   }
-
-	 
-	/** Singleton pattern.
-	 * @param pool
-	 * @return DefaultConnectionStrategy
-	 */
-	public static DefaultConnectionStrategy getInstance(BoneCP pool){
-		 DefaultConnectionStrategy dcs = SingletonHolder.INSTANCE;
-		 dcs.pool = pool;
-		 return dcs;
+	public DefaultConnectionStrategy(BoneCP pool){
+    this.pool = pool;
 	}
 	
 	@Override
-	public ConnectionHandle pollConnection(){
-		ConnectionHandle result = null;
+  public ConnectionHandle pollConnection(){
+    ConnectionHandle result = null;
 
-		int partition = (int) (Thread.currentThread().getId() % this.pool.partitionCount);
-		ConnectionPartition connectionPartition = this.pool.partitions[partition];
+    int partition = (int) (Thread.currentThread().getId() % this.pool.partitionCount);
+    ConnectionPartition connectionPartition = this.pool.partitions[partition];
 
-		result = connectionPartition.getFreeConnections().poll();
+    result = connectionPartition.getFreeConnections().poll();
 
-		if (result == null) { 
-			// we ran out of space on this partition, pick another free one
-			for (int i=0; i < this.pool.partitionCount; i++){
-				if (i == partition) {
-					continue; // we already determined it's not here
-				}
-				result = this.pool.partitions[i].getFreeConnections().poll(); // try our luck with this partition
-				connectionPartition = this.pool.partitions[i];
-				if (result != null) {
-					break;  // we found a connection
-				}
-			}
-		}
+    if (result == null) {
+      // we ran out of space on this partition, pick another free one
+      for (int i=0; i < this.pool.partitionCount; i++){
+        if (i == partition) {
+          continue; // we already determined it's not here
+        }
+        result = this.pool.partitions[i].getFreeConnections().poll(); // try our luck with this partition
+        connectionPartition = this.pool.partitions[i];
+        if (result != null) {
+          break;  // we found a connection
+        }
+      }
+    }
 		
-		if (!connectionPartition.isUnableToCreateMoreTransactions()){ // unless we can't create any more connections...   
-			this.pool.maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
-		}
+    if (!connectionPartition.isUnableToCreateMoreTransactions()){ // unless we can't create any more connections...
+      this.pool.maybeSignalForMoreConnections(connectionPartition);  // see if we need to create more
+    }
 		
-		return result;
+    return result;
 
-	}
+  }
+
 	@Override
 	protected Connection getConnectionInternal() throws SQLException {
 		

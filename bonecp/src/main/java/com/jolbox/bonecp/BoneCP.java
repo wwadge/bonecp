@@ -95,7 +95,7 @@ public class BoneCP implements Serializable {
 	/** Executor for threads watching each partition to dynamically create new threads/kill off excess ones.
 	 */
 	private ExecutorService connectionsScheduler;
-	/** Configuration object used in constructor. */ 
+	/** Configuration object used in constructor. */
 	private BoneCPConfig config;
 	/** If set to true, config has specified the use of helper threads. */
 	private boolean releaseHelperThreadsConfigured;
@@ -108,9 +108,9 @@ public class BoneCP implements Serializable {
 	/** Logger class. */
 	private static Logger logger = LoggerFactory.getLogger(BoneCP.class);
 	/** JMX support. */
-	private MBeanServer mbs; 
+	private MBeanServer mbs;
 
-	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to 
+	/** If set to true, create a new thread that monitors a connection and displays warnings if application failed to
 	 * close the connection.
 	 */
 	protected boolean closeConnectionWatch = false;
@@ -141,11 +141,11 @@ public class BoneCP implements Serializable {
 	/** Config setting. */
 	@VisibleForTesting protected boolean nullOnConnectionTimeout;
 	/** Config setting. */
-	@VisibleForTesting 
+	@VisibleForTesting
 	protected boolean resetConnectionOnClose;
 	/** Config setting. */
 	protected volatile boolean cachedPoolStrategy;
-	/** Currently active get connection strategy class to use. */ 
+	/** Currently active get connection strategy class to use. */
 	protected volatile ConnectionStrategy connectionStrategy;
 	/** If true, there are no connections to be taken. */
 	private AtomicBoolean dbIsDown = new AtomicBoolean();
@@ -193,7 +193,7 @@ public class BoneCP implements Serializable {
 				// do nothing
 			}
 			this.connectionStrategy.terminateAllConnections();
-			unregisterDriver();
+      unregisterDriver();
 			registerUnregisterJMX(false);
 			logger.info("Connection pool has been shutdown.");
 		}
@@ -250,7 +250,7 @@ public class BoneCP implements Serializable {
 		ConnectionPartition partition = handle.getOriginatingPartition();
 
 		if (this.finalizableRefQueue != null){ //safety
-			this.finalizableRefs.remove(handle.getInternalConnection()); 
+			this.finalizableRefs.remove(handle.getInternalConnection());
 			//			assert o != null : "Did not manage to remove connection from finalizable ref queue";
 		}
 
@@ -285,7 +285,7 @@ public class BoneCP implements Serializable {
 
 		if (datasourceBean != null){
 			return (username == null ? datasourceBean.getConnection() : datasourceBean.getConnection(username, password));
-		} 
+		}
 
 		// just force the driver to init first
 		if (!this.driverInitialized ){
@@ -302,7 +302,7 @@ public class BoneCP implements Serializable {
 				// See https://bugs.launchpad.net/bonecp/+bug/876476
 			}
 		}
-		
+
 		if (props != null){
 			result = DriverManager.getConnection(url, props);
 		} else {
@@ -387,9 +387,9 @@ public class BoneCP implements Serializable {
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 		this.cachedPoolStrategy = config.getPoolStrategy() != null && config.getPoolStrategy().equalsIgnoreCase("CACHED");
 		if (this.cachedPoolStrategy){
-			this.connectionStrategy = CachedConnectionStrategy.getInstance(this, DefaultConnectionStrategy.getInstance(this));
+			this.connectionStrategy = CachedConnectionStrategy.getInstance(this, new DefaultConnectionStrategy(this));
 		} else {
-			this.connectionStrategy = DefaultConnectionStrategy.getInstance(this);
+			this.connectionStrategy = new DefaultConnectionStrategy(this);
 		}
 		boolean queueLIFO = config.getServiceOrder() != null && config.getServiceOrder().equalsIgnoreCase("LIFO");
 		if (this.closeConnectionWatch){
@@ -465,7 +465,7 @@ public class BoneCP implements Serializable {
 		if (statementReleaseHelperThreads > 0) {
 			this.setStatementCloseHelperExecutor(Executors.newFixedThreadPool(statementReleaseHelperThreads, new CustomThreadFactory("BoneCP-statement-close-helper-thread"+suffix, true)));
 
-			for (int i = 0; i < statementReleaseHelperThreads; i++) { 
+			for (int i = 0; i < statementReleaseHelperThreads; i++) {
 				// go through pool  rather than statementReleaseHelper directly to aid unit testing (i.e. mocking)
 				getStatementCloseHelperExecutor().execute(new StatementReleaseHelperThread(this.statementsPendingRelease, this));
 			}
@@ -473,7 +473,7 @@ public class BoneCP implements Serializable {
 	}
 
 	/**
-	 * Initialises JMX stuff.  
+	 * Initialises JMX stuff.
 	 * @param doRegister if true, perform registration, if false unregister
 	 */
 	protected void registerUnregisterJMX(boolean doRegister) {
@@ -493,17 +493,17 @@ public class BoneCP implements Serializable {
 
 			if (doRegister){
 				if (!this.mbs.isRegistered(name)){
-					this.mbs.registerMBean(this.statistics, name); 
+					this.mbs.registerMBean(this.statistics, name);
 				}
 				if (!this.mbs.isRegistered(configname)){
-					this.mbs.registerMBean(this.config, configname); 
+					this.mbs.registerMBean(this.config, configname);
 				}
 			} else {
 				if (this.mbs.isRegistered(name)){
-					this.mbs.unregisterMBean(name); 
+					this.mbs.unregisterMBean(name);
 				}
 				if (this.mbs.isRegistered(configname)){
-					this.mbs.unregisterMBean(configname); 
+					this.mbs.unregisterMBean(configname);
 				}
 			}
 		} catch (Exception e) {
@@ -515,7 +515,7 @@ public class BoneCP implements Serializable {
 	/**
 	 * Returns a free connection.
 	 * @return Connection handle.
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
 	public Connection getConnection() throws SQLException {
 		return this.connectionStrategy.getConnection();
@@ -523,7 +523,7 @@ public class BoneCP implements Serializable {
 
 
 	/** Starts off a new thread to monitor this connection attempt.
-	 * @param connectionHandle to monitor 
+	 * @param connectionHandle to monitor
 	 */
 	protected void watchConnection(ConnectionHandle connectionHandle) {
 		String message = captureStackTrace(UNCLOSED_EXCEPTION_MESSAGE);
@@ -533,10 +533,10 @@ public class BoneCP implements Serializable {
 	/** Throw an exception to capture it so as to be able to print it out later on
 	 * @param message message to display
 	 * @return Stack trace message
-	 * 
+	 *
 	 */
 	protected String captureStackTrace(String message) {
-		StringBuilder stringBuilder = new StringBuilder(String.format(message, Thread.currentThread().getName()));		
+		StringBuilder stringBuilder = new StringBuilder(String.format(message, Thread.currentThread().getName()));
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 		for(int i = 0; i < trace.length; i++){
 			stringBuilder.append(" "+trace[i]+"\r\n");
@@ -547,14 +547,14 @@ public class BoneCP implements Serializable {
 		return stringBuilder.toString();
 	}
 
-	/** Obtain a connection asynchronously by queueing a request to obtain a connection in a separate thread. 
-	 * 
+	/** Obtain a connection asynchronously by queueing a request to obtain a connection in a separate thread.
+	 *
 	 *  Use as follows:<p>
 	 *      Future&lt;Connection&gt; result = pool.getAsyncConnection();<p>
 	 *       ... do something else in your application here ...<p>
 	 *      Connection connection = result.get(); // get the connection<p>
-	 *      
-	 * @return A Future task returning a connection. 
+	 *
+	 * @return A Future task returning a connection.
 	 */
 	public ListenableFuture<Connection> getAsyncConnection(){
 
@@ -571,14 +571,14 @@ public class BoneCP implements Serializable {
 	 */
 	protected void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
-		if (!connectionPartition.isUnableToCreateMoreTransactions() && !this.poolShuttingDown &&  
+		if (!connectionPartition.isUnableToCreateMoreTransactions() && !this.poolShuttingDown &&
 				connectionPartition.getAvailableConnections()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
 			connectionPartition.getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
-		} 
+		}
 	}
 
 	/**
-	 * Releases the given connection back to the pool. This method is not intended to be called by 
+	 * Releases the given connection back to the pool. This method is not intended to be called by
 	 * applications (hence set to protected). Call connection.close() instead which will return
 	 * the connection back to the pool.
 	 *
@@ -606,7 +606,7 @@ public class BoneCP implements Serializable {
 
 	/** Release a connection by placing the connection back in the pool.
 	 * @param connectionHandle Connection being released.
-	 * @throws SQLException 
+	 * @throws SQLException
 	 **/
 	protected void internalReleaseConnection(ConnectionHandle connectionHandle) throws SQLException {
 		if (!this.cachedPoolStrategy){
@@ -648,7 +648,7 @@ public class BoneCP implements Serializable {
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
 
 		if (this.cachedPoolStrategy && connectionHandle.inUseInThreadLocalContext.get()){
-			// this might fail if we have a thread that takes up more than one thread 
+			// this might fail if we have a thread that takes up more than one thread
 			// (we only track one)
 			connectionHandle.inUseInThreadLocalContext.set(false);
 		} else {
@@ -670,7 +670,7 @@ public class BoneCP implements Serializable {
 	 */
 	public boolean isConnectionHandleAlive(ConnectionHandle connection) {
 		Statement stmt = null;
-		boolean result = false; 
+		boolean result = false;
 		boolean logicallyClosed = connection.logicallyClosed;
 		try {
 			if (logicallyClosed){
@@ -688,7 +688,7 @@ public class BoneCP implements Serializable {
 			}
 
 
-			if (rs != null) { 
+			if (rs != null) {
 				rs.close();
 			}
 
@@ -760,7 +760,7 @@ public class BoneCP implements Serializable {
 	/**
 	 * Gets config object.
 	 *
-	 * @return config object 
+	 * @return config object
 	 */
 	public BoneCPConfig getConfig() {
 		return this.config;
