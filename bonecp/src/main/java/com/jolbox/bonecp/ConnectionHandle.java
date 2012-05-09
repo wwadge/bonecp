@@ -111,7 +111,7 @@ public class ConnectionHandle implements Connection{
 	/** Prepared Statement Cache. */
 	private IStatementCache callableStatementCache = null;
 	/** Logger handle. */
-	private static Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
 	/** An opaque handle for an application to use in any way it deems fit. */
 	private Object debugHandle;
 	/** Handle to the connection hook as defined in the config. */

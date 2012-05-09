@@ -40,7 +40,7 @@ public class PoolWatchThread implements Runnable {
 	/** Occupancy% threshold. */
 	private int poolAvailabilityThreshold;
 	/** Logger handle. */
-	private static Logger logger = LoggerFactory.getLogger(PoolWatchThread.class);
+	private static final Logger logger = LoggerFactory.getLogger(PoolWatchThread.class);
 
 
 	/** Thread constructor

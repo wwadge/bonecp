@@ -106,7 +106,7 @@ public class BoneCP implements Serializable {
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
 	private ListeningExecutorService asyncExecutor;
 	/** Logger class. */
-	private static Logger logger = LoggerFactory.getLogger(BoneCP.class);
+	private static final Logger logger = LoggerFactory.getLogger(BoneCP.class);
 	/** JMX support. */
 	private MBeanServer mbs;
 

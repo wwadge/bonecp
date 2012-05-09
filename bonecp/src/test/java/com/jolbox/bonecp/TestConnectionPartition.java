@@ -15,10 +15,6 @@
  */
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -31,12 +27,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
-
+import com.google.common.base.FinalizableReferenceQueue;
+import com.jolbox.bonecp.proxy.ConnectionProxy;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.google.common.base.FinalizableReferenceQueue;
-import com.jolbox.bonecp.proxy.ConnectionProxy;
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 /**
  * @author wwadge
  *
@@ -80,13 +78,9 @@ public class TestConnectionPartition {
 		expectLastCall().times(3);
 		replay(this.mockPool, mockReleaseHelper, mockConfig);
 		testClass = new ConnectionPartition(this.mockPool);
-		mockLogger = createNiceMock(Logger.class);
+		mockLogger = TestUtils.mockLogger(testClass.getClass());
 		makeThreadSafe(mockLogger, true);
-		Field field = testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(testClass, mockLogger);
 		mockLogger.error((String)anyObject());
-		makeThreadSafe(mockLogger, true);
 		expectLastCall().anyTimes();
 		replay(mockLogger);
 		verify(this.mockPool, mockReleaseHelper, mockConfig);

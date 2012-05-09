@@ -36,19 +36,17 @@ along with BoneCP.  If not, see <http://www.gnu.org/licenses/>.
 package com.jolbox.bonecp;
 
 
-import static org.easymock.EasyMock.*;
-
 import java.lang.reflect.InvocationTargetException;
 import java.sql.PreparedStatement;
 import java.util.HashSet;
 import java.util.Set;
-
+import com.jolbox.bonecp.hooks.AbstractConnectionHook;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.jolbox.bonecp.hooks.AbstractConnectionHook;
+import static org.easymock.EasyMock.*;
 
 /** Tests preparedStatementHandle class.
  * @author wwadge
@@ -84,11 +82,11 @@ public class TestPreparedStatementHandle {
 		replay(this.mockConnection, this.mockPool);
 		this.testClass = new PreparedStatementHandle(this.mockClass, "", this.mockConnection, "TestSQL", this.mockCallableStatementCache);
 		reset(this.mockConnection, this.mockPool);
-		PreparedStatementHandle.logger = createNiceMock(Logger.class);
+    Logger pshMockLogger = TestUtils.mockLogger(PreparedStatementHandle.class);
 		expect(PreparedStatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
-		PreparedStatementHandle.logger.debug((String)org.easymock.EasyMock.anyObject());
+		pshMockLogger.debug((String)org.easymock.EasyMock.anyObject());
 		org.easymock.EasyMock.expectLastCall().anyTimes();
-		replay(PreparedStatementHandle.logger );
+		replay(pshMockLogger);
 	}
 
 	/** Test that each method will result in an equivalent bounce on the inner statement (+ test exceptions)

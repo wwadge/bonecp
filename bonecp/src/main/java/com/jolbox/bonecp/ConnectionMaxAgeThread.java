@@ -41,7 +41,7 @@ public class ConnectionMaxAgeThread implements Runnable {
 	/** If true, we're operating in a LIFO fashion. */ 
 	private boolean lifoMode;
 	/** Logger handle. */
-	protected static Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
 
 	/** Constructor
 	 * @param connectionPartition partition to work on

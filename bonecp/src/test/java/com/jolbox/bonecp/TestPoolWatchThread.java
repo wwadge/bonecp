@@ -15,14 +15,12 @@
  */
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.jolbox.bonecp.hooks.CoverageHook;
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -31,7 +29,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.jolbox.bonecp.hooks.CoverageHook;
+import static org.easymock.EasyMock.*;
 
 
 /** Tests the functionality of the pool watch thread.
@@ -86,7 +84,7 @@ public class TestPoolWatchThread {
 		replay(mockPool, mockConfig);
 		testClass = new PoolWatchThread(mockPartition, mockPool);
 
-		mockLogger = createNiceMock(Logger.class);
+		mockLogger = TestUtils.mockLogger(testClass.getClass());
 		makeThreadSafe(mockLogger, true);
 
 		mockLogger.error((String)anyObject(), anyObject());
@@ -95,11 +93,6 @@ public class TestPoolWatchThread {
 
 		mockLogger.debug((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
-
-		Field field = testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(null, mockLogger);
-
 	}
 
 	/** AfterClass cleanup.

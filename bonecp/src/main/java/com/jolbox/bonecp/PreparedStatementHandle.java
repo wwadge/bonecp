@@ -48,12 +48,12 @@ import org.slf4j.LoggerFactory;
  * @author wallacew
  */
 public class PreparedStatementHandle extends StatementHandle implements
-PreparedStatement {
+    PreparedStatement {
 
 	/** Handle to the real prepared statement. */
 	private PreparedStatement internalPreparedStatement;
 	/** Class logger. */
-	protected static Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
+	protected static final Logger logger = LoggerFactory.getLogger(PreparedStatementHandle.class);
 
 
 	/**

@@ -15,16 +15,15 @@
  */
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ScheduledExecutorService;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import static org.easymock.EasyMock.*;
 
 /**
  * Test for connection thread tester
@@ -334,9 +333,8 @@ public class TestConnectionThreadTester {
 		
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor, mockLogger);
 		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, localconfig.getIdleMaxAgeInMinutes(), localconfig.getIdleConnectionTestPeriodInMinutes(), false);
-		Field loggerField = this.testClass.getClass().getDeclaredField("logger");
-		loggerField.setAccessible(true);
-		loggerField.set(this.testClass, mockLogger);
+    Field loggerField = this.testClass.getClass().getDeclaredField("logger");
+    TestUtils.setFinalStatic(loggerField, mockLogger);
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection, mockLogger);
 	}
@@ -374,8 +372,7 @@ public class TestConnectionThreadTester {
 		replay(mockPool, mockConnection, mockConnectionPartition, mockExecutor, mockLogger);
 		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, localconfig.getIdleMaxAgeInMinutes(), localconfig.getIdleConnectionTestPeriodInMinutes(), false);
 		Field loggerField = this.testClass.getClass().getDeclaredField("logger");
-		loggerField.setAccessible(true);
-		loggerField.set(this.testClass, mockLogger);
+    TestUtils.setFinalStatic(loggerField, mockLogger);
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection, mockLogger);
 	}

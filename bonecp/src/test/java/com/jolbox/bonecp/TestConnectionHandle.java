@@ -65,7 +65,7 @@ public class TestConnectionHandle {
 	/** Mock handle. */
 	private BoneCP mockPool = createNiceMock(BoneCP.class);
 	/** Mock handle. */
-	private Logger mockLogger = createNiceMock(Logger.class);
+	private Logger mockLogger;
 	/** Mock handle. */
 	private StatementCache testStatementCache = new StatementCache(100, false, new Statistics(this.mockPool));
 	/** Config clone. */
@@ -98,12 +98,9 @@ public class TestConnectionHandle {
 		this.testClass = ConnectionHandle.createTestConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
 		
 		this.mockPool.closeConnectionWatch=true;
-		
-		Field field = this.testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(null, this.mockLogger);
+		this.mockLogger = TestUtils.mockLogger(testClass.getClass());
 
-		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
+		Field field = this.testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);
 		field.set(this.testClass, false);
 		

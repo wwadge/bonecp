@@ -17,14 +17,12 @@
 
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-
-import java.lang.reflect.Field;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import static org.easymock.EasyMock.*;
 
 
 /**
@@ -45,11 +43,8 @@ public class TestCustomThreadFactory {
 	@Test
 	public void testUncaughtException() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InterruptedException{
 		CustomThreadFactory testClass = new CustomThreadFactory("test", false);
-		Logger mockLogger = createNiceMock(Logger.class);
+		Logger mockLogger = TestUtils.mockLogger(testClass.getClass());
 		makeThreadSafe(mockLogger, true);
-		Field field = testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(testClass, mockLogger);
 
 		ExecutorService executor = Executors.newSingleThreadExecutor(testClass);
 		mockLogger.error((String)anyObject(), (Throwable)anyObject());

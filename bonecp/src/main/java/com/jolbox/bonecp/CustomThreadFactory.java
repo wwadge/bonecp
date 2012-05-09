@@ -56,7 +56,7 @@ public class CustomThreadFactory
     /** Thread name. */
     private String threadName;
     /** Logger handle. */
-    private static Logger logger = LoggerFactory.getLogger(CustomThreadFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(CustomThreadFactory.class);
 
     /**
      *  Default constructor.
