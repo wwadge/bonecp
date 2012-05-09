@@ -16,14 +16,6 @@
 
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -42,7 +34,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
-
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -50,11 +41,10 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
-
+import com.jolbox.bonecp.hooks.ConnectionHook;
 import jsr166y.LinkedTransferQueue;
 import jsr166y.TransferQueue;
 import junit.framework.Assert;
-
 import org.easymock.EasyMock;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -62,7 +52,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.jolbox.bonecp.hooks.ConnectionHook;
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.*;
 
 /**
  * @author wwadge
@@ -185,11 +176,8 @@ public class TestBoneCP {
 		mockConnectionHandles = createNiceMock(BoundedLinkedTransferQueue.class);
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockLock = createNiceMock(Lock.class);
-		mockLogger = createNiceMock(Logger.class);
+		mockLogger = TestUtils.mockLogger(testClass.getClass());
 		makeThreadSafe(mockLogger, true);
-		field = testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(testClass, mockLogger);
 		mockDatabaseMetadata = createNiceMock(DatabaseMetaData.class);
 		mockResultSet = createNiceMock(MockResultSet.class);
 

@@ -38,6 +38,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
+// #ifdef JDK7
+import java.util.concurrent.Executor;
+// #endif JDK7
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -108,7 +111,7 @@ public class ConnectionHandle implements Connection{
 	/** Prepared Statement Cache. */
 	private IStatementCache callableStatementCache = null;
 	/** Logger handle. */
-	private static Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
 	/** An opaque handle for an application to use in any way it deems fit. */
 	private Object debugHandle;
 	/** Handle to the connection hook as defined in the config. */
@@ -685,7 +688,7 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-	@Override	
+  @Override
 	public Array createArrayOf(String typeName, Object[] elements)
 	throws SQLException {
 		Array result = null;
@@ -746,6 +749,33 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 	// #endif JDK6
+
+	// #ifdef JDK7
+  @Override
+  public void setSchema(String schema) throws SQLException {
+    this.connection.setSchema(schema);
+  }
+
+  @Override
+  public String getSchema() throws SQLException {
+    return this.connection.getSchema();
+  }
+
+  @Override
+  public void abort(Executor executor) throws SQLException {
+    this.connection.abort(executor);
+  }
+
+  @Override
+  public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+    this.connection.setNetworkTimeout(executor, milliseconds);
+  }
+
+  @Override
+  public int getNetworkTimeout() throws SQLException {
+    return this.connection.getNetworkTimeout();
+  }
+  // #endif JDK7
 
 	public Statement createStatement() throws SQLException {
 		Statement result = null;

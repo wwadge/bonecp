@@ -15,11 +15,6 @@
  */
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -27,12 +22,14 @@ import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.*;
 
 
 /** Test class for statement cache
@@ -346,11 +343,10 @@ public class TestStatementCache {
 		Field field = testClass.getClass().getDeclaredField("cache");
 		field.setAccessible(true);
 		field.set(testClass, mockCache);
-		
+
 		field = testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(null, mockLogger);
-		
+    TestUtils.setFinalStatic(field, mockLogger);
+
 		Iterator<StatementHandle> mockIterator = createNiceMock(Iterator.class);
 		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
 		

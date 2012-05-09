@@ -16,21 +16,6 @@
 package com.jolbox.bonecp;
 
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static org.easymock.EasyMock.anyInt;
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.aryEq;
-import static org.easymock.EasyMock.createNiceMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.reset;
-import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
 import java.lang.Thread.State;
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
@@ -48,18 +33,20 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import junit.framework.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-
 import com.google.common.base.FinalizableReferenceQueue;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
+import junit.framework.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.*;
 
 /**
  * Mock unit testing for Connection Handle class.
@@ -78,7 +65,7 @@ public class TestConnectionHandle {
 	/** Mock handle. */
 	private BoneCP mockPool = createNiceMock(BoneCP.class);
 	/** Mock handle. */
-	private Logger mockLogger = createNiceMock(Logger.class);
+	private Logger mockLogger;
 	/** Mock handle. */
 	private StatementCache testStatementCache = new StatementCache(100, false, new Statistics(this.mockPool));
 	/** Config clone. */
@@ -95,7 +82,7 @@ public class TestConnectionHandle {
 		reset(this.mockConnection, this.mockPreparedStatementCache, this.mockPool, this.mockCallableStatementCache);
 		
 		this.config = CommonTestUtils.getConfigClone();
-		this.mockPool.connectionStrategy = DefaultConnectionStrategy.getInstance(this.mockPool);
+		this.mockPool.connectionStrategy = new DefaultConnectionStrategy(this.mockPool);
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		
 		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
@@ -111,12 +98,9 @@ public class TestConnectionHandle {
 		this.testClass = ConnectionHandle.createTestConnectionHandle(this.mockConnection, this.mockPreparedStatementCache, this.mockCallableStatementCache, this.mockPool);
 		
 		this.mockPool.closeConnectionWatch=true;
-		
-		Field field = this.testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(null, this.mockLogger);
+		this.mockLogger = TestUtils.mockLogger(testClass.getClass());
 
-		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
+		Field field = this.testClass.getClass().getDeclaredField("logicallyClosed");
 		field.setAccessible(true);
 		field.set(this.testClass, false);
 		

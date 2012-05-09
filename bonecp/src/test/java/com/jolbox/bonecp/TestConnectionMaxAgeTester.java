@@ -16,19 +16,20 @@
 
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import jsr166y.TransferQueue;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.fail;
+
 
 /**
  * Test for connection thread tester
@@ -251,17 +252,20 @@ public class TestConnectionMaxAgeTester {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testCloseConnectionWithExceptionCoverage() throws SQLException{
+	public void testCloseConnectionWithExceptionCoverage() throws Exception{
 		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
 		mockPool.postDestroyConnection(mockConnection);
 		expectLastCall().once();
-		ConnectionMaxAgeThread.logger = null; // make it break.
+    // set logger to null so that exception will be thrown in catch clause
+    Field field = ConnectionMaxAgeThread.class.getDeclaredField("logger");
+    TestUtils.setFinalStatic(field, null);
 		mockConnection.internalClose();
 		expectLastCall().andThrow(new SQLException());
 		
 		replay(mockConnection, mockPool);
 		try{
 			testClass.closeConnection(mockConnection);
+      fail("Expecting NPE because logger was set to null");
 		} catch (Exception e){
 			// do nothing
 		}

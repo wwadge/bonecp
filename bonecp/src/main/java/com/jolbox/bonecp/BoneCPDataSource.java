@@ -16,36 +16,38 @@
 
 package com.jolbox.bonecp;
 
+import java.io.Closeable;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+// #ifdef JDK7
+// #endif JDK7
 
 /**
  * DataSource for use with LazyConnection Provider etc.
  *
  * @author wallacew
  */
-public class BoneCPDataSource extends BoneCPConfig implements DataSource, ObjectFactory {
+public class BoneCPDataSource extends BoneCPConfig implements DataSource, ObjectFactory, Closeable {
 	/** Serialization UID. */
 	private static final long serialVersionUID = -1561804548443209469L;
 	/** Config setting. */
@@ -194,7 +196,14 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		throw new UnsupportedOperationException("getLoginTimeout is unsupported.");
 	}
 
-	/**
+	// #ifdef JDK7
+  @Override
+  public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    throw new SQLFeatureNotSupportedException("getParentLogger is unsupported");
+  }
+  // #endif JDK7
+
+  /**
 	 * Sets the log writer for this DataSource object to the given java.io.PrintWriter object.
 	 */
 	public void setLogWriter(PrintWriter out)

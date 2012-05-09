@@ -39,7 +39,7 @@ public class CloseThreadMonitor implements Runnable {
 	/** ms to wait for thread.join() */
 	private long closeConnectionWatchTimeout;
 	/** Logger class. */
-	private static Logger logger = LoggerFactory.getLogger(CloseThreadMonitor.class);
+	private static final Logger logger = LoggerFactory.getLogger(CloseThreadMonitor.class);
 
 
 	/**
