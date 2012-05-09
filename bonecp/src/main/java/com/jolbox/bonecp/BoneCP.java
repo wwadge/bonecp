@@ -16,6 +16,7 @@
 
 package com.jolbox.bonecp;
 
+import java.io.Closeable;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.ref.Reference;
@@ -59,7 +60,7 @@ import com.jolbox.bonecp.hooks.AcquireFailConfig;
  * @author wwadge
  *
  */
-public class BoneCP implements Serializable {
+public class BoneCP implements Serializable, Closeable {
 	/** Warning message. */
 	private static final String THREAD_CLOSE_CONNECTION_WARNING = "Thread close connection monitoring has been enabled. This will negatively impact on your performance. Only enable this option for debugging purposes!";
 	/** Serialization UID */
