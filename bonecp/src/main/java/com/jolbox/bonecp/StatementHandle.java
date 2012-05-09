@@ -462,8 +462,9 @@ public class StatementHandle implements Statement{
 				logger.debug(PoolUtil.fillLogParams(this.batchSQL.toString(), this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
-			String query = this.logStatementsEnabled ? this.batchSQL.toString() : "";
+			String query = "";
 			if (this.connectionHook != null){
+        query = this.batchSQL.toString();
 				this.connectionHook.onBeforeStatementExecute(this.connectionHandle, this, query, this.logParams);
 			}
 			result = this.internalStatement.executeBatch();
