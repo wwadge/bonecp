@@ -86,7 +86,7 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 				if (this.pool.nullOnConnectionTimeout){
 					return null;
 				}
-				throw new SQLException(e.getMessage());
+				throw new SQLException(e);
 			}
 		}
 		
