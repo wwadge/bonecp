@@ -19,14 +19,12 @@
  */
 package com.jolbox.bonecp;
 
-import static org.easymock.EasyMock.*;
-
-import java.lang.reflect.Field;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import static org.easymock.EasyMock.*;
 
 
 /** Test for CloseThreadMonitor class
@@ -53,15 +51,9 @@ public class TestCloseThreadMonitor {
 	@BeforeClass
 	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		mockConnection = createNiceMock(ConnectionHandle.class);
-		mockLogger = createStrictMock(Logger.class);
 		mockThread = createNiceMock(Thread.class);
-		
 		testClass = new CloseThreadMonitor(mockThread, mockConnection, "fakeexception", 0);
-		Field field = testClass.getClass().getDeclaredField("logger");
-		field.setAccessible(true);
-		field.set(testClass, mockLogger);
-		
-		
+    mockLogger = TestUtils.mockLogger(testClass.getClass());
 	}
 	
 	/**

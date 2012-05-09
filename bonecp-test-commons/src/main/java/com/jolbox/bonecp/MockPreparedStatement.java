@@ -714,7 +714,18 @@ public class MockPreparedStatement implements PreparedStatement {
 		return false;
 	}
 
-	/** {@inheritDoc}
+  // #ifdef JDK7
+  @Override
+  public void closeOnCompletion() throws SQLException {
+  }
+
+  @Override
+  public boolean isCloseOnCompletion() throws SQLException {
+    return false;
+  }
+  // #endif JDK7
+
+  /** {@inheritDoc}
 	 * @see java.sql.Statement#setCursorName(java.lang.String)
 	 */
 	// @Override

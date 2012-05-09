@@ -73,7 +73,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 	/** Configuration handle. */
 	private BoneCPConfig config;
 	/** Class logger. */
-	private static Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
+	private static final Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
 
 	
 	/**

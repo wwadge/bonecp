@@ -41,7 +41,7 @@ import com.google.common.base.FinalizableWeakReference;
  */
 public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	/** Logger class. */
-	static Logger logger = LoggerFactory.getLogger(CachedConnectionStrategy.class);
+	private static final Logger logger = LoggerFactory.getLogger(CachedConnectionStrategy.class);
 
 	/** Just to give out a warning once. */
 	private volatile AtomicBoolean warnApp = new AtomicBoolean();

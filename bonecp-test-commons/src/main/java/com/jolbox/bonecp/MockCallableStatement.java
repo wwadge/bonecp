@@ -659,7 +659,7 @@ public class MockCallableStatement implements CallableStatement {
 			throws SQLException {
 	}
 
-	/** {@inheritDoc}
+  /** {@inheritDoc}
 	 * @see java.sql.CallableStatement#setNClob(java.lang.String, java.io.Reader, long)
 	 */
 	public void setNClob(String parameterName, Reader reader, long length)
@@ -1366,7 +1366,28 @@ public class MockCallableStatement implements CallableStatement {
 		return false;
 	}
 
-	/** {@inheritDoc}
+  // #ifdef JDK7
+  @Override
+  public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+    return null;
+  }
+
+  @Override
+  public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+    return null;
+  }
+
+  @Override
+  public void closeOnCompletion() throws SQLException {
+  }
+
+  @Override
+  public boolean isCloseOnCompletion() throws SQLException {
+    return false;
+  }
+  // #endif JDK7
+
+  /** {@inheritDoc}
 	 * @see java.sql.Statement#setCursorName(java.lang.String)
 	 */
 	public void setCursorName(String name) throws SQLException {

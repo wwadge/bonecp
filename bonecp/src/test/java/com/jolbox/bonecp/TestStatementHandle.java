@@ -17,12 +17,6 @@
 package com.jolbox.bonecp;
 
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -30,9 +24,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
-
+import com.jolbox.bonecp.hooks.CoverageHook;
+import com.jolbox.bonecp.hooks.CustomHook;
 import jsr166y.LinkedTransferQueue;
-
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.Assert;
@@ -41,8 +35,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.jolbox.bonecp.hooks.CoverageHook;
-import com.jolbox.bonecp.hooks.CustomHook;
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.*;
 /**
  * @author wwadge
  *
@@ -51,7 +45,7 @@ public class TestStatementHandle {
 	/** Class under test. */
 	private static StatementHandle testClass;
 	/** Mock class under test. */
-	private static StatementHandle mockClass;
+	private static PreparedStatementHandle mockClass;
 	/** Mock handles. */
 	private static IStatementCache mockCallableStatementCache;
 	/** Mock handles. */
@@ -80,14 +74,14 @@ public class TestStatementHandle {
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		replay(mockConnection, mockPool, mockConfig);
 		testClass = new StatementHandle(mockClass, "", mockCallableStatementCache, mockConnection, "testSQL", true);
-		StatementHandle.logger = createNiceMock(Logger.class);
-		expect(StatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
-		PreparedStatementHandle.logger = createNiceMock(Logger.class);
-		expect(PreparedStatementHandle.logger.isDebugEnabled()).andReturn(true).anyTimes();
-		
+    Logger shMockLogger = TestUtils.mockLogger(testClass.getClass());
+    expect(shMockLogger.isDebugEnabled()).andReturn(true).anyTimes();
+    Logger pshMockLogger = TestUtils.mockLogger(PreparedStatementHandle.class);
+		expect(pshMockLogger.isDebugEnabled()).andReturn(true).anyTimes();
+
 		reset(mockConnection, mockPool, mockConfig);
-		replay(StatementHandle.logger);
-		replay(PreparedStatementHandle.logger);
+		replay(shMockLogger);
+		replay(pshMockLogger);
 
 	}
 

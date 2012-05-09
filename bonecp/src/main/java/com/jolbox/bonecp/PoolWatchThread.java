@@ -40,7 +40,7 @@ public class PoolWatchThread implements Runnable {
 	/** Occupancy% threshold. */
 	private int poolAvailabilityThreshold;
 	/** Logger handle. */
-	private static Logger logger = LoggerFactory.getLogger(PoolWatchThread.class);
+	private static final Logger logger = LoggerFactory.getLogger(PoolWatchThread.class);
 
 
 	/** Thread constructor
@@ -119,7 +119,7 @@ public class PoolWatchThread implements Runnable {
 					this.partition.addFreeConnection(handle);
 
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			logger.error("Error in trying to obtain a connection. Retrying in "+this.acquireRetryDelayInMs+"ms", e);
 			Thread.sleep(this.acquireRetryDelayInMs);
 		}

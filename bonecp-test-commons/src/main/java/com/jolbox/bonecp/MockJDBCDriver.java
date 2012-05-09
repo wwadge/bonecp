@@ -25,12 +25,16 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Properties;
+// #ifdef JDK7
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
+// #endif JDK7
 
 /** A Fake jdbc driver for mocking purposes.
  * @author Wallace
  *
  */
-public class MockJDBCDriver  implements Driver {
+public class MockJDBCDriver implements Driver {
 	/** Connection handle to return. */
 	private volatile Connection connection = null;
 	/** called to return. */
@@ -134,8 +138,15 @@ public class MockJDBCDriver  implements Driver {
 	public boolean jdbcCompliant() {
 		return true;
 	}
-	
-	/** 
+
+  // #ifdef JDK7
+  @Override
+  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    return null;
+  }
+  // #endif JDK7
+
+  /**
 	 * Disable everything.
 	 * @throws SQLException 
 	 * @throws SQLException 

@@ -42,7 +42,7 @@ public class ConnectionPartition implements Serializable{
 	/** Serialization UID */
 	private static final long serialVersionUID = -7864443421028454573L;
 	/** Logger class. */
-	static Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConnectionPartition.class);
 	/**  Connections available to be taken  */
 	private TransferQueue<ConnectionHandle> freeConnections;
 	/** When connections start running out, add these number of new connections. */

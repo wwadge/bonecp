@@ -31,7 +31,7 @@ import com.google.common.collect.MapMaker;
  */
 public class StatementCache implements IStatementCache {
 	/** Logger class. */
-	private static Logger logger = LoggerFactory.getLogger(StatementCache.class);
+	private static final Logger logger = LoggerFactory.getLogger(StatementCache.class);
 	/** The cache of our statements. */
 	private ConcurrentMap<String, StatementHandle> cache;
 	/** How many items to cache. */

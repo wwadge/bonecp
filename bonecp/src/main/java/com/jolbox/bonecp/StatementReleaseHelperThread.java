@@ -36,7 +36,7 @@ public class StatementReleaseHelperThread implements Runnable {
 	/** Handle to the connection pool. */
 	private BoneCP pool;
 	/** Handle to logger. */
-	private static Logger logger = LoggerFactory.getLogger(StatementReleaseHelperThread.class);
+	private static final Logger logger = LoggerFactory.getLogger(StatementReleaseHelperThread.class);
 
 	/**
 	 * Helper Thread constructor.

@@ -675,7 +675,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		}
 	}
 
-	@Override
+  @Override
 	public void setNClob(String parameterName, Reader reader, long length)
 			throws SQLException {
 		checkClosed();
@@ -736,6 +736,19 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	}
 
  	// #endif JDK6 
+
+	// #ifdef JDK7
+  @Override
+  public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+    return this.internalCallableStatement.getObject(parameterIndex, type);
+  }
+
+  @Override
+  public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+    return this.internalCallableStatement.getObject(parameterName, type);
+  }
+  // #endif JDK7
+
 
 	/**
 	 * {@inheritDoc}
