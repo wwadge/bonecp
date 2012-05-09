@@ -119,7 +119,7 @@ public class PoolWatchThread implements Runnable {
 					this.partition.addFreeConnection(handle);
 
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			logger.error("Error in trying to obtain a connection. Retrying in "+this.acquireRetryDelayInMs+"ms", e);
 			Thread.sleep(this.acquireRetryDelayInMs);
 		}
