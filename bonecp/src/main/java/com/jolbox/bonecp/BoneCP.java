@@ -190,6 +190,10 @@ public class BoneCP implements Serializable, Closeable {
 					this.closeConnectionExecutor.shutdownNow();
 					this.closeConnectionExecutor.awaitTermination(5, TimeUnit.SECONDS);
 				}
+				if(!this.config.isDisableJMX()) {
+					unregisterJMX();
+				}
+
 			} catch (InterruptedException e) {
 				// do nothing
 			}
@@ -851,5 +855,35 @@ public class BoneCP implements Serializable, Closeable {
 	public AtomicBoolean getDbIsDown() {
 		return this.dbIsDown;
 	}
+
+	/**
+	 * Unregisters JMX stuff.
+	 */
+	protected void unregisterJMX() {
+		if (this.mbs == null){
+			return;
+		}
+		try {
+			String suffix = "";
+
+			if (this.config.getPoolName()!=null){
+				suffix="-"+this.config.getPoolName();
+			}
+
+			ObjectName name = new ObjectName(MBEAN_BONECP +suffix);
+			ObjectName configname = new ObjectName(MBEAN_CONFIG + suffix);
+
+
+			if (this.mbs.isRegistered(name)){
+				this.mbs.unregisterMBean(name);
+			}
+			if (this.mbs.isRegistered(configname)){
+				this.mbs.unregisterMBean(configname);
+			}
+		} catch (Exception e) {
+			logger.error("Unable to unregister JMX", e);
+		}
+	}
+
 
 }

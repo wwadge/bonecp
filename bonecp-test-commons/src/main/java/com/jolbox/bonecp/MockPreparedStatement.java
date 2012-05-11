@@ -715,11 +715,11 @@ public class MockPreparedStatement implements PreparedStatement {
 	}
 
   // #ifdef JDK7
-  @Override
+ // @Override
   public void closeOnCompletion() throws SQLException {
   }
 
-  @Override
+//  @Override
   public boolean isCloseOnCompletion() throws SQLException {
     return false;
   }
