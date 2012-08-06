@@ -626,6 +626,10 @@ public class BoneCP implements Serializable, Closeable {
 		if (connectionHandle.isExpired() || (!this.poolShuttingDown && connectionHandle.isPossiblyBroken()
 				&& !isConnectionHandleAlive(connectionHandle))){
 
+            if (connectionHandle.isExpired()) {
+                connectionHandle.internalClose();
+            }
+
 			ConnectionPartition connectionPartition = connectionHandle.getOriginatingPartition();
 			postDestroyConnection(connectionHandle);
 
