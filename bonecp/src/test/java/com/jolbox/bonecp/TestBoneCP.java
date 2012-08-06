@@ -821,8 +821,6 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testInternalReleaseConnectionWhereConnectionIsBroken() throws InterruptedException, SQLException {
-
-
 		// Test case where connection is broken
 		reset(mockConnection,mockPartition, mockConnectionHandles);
 		expect(mockConnection.isPossiblyBroken()).andReturn(true).once();
@@ -844,10 +842,37 @@ public class TestBoneCP {
 		replay(mockPartition, mockConnection);
 		testClass.internalReleaseConnection(mockConnection);
 		verify(mockPartition, mockConnection);
-
 	}
 
-	/**
+    /**
+     * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(ConnectionHandle)}.
+     *
+     * @throws InterruptedException
+     * @throws SQLException
+     */
+    @Test
+    public void testInternalReleaseConnectionWhereConnectionIsExpired() throws InterruptedException, SQLException {
+        // Test case where connection is expired
+        reset(mockConnection, mockPartition, mockConnectionHandles);
+
+        Connection mockRealConnection = createNiceMock(Connection.class);
+        expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+
+        // return a partition
+        expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+        // break out from this method, we're not interested in it
+        expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
+
+        expect(mockConnection.isExpired()).andReturn(true).anyTimes();
+        mockConnection.internalClose();
+        expectLastCall();
+
+        replay(mockPartition, mockConnection, mockRealConnection);
+        testClass.internalReleaseConnection(mockConnection);
+        verify(mockPartition, mockConnection, mockRealConnection);
+    }
+
+    /**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#putConnectionBackInPartition(com.jolbox.bonecp.ConnectionHandle)}.
 	 * @throws InterruptedException 
 	 * @throws SQLException 
