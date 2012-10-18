@@ -312,6 +312,14 @@
 							<value>// #endif JDK6</value>
 						</replacement>
 						<replacement>
+							<token>/* #ifdef JDK7</token>
+							<value>// #ifdef JDK7</value>
+						</replacement>
+						<replacement>
+							<token>#endif JDK7 */</token>
+							<value>// #endif JDK7</value>
+						</replacement>
+						<replacement>
 							<token>// #ifdef JDK5</token>
 							<value>/* #ifdef JDK5</value>
 						</replacement>
@@ -444,6 +452,14 @@
 									<value>#endif JDK6 */</value>
 								</replacement>
 								<replacement>
+									<token>// #ifdef JDK7</token>
+									<value>/* #ifdef JDK7</value>
+								</replacement>
+								<replacement>
+									<token>// #endif JDK7</token>
+									<value>#endif JDK7 */</value>
+								</replacement>
+								<replacement>
 									<token>/* #ifdef JDK5</token>
 									<value>// #ifdef JDK5</value>
 								</replacement>
@@ -518,6 +534,14 @@
 								<replacement>
 									<token>// #endif JDK7</token>
 									<value>#endif JDK7 */</value>
+								</replacement>
+								<replacement>
+									<token>/* #ifdef JDK6</token>
+									<value>// #ifdef JDK6</value>
+								</replacement>
+								<replacement>
+									<token>#endif JDK6 */</token>
+									<value>// #endif JDK6</value>
 								</replacement>
 								<replacement>
 									<token>// #ifdef JDK5</token>
