@@ -53,7 +53,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	/** Config setting. */
 	private PrintWriter logWriter = null;
 	/** Pool handle. */
-	private transient volatile BoneCP pool = null;
+	private transient BoneCP pool = null;
 	/** Lock for init. */
 	private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 	/** JDBC driver to use. */
@@ -145,8 +145,8 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	private void maybeInit() throws SQLException {
 		try{
 			this.rwl.readLock().lock();
-			if (this.pool == null){
-				this.rwl.readLock().unlock();
+			if (this.pool == null){ // this.pool is protected in getConnection
+ 				this.rwl.readLock().unlock();
 				this.rwl.writeLock().lock();
 				try {
 					if (this.pool == null){ //read might have passed, write might not

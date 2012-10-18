@@ -83,7 +83,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** No of statements that can be cached per connection. Deprecated. */
 	private int statementsCachedPerConnection = 0;
 	/** Number of release-connection helper threads to create per partition. */
-	private int releaseHelperThreads = 3;
+	private int releaseHelperThreads = 0;
 	/** Number of statement release helper threads to create. */
 	private int statementReleaseHelperThreads = 0;
 	/** Hook class (external). */
@@ -589,6 +589,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** {@inheritDoc}
 	 * @see com.jolbox.bonecp.BoneCPConfigMBean#getReleaseHelperThreads()
 	 */
+	@Deprecated
 	public int getReleaseHelperThreads() {
 		return this.releaseHelperThreads;
 	}
@@ -610,8 +611,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * @param releaseHelperThreads no to release 
 	 */
+	@Deprecated
 	public void setReleaseHelperThreads(int releaseHelperThreads) {
-		this.releaseHelperThreads = releaseHelperThreads;
+		logger.warn("releaseHelperThreads has been deprecated -- it tends to slow down your application more.");
+//		this.releaseHelperThreads = releaseHelperThreads;
 	}
 
 	/** {@inheritDoc}
@@ -1104,15 +1107,16 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/**
-	 * Returns the statementHelperThreads field.
+	 * Returns the statementHelperThreads field. Deprecated.
 	 * @return statementHelperThreads
 	 */
+	@Deprecated
 	public int getStatementReleaseHelperThreads() {
 		return this.statementReleaseHelperThreads;
 	}
 
 	/**
-	 * Sets number of statement helper threads to create that will handle releasing a statement.
+	 * Depracated method. Sets number of statement helper threads to create that will handle releasing a statement.
 	 *
 	 * When this value is set to zero, the application thread is blocked until the pool and JDBC driver are able to close off the statement. 
 	 * 
@@ -1123,8 +1127,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * @param statementReleaseHelperThreads no to release 
 	 */	
+	@Deprecated
 	public void setStatementReleaseHelperThreads(int statementReleaseHelperThreads) {
-		this.statementReleaseHelperThreads = statementReleaseHelperThreads;
+		logger.warn("statementReleaseHelperThreads has been deprecated -- it tends to slow down your application more.");
+	//	this.statementReleaseHelperThreads = statementReleaseHelperThreads;
 	}
 
 
@@ -1604,13 +1610,13 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 
 		if (this.releaseHelperThreads < 0){
-			logger.warn("releaseHelperThreads < 0! Setting to 3");
-			this.releaseHelperThreads = 3;
+			logger.warn("releaseHelperThreads < 0! Setting to 0");
+			this.releaseHelperThreads = 0;
 		}
 
 		if (this.statementReleaseHelperThreads < 0){
-			logger.warn("statementReleaseHelperThreads < 0! Setting to 3");
-			this.statementReleaseHelperThreads = 3;
+			logger.warn("statementReleaseHelperThreads < 0! Setting to 0");
+			this.statementReleaseHelperThreads = 0;
 		}
 
 		if (this.statementsCacheSize < 0) {

@@ -135,7 +135,6 @@ public class TestStatementHandle {
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		expect(mockConfig.isStatisticsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(1L).anyTimes();
-		expect(mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(true).anyTimes();
 		
 		replay(mockConnection, mockConfig, mockPool);
 		// alternate constructor 
@@ -159,15 +158,9 @@ public class TestStatementHandle {
 		mockStatement.close();
 		expectLastCall();
 		
-		LinkedTransferQueue<StatementHandle> mockQueue = createNiceMock(LinkedTransferQueue.class); 
-		Field field = handle.getClass().getDeclaredField("statementsPendingRelease");
-		field.setAccessible(true);
-		field.set(handle, mockQueue);
-		expect(mockQueue.tryTransfer(handle)).andReturn(false).once();
-		expect(mockQueue.offer(handle)).andReturn(false).once();
 		
 		
-		replay(mockStatement, mockCache, mockQueue); 
+		replay(mockStatement, mockCache); 
 
 		handle.close();
 		verify(mockStatement);
@@ -245,34 +238,8 @@ public class TestStatementHandle {
 		assertEquals(mockStatement, testClass.getInternalStatement());
 		
 		assertEquals(obj, testClass.getDebugHandle());
-		
-		boolean old = testClass.enqueuedForClosure;
-		testClass.enqueuedForClosure = true;
-		assertTrue(testClass.isEnqueuedForClosure());
-		testClass.enqueuedForClosure = old;
-		
 	}
 	
-	/**
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testTryTransferOffer() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
-		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
-		LinkedTransferQueue<StatementHandle> mockQueue = createNiceMock(LinkedTransferQueue.class); 
-		Field field = testClass.getClass().getDeclaredField("statementsPendingRelease");
-		field.setAccessible(true);
-		field.set(testClass, mockQueue);
-		expect(mockQueue.tryTransfer(mockStatement)).andReturn(false).once();
-		expect(mockQueue.offer(mockStatement)).andReturn(false).once();
-		replay(mockQueue, mockStatement);
-		assertFalse(testClass.tryTransferOffer(mockStatement));
-		verify(mockQueue, mockStatement);
-	}
 	
 	/**
 	 * @throws SQLException
@@ -301,41 +268,5 @@ public class TestStatementHandle {
 	 * @throws IllegalAccessException
 	 * @throws SQLException
 	 */
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testCloseUsingStatementReleaseHelper() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
-		StatementHandle mockStatement = createNiceMock(StatementHandle.class);
-		LinkedTransferQueue<StatementHandle> mockQueue = createNiceMock(LinkedTransferQueue.class); 
-		Field field = testClass.getClass().getDeclaredField("statementsPendingRelease");
-		field.setAccessible(true);
-		field.set(testClass, mockQueue);
-		testClass.cache = null;
-		expect(mockQueue.tryTransfer(mockStatement)).andReturn(false).once();
-		expect(mockQueue.offer(mockStatement)).andReturn(false).once();
-		testClass.internalStatement = mockStatement;
-		mockStatement.close();
-		expectLastCall().once();
-		field = testClass.getClass().getDeclaredField("statementReleaseHelperEnabled");
-		field.setAccessible(true);
-		field.set(testClass, true);
 
-		
-		replay(mockQueue, mockStatement);
-		testClass.close();
-		verify(mockStatement);
-	}
-	
-	/**
-	 * Test for isClosedOrEnqueuedForClosure.
-	 */
-	@Test
-	public void testIsClosedOrEnqueuedForClosure(){
-		testClass.enqueuedForClosure = true;
-		testClass.logicallyClosed.set(false);
-		assertTrue(testClass.isClosedOrEnqueuedForClosure());
-		testClass.enqueuedForClosure = false;
-		testClass.logicallyClosed.set(true);
-		
-		assertTrue(testClass.isClosedOrEnqueuedForClosure());
-	}
 }

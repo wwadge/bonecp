@@ -29,13 +29,13 @@ import static org.easymock.EasyMock.createNiceMock;
  */
 public class TestUtils {
 
-  /**
+  /** 
    * Creates a mock logger, sets it in the specified class, and returns it for configuration.
    *
    * @param loggingClass the class with a private static final Logger
-   * @return the mocked logger
+   * @return the mocked logger 
    * @throws Exception if anything goes wrong
-   */
+   */   
   static Logger mockLogger(Class loggingClass) throws NoSuchFieldException, IllegalAccessException {
 
     Logger mockLogger = createNiceMock(Logger.class);

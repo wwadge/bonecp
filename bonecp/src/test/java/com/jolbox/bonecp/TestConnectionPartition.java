@@ -66,25 +66,20 @@ public class TestConnectionPartition {
 		expect(mockConfig.getUsername()).andReturn("testuser").anyTimes();
 		expect(mockConfig.getPassword()).andReturn("testpass").anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("testurl").anyTimes();
-		expect(mockConfig.getReleaseHelperThreads()).andReturn(3).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("Junit test").anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(false).anyTimes();
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
-		ExecutorService mockReleaseHelper = createNiceMock(ExecutorService.class); 
-		expect(this.mockPool.getReleaseHelper()).andReturn(mockReleaseHelper).anyTimes();
-		mockReleaseHelper.execute((Runnable)anyObject());
-		expectLastCall().times(3);
-		replay(this.mockPool, mockReleaseHelper, mockConfig);
+		replay(mockPool, mockConfig);
 		testClass = new ConnectionPartition(this.mockPool);
 		mockLogger = TestUtils.mockLogger(testClass.getClass());
 		makeThreadSafe(mockLogger, true);
 		mockLogger.error((String)anyObject());
 		expectLastCall().anyTimes();
 		replay(mockLogger);
-		verify(this.mockPool, mockReleaseHelper, mockConfig);
-		reset(this.mockPool, mockReleaseHelper, mockConfig);
+		verify(this.mockPool, mockConfig);
+		reset(this.mockPool, mockConfig);
 	}
 
 	/**
@@ -244,7 +239,6 @@ public class TestConnectionPartition {
 		assertEquals(1, testClass.getMaxConnections());
 		assertEquals(1, testClass.getMinConnections());
 		assertEquals(1, testClass.getAcquireIncrement());
-		assertEquals(0, testClass.getConnectionsPendingRelease().size());
 	}
 
 
@@ -360,6 +354,8 @@ public class TestConnectionPartition {
 		expect(mockConnectionHandle.getInternalConnection()).andReturn(connection).anyTimes();
 		makeThreadSafe(mockConnectionHandle, true);
 		makeThreadSafe(mockConnection, true);
+		mockLogger = TestUtils.mockLogger(testClass.getClass());
+		
 		reset(mockLogger);
 		makeThreadSafe(mockLogger, true);
 		reset(this.mockPool);

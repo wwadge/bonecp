@@ -67,7 +67,7 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring</artifactId>
+            <artifactId>spring-jdbc</artifactId>
             <scope>provided</scope>
         </dependency>
 

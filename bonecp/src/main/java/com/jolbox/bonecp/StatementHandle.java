@@ -63,18 +63,12 @@ public class StatementHandle implements Statement{
 	protected long queryExecuteTimeLimit;
 	/** Config setting. */
 	protected ConnectionHook connectionHook;
-	/** If true, we will close off statements in a separate thread. */
-	private volatile boolean statementReleaseHelperEnabled;
-	/** Scratch queue of statments awaiting to be closed. */
-	private LinkedTransferQueue<StatementHandle> statementsPendingRelease;
 	/** An opaque object. */
 	private Object debugHandle;
 	/** if true, we care about statistics. */
 	private boolean statisticsEnabled;
 	/** Statistics handle. */
 	private Statistics statistics;
-	/** If true, this statement is being closed off by a separate thread. */
-	protected volatile boolean enqueuedForClosure; 
 	
 	/** For logging purposes - stores parameters to be used for execution. */
 	protected Map<Object, Object> logParams = new TreeMap<Object, Object>();
@@ -107,10 +101,6 @@ public class StatementHandle implements Statement{
 		this.statistics = connectionHandle.getPool().getStatistics();
 		this.statisticsEnabled = config.isStatisticsEnabled();
 
-		this.statementReleaseHelperEnabled = connectionHandle.getPool().isStatementReleaseHelperThreadsConfigured();
-		if (this.statementReleaseHelperEnabled){
-			this.statementsPendingRelease = connectionHandle.getPool().getStatementsPendingRelease();
-		}
 		try{
 			
 			this.queryExecuteTimeLimit = connectionHandle.getOriginatingPartition().getQueryExecuteTimeLimitinNanoSeconds();
@@ -138,10 +128,9 @@ public class StatementHandle implements Statement{
 
 
 
-	/** Closes off the statement
-	 * @throws SQLException
-	 */
-	protected void closeStatement() throws SQLException {
+	
+	public void close() throws SQLException {
+		this.connectionHandle.untrackStatement(this);
 		this.logicallyClosed.set(true);
 		if (this.logStatementsEnabled){
 			this.logParams.clear();
@@ -150,40 +139,7 @@ public class StatementHandle implements Statement{
 		if (this.cache == null || !this.inCache){ // no cache = throw it away right now
 			this.internalStatement.close();
 		}
-		this.enqueuedForClosure = false;
-	}
-
-	/** Tries to move the item to a waiting consumer. If there's no consumer waiting,
-	 * offers the item to the queue if there's space available.  
-	 * @param e Item to transfer
-	 * @return true if the item was transferred or placed on the queue, false if there are no
-	 * waiting clients and there's no more space on the queue.
-	 */
-	protected boolean tryTransferOffer(StatementHandle e) {
-		boolean result = true;
-		// if we are using a normal LinkedTransferQueue instead of a bounded one, tryTransfer
-		// will never fail.
-//		assert e.enqueuedForClosure : "Statement is not enqueued";
-		if (!this.statementsPendingRelease.tryTransfer(e)){
-			result = this.statementsPendingRelease.offer(e);
-		}
-		return result;
-	}
 	
-	public void close() throws SQLException {
-		this.connectionHandle.untrackStatement(this);
-		if (this.statementReleaseHelperEnabled){
-			this.enqueuedForClosure = true; // stop warning later on.
-			// try moving onto queue so that a separate thread will handle it....
-			if (!tryTransferOffer(this)){
-				this.enqueuedForClosure = false; // we failed to enqueue it.
-				// closing off the statement if that fails....
-				closeStatement();
-			} 
-		} else {
-			// otherwise just close it off straight away
-			closeStatement();
-		}
 	}
 		
 
@@ -1218,21 +1174,5 @@ public class StatementHandle implements Statement{
 	public Object getDebugHandle() {
 		return this.debugHandle;
 	}
-
-	/**
-	 * Returns the enqueuedForClosure field.
-	 * @return enqueuedForClosure
-	 */
-	public boolean isEnqueuedForClosure() {
-		return this.enqueuedForClosure;
-	}
-
-	/** Return true if statement is closed or is enqueued for closure.
-	 * @return true if this statement is closed or about to close.
-	 */
-	public boolean isClosedOrEnqueuedForClosure(){
-		return this.enqueuedForClosure || this.isClosed();
-	}
-
 
 }

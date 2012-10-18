@@ -65,8 +65,6 @@ public class ConnectionPartition implements Serializable{
 	 * more connections because we've hit our limit. 
 	 */
 	private volatile boolean unableToCreateMoreTransactions=false;
-	/** Scratch queue of connections awaiting to be placed back in queue. */
-	private LinkedTransferQueue<ConnectionHandle> connectionsPendingRelease;
 	/** Config setting. */
 	private boolean disableTracking;
 	/** Signal trigger to pool watch thread. Making it a queue means our signal is persistent. */
@@ -206,15 +204,8 @@ public class ConnectionPartition implements Serializable{
 		this.poolName = config.getPoolName() != null ? "(in pool '"+config.getPoolName()+"') " : "";
 		this.pool = pool;
 		
-		this.connectionsPendingRelease = new LinkedTransferQueue<ConnectionHandle>();
 		this.disableTracking = config.isDisableConnectionTracking();
 		this.queryExecuteTimeLimitInNanoSeconds = TimeUnit.NANOSECONDS.convert(config.getQueryExecuteTimeLimitInMs(), TimeUnit.MILLISECONDS);
-		/** Create a number of helper threads for connection release. */
-		int helperThreads = config.getReleaseHelperThreads();
-		for (int i = 0; i < helperThreads; i++) { 
-			// go through pool.getReleaseHelper() rather than releaseHelper directly to aid unit testing (i.e. mocking)
-			pool.getReleaseHelper().execute(new ConnectionReleaseHelperThread(this.connectionsPendingRelease, pool));
-		}
 	}
 
 	/**
@@ -292,16 +283,6 @@ public class ConnectionPartition implements Serializable{
 	 */
 	protected void setUnableToCreateMoreTransactions(boolean unableToCreateMoreTransactions) {
 		this.unableToCreateMoreTransactions = unableToCreateMoreTransactions;
-	}
-
-
-	/**
-	 * Gets handle to a release connection handle queue.
-	 *
-	 * @return release connection handle queue 
-	 */
-	protected LinkedTransferQueue<ConnectionHandle> getConnectionsPendingRelease() {
-		return this.connectionsPendingRelease;
 	}
 
 

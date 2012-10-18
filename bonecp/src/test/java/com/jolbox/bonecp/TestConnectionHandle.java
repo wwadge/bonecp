@@ -85,12 +85,10 @@ public class TestConnectionHandle {
 		this.mockPool.connectionStrategy = new DefaultConnectionStrategy(this.mockPool);
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		
-		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		replay(this.mockConnection, this.mockPool);
 
-		this.config.setReleaseHelperThreads(0);
 		this.config.setTransactionRecoveryEnabled(false);
 		this.config.setStatementsCacheSize(1);
 		this.config.setStatisticsEnabled(true);
@@ -232,7 +230,6 @@ public class TestConnectionHandle {
 		
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
-		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
 		CommonTestUtils.testStatementBounceMethod(this.mockConnection, this.testClass, skipTests, this.mockConnection);

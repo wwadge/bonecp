@@ -236,7 +236,7 @@ public class TestBoneCPConfig {
 		assertEquals(2, config.getStatementCacheSize());
 		assertEquals(2, config.getPreparedStatementsCacheSize());
 		assertEquals(2, config.getPreparedStatementCacheSize());
-		assertEquals(3, config.getReleaseHelperThreads());
+		assertEquals(0, config.getReleaseHelperThreads());
 		assertEquals(5, config.getMaxConnectionsPerPartition());
 		assertEquals(5, config.getMinConnectionsPerPartition());
 		assertEquals(6, config.getAcquireIncrement());
@@ -279,7 +279,7 @@ public class TestBoneCPConfig {
 		assertEquals("FIFO", config.getServiceOrder());
 		assertEquals(0, config.getConnectionTimeoutInMs());
 		assertNotNull(config.toString());
-		assertEquals(3, config.getStatementReleaseHelperThreads());
+		assertEquals(0, config.getStatementReleaseHelperThreads());
 		assertFalse(config.getAcquireIncrement() == 0);
 		assertFalse(config.getReleaseHelperThreads() == -1);
 		assertFalse(config.getMaxConnectionsPerPartition() == -1);

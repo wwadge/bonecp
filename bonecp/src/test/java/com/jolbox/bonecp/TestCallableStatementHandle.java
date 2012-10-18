@@ -51,7 +51,6 @@ public class TestCallableStatementHandle {
 	public void setUp() throws Exception {
 		
 		reset(this.mockClass, this.mockCallableStatementCache, this.mockConnection);
-		expect(this.mockPool.isStatementReleaseHelperThreadsConfigured()).andReturn(false).anyTimes();
 		expect(this.mockConnection.getPool()).andReturn(this.mockPool).anyTimes();
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		BoneCPConfig config = new BoneCPConfig();

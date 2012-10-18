@@ -16,6 +16,23 @@
 
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.anyLong;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.makeThreadSafe;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import com.google.common.util.concurrent.ListenableFuture;
+
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -30,10 +47,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
+
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -41,10 +58,10 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
-import com.jolbox.bonecp.hooks.ConnectionHook;
+
 import jsr166y.LinkedTransferQueue;
-import jsr166y.TransferQueue;
 import junit.framework.Assert;
+
 import org.easymock.EasyMock;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -52,8 +69,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.*;
+import com.jolbox.bonecp.hooks.ConnectionHook;
 
 /**
  * @author wwadge
@@ -124,7 +140,7 @@ public class TestBoneCP {
 	@SuppressWarnings("unchecked")
 	@Before
 	public void before() throws IllegalArgumentException, IllegalAccessException, SQLException, SecurityException, NoSuchFieldException{
-		mockConfig = createNiceMock(BoneCPConfig.class);
+		mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
@@ -159,27 +175,27 @@ public class TestBoneCP {
 		// if all ok 
 		assertEquals(2, partitions.length);
 		// switch to our mock version now
-		mockPartition = createNiceMock(ConnectionPartition.class);
+		mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
 		Array.set(field.get(testClass), 0, mockPartition);
 		Array.set(field.get(testClass), 1, mockPartition);
 
-		mockKeepAliveScheduler = createNiceMock(ScheduledExecutorService.class); 
+		mockKeepAliveScheduler = EasyMock.createNiceMock(ScheduledExecutorService.class); 
 		field = testClass.getClass().getDeclaredField("keepAliveScheduler");
 		field.setAccessible(true);
 		field.set(testClass, mockKeepAliveScheduler);
 
 		field = testClass.getClass().getDeclaredField("connectionsScheduler");
 		field.setAccessible(true);
-		mockConnectionsScheduler = createNiceMock(ExecutorService.class);
+		mockConnectionsScheduler = EasyMock.createNiceMock(ExecutorService.class);
 		field.set(testClass, mockConnectionsScheduler);
 
-		mockConnectionHandles = createNiceMock(BoundedLinkedTransferQueue.class);
-		mockConnection = createNiceMock(ConnectionHandle.class);
-		mockLock = createNiceMock(Lock.class);
+		mockConnectionHandles = EasyMock.createNiceMock(BoundedLinkedTransferQueue.class);
+		mockConnection = EasyMock.createNiceMock(ConnectionHandle.class);
+		mockLock = EasyMock.createNiceMock(Lock.class);
 		mockLogger = TestUtils.mockLogger(testClass.getClass());
 		makeThreadSafe(mockLogger, true);
-		mockDatabaseMetadata = createNiceMock(DatabaseMetaData.class);
-		mockResultSet = createNiceMock(MockResultSet.class);
+		mockDatabaseMetadata = EasyMock.createNiceMock(DatabaseMetaData.class);
+		mockResultSet = EasyMock.createNiceMock(MockResultSet.class);
 
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
@@ -219,32 +235,19 @@ public class TestBoneCP {
 
 		expect(mockConnectionHandles.poll()).andReturn(null).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		Field field = testClass.getClass().getDeclaredField("releaseHelperThreadsConfigured");
-		field.setAccessible(true);
-		field.setBoolean(testClass, true);
+	
 
-		field = BoneCP.class.getDeclaredField("statementReleaseHelperThreadsConfigured");
-		field.setAccessible(true);
-		field.set(testClass, true);
-
-		ExecutorService mockReleaseHelper = createNiceMock(ExecutorService.class);
-		testClass.setReleaseHelper(mockReleaseHelper);
-		expect(mockReleaseHelper.shutdownNow()).andReturn(null).once();
-
-		ExecutorService mockStatementCloseHelperExecutor = createNiceMock(ExecutorService.class);
-		testClass.setStatementCloseHelperExecutor(mockStatementCloseHelperExecutor);
-		
-		expect(mockStatementCloseHelperExecutor.shutdownNow()).andReturn(null).once();
+		ExecutorService mockReleaseHelper = EasyMock.createNiceMock(ExecutorService.class);
 
 
-		replay(mockConfig, mockConnectionsScheduler, mockStatementCloseHelperExecutor, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
+		replay(mockConfig, mockConnectionsScheduler,  mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
 		
 		if (doShutdown){
 			testClass.shutdown();
 		} else {
 			testClass.close();
 		}
-		verify(mockConnectionsScheduler, mockStatementCloseHelperExecutor, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockReleaseHelper);
+		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles);
 	}
 
 	/**
@@ -271,7 +274,7 @@ public class TestBoneCP {
 		expectLastCall().once().andThrow(new SQLException()).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 		replay(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
 
@@ -287,7 +290,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testTerminateAllConnections2() throws SQLException {
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 
 		// same test but to cover the finally section
 		reset(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
@@ -313,7 +316,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testPostDestroyConnection(){
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 
 		reset(mockConnection);
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
@@ -321,7 +324,7 @@ public class TestBoneCP {
 		expectLastCall().once();
 		mockPartition.setUnableToCreateMoreTransactions(false);
 		expectLastCall().once();
-		ConnectionHook mockConnectionHook = createNiceMock(ConnectionHook.class);
+		ConnectionHook mockConnectionHook = EasyMock.createNiceMock(ConnectionHook.class);
 		expect(mockConnection.getConnectionHook()).andReturn(mockConnectionHook).anyTimes();
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 
@@ -395,7 +398,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testGetConnectionViaDataSourceBean() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
-		DataSource mockDataSource = createNiceMock(DataSource.class);
+		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
 		expect(mockConfig.getJdbcUrl()).andReturn("").once().andReturn("jdbc:mock:foo").once();
 		expect(mockConfig.getUsername()).andReturn(null).anyTimes();
@@ -445,7 +448,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testGetConnectionViaDriverProperties() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
-		//		DataSource mockDataSource = createNiceMock(DataSource.class);
+		//		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		//		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
 		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once();
 		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
@@ -466,7 +469,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testGetConnectionViaDataSourceBeanWithPass() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
-		DataSource mockDataSource = createNiceMock(DataSource.class);
+		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		expect(mockDataSource.getConnection((String)anyObject(), (String)anyObject())).andReturn(mockConnection).once();
 		expect(mockConfig.getJdbcUrl()).andReturn("").once();
 		expect(mockConfig.getUsername()).andReturn("username").once();
@@ -712,7 +715,7 @@ public class TestBoneCP {
 		replay(mockPartition, mockConnectionHandles, mockConnection);
 		assertEquals(mockConnection, testClass.getAsyncConnection().get());
 		verify(mockPartition, mockConnectionHandles, mockConnection);
-
+ 
 	}
 
 	/**
@@ -726,23 +729,18 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testReleaseConnection() throws SQLException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, InterruptedException {
-		// Test #1: Test releasing connections directly (without helper threads)
-		Field field = testClass.getClass().getDeclaredField("releaseHelperThreadsConfigured");
-		field.setAccessible(true);
-		field.setBoolean(testClass, false);
-
+		// Test #1: Test releasing connections directly
 		expect(mockConnection.isPossiblyBroken()).andReturn(false).once();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
 
-		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
 		//		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 
 		// should reset last connection use
 		mockConnection.setConnectionLastUsedInMs(anyLong());
 		expectLastCall().once();
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 	
 		replay(mockRealConnection, mockConnection, mockPartition, mockConnectionHandles);
@@ -752,41 +750,6 @@ public class TestBoneCP {
 		reset(mockConnection, mockPartition, mockConnectionHandles);
 	}
 
-	/**
-	 * @throws SQLException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws InterruptedException
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testReleaseConnectionThrowingException() throws SQLException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, InterruptedException {
-
-		// Test #2: Same test as testReleaseConnection but throw an exception instead
-//		Field field = testClass.getClass().getDeclaredField("releaseHelperThreadsConfigured");
-//		field.setAccessible(true);
-//		field.setBoolean(testClass, false);
-
-		reset(mockConnection, mockPartition, mockConnectionHandles);
-
-		// Test #2: Test with releaser helper threads configured
-		Field field = testClass.getClass().getDeclaredField("releaseHelperThreadsConfigured");
-		field.setAccessible(true);
-		field.setBoolean(testClass, true);
-
-		LinkedTransferQueue<ConnectionHandle> mockPendingRelease = createNiceMock(LinkedTransferQueue.class);
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
-		expect(mockPartition.getConnectionsPendingRelease()).andReturn(mockPendingRelease).anyTimes();
-		mockPendingRelease.put(mockConnection);
-		expectLastCall().once();
-
-		replay(mockConnection, mockPartition, mockConnectionHandles, mockPendingRelease);
-		testClass.releaseConnection(mockConnection);
-		verify(mockConnection, mockPartition, mockConnectionHandles, mockPendingRelease);
-
-	}
 
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(ConnectionHandle)}.
@@ -802,7 +765,7 @@ public class TestBoneCP {
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 	
 		//		expect(mockConnectionHandles.offer(mockConnection)).andReturn(false).anyTimes();
@@ -836,7 +799,7 @@ public class TestBoneCP {
 		// break out from the next method, we're not interested in it
 		expect(mockPartition.isUnableToCreateMoreTransactions()).andReturn(true).once();
 
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 
 		replay(mockPartition, mockConnection);
@@ -855,7 +818,7 @@ public class TestBoneCP {
         // Test case where connection is expired
         reset(mockConnection, mockPartition, mockConnectionHandles);
 
-        Connection mockRealConnection = createNiceMock(Connection.class);
+        Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
         expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 
         // return a partition
@@ -881,7 +844,7 @@ public class TestBoneCP {
 	public void testPutConnectionBackInPartition() throws InterruptedException, SQLException {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
-		Connection mockRealConnection = createNiceMock(Connection.class);
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 	
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
@@ -909,7 +872,7 @@ public class TestBoneCP {
 		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 		expect(mockConnection.isTxResolved()).andReturn(false).once();
-		Connection mockInternalConnection = createNiceMock(Connection.class);
+		Connection mockInternalConnection = EasyMock.createNiceMock(Connection.class);
 		expect(mockInternalConnection.getAutoCommit()).andReturn(false).once();
 		expect(mockConnection.getInternalConnection()).andReturn(mockInternalConnection).anyTimes();
 		mockInternalConnection.rollback();
@@ -968,7 +931,7 @@ public class TestBoneCP {
 		// Test 3: Normal case (+ with connection test statement)
 		reset(mockConfig, mockConnection, mockDatabaseMetadata, mockResultSet);
 
-		Statement mockStatement = createNiceMock(Statement.class);
+		Statement mockStatement = EasyMock.createNiceMock(Statement.class);
 		expect(mockConfig.getConnectionTestStatement()).andReturn("whatever").once();
 		expect(mockConnection.createStatement()).andReturn(mockStatement).once();
 		expect(mockStatement.execute((String)anyObject())).andReturn(true).once();
@@ -985,7 +948,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testIsConnectionHandleAliveNormalCaseWithConnectionTestTriggerException() throws SQLException {
-		Statement mockStatement = createNiceMock(Statement.class);
+		Statement mockStatement = EasyMock.createNiceMock(Statement.class);
 		// Test 4: Same like test testIsConnectionHandleAliveNormalCaseWithConnectionTestStatement but triggers exception
 		reset(mockConfig, mockConnection, mockDatabaseMetadata, mockResultSet);
 
@@ -1013,7 +976,7 @@ public class TestBoneCP {
 	 */
 	@Test
 	public void testIsConnectionHandleAliveNormalCaseWithConnectionTestTriggerExceptionInFinally() throws SQLException {
-		Statement mockStatement = createNiceMock(Statement.class);
+		Statement mockStatement = EasyMock.createNiceMock(Statement.class);
 		
 		// Test 5: Same like test testIsConnectionHandleAliveNormalCaseWithConnectionTestTriggerException
 		// but triggers exception in finally block
@@ -1153,21 +1116,12 @@ public class TestBoneCP {
 	}
 
 	/**
-	 * A coverage test.
-	 */
-	@Test
-	public void testIsReleaseHelperThreadsConfigured(){
-		// coverage
-		assertFalse(testClass.isReleaseHelperThreadsConfigured());
-	}
-
-	/**
 	 * Coverage.
 	 * @throws SQLException 
 	 */
 	@Test
 	public void testCoverage() throws SQLException{
-		BoneCPConfig config = createNiceMock(BoneCPConfig.class);
+		BoneCPConfig config = EasyMock.createNiceMock(BoneCPConfig.class);
 		expect(config.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(config.getMinConnectionsPerPartition()).andReturn(2).anyTimes();
 		expect(config.getMaxConnectionsPerPartition()).andReturn(20).anyTimes();
@@ -1175,37 +1129,7 @@ public class TestBoneCP {
 		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
 		expect(config.getMaxConnectionAgeInSeconds()).andReturn(100000L).anyTimes();
 		replay(config);
-		try{
-			BoneCP pool = new BoneCP(config);
-			// just for more coverage
-			ExecutorService statementCloseHelper = Executors.newFixedThreadPool(1);
-			pool.setStatementCloseHelperExecutor(statementCloseHelper);
-			assertEquals(statementCloseHelper, pool.getStatementCloseHelperExecutor());
 
-			TransferQueue<StatementHandle> tmp = new BoundedLinkedTransferQueue<StatementHandle>(1);
-			Field field = BoneCP.class.getDeclaredField("statementsPendingRelease");
-			field.setAccessible(true);
-			field.set(pool, tmp);
-			assertEquals(tmp, pool.getStatementsPendingRelease());
-
-
-
-		} catch (Throwable t){
-			// do nothing
-		}
-
-
-
-	}
-
-	/**
-	 * Test method for {@link com.jolbox.bonecp.BoneCP#setReleaseHelper(java.util.concurrent.ExecutorService)}.
-	 */
-	@Test
-	public void testSetReleaseHelper() {
-		ExecutorService mockReleaseHelper = createNiceMock(ExecutorService.class);
-		testClass.setReleaseHelper(mockReleaseHelper);
-		assertEquals(mockReleaseHelper, testClass.getReleaseHelper());
 	}
 
 	/** JMX setup test
@@ -1224,7 +1148,7 @@ public class TestBoneCP {
 		field.setAccessible(true);
 		field.set(testClass, mockMbs);
 		expect(mockConfig.getPoolName()).andReturn(null).anyTimes();
-		ObjectInstance mockInstance = createNiceMock(ObjectInstance.class);
+		ObjectInstance mockInstance = EasyMock.createNiceMock(ObjectInstance.class);
 		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
 		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
 		replay(mockMbs, mockInstance, mockConfig);
@@ -1248,7 +1172,7 @@ public class TestBoneCP {
 		field.setAccessible(true);
 		field.set(testClass, mockMbs);
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
-		ObjectInstance mockInstance = createNiceMock(ObjectInstance.class);
+		ObjectInstance mockInstance = EasyMock.createNiceMock(ObjectInstance.class);
 		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
 		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
 		replay(mockMbs, mockInstance, mockConfig);
@@ -1288,7 +1212,7 @@ public class TestBoneCP {
 		Field field = testClass.getClass().getDeclaredField("closeConnectionExecutor");
 		field.setAccessible(true);
 
-		ExecutorService mockExecutor = createNiceMock(ExecutorService.class);
+		ExecutorService mockExecutor = EasyMock.createNiceMock(ExecutorService.class);
 		field.set(testClass, mockExecutor);
 
 
@@ -1301,17 +1225,6 @@ public class TestBoneCP {
 
 		// Test #2: Code coverage
 		method.invoke(testClass, new Object[]{null});
-	}
-
-	/**
-	 * Mostly for coverage.
-	 */
-	@Test
-	public void testInitStmtReleaseHelper(){
-		expect(mockConfig.getStatementReleaseHelperThreads()).andReturn(1).once();
-		replay(mockConfig);
-		testClass.initStmtReleaseHelper("test");
-		assertNotNull(testClass.getStatementCloseHelperExecutor());
 	}
 	
 	/**
