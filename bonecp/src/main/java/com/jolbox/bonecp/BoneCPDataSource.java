@@ -39,8 +39,8 @@ import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/* #ifdef JDK7
-#endif JDK7 */
+// #ifdef JDK7
+// #endif JDK7
 
 /**
  * DataSource for use with LazyConnection Provider etc.
@@ -136,30 +136,24 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 			if (this.pool == null){
 				this.rwl.readLock().unlock();
 				this.rwl.writeLock().lock();
-				if (this.pool == null){ //read might have passed, write might not
-					try {
+				try {
+					if (this.pool == null){ //read might have passed, write might not
 						if (this.getDriverClass() != null){
 							loadClass(this.getDriverClass());
 						}
+					
+						logger.debug(this.toString());
+						this.pool = new BoneCP(this);
 					}
-					catch (ClassNotFoundException e) {
+				    } catch (ClassNotFoundException e) {
 						throw new SQLException(PoolUtil.stringifyException(e));
+					} finally{
+						this.rwl.readLock().lock();
+						this.rwl.writeLock().unlock();
 					}
-
-
-					logger.debug(this.toString());
-
-					this.pool = new BoneCP(this);
-				}
-
-				
-			} else {
-				this.rwl.readLock().unlock(); // Unlock read
-			}
+			} 
 		} finally {
-			while (this.rwl.writeLock().getHoldCount() > 0){
-				this.rwl.writeLock().unlock();
-			}
+			this.rwl.readLock().unlock();
 		}
 	}
 
@@ -196,12 +190,12 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		throw new UnsupportedOperationException("getLoginTimeout is unsupported.");
 	}
 
-	/* #ifdef JDK7
+	// #ifdef JDK7
   @Override
   public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
     throw new SQLFeatureNotSupportedException("getParentLogger is unsupported");
   }
-  #endif JDK7 */
+  // #endif JDK7
 
   /**
 	 * Sets the log writer for this DataSource object to the given java.io.PrintWriter object.

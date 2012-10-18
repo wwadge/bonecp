@@ -15,12 +15,20 @@
  */
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.makeThreadSafe;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import com.jolbox.bonecp.hooks.CoverageHook;
+
+import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -29,7 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import static org.easymock.EasyMock.*;
+import com.jolbox.bonecp.hooks.CoverageHook;
 
 
 /** Tests the functionality of the pool watch thread.
@@ -64,10 +72,10 @@ public class TestPoolWatchThread {
 	@BeforeClass
 	public static void setup() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, ClassNotFoundException, SQLException{
 		driver = new MockJDBCDriver();
-		mockPartition = createNiceMock(ConnectionPartition.class);
+		mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
 
 
-    	mockConfig = createNiceMock(BoneCPConfig.class);
+    	mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
     	expect(mockConfig.getStatementsCacheSize()).andReturn(0).anyTimes();
 //    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes(); 
     	expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
@@ -78,7 +86,7 @@ public class TestPoolWatchThread {
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		expect(mockConfig.isLazyInit()).andReturn(false).anyTimes();
 		
-    	mockPool = createNiceMock(BoneCP.class);
+    	mockPool = EasyMock.createNiceMock(BoneCP.class);
     	expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockConfig);
@@ -131,13 +139,13 @@ public class TestPoolWatchThread {
 		expectLastCall().once();
 
 		// just to break out of the loop
-		BlockingQueue<?> mockQueue = createNiceMock(BlockingQueue.class);
+		BlockingQueue<?> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
 		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn((BlockingQueue) mockQueue);
 		expect(mockQueue.take()).andThrow(new InterruptedException());
 
 		replay(mockPartition, mockPool, mockLogger, mockQueue);
 		testClass.run();
-		verify(mockPartition);
+		EasyMock.verify(mockPartition);
 
 
 	}
@@ -187,12 +195,12 @@ public class TestPoolWatchThread {
 
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
-		expect(mockPool.obtainRawInternalConnection()).andReturn(createNiceMock(ConnectionHandle.class)).anyTimes();
+		expect(mockPool.obtainRawInternalConnection()).andReturn(EasyMock.createNiceMock(ConnectionHandle.class)).anyTimes();
 		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockPartition, mockLogger);
 		testClass.run();
-		verify(mockPartition);
+		EasyMock.verify(mockPartition);
 		
 		// check exceptional cases
 		reset(mockPartition, mockPool, mockLogger);
@@ -212,7 +220,7 @@ public class TestPoolWatchThread {
 		} catch (RuntimeException e){
 			// do nothing
 		}
-		verify(mockPartition);
+		EasyMock.verify(mockPartition);
 
 		
 		// check case where creating new ConnectionHandle fails
@@ -264,7 +272,7 @@ public class TestPoolWatchThread {
 		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		replay(mockPartition, mockPool, mockLogger, mockConfig);
 		testClass.run();
-		verify(mockPartition);
+		EasyMock.verify(mockPartition);
 
 	}
 

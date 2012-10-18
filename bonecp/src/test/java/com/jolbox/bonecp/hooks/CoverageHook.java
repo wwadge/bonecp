@@ -25,4 +25,5 @@ package com.jolbox.bonecp.hooks;
  */
 public class CoverageHook extends AbstractConnectionHook{
   // do nothing - call the abstract methods
-}
+} 
+ 

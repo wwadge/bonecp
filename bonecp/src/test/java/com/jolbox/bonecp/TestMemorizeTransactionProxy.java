@@ -25,11 +25,9 @@ import static junit.framework.Assert.assertTrue;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.makeThreadSafe;
-import static org.easymock.classextension.EasyMock.createNiceMock;
-import static org.easymock.classextension.EasyMock.createStrictMock;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.verify;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.State;
@@ -41,6 +39,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -76,13 +75,13 @@ public class TestMemorizeTransactionProxy {
 
 		this.config =  new BoneCPConfig();
 		this.config.setDisableConnectionTracking(true);
-		mockConnection = createNiceMock(Connection.class);
+		mockConnection = EasyMock.createNiceMock(Connection.class);
 		// make it return a new connection when asked for again
-		mockConnection2 = createNiceMock(Connection.class);
-		mockConnection3 = createNiceMock(Connection.class);
-		mockCallableStatement = createNiceMock(CallableStatement.class);
-		mockStatement = createNiceMock(Statement.class);
-		mockPreparedStatement = createNiceMock(PreparedStatement.class);
+		mockConnection2 = EasyMock.createNiceMock(Connection.class);
+		mockConnection3 = EasyMock.createNiceMock(Connection.class);
+		mockCallableStatement = EasyMock.createNiceMock(CallableStatement.class);
+		mockStatement = EasyMock.createNiceMock(Statement.class);
+		mockPreparedStatement = EasyMock.createNiceMock(PreparedStatement.class);
 		reset(mockConnection, mockConnection2, mockConnection3, mockCallableStatement, mockPreparedStatement, mockStatement);
 		makeThreadSafe(mockConnection, true);
 		makeThreadSafe(mockConnection2, true);
@@ -259,18 +258,18 @@ public class TestMemorizeTransactionProxy {
 
 
 		// we should be getting a new connection and everything replayed on it
-		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement2 = EasyMock.createStrictMock(PreparedStatement.class);
 		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).anyTimes();
 		mockPreparedStatement2.setInt(1, 1);
 		expectLastCall().once();
 		expect(mockPreparedStatement2.execute()).andReturn(true).once();
 
-		CallableStatement mockCallableStatement2 = createStrictMock(CallableStatement.class);
+		CallableStatement mockCallableStatement2 = EasyMock.createStrictMock(CallableStatement.class);
 		expect(mockConnection2.prepareCall(prepCall)).andReturn(mockCallableStatement2).anyTimes();
 		mockCallableStatement2.clearWarnings();
 		expectLastCall().once();
 
-		Statement mockStatement2 = createStrictMock(Statement.class);
+		Statement mockStatement2 = EasyMock.createStrictMock(Statement.class);
 		expect(mockConnection2.createStatement()).andReturn(mockStatement2).anyTimes();
 		mockStatement2.clearWarnings();
 		expectLastCall().once();
@@ -389,8 +388,8 @@ public class TestMemorizeTransactionProxy {
 
 		makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
-		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
-		PreparedStatement mockPreparedStatement3 = createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement2 = EasyMock.createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement3 = EasyMock.createStrictMock(PreparedStatement.class);
 
 		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
 		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
@@ -465,7 +464,7 @@ public class TestMemorizeTransactionProxy {
 
 		makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
-		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement2 = EasyMock.createStrictMock(PreparedStatement.class);
 
 		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
 		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
@@ -540,7 +539,7 @@ public class TestMemorizeTransactionProxy {
 
 		makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
-		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement2 = EasyMock.createStrictMock(PreparedStatement.class);
 
 		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
 		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();
@@ -630,7 +629,7 @@ public class TestMemorizeTransactionProxy {
 
 		makeThreadSafe(mockConnection, true);
 		// we should be getting new connections and everything replayed on it
-		PreparedStatement mockPreparedStatement2 = createStrictMock(PreparedStatement.class);
+		PreparedStatement mockPreparedStatement2 = EasyMock.createStrictMock(PreparedStatement.class);
 
 		expect(mockConnection.prepareStatement("whatever")).andReturn(mockPreparedStatement).once();
 		expect(mockConnection2.prepareStatement("whatever")).andReturn(mockPreparedStatement2).once();

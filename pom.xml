@@ -14,7 +14,7 @@
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
 	<version>0.8.0-alpha2-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<packaging>pom</packaging> 
 	<name>BoneCP</name>
 	<description>The fast Java JDBC Database Connection pool</description>
 	<url>http://jolbox.com</url>
@@ -284,7 +284,7 @@
 					<target>${javac.target.version}</target>
 				</configuration>
 			</plugin>
-
+<!--
 			<plugin>
 				<groupId>com.google.code.maven-replacer-plugin</groupId>
 				<artifactId>replacer</artifactId>
@@ -330,7 +330,7 @@
 					</replacements>
 				</configuration>
 			</plugin>
-
+-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
