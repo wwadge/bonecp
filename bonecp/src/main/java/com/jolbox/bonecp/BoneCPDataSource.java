@@ -109,19 +109,31 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * @see javax.sql.DataSource#getConnection()
 	 */
 	public Connection getConnection() throws SQLException {
-		if (this.pool == null){
-			maybeInit();
+		
+		if (this.pool != null) {  // let's avoid making pool a volatile 
+			return this.pool.getConnection();
 		}
-		return this.pool.getConnection();
+		
+		synchronized (this) {
+			if (this.pool != null) {
+				return this.pool.getConnection();
+			}
+
+			this.maybeInit();
+			return this.pool.getConnection();
+		}
 	}
+	
+		
 
 	/**
 	 * Close the datasource. 
 	 *
 	 */
 	public void close(){
-		if (this.pool != null){
-			this.pool.shutdown();
+		
+		if (getPool() != null){
+			getPool().shutdown();
 		}
 	}
 
@@ -265,7 +277,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * @return total leased connections
 	 */
 	public int getTotalLeased() {
-		return this.pool.getTotalLeased();
+		return getPool().getTotalLeased();
 	}
 
 	/** Returns a configuration object built during initialization of the connection pool. 
@@ -304,7 +316,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * statistics for example.
 	 * @return pool
 	 */
-	public BoneCP getPool() {
+	public synchronized BoneCP getPool() {
 		return this.pool;
 	}
 
