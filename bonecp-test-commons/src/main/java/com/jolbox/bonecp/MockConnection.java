@@ -44,7 +44,7 @@ import java.util.concurrent.Executor;
  */
 @SuppressWarnings("all")
 public class MockConnection implements Connection {
-
+	volatile boolean closed = false;
 	/** {@inheritDoc}
 	 * @see java.sql.Connection#clearWarnings()
 	 */
@@ -57,6 +57,7 @@ public class MockConnection implements Connection {
 	 */
 	// @Override
 	public void close() throws SQLException {
+		closed=true;
 	}
 
 	/** {@inheritDoc}
@@ -239,7 +240,7 @@ public class MockConnection implements Connection {
 	 */
 	// @Override
 	public boolean isClosed() throws SQLException {
-		return false;
+		return closed;
 	}
 
 	/** {@inheritDoc}

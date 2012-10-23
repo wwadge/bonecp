@@ -570,10 +570,14 @@ public class ConnectionHandle implements Connection{
 						}
 					}
 					this.trackedStatement.clear();
+				} 
+				
+				this.logicallyClosed = true;
+				if (this.connectionTrackingDisabled){
+					pool.getFinalizableRefs().remove(this.connection);
 				}
 				
 				ConnectionHandle handle = this.recreateConnectionHandle();
-				this.logicallyClosed = true;
 				this.pool.releaseConnection(handle);
 
 				if (this.doubleCloseCheck){
