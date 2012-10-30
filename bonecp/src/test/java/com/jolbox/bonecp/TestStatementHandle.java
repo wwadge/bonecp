@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
-import jsr166y.LinkedTransferQueue;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.Assert;

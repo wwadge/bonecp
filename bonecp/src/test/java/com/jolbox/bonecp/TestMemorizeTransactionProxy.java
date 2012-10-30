@@ -75,6 +75,9 @@ public class TestMemorizeTransactionProxy {
 
 		this.config =  new BoneCPConfig();
 		this.config.setDisableConnectionTracking(true);
+		this.config.setMinConnectionsPerPartition(1);
+		this.config.setMaxConnectionsPerPartition(5);
+
 		mockConnection = EasyMock.createNiceMock(Connection.class);
 		// make it return a new connection when asked for again
 		mockConnection2 = EasyMock.createNiceMock(Connection.class);
@@ -92,6 +95,7 @@ public class TestMemorizeTransactionProxy {
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	@Ignore
 	public void testHSQLDB() throws ClassNotFoundException, SQLException{
@@ -141,6 +145,7 @@ public class TestMemorizeTransactionProxy {
 	 * @throws NoSuchFieldException
 	 * @throws IllegalAccessException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testProxies() throws SQLException, SecurityException, IllegalArgumentException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException{
 

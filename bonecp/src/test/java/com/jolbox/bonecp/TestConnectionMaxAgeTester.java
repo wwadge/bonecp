@@ -21,7 +21,6 @@ import java.sql.SQLException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import jsr166y.TransferQueue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,6 +28,10 @@ import org.slf4j.Logger;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.fail;
+
+
+import jsr166y.TransferQueue;
+
 
 
 /**

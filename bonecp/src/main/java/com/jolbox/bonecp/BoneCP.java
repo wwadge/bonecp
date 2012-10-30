@@ -135,9 +135,9 @@ public class BoneCP implements Serializable, Closeable {
 	@VisibleForTesting
 	protected boolean resetConnectionOnClose;
 	/** Config setting. */
-	protected volatile boolean cachedPoolStrategy;
+	protected boolean cachedPoolStrategy;
 	/** Currently active get connection strategy class to use. */
-	protected volatile ConnectionStrategy connectionStrategy;
+	protected ConnectionStrategy connectionStrategy;
 	/** If true, there are no connections to be taken. */
 	private AtomicBoolean dbIsDown = new AtomicBoolean();
 	/** Config setting. */
@@ -308,8 +308,12 @@ public class BoneCP implements Serializable, Closeable {
 	 * @throws SQLException on error
 	 */
 	public BoneCP(BoneCPConfig config) throws SQLException {
-		this.config = config;
-		config.sanitize();
+		try {
+			this.config = config.clone();
+		} catch (CloneNotSupportedException e1) {
+			throw new SQLException("Cloning of the config failed");
+		}
+		this.config.sanitize();
 
 		this.statisticsEnabled = config.isStatisticsEnabled();
 		this.closeConnectionWatchTimeoutInMs = config.getCloseConnectionWatchTimeoutInMs();
@@ -339,6 +343,7 @@ public class BoneCP implements Serializable, Closeable {
 				// #ifdef JDK6
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)), e);
 				// #endif JDK6
+
 				/* #ifdef JDK5
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
 				#endif JDK5 */
@@ -555,7 +560,7 @@ public class BoneCP implements Serializable, Closeable {
 
 		// release immediately or place it in a queue so that another thread will eventually close it. If we're shutting down,
 		// close off the connection right away because the helper threads have gone away.
-		if (!this.poolShuttingDown && !this.cachedPoolStrategy){
+		if (!this.poolShuttingDown){
 			internalReleaseConnection(handle);
 		}
 	}

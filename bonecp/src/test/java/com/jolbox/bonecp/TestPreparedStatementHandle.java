@@ -52,7 +52,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;
-import org.slf4j.Logger;
 /** Tests preparedStatementHandle class.
  * @author wwadge
  *

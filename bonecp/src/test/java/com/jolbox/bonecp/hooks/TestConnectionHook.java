@@ -59,9 +59,11 @@ public class TestConnectionHook {
 	/** Setups all mocks.
 	 * @throws SQLException
 	 * @throws ClassNotFoundException
+	 * @throws CloneNotSupportedException 
 	 */
+	@SuppressWarnings("deprecation")
 	@BeforeClass
-	public static void setup() throws SQLException, ClassNotFoundException{
+	public static void setup() throws SQLException, ClassNotFoundException, CloneNotSupportedException{
 		ConnectionState.valueOf(ConnectionState.NOP.toString()); // coverage BS.
 		
 	driver = new MockJDBCDriver(new MockJDBCAnswer() {
@@ -73,6 +75,8 @@ public class TestConnectionHook {
 		hookClass = new CustomHook();
 		Class.forName("com.jolbox.bonecp.MockJDBCDriver");
 		mockConfig = createNiceMock(BoneCPConfig.class);
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+		
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getAcquireIncrement()).andReturn(0).anyTimes();
@@ -135,9 +139,11 @@ public class TestConnectionHook {
 	
 	/** Just to do code coverage of abstract class.
 	 * @throws SQLException
+	 * @throws CloneNotSupportedException 
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
-	public void dummyCoverage() throws SQLException{
+	public void dummyCoverage() throws SQLException, CloneNotSupportedException{
 		CoverageHook hook = new CoverageHook();
 		reset(mockConfig);
 		mockConfig.sanitize();
@@ -153,6 +159,8 @@ public class TestConnectionHook {
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hook).anyTimes();
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+		
 		replay(mockConfig);
 		
 		poolClass = new BoneCP(mockConfig);	
@@ -185,9 +193,11 @@ public class TestConnectionHook {
 	/**
 	 * Test method for {@link com.jolbox.bonecp.hooks.AbstractConnectionHook#onDestroy(com.jolbox.bonecp.ConnectionHandle)}.
 	 * @throws SQLException 
+	 * @throws CloneNotSupportedException 
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
-	public void testOnAcquireFail() throws SQLException {
+	public void testOnAcquireFail() throws SQLException, CloneNotSupportedException {
 		hookClass = new CustomHook();
 		reset(mockConfig);
 		mockConfig.sanitize();
@@ -210,6 +220,8 @@ public class TestConnectionHook {
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+		
 		replay(mockConfig);
 		
 		try{
@@ -243,9 +255,10 @@ public class TestConnectionHook {
 	/**
 	 * Test method.
 	 * @throws SQLException 
+	 * @throws CloneNotSupportedException 
 	 */
 	@Test
-	public void testonQueryExecuteTimeLimitExceeded() throws SQLException {
+	public void testonQueryExecuteTimeLimitExceeded() throws SQLException, CloneNotSupportedException {
 		reset(mockConfig);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
@@ -260,6 +273,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
 		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
 		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		Connection mockConnection = createNiceMock(Connection.class);
@@ -287,9 +301,10 @@ public class TestConnectionHook {
 	/**
 	 * Test method.
 	 * @throws SQLException 
+	 * @throws CloneNotSupportedException 
 	 */
 	@Test
-	public void testonQueryExecuteTimeLimitExceededCoverage() throws SQLException {
+	public void testonQueryExecuteTimeLimitExceededCoverage() throws SQLException, CloneNotSupportedException {
 		Connection mockConnection = createNiceMock(Connection.class);
 		reset(mockConfig, mockConnection);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
@@ -306,6 +321,8 @@ public class TestConnectionHook {
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
 		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+		
 		expect(mockPreparedStatement.execute()).andAnswer(new IAnswer<Boolean>() {
 			
 			public Boolean answer() throws Throwable {

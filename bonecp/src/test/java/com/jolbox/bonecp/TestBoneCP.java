@@ -30,7 +30,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import com.google.common.util.concurrent.ListenableFuture;
 
 
 import java.lang.reflect.Array;
@@ -59,7 +58,7 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
-import jsr166y.LinkedTransferQueue;
+
 import junit.framework.Assert;
 
 import org.easymock.EasyMock;
@@ -136,11 +135,13 @@ public class TestBoneCP {
 	 * @throws SQLException 
 	 * @throws NoSuchFieldException 
 	 * @throws SecurityException 
+	 * @throws CloneNotSupportedException 
 	 */
-	@SuppressWarnings("unchecked")
 	@Before
-	public void before() throws IllegalArgumentException, IllegalAccessException, SQLException, SecurityException, NoSuchFieldException{
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	public void before() throws IllegalArgumentException, IllegalAccessException, SQLException, SecurityException, NoSuchFieldException, CloneNotSupportedException{
 		mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
