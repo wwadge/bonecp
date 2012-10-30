@@ -90,7 +90,7 @@ public class ConnectionTesterThread implements Runnable {
 						
 						// check if connection has been idle for too long (or is marked as broken)
 						if (!connection.isPoison() && connection.isPossiblyBroken() || 
-								((this.idleMaxAgeInMs > 0) && (this.partition.getAvailableConnections() >= this.partition.getMinConnections() && System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
+								((this.idleMaxAgeInMs > 0) && ( System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
 							// kill off this connection - it's broken or it has been idle for too long
 							closeConnection(connection);
 							continue;
@@ -135,8 +135,9 @@ public class ConnectionTesterThread implements Runnable {
 					}
 
 				} // throw it back on the queue
-//				System.out.println("Scheduling for " + nextCheckInMs);
 				// offset by a bit to avoid firing a lot for slightly offset connections
+//				logger.debug("Next check in "+nextCheckInMs);
+				
 				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
