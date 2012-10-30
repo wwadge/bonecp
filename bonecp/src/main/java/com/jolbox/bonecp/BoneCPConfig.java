@@ -117,7 +117,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Queries taking longer than this limit to execute are logged. */ 
 	private long queryExecuteTimeLimitInMs = 0;
 	/** Create more connections when we hit x% of our possible number of connections. */
-	private int poolAvailabilityThreshold = 20;
+	private int poolAvailabilityThreshold = 0;
 	/** Disable connection tracking. */
 	private boolean disableConnectionTracking;
 	/** Used when the alternate way of obtaining a connection is required */
@@ -934,9 +934,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 * new connections will be created. In other words, it tries to keep at least 20% of the pool full of connections. Setting the value
 	 * to zero will make the pool create new connections when it needs them but it also means your application may have to wait for new
-	 * connections to be obtained at times.
+	 * connections to be obtained at times. 
 	 * 
-	 * Default: 20.
+	 * Default: 0.
 	 *  
 	 * @param poolAvailabilityThreshold the poolAvailabilityThreshold to set
 	 */
