@@ -112,6 +112,11 @@ public class BenchmarkMain {
 		if (cmd.hasOption("p")){
 			BenchmarkTests.pool_size=Integer.parseInt(cmd.getOptionValue("p", "200"));
 		} 
+
+		plotLineGraph(tests.testMultiThreadedConstantDelay(0), 0, false);
+		plotBarGraph("Single Thread", "bonecp-singlethread-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testSingleThread());
+		plotBarGraph("Prepared Statement\nSingle Threaded", "bonecp-preparedstatement-single-poolsize-"+BenchmarkTests.pool_size+"-threads-"+BenchmarkTests.threads+".png", tests.testPreparedStatementSingleThread());
+
 		
 		System.out.println("Starting benchmark tests with "
 				+ BenchmarkTests.threads + " threads (stepping "

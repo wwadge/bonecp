@@ -29,7 +29,7 @@ public enum ConnectionPoolType {
 	/** pool type. */
 	PROXOOL(false),
 	/** pool type. */
-	DBPOOL(true),
+	DBPOOL(false),
 	/** pool type. */
 	DBCP(false),
 	/** pool type. */

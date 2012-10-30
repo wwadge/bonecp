@@ -73,15 +73,11 @@ public class BenchmarkTests {
 	/** config setting. */
 	public static int pool_size = 200;
 	/** config setting. */
-	public static int helper_threads = 5;
-	/** config setting. */
 	private int max_idle_time = 0;
 	/** config setting. */
 	private int idle_connection_test_period = 0;
 	/** config setting. */
 	private int max_statement = 10;
-	/** config setting. */
-	private int statement_release_helper = 15;
 	/** config setting. */
 	private int acquire_increment = 5;
 	
@@ -111,7 +107,6 @@ public class BenchmarkTests {
 		}
 		cpds.setMinPoolSize(pool_size); 
 		cpds.setMaxPoolSize(pool_size);
-		cpds.setNumHelperThreads(helper_threads);
 		return cpds;
 	}
 
@@ -233,8 +228,7 @@ return dsb;
 		dsb.setJdbcUrl(url);
 		dsb.setUsername(username);
 		dsb.setPassword(password);
-		dsb.setIdleMaxAge(0L);
-		dsb.setIdleConnectionTestPeriod(0L);
+//		dsb.setPoolStrategy("CACHED");
 		dsb.setDisableConnectionTracking(true);
 		if (doPreparedStatement){
 			dsb.setStatementsCacheSize(max_statement);
@@ -244,8 +238,6 @@ return dsb;
 		dsb.setMinConnectionsPerPartition(pool_size / partitions);
 		dsb.setMaxConnectionsPerPartition(pool_size / partitions);
 		dsb.setPartitionCount(partitions);
-		dsb.setReleaseHelperThreads(helper_threads);
-		dsb.setStatementReleaseHelperThreads(15);
 		dsb.setAcquireIncrement(5);
 		return dsb;
 
@@ -264,16 +256,12 @@ return dsb;
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
-		config.setIdleConnectionTestPeriod(0);
-		config.setIdleMaxAge(0);
 		config.setStatementsCacheSize(0);
 		config.setMinConnectionsPerPartition(pool_size);
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
 		config.setDisableConnectionTracking(true);
-		config.setReleaseHelperThreads(helper_threads);
-		config.setStatementReleaseHelperThreads(statement_release_helper);
 		BoneCP dsb = new BoneCP(config);
 
 		long start = System.currentTimeMillis();
@@ -714,7 +702,6 @@ return dsb;
 		cpds.setMinPoolSize(pool_size);
 		cpds.setMaxPoolSize(pool_size);
 		cpds.setAcquireIncrement(5);
-		cpds.setNumHelperThreads(helper_threads);
 		Connection conn = cpds.getConnection();
 		long start = System.currentTimeMillis();
 		for (int i=0; i< MAX_CONNECTIONS; i++){
@@ -789,8 +776,6 @@ return dsb;
 		config.setMaxConnectionsPerPartition(pool_size);
 		config.setPartitionCount(1);
 		config.setAcquireIncrement(5);
-		config.setReleaseHelperThreads(helper_threads);
-		config.setStatementReleaseHelperThreads(15);
 		
 		BoneCP dsb = new BoneCP(config);
 

@@ -11,7 +11,7 @@
 		<property name="minConnectionsPerPartition">0</property>
 
 		<!-- Sets the maximum number of connections that will be contained in every partition. 
-		     Setting this to 5 with 3 partitions means you will have 15
+		      Setting this to 5 with 3 partitions means you will have 15 
 		     unique connections to the database.  Note that the connection pool will not 
 		     create all these connections in one go but rather start off  with 
 		     minConnectionsPerPartition and gradually increase connections as required. -->
@@ -85,19 +85,6 @@
 		<!-- Sets statementsCacheSize setting.  The number of statements to cache. -->
 		<property name="statementsCacheSize">0</property>
 
-		<!-- Sets number of helper threads to create that will handle releasing a connection. 
-		     When this value is set to zero, the application thread is blocked
-		     until the pool is able to perform all the necessary cleanup to recycle 
-		     the connection and make it available for another thread.   When a 
-		     non-zero value is set, the pool will create threads that will take care 
-		     of recycling a connection when it is closed (the  application dumps the 
-		     connection into a temporary queue to be processed asychronously to the application via 
-		     the release helper  threads).  Useful when your application is doing lots 
-		     of work on each connection  (i.e. perform an SQL query, do lots 
-		     of non-DB stuff and perform another query),  otherwise will probably slow things 
-		     down. -->
-		<property name="releaseHelperThreads">3</property>
-
 		<!-- Sets the connection hook.  Fully qualified class name that implements the ConnectionHook 
 		     interface (or extends AbstractConnectionHook).  BoneCP will callback the specified class according to 
 		     the connection state (onAcquire, onCheckIn, onCheckout, onDestroy). -->
@@ -152,8 +139,8 @@
 		     least 20% of the pool full of connections. Setting the value to zero 
 		     will make the pool create new connections when it needs them but it 
 		     also means your application may have to wait for new connections to be 
-		     obtained at times.  Default: 20. -->
-		<property name="poolAvailabilityThreshold">20</property>
+		     obtained at times.   Default: 0. -->
+		<property name="poolAvailabilityThreshold">0</property>
 
 		<!-- If set to true, the pool will not monitor connections for proper closure. 
 		     Enable this option if you only ever obtain your connections via a mechanism 
@@ -169,15 +156,6 @@
 		<!-- Sets the no of ms to wait when close connection watch threads are 
 		     enabled. 0 = wait forever. -->
 		<property name="closeConnectionWatchTimeoutInMs">0</property>
-
-		<!-- Sets number of statement helper threads to create that will handle releasing a 
-		     statement.  When this value is set to zero, the application thread is 
-		     blocked until the pool and JDBC driver are able to close off the 
-		     statement.   When a non-zero value is set, the pool will create 
-		     threads that will take care of closing off the statement asychronously to the 
-		     application via the release helper  threads).  Useful when your application is 
-		     opening up lots of statements otherwise will probably slow things down. -->
-		<property name="statementReleaseHelperThreads">0</property>
 
 		<!-- Sets the maxConnectionAge in seconds. Any connections older than this setting will be 
 		     closed off whether it is idle or not. Connections currently in use will 
@@ -208,7 +186,7 @@
 		<!-- <property name="defaultCatalog">(null or no default value)</property> -->
 
 		<!-- Sets the defaultTransactionIsolation. Should be set to one of: NONE, READ_COMMITTED, READ_UNCOMMITTED,  
-		     REPEATABLE_READ or SERIALIZABLE. If not set, will use driver default. -->
+		      REPEATABLE_READ or SERIALIZABLE. If not set, will use driver default. -->
 		<!-- <property name="defaultTransactionIsolation">(null or no default value)</property> -->
 
 		<!-- If set to true, no attempts at passing in a username/password will be 
@@ -254,7 +232,7 @@
 		     threads are  managed eg in a Tomcat environment where you can limit 
 		     the number of threads that it can  handle. A typical use case 
 		     would be a web service that always requires some form of database access, 
-		     therefore a service would have little point in accepting a new incoming
+		      therefore a service would have little point in accepting a new incoming 
 		     socket connection if it  still has to wait in order to obtain 
 		     a connection.   Essentially this means that you are pushing back the 
 		     lock down to the socket or thread layer.  While the first few 
