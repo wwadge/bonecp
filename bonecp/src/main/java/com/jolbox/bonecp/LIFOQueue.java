@@ -18,17 +18,15 @@ package com.jolbox.bonecp;
 
 /* #ifdef JDK5
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 #endif JDK5 */ 
 
-import jsr166y.TransferQueue;
-
 // #ifdef JDK6
+import jsr166y.TransferQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-
 // #endif JDK6 
 
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation that uses LinkedBlockingDeque internally to hide the difference between

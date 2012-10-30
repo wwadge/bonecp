@@ -39,9 +39,6 @@ import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// #ifdef JDK7
-// #endif JDK7
-
 /**
  * DataSource for use with LazyConnection Provider etc.
  *

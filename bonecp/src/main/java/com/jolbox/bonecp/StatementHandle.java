@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import jsr166y.LinkedTransferQueue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -589,7 +587,7 @@ public class StatementHandle implements Statement{
 		checkClosed();
 		try{
 			if (this.logStatementsEnabled && logger.isDebugEnabled()){
-				logger.debug(PoolUtil.fillLogParams(sql, this.logParams), columnNames);
+				logger.debug(PoolUtil.fillLogParams(sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
 			if (this.connectionHook != null){
