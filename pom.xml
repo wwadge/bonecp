@@ -266,7 +266,7 @@
 					<configuration>
 						<mavenExecutorId>forked-path</mavenExecutorId>
 						<useReleaseProfile>false</useReleaseProfile>
-						<arguments>${arguments} -Prelease</arguments>
+						<arguments>${arguments} -Prelease,${otherprofile}</arguments>
 					</configuration>
 				</plugin>
 			</plugins>
