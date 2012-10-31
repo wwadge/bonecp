@@ -147,6 +147,13 @@ public class TestSystemTests {
 			// do nothing
 		}
 	
+		try {
+			dsb.getParentLogger();
+			fail("Should throw exception");
+		} catch (UnsupportedOperationException e) {
+			// do nothing
+		}
+		
 			Connection c = dsb.getConnection("test", "test");
 			assertNotNull(c);
 		

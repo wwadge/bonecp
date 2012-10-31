@@ -33,6 +33,7 @@ public class TestStressTest {
 	 * @throws SQLException
 	 * @throws InterruptedException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	@Ignore
 	public void testStress() throws SQLException, InterruptedException{

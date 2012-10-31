@@ -125,7 +125,6 @@ public class TestStatementHandle {
 	 * @throws NoSuchMethodException
 	 * @throws NoSuchFieldException
 	 */
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testRemainingForCoverage() throws SQLException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException{
 		Statement mockStatement = createNiceMock(Statement.class);

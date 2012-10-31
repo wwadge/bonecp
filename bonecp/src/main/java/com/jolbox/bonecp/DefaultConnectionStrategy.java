@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 
 	public DefaultConnectionStrategy(BoneCP pool){
-    this.pool = pool;
+		this.pool = pool;
 	}
 	
 	@Override
@@ -95,13 +95,6 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 			}
 		}
 		
-		if (result.isPoison()){
-			if (this.pool.getDbIsDown().get() && connectionPartition.getFreeConnections().hasWaitingConsumer()){
-				// poison other waiting threads.
-				connectionPartition.getFreeConnections().offer(result);
-			}
-			throw new SQLException("Pool connections have been terminated. Aborting getConnection() request.", "08001");
-		}
 		return result;
 	}
 	

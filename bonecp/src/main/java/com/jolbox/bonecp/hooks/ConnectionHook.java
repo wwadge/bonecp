@@ -55,7 +55,7 @@ public interface ConnectionHook {
 	void onCheckIn(ConnectionHandle connection);
 
 	/**  Called when the connection is extracted from the pool and about to be
-	 * given to the application.
+	 * given to the application. 
 	 * @param connection about to given to the app.
 	 */
 	void onCheckOut(ConnectionHandle connection);

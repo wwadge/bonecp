@@ -160,7 +160,7 @@ public class ConnectionPartition implements Serializable{
 						if (internalDBConnection != null && !internalDBConnection.isClosed()){ // safety!
 							
 							logger.warn("BoneCP detected an unclosed connection "+ConnectionPartition.this.poolName + "and will now attempt to close it for you. " +
-							"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance.");
+							"You should be closing this connection in your application - enable connectionWatch for additional debugging assistance or set disableConnectionTracking to true to disable this feature entirely.");
 							internalDBConnection.close();
 							updateCreatedConnections(-1);
 						}

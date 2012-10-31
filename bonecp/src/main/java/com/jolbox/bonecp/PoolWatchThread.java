@@ -100,21 +100,12 @@ public class PoolWatchThread implements Runnable {
 	private void fillConnections(int connectionsToCreate) throws InterruptedException  {
 		try {
 			for (int i=0; i < connectionsToCreate; i++){
-				boolean dbDown = this.pool.getDbIsDown().get();
+			//	boolean dbDown = this.pool.getDbIsDown().get();
 				if (this.pool.poolShuttingDown){
 					break;
 				}
 				ConnectionHandle handle = ConnectionHandle.createConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool);
-				
-				if (dbDown && !this.pool.getDbIsDown().get()){ // we've just recovered
-					ConnectionHandle maybePoison = this.partition.getFreeConnections().poll();
-					if (maybePoison != null && !maybePoison.isPoison()){
-							// wasn't poison, push it back
-							this.partition.getFreeConnections().offer(maybePoison);
-								// otherwise just consume it.
-						}
-					}
-					this.partition.addFreeConnection(handle);
+				this.partition.addFreeConnection(handle);
 
 			}
 		} catch (Exception e) {

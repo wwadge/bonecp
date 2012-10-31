@@ -36,7 +36,7 @@ public class TestUtils {
    * @return the mocked logger 
    * @throws Exception if anything goes wrong
    */   
-  static Logger mockLogger(Class loggingClass) throws NoSuchFieldException, IllegalAccessException {
+  static Logger mockLogger(Class<?> loggingClass) throws NoSuchFieldException, IllegalAccessException {
 
     Logger mockLogger = createNiceMock(Logger.class);
     Field field = loggingClass.getDeclaredField("logger");

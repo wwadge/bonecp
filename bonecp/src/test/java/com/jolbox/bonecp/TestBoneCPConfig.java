@@ -254,6 +254,7 @@ public class TestBoneCPConfig {
 	/**
 	 * Config file scrubbing
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testConfigSanitize(){
 		config.setMaxConnectionsPerPartition(-1);

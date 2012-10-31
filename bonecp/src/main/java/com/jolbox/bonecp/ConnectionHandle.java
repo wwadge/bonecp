@@ -158,10 +158,6 @@ public class ConnectionHandle implements Connection{
 	protected String autoCommitStackTrace;
 	/** If true, this connection is in use in a thread-local context. */
 	protected AtomicBoolean inUseInThreadLocalContext = new AtomicBoolean();
-	/** If true, this is a poison dummy connection used to unblock threads that are currently
-	 * waiting on getConnection() for nothing while the pool is trying to revive itself. 
-	 */
-	private boolean poison;
 	/** Config setting. */
 	private boolean detectUnclosedStatements;
 	/** Config setting. */
@@ -270,7 +266,6 @@ public class ConnectionHandle implements Connection{
 		handle.detectUnresolvedTransactions = this.detectUnresolvedTransactions;
 		handle.autoCommitStackTrace = this.autoCommitStackTrace;
 		handle.inUseInThreadLocalContext = this.inUseInThreadLocalContext;
-		handle.poison = this.poison;
 		handle.detectUnclosedStatements = this.detectUnclosedStatements;
 		handle.closeOpenStatements = this.closeOpenStatements;
 		handle.trackedStatement = this.trackedStatement;
@@ -396,15 +391,6 @@ public class ConnectionHandle implements Connection{
 		return result;
 
 	}
-
-	/** Create a dummy handle that is marked as poison (i.e. causes receiving thread to terminate).
-	 * @return connection handle.
-	 */
-	public static ConnectionHandle createPoisonConnectionHandle(){
-		ConnectionHandle handle = new ConnectionHandle();
-		handle.setPoison(true);
-		return handle;
-	}
 	
 	/** Private -- used solely for unit testing. 
 	 * @param connection
@@ -467,7 +453,7 @@ public class ConnectionHandle implements Connection{
 		if (((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null) && this.pool.getDbIsDown().compareAndSet(false, true) ){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.connectionStrategy.terminateAllConnections();
-			this.pool.poisonAndRepopulatePartitions();
+			this.pool.repopulatePartitions();
 		}
 
 		// SQL-92 says:
@@ -575,7 +561,7 @@ public class ConnectionHandle implements Connection{
 				} 
 				
 				this.logicallyClosed = true;
-				if (this.connectionTrackingDisabled){
+				if (!this.connectionTrackingDisabled){
 					pool.getFinalizableRefs().remove(this.connection);
 				}
 				
@@ -1730,21 +1716,6 @@ public class ConnectionHandle implements Connection{
 		this.autoCommitStackTrace = autoCommitStackTrace;
 	}
 	
-	/**
-	 * Returns the poison field.
-	 * @return poison
-	 */
-	protected boolean isPoison() {
-		return this.poison;
-	}
-	
-	/**
-	 * Sets the poison.
-	 * @param poison the poison to set
-	 */
-	protected void setPoison(boolean poison) {
-		this.poison = poison;
-	}
 			
 	/**
 	 * Destroys the internal connection handle and creates a new one. 

@@ -205,11 +205,11 @@ public class BoneCP implements Serializable, Closeable {
 	}
 
 	/**
-	 * Add a poison connection handle so that waiting threads are terminated.
+	 * Repopulate partitions.
 	 */
-	protected void poisonAndRepopulatePartitions(){
+	protected void repopulatePartitions(){
 		for (int i=0; i < this.partitionCount; i++) {
-			this.partitions[i].getFreeConnections().offer(ConnectionHandle.createPoisonConnectionHandle());
+		//	this.partitions[i].getFreeConnections().offer(ConnectionHandle.createPoisonConnectionHandle());
 			// send a signal to try re-populating again.
 			this.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 		}
@@ -222,14 +222,12 @@ public class BoneCP implements Serializable, Closeable {
 		postDestroyConnection(conn);
 		conn.setInReplayMode(true); // we're dead, stop attempting to replay anything
 		try {
-			if (!conn.isPoison()){
 				conn.internalClose();
-			}
 		} catch (SQLException e) {
 			logger.error("Error in attempting to close connection", e);
 		}
 	}
-
+ 
 	/** Update counters and call hooks.
 	 * @param handle connection handle.
 	 */
@@ -764,7 +762,7 @@ public class BoneCP implements Serializable, Closeable {
 	}
 
 	/**
-	 * Unregisters JMX stuff.
+	 * Unregisters JMX beans.
 	 */ 
 	protected void unregisterJMX() {
 		if (this.mbs == null){

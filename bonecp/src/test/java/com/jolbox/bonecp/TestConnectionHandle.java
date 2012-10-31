@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,6 +41,8 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
 import junit.framework.Assert;
+
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -283,10 +284,12 @@ public class TestConnectionHandle {
 		Field field = this.testClass.getClass().getDeclaredField("doubleCloseCheck");
 		field.setAccessible(true);
 		field.set(this.testClass, true);
+		this.testClass.setInternalConnection(EasyMock.createNiceMock(Connection.class));
 
 		this.testClass.renewConnection();
 		this.mockPool.releaseConnection((Connection)anyObject());
 		expectLastCall().once().andThrow(new SQLException()).once();
+		expect(this.mockPool.getFinalizableRefs()).andReturn(new HashMap<Connection, Reference<ConnectionHandle>>()).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
 		

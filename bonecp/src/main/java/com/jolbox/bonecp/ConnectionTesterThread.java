@@ -89,7 +89,7 @@ public class ConnectionTesterThread implements Runnable {
 						connection.setOriginatingPartition(this.partition);
 						
 						// check if connection has been idle for too long (or is marked as broken)
-						if (!connection.isPoison() && connection.isPossiblyBroken() || 
+						if (connection.isPossiblyBroken() || 
 								((this.idleMaxAgeInMs > 0) && ( System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
 							// kill off this connection - it's broken or it has been idle for too long
 							closeConnection(connection);
@@ -97,7 +97,7 @@ public class ConnectionTesterThread implements Runnable {
 						}
 						
 						// check if it's time to send a new keep-alive test statement.
-						if (!connection.isPoison() && this.idleConnectionTestPeriodInMs > 0 && (currentTimeInMs-connection.getConnectionLastUsedInMs() > this.idleConnectionTestPeriodInMs) &&
+						if (this.idleConnectionTestPeriodInMs > 0 && (currentTimeInMs-connection.getConnectionLastUsedInMs() > this.idleConnectionTestPeriodInMs) &&
 								(currentTimeInMs-connection.getConnectionLastResetInMs() >= this.idleConnectionTestPeriodInMs)) {
 							// send a keep-alive, close off connection if we fail.
 							if (!this.pool.isConnectionHandleAlive(connection)){

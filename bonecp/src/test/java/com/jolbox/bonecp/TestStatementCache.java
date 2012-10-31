@@ -36,6 +36,7 @@ import static org.junit.Assert.*;
  * @author wwadge
  *
  */
+@SuppressWarnings("deprecation")
 public class TestStatementCache {
 	/** Mock handle. */
 	private static IStatementCache mockCache;
@@ -74,6 +75,7 @@ public class TestStatementCache {
 	/**
 	 * Init.
 	 */
+	
 	@Before
 	public void beforeTest(){
 		config.setJdbcUrl(CommonTestUtils.url);

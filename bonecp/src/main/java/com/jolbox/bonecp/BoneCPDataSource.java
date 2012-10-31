@@ -126,7 +126,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		
 
 	/**
-	 * Close the datasource. 
+	 * Close the datasource (i.e. shut down the entire pool). 
 	 *
 	 */
 	public void close(){
@@ -212,7 +212,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	// #ifdef JDK7
   @Override
   public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
-    throw new SQLFeatureNotSupportedException("getParentLogger is unsupported");
+    throw new UnsupportedOperationException("getParentLogger is unsupported");
   }
   // #endif JDK7
 

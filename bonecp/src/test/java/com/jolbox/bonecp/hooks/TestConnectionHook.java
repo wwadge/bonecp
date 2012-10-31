@@ -257,6 +257,7 @@ public class TestConnectionHook {
 	 * @throws SQLException 
 	 * @throws CloneNotSupportedException 
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testonQueryExecuteTimeLimitExceeded() throws SQLException, CloneNotSupportedException {
 		reset(mockConfig);
@@ -303,6 +304,7 @@ public class TestConnectionHook {
 	 * @throws SQLException 
 	 * @throws CloneNotSupportedException 
 	 */
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testonQueryExecuteTimeLimitExceededCoverage() throws SQLException, CloneNotSupportedException {
 		Connection mockConnection = createNiceMock(Connection.class);
