@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-import jsr166y.LinkedTransferQueue;
+import java.util.concurrent.LinkedTransferQueue;
 
 /**
  * A bounded version of linkedTransferQueue.

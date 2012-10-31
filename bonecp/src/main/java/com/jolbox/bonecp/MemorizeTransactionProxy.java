@@ -211,9 +211,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					} catch(Throwable t2){
 						con.setInReplayMode(false); // start recording again
 						con.getReplayLog().clear();
-						// #ifdef JDK6
+						/* #ifdef JDK6
 						throw new SQLException("Could not recover transaction.", t.getCause());
-						// #endif JDK6
+						#endif JDK6 */
 						/* #ifdef JDK5
 			 			throw new SQLException("Could not recover transaction. Original exception follows." + t.getCause());
 						#endif JDK5 */
@@ -374,9 +374,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		}
 		
 		if (failedThrowable != null){
-		// #ifdef JDK6
+		/* #ifdef JDK6
 		throw new SQLException(failedThrowable.getMessage(), failedThrowable);
-		 // #endif JDK6
+		 #endif JDK6 */
 		/* #ifdef JDK5
 			throw new SQLException(PoolUtil.stringifyException(failedThrowable));
 		#endif JDK5 */

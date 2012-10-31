@@ -37,11 +37,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
-// #ifdef JDK6
+// #ifdef JDK>6
 import java.sql.NClob;
 import java.sql.RowId;
 import java.sql.SQLXML;
-// #endif JDK6
+// #endif JDK>6 
 /**
  * @author Wallace
  *
@@ -1189,7 +1189,7 @@ public class MockResultSet implements ResultSet {
 	/** {@inheritDoc}
 	 * @see java.sql.ResultSet#updateNClob(int, java.sql.NClob)
 	 */
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
 	}
 
@@ -1232,7 +1232,7 @@ public class MockResultSet implements ResultSet {
 	public void updateSQLXML(String columnLabel, SQLXML xmlObject)
 			throws SQLException {
 	}
-	// #endif JDK6  
+	// #endif JDK>6  
 
   // #ifdef JDK7
 //  @Override

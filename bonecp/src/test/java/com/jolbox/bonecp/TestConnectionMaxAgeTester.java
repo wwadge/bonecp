@@ -30,7 +30,7 @@ import static org.easymock.EasyMock.*;
 import static org.junit.Assert.fail;
 
 
-import jsr166y.TransferQueue;
+import java.util.concurrent.TransferQueue;
 
 
 

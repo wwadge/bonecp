@@ -86,7 +86,12 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 				if (this.pool.nullOnConnectionTimeout){
 					return null;
 				}
+				// #ifdef JDK>6
 				throw new SQLException(e);
+				// #endif JDK>6
+				/* #ifdef JDK5
+				 throw new SQLException(e.getMessage());
+				#endif JDK5 */
 			}
 		}
 		

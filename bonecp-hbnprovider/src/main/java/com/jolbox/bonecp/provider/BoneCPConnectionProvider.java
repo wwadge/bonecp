@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -69,7 +70,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 	/** Autocommit option. */
 	private boolean autocommit;
 	/** Classloader to use to load the jdbc driver. */
-	private ClassLoader classLoader;
+	private ClassLoader classLoader; 
 	/** Configuration handle. */
 	private BoneCPConfig config;
 	/** Class logger. */

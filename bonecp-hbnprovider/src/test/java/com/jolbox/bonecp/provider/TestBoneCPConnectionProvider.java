@@ -279,9 +279,10 @@ public class TestBoneCPConnectionProvider {
 	 * Test method for {@link com.jolbox.bonecp.provider.BoneCPConnectionProvider#createPool(BoneCPConfig)}.
 	 * @throws SQLException 
 	 * @throws ClassNotFoundException 
+	 * @throws CloneNotSupportedException 
 	 */
 	@Test
-	public void testCreatePool() throws SQLException, ClassNotFoundException {
+	public void testCreatePool() throws SQLException, ClassNotFoundException, CloneNotSupportedException {
 	
 		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
@@ -312,12 +313,15 @@ public class TestBoneCPConnectionProvider {
 		expect(mockConfig.getUsername()).andReturn(USERNAME).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(PASSWORD).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn(URL).anyTimes();
+		expect(mockConfig.isLazyInit()).andReturn(false).anyTimes();
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+		 
 		replay(mockConfig);
 		
 		try{
 			testClass.createPool(mockConfig);
 		} catch (RuntimeException e){
-			fail("Should pass");
+			fail("Should pass: ");
 		}
 		verify(mockConfig);
 		

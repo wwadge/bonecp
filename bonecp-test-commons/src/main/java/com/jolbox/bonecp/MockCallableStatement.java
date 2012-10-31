@@ -33,11 +33,11 @@ import java.sql.ParameterMetaData;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-// #ifdef JDK6
+// #ifdef JDK>6
 import java.sql.NClob;
 import java.sql.RowId;
 import java.sql.SQLXML;
-// #endif JDK6
+// #endif JDK>6
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Time;
@@ -1050,7 +1050,7 @@ public class MockCallableStatement implements CallableStatement {
 	 */
 	public void setRef(int parameterIndex, Ref x) throws SQLException {
 	}
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
 	}
 
@@ -1089,7 +1089,7 @@ public class MockCallableStatement implements CallableStatement {
 
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
 	}
-	// #endif JDK6
+	// #endif JDK>6
 	/** {@inheritDoc}
 	 * @see java.sql.PreparedStatement#setShort(int, short)
 	 */
@@ -1448,5 +1448,6 @@ public class MockCallableStatement implements CallableStatement {
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return null;
 	}
+
 
 }

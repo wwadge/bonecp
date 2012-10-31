@@ -40,8 +40,8 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
-import jsr166y.LinkedTransferQueue;
-import jsr166y.TransferQueue;
+import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.TransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -295,10 +295,12 @@ public class BoneCP implements Serializable, Closeable {
 		} else {
 			result = DriverManager.getConnection(url, username, password);
 		}
-
+		// #ifdef JDK>6
 		if (this.clientInfo != null){
 			result.setClientInfo(this.clientInfo);
 		}
+		// #endif JDK>6
+
 		return result;
 	}
 
@@ -340,9 +342,9 @@ public class BoneCP implements Serializable, Closeable {
 				if (config.getConnectionHook() != null){
 					config.getConnectionHook().onAcquireFail(e, acquireConfig);
 				}
-				// #ifdef JDK6
+				// #ifdef JDK>6
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)), e);
-				// #endif JDK6
+				// #endif JDK>6
 
 				/* #ifdef JDK5
 				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
@@ -763,7 +765,7 @@ public class BoneCP implements Serializable, Closeable {
 
 	/**
 	 * Unregisters JMX stuff.
-	 */
+	 */ 
 	protected void unregisterJMX() {
 		if (this.mbs == null){
 			return;

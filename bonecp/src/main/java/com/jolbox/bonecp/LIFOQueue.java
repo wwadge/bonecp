@@ -18,12 +18,13 @@ package com.jolbox.bonecp;
 
 /* #ifdef JDK5
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TransferQueue;
 #endif JDK5 */ 
 
-// #ifdef JDK6
-import jsr166y.TransferQueue;
+// #ifdef JDK>6
+import java.util.concurrent.TransferQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-// #endif JDK6 
+// #endif JDK>6 
 
 
 import java.util.concurrent.TimeUnit;
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * @param <E> 
  *
  */
-// #ifdef JDK6
+// #ifdef JDK>6
 @SuppressWarnings("all")
 public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueue<E>{
 
@@ -85,7 +86,7 @@ public class LIFOQueue<E> extends LinkedBlockingDeque<E> implements TransferQueu
 	
 
 }
- // #endif JDK6
+ // #endif JDK>6
 
 /* #ifdef JDK5
 // for JDK5, there's no dequeue implementation so we fall back on a simple linkedblockingqueue

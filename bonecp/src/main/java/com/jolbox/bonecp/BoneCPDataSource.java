@@ -21,7 +21,9 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+// #ifdef JDK>6
 import java.sql.SQLFeatureNotSupportedException;
+// #endif JDK>6
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -177,7 +179,15 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		try {
 			return this.multiDataSource.get(new UsernamePassword(username, password)).getConnection();
 		} catch (ExecutionException e) {
+			// #ifdef JDK>6
 			throw new SQLException(e);
+			// #endif JDK>6
+			/* #ifdef JDK5
+			 throw new SQLException(e.getMessage());
+			#endif JDK5 */
+			  
+			 
+
 		}
 	}
 

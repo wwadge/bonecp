@@ -907,7 +907,7 @@ public class StatementHandle implements Statement{
 		return this.logicallyClosed.get();
 	}
 
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	@Override
 	public void setPoolable(boolean poolable)
 	throws SQLException {
@@ -963,7 +963,7 @@ public class StatementHandle implements Statement{
 		return result; 
 
 	}
-  // #endif JDK6
+  // #endif JDK>6
 
 	// #ifdef JDK7
   @Override

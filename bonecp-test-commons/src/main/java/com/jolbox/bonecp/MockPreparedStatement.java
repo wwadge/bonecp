@@ -38,11 +38,11 @@ import java.sql.SQLWarning;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-// #ifdef JDK6
+// #ifdef JDK>6
 import java.sql.NClob;
 import java.sql.RowId;
 import java.sql.SQLXML;
-// #endif
+// #endif JDK>6
 
 /**
  * @author Wallace
@@ -317,7 +317,7 @@ public class MockPreparedStatement implements PreparedStatement {
 			long length) throws SQLException {
 	}
 
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
 	}
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
@@ -327,11 +327,8 @@ public class MockPreparedStatement implements PreparedStatement {
 			throws SQLException {
 	}
 
-	// #endif JDK6
+	// #endif JDK>6
 
-	/** {@inheritDoc}
-	 * @see java.sql.PreparedStatement#setNClob(int, java.io.Reader)
-	 */
 	// @Override
 	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
 	}
@@ -796,4 +793,5 @@ public class MockPreparedStatement implements PreparedStatement {
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return null;
 	}
-}
+
+	}

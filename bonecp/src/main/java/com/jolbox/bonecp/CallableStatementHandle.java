@@ -31,11 +31,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
-// #ifdef JDK6
+// #ifdef JDK>6
 import java.sql.NClob;
 import java.sql.RowId;
 import java.sql.SQLXML;
-// #endif JDK6 
+// #endif JDK>6 
 /**
  * Wrapper around CallableStatement.
  * 
@@ -288,7 +288,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 
 	}
 
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	@Override
 	public Reader getCharacterStream(int parameterIndex) throws SQLException {
 		checkClosed();
@@ -735,7 +735,7 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 		}
 	}
 
- 	// #endif JDK6 
+ 	// #endif JDK>6 
 
 	// #ifdef JDK7
   @Override

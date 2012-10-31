@@ -29,11 +29,11 @@ import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-// #ifdef JDK6
+// #ifdef JDK>6
 import java.sql.NClob;
 import java.sql.RowId;
 import java.sql.SQLXML;
-// #endif JDK6
+// #endif JDK>6
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -271,7 +271,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	@Override
 	public void setBinaryStream(int parameterIndex, InputStream x)
 	throws SQLException {
@@ -557,7 +557,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	// #endif JDK6
+	// #endif JDK>6
 
 	/**
 	 * {@inheritDoc}

@@ -23,12 +23,14 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.NClob;
 import java.sql.PreparedStatement;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+// #ifdef JDK>6
+import java.sql.SQLClientInfoException;
+import java.sql.NClob;
 import java.sql.SQLXML;
+// #endif JDK>6
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
@@ -625,7 +627,7 @@ public class ConnectionHandle implements Connection{
 			throw markPossiblyBroken(e);
 		}
 	}
-	// #ifdef JDK6
+	// #ifdef JDK>6
 	public Properties getClientInfo() throws SQLException {
 		Properties result = null;
 		checkClosed();
@@ -752,7 +754,7 @@ public class ConnectionHandle implements Connection{
 		}
 		return result;
 	}
-	// #endif JDK6
+	// #endif JDK>6
 
 	// #ifdef JDK7
   @Override

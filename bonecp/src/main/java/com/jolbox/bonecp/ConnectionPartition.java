@@ -25,7 +25,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import jsr166y.TransferQueue;
+import java.util.concurrent.TransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

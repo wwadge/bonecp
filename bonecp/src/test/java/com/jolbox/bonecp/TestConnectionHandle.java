@@ -22,7 +22,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+/* #ifdef JDK6
 import java.sql.SQLClientInfoException;
+#endif JDK6 */
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -836,7 +839,7 @@ public class TestConnectionHandle {
 
 	/**
 	 */
-	// #ifdef JDK6
+	/* #ifdef JDK6
 	@Test
 	public void testSetClientInfo() {
 		Properties prop = new Properties();
@@ -859,7 +862,7 @@ public class TestConnectionHandle {
 		}
 
 	}
-	 // #endif JDK6
+	 #endif JDK6 */
 	
 	/** Tests that a thrown exception will call the onAcquireFail hook.
 	 * @throws SQLException

@@ -22,10 +22,10 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-// #ifdef JDK6
+// #ifdef JDK>6
 import java.sql.NClob;
 import java.sql.SQLXML;
-// #endif JDK6
+// #endif JDK>6
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -92,7 +92,7 @@ public class MockConnection implements Connection {
 		return null;
 	}
 
-	// #ifdef JDK6
+	/* #ifdef JDK6
 	@Override
 	public NClob createNClob() throws SQLException {
 		return null;
@@ -101,7 +101,7 @@ public class MockConnection implements Connection {
 	public SQLXML createSQLXML() throws SQLException {
 		return null;
 	}
-	// #endif JDK6
+	#endif JDK6 */
 
   // #ifdef JDK7
 //  @Override
@@ -456,5 +456,19 @@ public class MockConnection implements Connection {
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return null;
 	}
+
+	// #ifdef JDK7
+	@Override
+	public NClob createNClob() throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public SQLXML createSQLXML() throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	  // #endif JDK7
 
 }
