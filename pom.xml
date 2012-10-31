@@ -7,13 +7,12 @@
 	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. | See the 
 	License for the specific language governing permissions and | limitations 
 	under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
-	<version>0.8.0-beta1-SNAPSHOT</version>
+	<version>0.8.0-beta1</version>
 	<packaging>pom</packaging>
 	<name>BoneCP</name>
 	<description>The fast Java JDBC Database Connection pool</description>
@@ -109,13 +108,13 @@
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp-test-commons</artifactId>
-				<version>0.8.0-beta1-SNAPSHOT</version>
+				<version>0.8.0-beta1</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp</artifactId>
-				<version>0.8.0-beta1-SNAPSHOT</version>
+				<version>0.8.0-beta1</version>
 			</dependency>
 
 			<dependency>
@@ -424,16 +423,16 @@
 									<value>#endif JDK6 */</value>
 								</replacement>
 								<replacement>
-									<token>// #ifdef JDK>6</token>
-									<value>/* #ifdef JDK>6</value>
+									<token>// #ifdef JDK&gt;6</token>
+									<value>/* #ifdef JDK&gt;6</value>
 								</replacement>
 								<replacement>
 									<token>// #endif JDK6</token>
 									<value>#endif JDK6 */</value>
 								</replacement>
 								<replacement>
-									<token>// #endif JDK>6</token>
-									<value>#endif JDK>6 */</value>
+									<token>// #endif JDK&gt;6</token>
+									<value>#endif JDK&gt;6 */</value>
 								</replacement>
 								<replacement>
 									<token>// #ifdef JDK7</token>
@@ -548,12 +547,12 @@
 									<value>// #endif JDK6</value>
 								</replacement>
 								<replacement>
-									<token>/* #ifdef JDK>6</token>
-									<value>// #ifdef JDK>6</value>
+									<token>/* #ifdef JDK&gt;6</token>
+									<value>// #ifdef JDK&gt;6</value>
 								</replacement>
 								<replacement>
-									<token>#endif JDK>6 */</token>
-									<value>// #endif JDK>6</value>
+									<token>#endif JDK&gt;6 */</token>
+									<value>// #endif JDK&gt;6</value>
 								</replacement>
 								<replacement>
 									<token>// #ifdef JDK5</token>
@@ -643,12 +642,12 @@
 									<token>#endif JDK7 */</token>
 								</replacement>
 								<replacement>
-									<token>/* #ifdef JDK>6</token>
-									<value>// #ifdef JDK>6</value>
+									<token>/* #ifdef JDK&gt;6</token>
+									<value>// #ifdef JDK&gt;6</value>
 								</replacement>
 								<replacement>
-									<token>#endif JDK>6 */</token>
-									<value>// #endif JDK>6</value>
+									<token>#endif JDK&gt;6 */</token>
+									<value>// #endif JDK&gt;6</value>
 								</replacement>
 								<replacement>
 									<token>// #ifdef JDK6</token>
