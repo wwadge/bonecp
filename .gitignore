@@ -14,3 +14,4 @@ bin/
 **/.project
 .settings/*
 release.properties
+*.releaseBackup
