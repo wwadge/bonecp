@@ -159,9 +159,15 @@ public class MockJDBCDriver implements Driver {
 
 	/**
 	 * @return the connection
+	 * @throws SQLException 
 	 */
-	public synchronized Connection getConnection() {
-		return this.connection;
+	public synchronized Connection getConnection() throws SQLException {
+		if (this.mockJDBCAnswer == null){
+			return new MockConnection();
+		}
+		
+		return this.mockJDBCAnswer.answer();
+
 	}
 
 	/**

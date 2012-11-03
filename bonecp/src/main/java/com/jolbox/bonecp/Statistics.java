@@ -15,6 +15,7 @@
  */
 package com.jolbox.bonecp;
 
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -22,7 +23,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author wallacew
  *
  */
-public class Statistics implements StatisticsMBean{
+public class Statistics implements StatisticsMBean, Serializable{
+	/**
+	 * uid
+	 */
+	private static final long serialVersionUID = -5819368300823149669L;
 	/** No of cache hits. */
 	private final AtomicLong cacheHits = new AtomicLong(0);
 	/** No of cache misses. */

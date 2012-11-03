@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.NotCompliantMBeanException;
@@ -1141,14 +1142,56 @@ public class TestBoneCP {
 	 * @throws InstanceAlreadyExistsException
 	 * @throws MBeanRegistrationException
 	 * @throws NotCompliantMBeanException
+	 * @throws InstanceNotFoundException 
 	 */
 	@Test
-	public void testJMX() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException{
+	public void testJMXRegister() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, InstanceNotFoundException{
 		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
 		Field field = testClass.getClass().getDeclaredField("mbs");
 		field.setAccessible(true);
 		field.set(testClass, mockMbs);
-		expect(mockConfig.getPoolName()).andReturn(null).anyTimes();
+		expect(mockConfig.getPoolName()).andReturn(null).anyTimes(); 
+		ObjectInstance mockInstance = EasyMock.createNiceMock(ObjectInstance.class);
+		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
+		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
+		replay(mockMbs, mockInstance, mockConfig);
+		testClass.registerUnregisterJMX(true);
+		verify(mockMbs);
+	}
+	
+	@Test
+	public void testJMXUnregisterNoName() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, InstanceNotFoundException{
+		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
+		Field field = testClass.getClass().getDeclaredField("mbs");
+		field.setAccessible(true);
+		field.set(testClass, mockMbs);
+		expect(mockConfig.getPoolName()).andReturn(null).anyTimes(); 
+		ObjectInstance mockInstance = EasyMock.createNiceMock(ObjectInstance.class);
+	
+		reset(mockMbs, mockInstance, mockConfig);
+		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(true).anyTimes();
+		mockMbs.unregisterMBean((ObjectName)anyObject());
+		replay(mockMbs, mockInstance, mockConfig);
+		testClass.registerUnregisterJMX(false);
+		verify(mockMbs);
+	}
+
+	/** Test for different pool names.
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InstanceAlreadyExistsException
+	 * @throws MBeanRegistrationException
+	 * @throws NotCompliantMBeanException
+	 */
+	@Test
+	public void testJMXRegisterWithName() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException{
+		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
+		Field field = testClass.getClass().getDeclaredField("mbs");
+		field.setAccessible(true);
+		field.set(testClass, mockMbs);
+		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
 		ObjectInstance mockInstance = EasyMock.createNiceMock(ObjectInstance.class);
 		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
 		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
@@ -1165,19 +1208,28 @@ public class TestBoneCP {
 	 * @throws InstanceAlreadyExistsException
 	 * @throws MBeanRegistrationException
 	 * @throws NotCompliantMBeanException
+	 * @throws InstanceNotFoundException 
 	 */
 	@Test
-	public void testJMXWithName() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException{
+	public void testJMXUnRegisterWithName() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, InstanceNotFoundException{
 		MBeanServer mockMbs = EasyMock.createNiceMock(MBeanServer.class);
 		Field field = testClass.getClass().getDeclaredField("mbs");
 		field.setAccessible(true);
 		field.set(testClass, mockMbs);
+	
+		field = testClass.getClass().getDeclaredField("config");
+		field.setAccessible(true);
+		field.set(testClass, mockConfig);
+	
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
 		ObjectInstance mockInstance = EasyMock.createNiceMock(ObjectInstance.class);
-		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(false).anyTimes();
-		expect(mockMbs.registerMBean(anyObject(), (ObjectName)anyObject())).andReturn(mockInstance).once().andThrow(new InstanceAlreadyExistsException()).once();
+		expect(mockMbs.isRegistered((ObjectName)anyObject())).andReturn(true).anyTimes();
+		mockMbs.unregisterMBean((ObjectName)anyObject());
+		expectLastCall().times(2).andThrow(new InstanceNotFoundException()).once();
 		replay(mockMbs, mockInstance, mockConfig);
-		testClass.registerUnregisterJMX(true);
+		testClass.registerUnregisterJMX(false);
+		testClass.registerUnregisterJMX(false); // should trigger an exception
+
 		verify(mockMbs);
 	}
 
@@ -1243,12 +1295,6 @@ public class TestBoneCP {
 			fail("SQLException thrown");
 		}
 		testClass.unregisterDriver();
-//		try{
-//			DriverManager.getDriver("jdbc:mock");
-//			fail("Should throw exception");
-//		} catch (SQLException e){
-//			// success
-//		}
 		
 		testClass.unregisterDriver(); // should log a message (nothing to unregister)
 	}

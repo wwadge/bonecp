@@ -28,10 +28,12 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Enumeration;
+import java.util.concurrent.ExecutionException;
 
 import javax.naming.RefAddr;
 import javax.naming.Reference;
@@ -42,6 +44,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.cache.LoadingCache;
 import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.hooks.CustomHook;
 
@@ -90,9 +93,11 @@ public class TestSystemTests {
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
-	 * @throws ClassNotFoundException */
+	 * @throws ClassNotFoundException 
+	 * @throws NoSuchFieldException 
+	 * @throws ExecutionException */
 	@Test
-	public void testDataSource() throws SQLException, IOException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
+	public void testDataSource() throws SQLException, IOException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, ClassNotFoundException, NoSuchFieldException, ExecutionException {
 		config.setAcquireIncrement(5);
 		config.setMinConnectionsPerPartition(30);
 		config.setMaxConnectionsPerPartition(100);
@@ -166,6 +171,20 @@ public class TestSystemTests {
 			// do nothing
 		}
 		
+		
+		LoadingCache<UsernamePassword, BoneCPDataSource> mockLoadingCache = createNiceMock(LoadingCache.class);
+		expect(mockLoadingCache.get((UsernamePassword)anyObject())).andThrow(new ExecutionException("", new Exception())).once();
+		Field f = BoneCPDataSource.class.getDeclaredField("multiDataSource");
+		f.setAccessible(true);
+		f.set(dsb, mockLoadingCache);
+
+		replay(mockLoadingCache);
+		try{
+			dsb.getConnection("foo", "bar");
+			fail("Should throw exception");
+		} catch(SQLException e){
+			// do nothing
+		}
 		
 		assertNull(dsb.unwrap(String.class));
 		assertEquals("com.jolbox.bonecp.MockJDBCDriver", dsb.getDriverClass());
@@ -356,7 +375,9 @@ public class TestSystemTests {
 				CommonTestUtils.logPass();
 			}
 		} finally{
-			dsb.shutdown();
+			if (dsb != null){
+				dsb.shutdown();
+			}
 		}
 	}
 

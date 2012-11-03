@@ -48,9 +48,10 @@ import com.jolbox.bonecp.hooks.CoverageHook;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
 
 /**
- * @author Wallace
+ * @author wwadge
  *
  */
+@Ignore
 public class TestMemorizeTransactionProxy {
 	/** Mock handle. */
 	static Connection mockConnection;
@@ -91,51 +92,6 @@ public class TestMemorizeTransactionProxy {
 		makeThreadSafe(mockConnection3, true);
 	}
 
-	/**
-	 * @throws ClassNotFoundException
-	 * @throws SQLException
-	 */
-	@SuppressWarnings("deprecation")
-	@Test
-	@Ignore
-	public void testHSQLDB() throws ClassNotFoundException, SQLException{
-		Class.forName("org.hsqldb.jdbcDriver" );
-		this.config.setTransactionRecoveryEnabled(true);
-		this.config.setJdbcUrl("jdbc:hsqldb:mem");
-		this.config.setUsername("sa");
-		this.config.setPassword("");
-		this.config.setMinConnectionsPerPartition(1);
-		this.config.setMaxConnectionsPerPartition(1);
-		this.config.setAcquireRetryAttempts(1);
-		this.config.setAcquireRetryDelayInMs(1);
-		this.config.setStatementsCacheSize(100);
-		this.config.setReleaseHelperThreads(0);
-		this.config.setTransactionRecoveryEnabled(true);
-		BoneCP pool = new BoneCP(this.config);
-		Connection c = pool.getConnection();
-		Statement st = c.createStatement();
-		try{
-			st.execute("CREATE TABLE foo(id INTEGER)");
-		} catch (SQLException e){
-			//
-		}
-		PreparedStatement ps = c.prepareStatement("insert into foo(id) values (1)");
-		try {
-
-			ps.execute();
-			ps.close();
-			st.execute("alter table foo");
-		} catch(SQLException e){
-//			e.printStackTrace();
-			// do nothing
-		}
-		PreparedStatement ps2 = c.prepareStatement("insert into foo(id) values (1)");
-
-		ps2.execute();
-
-		//st.execute("CREATE TABLE foo(id INTEGER)");
-
-	}
 
 	/** Tests that the statements and connections are proxified.
 	 * @throws SQLException
@@ -361,7 +317,6 @@ public class TestMemorizeTransactionProxy {
 	 * @throws Throwable
 	 */
 	@Test
-	@Ignore
 	public void testReplayTransactionWithFailuresOnReplay() throws IllegalArgumentException, Throwable{
 
 		count = 1;
@@ -516,7 +471,6 @@ public class TestMemorizeTransactionProxy {
 	 * @throws Throwable
 	 */
 	@Test
-	@Ignore
 	public void testReplayTransactionWithFailuresInterruptedException() throws IllegalArgumentException, Throwable{
 
 		count = 1;
@@ -607,7 +561,6 @@ public class TestMemorizeTransactionProxy {
 	 * @throws Throwable
 	 */
 	@Test
-	@Ignore
 	public void testReplayTransactionWithFailuresCustomHook() throws IllegalArgumentException, Throwable{
 
 		count = 1;
@@ -676,6 +629,4 @@ public class TestMemorizeTransactionProxy {
 
 		mockDriver.disable();
 	}
-
-
 }

@@ -118,7 +118,7 @@ public class BoneCP implements Serializable, Closeable {
 	/** Reference of objects that are to be watched. */
 	private final Map<Connection, Reference<ConnectionHandle>> finalizableRefs = new ConcurrentHashMap<Connection, Reference<ConnectionHandle>>();
 	/** Watch for connections that should have been safely closed but the application forgot. */
-	private FinalizableReferenceQueue finalizableRefQueue;
+	private transient FinalizableReferenceQueue finalizableRefQueue;
 	/** Time to wait before timing out the connection. Default in config is Long.MAX_VALUE milliseconds. */
 	protected long connectionTimeoutInMs;
 	/** No of ms to wait for thread.join() in connection watch thread. */
@@ -157,17 +157,15 @@ public class BoneCP implements Serializable, Closeable {
 			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.maxAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
+			this.asyncExecutor.shutdownNow();
 
 			try {
 				this.connectionsScheduler.awaitTermination(5, TimeUnit.SECONDS);
 
 				this.maxAliveScheduler.awaitTermination(5, TimeUnit.SECONDS);
 				this.keepAliveScheduler.awaitTermination(5, TimeUnit.SECONDS);
-
-				if (this.asyncExecutor != null){
-					this.asyncExecutor.shutdownNow();
-					this.asyncExecutor.awaitTermination(5, TimeUnit.SECONDS);
-				}
+				this.asyncExecutor.awaitTermination(5, TimeUnit.SECONDS);
+				
 				if (this.closeConnectionExecutor != null){
 					this.closeConnectionExecutor.shutdownNow();
 					this.closeConnectionExecutor.awaitTermination(5, TimeUnit.SECONDS);
@@ -180,17 +178,17 @@ public class BoneCP implements Serializable, Closeable {
 				// do nothing
 			}
 			this.connectionStrategy.terminateAllConnections();
-      unregisterDriver();
+			unregisterDriver();
 			registerUnregisterJMX(false);
 			logger.info("Connection pool has been shutdown.");
 		}
 	}
 
 	/** Drops a driver from the DriverManager's list. */
-	public void unregisterDriver(){
-		logger.info("Unregistering driver.");
+	protected void unregisterDriver(){
 		String jdbcURL = this.config.getJdbcUrl();
-		if (this.config.isDeregisterDriverOnClose() && (jdbcURL != null)){
+		if ((jdbcURL != null) && this.config.isDeregisterDriverOnClose()){
+			logger.info("Unregistering JDBC driver for : "+jdbcURL);
 			try {
 				DriverManager.deregisterDriver(DriverManager.getDriver(jdbcURL));
 			} catch (SQLException e) {
@@ -204,18 +202,9 @@ public class BoneCP implements Serializable, Closeable {
 		shutdown();
 	}
 
-	/**
-	 * Repopulate partitions.
-	 */
-	protected void repopulatePartitions(){
-		for (int i=0; i < this.partitionCount; i++) {
-		//	this.partitions[i].getFreeConnections().offer(ConnectionHandle.createPoisonConnectionHandle());
-			// send a signal to try re-populating again.
-			this.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
-		}
-	}
 
 	/**
+	 * Physically close off the internal connection.
 	 * @param conn
 	 */
 	protected void destroyConnection(ConnectionHandle conn) {
@@ -309,7 +298,7 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	public BoneCP(BoneCPConfig config) throws SQLException {
 		try {
-			this.config = config.clone();
+			this.config = config.clone(); // immutable
 		} catch (CloneNotSupportedException e1) {
 			throw new SQLException("Cloning of the config failed");
 		}
@@ -771,7 +760,7 @@ public class BoneCP implements Serializable, Closeable {
 		try {
 			String suffix = "";
 
-			if (this.config.getPoolName()!=null){
+			if (this.config.getPoolName() != null){
 				suffix="-"+this.config.getPoolName();
 			}
 

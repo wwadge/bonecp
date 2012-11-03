@@ -16,6 +16,7 @@
 
 package com.jolbox.bonecp;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
@@ -26,7 +27,12 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author wallacew
  *
  */
-public abstract class AbstractConnectionStrategy implements ConnectionStrategy{
+public abstract class AbstractConnectionStrategy implements ConnectionStrategy,Serializable{
+
+	/**
+	 * uuid
+	 */
+	private static final long serialVersionUID = 27805973487155497L;
 
 	/** Pool handle */
 	protected BoneCP pool;

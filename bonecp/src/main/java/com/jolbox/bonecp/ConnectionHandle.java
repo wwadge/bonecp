@@ -453,7 +453,10 @@ public class ConnectionHandle implements Connection{
 		if (((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null) && this.pool.getDbIsDown().compareAndSet(false, true) ){
 			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.connectionStrategy.terminateAllConnections();
-			this.pool.repopulatePartitions();
+			for (int i=0; i < this.pool.partitionCount; i++) {
+				// send a signal to try re-populating again.
+				this.pool.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
+			}
 		}
 
 		// SQL-92 says:
