@@ -50,9 +50,9 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	/** Serialization UID. */
 	private static final long serialVersionUID = -1561804548443209469L;
 	/** Config setting. */
-	private PrintWriter logWriter = null;
+	private transient PrintWriter logWriter = null;
 	/** Pool handle. */
-	private transient BoneCP pool = null;
+	private transient FinalWrapper<BoneCP> pool = null;
 	/** Lock for init. */
 	private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 	/** JDBC driver to use. */
@@ -109,19 +109,30 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 */
 	public Connection getConnection() throws SQLException {
 		
-		if (this.pool != null) {  // let's avoid making pool a volatile 
-			return this.pool.getConnection();
-		}
-		
-		synchronized (this) {
-			if (this.pool != null) {
-				return this.pool.getConnection();
-			}
+		FinalWrapper<BoneCP> wrapper = this.pool;
 
-			this.maybeInit();
-			return this.pool.getConnection();
-		}
-	}
+        if (wrapper == null) {
+                synchronized (this) {
+                        if (this.pool == null) {
+                        	try{
+                        		if (this.getDriverClass() != null){
+                        			loadClass(this.getDriverClass());
+                        		}
+    					
+                        		logger.debug(this.toString());
+                        		this.pool = new FinalWrapper<BoneCP>(new BoneCP(this));
+    				    
+                        	} catch (ClassNotFoundException e) {
+                        		throw new SQLException(PoolUtil.stringifyException(e));
+                        	}
+                        }
+
+                        wrapper = this.pool;
+                } 
+        }
+
+        return wrapper.value.getConnection();
+     }
 	
 		
 
@@ -133,38 +144,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		
 		if (getPool() != null){
 			getPool().shutdown();
-		}
-	}
-
-	/**
-	 * @throws SQLException 
-	 * 
-	 *
-	 */
-	private void maybeInit() throws SQLException {
-		try{
-			this.rwl.readLock().lock();
-			if (this.pool == null){ // this.pool is protected in getConnection
- 				this.rwl.readLock().unlock();
-				this.rwl.writeLock().lock();
-				try {
-					if (this.pool == null){ //read might have passed, write might not
-						if (this.getDriverClass() != null){
-							loadClass(this.getDriverClass());
-						}
-					
-						logger.debug(this.toString());
-						this.pool = new BoneCP(this);
-					}
-				    } catch (ClassNotFoundException e) {
-						throw new SQLException(PoolUtil.stringifyException(e));
-					} finally{
-						this.rwl.readLock().lock();
-						this.rwl.writeLock().unlock();
-					}
-			} 
-		} finally {
-			this.rwl.readLock().unlock();
+			logger.debug("Connection pool has been shut down");
 		}
 	}
 
@@ -183,10 +163,8 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 			throw new SQLException(e);
 			// #endif JDK>6
 			/* #ifdef JDK5
-			 throw new SQLException(e.getMessage());
+			 throw new SQLException(PoolUtil.stringifyException(e));
 			#endif JDK5 */
-			  
-			 
 
 		}
 	}
@@ -201,7 +179,8 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 
 	/**
 	 * Gets the maximum time in seconds that this data source can wait while attempting to connect to a database. 
-	 * A value of zero means that the timeout is the default system timeout if there is one; otherwise, it means that there is no timeout. When a DataSource object is created, the login timeout is initially zero.
+	 * A value of zero means that the timeout is the default system timeout if there is one; otherwise, it means that there is no timeout. 
+	 * When a DataSource object is created, the login timeout is initially zero.
 	 * 
 	 */
 	public int getLoginTimeout()
@@ -227,7 +206,8 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	/**
 	 * Sets the maximum time in seconds that this data source will wait while 
 	 * attempting to connect to a database. A value of zero specifies that the timeout is the default 
-	 * system timeout if there is one; otherwise, it specifies that there is no timeout. When a DataSource object is created, the login timeout is initially zero.
+	 * system timeout if there is one; otherwise, it specifies that there is no timeout. 
+	 * When a DataSource object is created, the login timeout is initially zero.
 	 */
 	public void setLoginTimeout(int seconds)
 	throws SQLException {
@@ -323,8 +303,15 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * statistics for example.
 	 * @return pool
 	 */
-	public synchronized BoneCP getPool() {
-		return this.pool;
+	public BoneCP getPool() {
+		return this.pool.value;
 	}
 
+	
+	class FinalWrapper<T> {
+	    public final T value;
+	    public FinalWrapper(T value) { 
+	        this.value = value; 
+	    }
+	}
 }
