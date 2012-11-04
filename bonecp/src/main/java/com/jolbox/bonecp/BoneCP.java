@@ -144,7 +144,7 @@ public class BoneCP implements Serializable, Closeable {
 	@VisibleForTesting protected Properties clientInfo;
 	/** If false, we haven't made a dummy driver call first. */
 	private volatile boolean driverInitialized = false;
-
+ 
 	/**
 	 * Closes off this connection pool.
 	 */
@@ -605,6 +605,7 @@ public class BoneCP implements Serializable, Closeable {
 			// this might fail if we have a thread that takes up more than one thread
 			// (we only track one)
 			connectionHandle.inUseInThreadLocalContext.set(false);
+			((CachedConnectionStrategy)this.connectionStrategy).tlConnections.set(connectionHandle);
 		} else {
 			TransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
 			if (!queue.tryTransfer(connectionHandle)){

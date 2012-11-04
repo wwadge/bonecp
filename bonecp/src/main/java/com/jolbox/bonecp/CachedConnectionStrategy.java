@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.FinalizableWeakReference;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 /** A connection strategy that is optimized to store/retrieve the connection inside a thread
  * local variable. This makes getting a connection in a managed thread environment such as Tomcat
@@ -40,6 +42,9 @@ import com.google.common.base.FinalizableWeakReference;
  *
  */
 public class CachedConnectionStrategy extends AbstractConnectionStrategy {
+	/**  uid */
+	private static final long serialVersionUID = -4725640468699097218L;
+
 	/** Logger class. */
 	private static final Logger logger = LoggerFactory.getLogger(CachedConnectionStrategy.class);
 
@@ -81,8 +86,8 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	}
 	
 	/** Connections are stored here. No need for static here, this class is a singleton. */
-	private ThreadLocal<ConnectionHandle> tlConnections = new ThreadLocal<ConnectionHandle>() {
-
+	protected ThreadLocal<ConnectionHandle> tlConnections = new ThreadLocal<ConnectionHandle>() {
+ 
 		@Override
 		protected ConnectionHandle initialValue() {
 			ConnectionHandle result;
@@ -90,6 +95,19 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 				// grab a connection from any other configured fallback strategy
 				result = pollFallbackConnection();
 				
+				if (result == null){
+					// oh-huh? either we are racing while resizing the pool or else no of threads > no of connections. Let's wait a bit 
+					// and try again one last time
+					for (int i=0; i < 4*3; i++){	// there is a slight race with the pool watch creation thread so spin for a bit
+																// no big deal if it keeps failing, we just switch to default connection strategy
+						result = pollFallbackConnection();
+						if (result != null){
+							break;
+						}
+						Uninterruptibles.sleepUninterruptibly(250, TimeUnit.MILLISECONDS);
+					}
+					
+				}
 			} catch (SQLException e) {
 				result = null; 
 			}
@@ -102,7 +120,7 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 		public ConnectionHandle get() {
 			ConnectionHandle result = super.get();
 			// have we got one that's cached and unused? Mark it as in use. 
-			if (result != null && !result.inUseInThreadLocalContext.compareAndSet(false, true)){
+			if (result == null || !result.inUseInThreadLocalContext.compareAndSet(false, true)){
 				try {
 					// ... otherwise grab a new connection 
 					result = pollFallbackConnection();
