@@ -28,7 +28,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.RefAddr;
@@ -53,8 +52,6 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	private transient PrintWriter logWriter = null;
 	/** Pool handle. */
 	private transient FinalWrapper<BoneCP> pool = null;
-	/** Lock for init. */
-	private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 	/** JDBC driver to use. */
 	private String driverClass;
 	/** Class logger. */ 

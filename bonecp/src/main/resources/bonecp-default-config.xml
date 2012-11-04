@@ -27,11 +27,11 @@
 		     contention and thus improve performance,  each incoming connection request picks off a 
 		     connection from a pool that has thread-affinity,  i.e. pool[threadId % partition_count]. The 
 		     higher this number, the better your performance will be for the case  
-		     when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of 
-		     these pools will start  to have a negative effect on performance (and 
-		     only for the case when connections on a partition start running out). Has 
-		     no effect in a CACHED strategy.   Default: 1, minimum: 1, recommended: 
-		     2-4 (but very app specific) -->
+		     when you have plenty of short-lived threads. Beyond a certain threshold (approx 4), 
+		     maintenance of these pools will start  to have a negative effect on 
+		     performance (and only for the case when connections on a partition start running 
+		     out). Has no effect in a CACHED strategy.   Default: 1, minimum: 
+		     1, recommended: 2-4 (but very app specific) -->
 		<property name="partitionCount">1</property>
 
 		<!-- Sets the JDBC connection URL. -->

@@ -53,9 +53,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Serialization UID. */
 	private static final long serialVersionUID = 6090570773474131622L;
 	/** For toString(). */
-	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
+	private static final String CONFIG_TOSTRING = "JDBC URL = %s, Username = %s, partitions = %d, max (per partition) = %d, min (per partition) = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
 	/** For toString(). */
-	private static final String CONFIG_DS_TOSTRING = "JDBC URL = (via datasource bean), Username = (via datasource bean), partitions = %d, max (per partition) = %d, min (per partition) = %d, helper threads = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
+	private static final String CONFIG_DS_TOSTRING = "JDBC URL = (via datasource bean), Username = (via datasource bean), partitions = %d, max (per partition) = %d, min (per partition) = %d, idle max age = %d min, idle test period = %d min, strategy = %s";
 	/** Logger class. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
@@ -252,7 +252,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * In order to reduce lock contention and thus improve performance, 
 	 * each incoming connection request picks off a connection from a pool that has thread-affinity, 
 	 * i.e. pool[threadId % partition_count]. The higher this number, the better your performance will be for the case 
-	 * when you have plenty of short-lived threads. Beyond a certain threshold, maintenance of these pools will start 
+	 * when you have plenty of short-lived threads. Beyond a certain threshold (approx 4), maintenance of these pools will start 
 	 * to have a negative effect on performance (and only for the case when connections on a partition start running out).
 	 * Has no effect in a CACHED strategy.
 	 *  
@@ -1720,12 +1720,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		String result = null;
 		if (this.datasourceBean != null){
 			result = String.format(CONFIG_DS_TOSTRING, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-					this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
+					getIdleMaxAgeInMinutes(), 
 					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		} else {
 			result = String.format(CONFIG_TOSTRING, this.jdbcUrl,
 					this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-					this.releaseHelperThreads, getIdleMaxAgeInMinutes(), 
+					 getIdleMaxAgeInMinutes(), 
 					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		}
 

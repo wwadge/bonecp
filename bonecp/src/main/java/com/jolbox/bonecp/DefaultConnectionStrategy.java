@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 
+	/** uid */
+	private static final long serialVersionUID = 962520166486807512L;
+
 	public DefaultConnectionStrategy(BoneCP pool){
 		this.pool = pool;
 	}

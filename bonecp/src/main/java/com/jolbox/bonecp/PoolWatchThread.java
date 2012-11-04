@@ -71,6 +71,7 @@ public class PoolWatchThread implements Runnable {
 					if (maxNewConnections == 0){
 						this.partition.setUnableToCreateMoreTransactions(true);
 					}
+					
 					this.partition.getPoolWatchThreadSignalQueue().take();
 					maxNewConnections = this.partition.getMaxConnections()-this.partition.getCreatedConnections();
 					
@@ -86,6 +87,7 @@ public class PoolWatchThread implements Runnable {
 
 
 			} catch (InterruptedException e) {
+				logger.debug("Terminating pool watch thread");
 				return; // we've been asked to terminate.
 			}
 		}
