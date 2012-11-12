@@ -59,9 +59,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Logger class. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPConfig.class);
 	/** Min number of connections per partition. */
-	private int minConnectionsPerPartition;
+	private int minConnectionsPerPartition = 1;
 	/** Max number of connections per partition. */
-	private int maxConnectionsPerPartition;
+	private int maxConnectionsPerPartition = 2;
 	/** Number of new connections to create in 1 batch. */
 	private int acquireIncrement = 2;
 	/** Number of partitions. */
@@ -1398,6 +1398,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 		} catch (Exception e) {
 			throw e;
+		} finally {
+			if (xmlConfigFile != null){ // safety
+				xmlConfigFile.close();
+			}
 		}
 	}
 
@@ -1901,7 +1905,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	
 
 	/**
-	 * Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED.
+	 * Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED. This is an experimental feature!
 	 *
 	 * DEFAULT strategy operates in a manner that has been used in the pool since the very first
 	 * version: it tries to obtain a connection from a queue.
