@@ -24,7 +24,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>bonecp${project.specifier}</artifactId>
+    <artifactId>bonecp</artifactId>
     <packaging>bundle</packaging> 
 
     <name>BoneCP :: Core Library</name>
@@ -32,6 +32,15 @@
 
     <build>
         <plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/jsr166y/*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -54,24 +63,6 @@
             </plugin>
         </plugins>
     </build>
-    
-    <profiles>
-    	<profile>
-    		<id>JDK7</id>
-    		<build>
-    			<plugins>
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<excludes>
-								<exclude>**/jsr166y/*.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-				</plugins>
-    		</build>
-    	</profile>
-    </profiles>
 
     <dependencies>
         <dependency>

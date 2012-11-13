@@ -24,7 +24,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>bonecp-provider${project.specifier}</artifactId>
+    <artifactId>bonecp-provider</artifactId>
     <packaging>bundle</packaging>
 
     <name>BoneCP :: Hibernate provider</name>
@@ -57,7 +57,7 @@
     <dependencies>
         <dependency>
             <groupId>com.jolbox</groupId>
-            <artifactId>bonecp${project.specifier}</artifactId>
+            <artifactId>bonecp</artifactId>
         </dependency>
 
         <dependency>

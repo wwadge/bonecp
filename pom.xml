@@ -122,7 +122,7 @@
 
 			<dependency>
 				<groupId>com.jolbox</groupId>
-				<artifactId>bonecp${project.specifier}</artifactId>
+				<artifactId>bonecp</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -188,7 +188,7 @@
 		<project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
 
 		<!-- Set compiler source and target versions (m-compiler-p) -->
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.target>1.5</maven.compiler.target>
 		<maven.compiler.source>1.7</maven.compiler.source>
 
 		<!-- Set compiler to be more verbose (m-compiler-p) -->
@@ -215,7 +215,7 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>2.5.1</version>
 					<configuration>
-						<compilerId>javac</compilerId>
+						<compilerId>eclipse</compilerId>
 					</configuration>
 					<dependencies>
 						<dependency>
@@ -409,11 +409,6 @@
 				<jdk>[1.5,1.6)</jdk>
 			</activation>
 			<properties>
-				<project.specifier>-jdk5</project.specifier>
-
-				<!-- Override compiler target -->
-				<maven.compiler.target>1.5</maven.compiler.target>
-
 				<!-- Under jdk5, we fall back to v11 since that's the last one supported -->
 				<guava.version>11.0.2</guava.version>
 				
@@ -483,12 +478,6 @@
 			<activation>
 				<jdk>[1.6,1.7)</jdk>
 			</activation>
-			<properties>
-				<project.specifier>-jdk6</project.specifier>
-
-				<!-- Override compiler target -->
-				<maven.compiler.target>1.6</maven.compiler.target>
-			</properties>
 
 			<modules>
 				<module>bonecp-hbnprovider</module>
@@ -553,9 +542,6 @@
 			<activation>
 				<jdk>[1.7,)</jdk>
 			</activation>
-			<properties>
-				<project.specifier>-jdk7</project.specifier>
-			</properties>
 
 			<modules>
 				<module>bonecp-hbnprovider</module>
