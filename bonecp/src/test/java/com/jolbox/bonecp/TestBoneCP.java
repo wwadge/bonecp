@@ -63,9 +63,8 @@ import javax.sql.DataSource;
 import junit.framework.Assert;
 
 import org.easymock.EasyMock;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -77,58 +76,30 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  */
 public class TestBoneCP {
 	/** Class under test. */
-	private static BoneCP testClass;
+	private BoneCP testClass;
 	/** Mock handle. */
-	private static BoneCPConfig mockConfig;
+	private BoneCPConfig mockConfig;
 	/** Mock handle. */
-	private static ConnectionPartition mockPartition;
+	private ConnectionPartition mockPartition;
 	/** Mock handle. */
-	private static ScheduledExecutorService mockKeepAliveScheduler;
+	private ScheduledExecutorService mockKeepAliveScheduler;
 	/** Mock handle. */
-	private static ExecutorService mockConnectionsScheduler;
+	private ExecutorService mockConnectionsScheduler;
 	/** Mock handle. */
-	private static BoundedLinkedTransferQueue<ConnectionHandle> mockConnectionHandles;
+	private BoundedLinkedTransferQueue<ConnectionHandle> mockConnectionHandles;
 	/** Mock handle. */
-	private static ConnectionHandle mockConnection;
+	private ConnectionHandle mockConnection;
 	/** Mock handle. */
-	private static Lock mockLock;
+	private Lock mockLock;
 	/** Mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 	/** Mock handle. */
-	private static DatabaseMetaData mockDatabaseMetadata;
+	private DatabaseMetaData mockDatabaseMetadata;
 	/** Mock handle. */
-	private static MockResultSet mockResultSet;
+	private MockResultSet mockResultSet;
 	/** Fake database driver. */
-	private static MockJDBCDriver driver;
+	private MockJDBCDriver driver;
 
-	/** Mock setups.
-	 * @throws SQLException
-	 * @throws ClassNotFoundException
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * @throws CloneNotSupportedException 
-	 */
-	@BeforeClass
-	public static void setup() throws SQLException, ClassNotFoundException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
-		driver = new MockJDBCDriver(new MockJDBCAnswer() {
-
-			public Connection answer() throws SQLException {
-				return new MockConnection();
-			}
-		});
-		//		config = CommonTestUtils.getConfigClone();
-	}
-
-
-	/**
-	 * @throws SQLException
-	 */
-	@AfterClass
-	public static void teardown() throws SQLException{
-		driver.disable();
-	}
 	/**
 	 * Reset the mocks.
 	 * @throws IllegalAccessException 
@@ -141,6 +112,12 @@ public class TestBoneCP {
 	@Before
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	public void before() throws IllegalArgumentException, IllegalAccessException, SQLException, SecurityException, NoSuchFieldException, CloneNotSupportedException{
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
+
+			public Connection answer() throws SQLException {
+				return new MockConnection();
+			}
+		});
 		mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
@@ -205,6 +182,15 @@ public class TestBoneCP {
 		reset(mockConfig, mockKeepAliveScheduler, mockConnectionsScheduler, mockPartition, 
 				mockConnectionHandles, mockConnection, mockLock);
 	}
+
+	/**
+	 * @throws SQLException
+	 */
+	@After
+	public void teardown() throws SQLException{
+		driver.disable();
+	}
+	
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#shutdown()}.
 	 * @throws IllegalAccessException 

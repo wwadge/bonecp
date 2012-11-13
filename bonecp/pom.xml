@@ -23,35 +23,34 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+
     <artifactId>bonecp</artifactId>
     <packaging>bundle</packaging> 
+
     <name>BoneCP :: Core Library</name>
     <description>Lightweight connection pool.</description>
 
     <build>
         <plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/jsr166y/*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.4</version>
                 <configuration>
-                    <manifestLocation>${project.build.directory}/osgi</manifestLocation>
                     <instructions>
-                        <Import-Package>com.google.*;version="[0.8,1.0)",*</Import-Package>
+						<Private-Package>jsr166y</Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestFile>${project.build.directory}/osgi/MANIFEST.MF</manifestFile>
-                    </archive>
-                </configuration>
-            </plugin>
-            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -67,15 +66,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.thoughtworks.qdox</groupId>
-            <artifactId>qdox</artifactId>
-            <scope>test</scope>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
-
+        
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <dependency>
@@ -85,10 +82,17 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
-        
+
+        <dependency>
+            <groupId>com.thoughtworks.qdox</groupId>
+            <artifactId>qdox</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
@@ -97,28 +101,9 @@
 
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- 
-        <dependency>
-        	<groupId>hsqldb</groupId>
-        	<artifactId>hsqldb</artifactId>
-        	<version>1.8.0.7</version>
-        	<scope>test</scope>
-        </dependency>
-         -->
     </dependencies>
 
 </project>

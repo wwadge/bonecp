@@ -30,10 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -47,37 +46,34 @@ import com.jolbox.bonecp.hooks.CoverageHook;
 public class TestPoolWatchThread {
 
 	/** Mock handle. */
-	private static ConnectionPartition mockPartition;
+	private ConnectionPartition mockPartition;
 	/** Mock handle. */
-	private static BoneCP mockPool;
+	private BoneCP mockPool;
 	/** Class under test. */
 	static PoolWatchThread testClass;
 	/** Mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 	/** Break out from infinite loop. */
 	static boolean first = true;
 	/** Mock handle. */
-	private static BoneCPConfig mockConfig;
+	private BoneCPConfig mockConfig;
 	/** Mock handle. */
-	private static MockJDBCDriver driver;
+	private MockJDBCDriver driver;
+
 
 	/** Test class setup.
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws ClassNotFoundException
+	 * @throws IllegalAccessException 
+	 * @throws NoSuchFieldException 
 	 * @throws SQLException 
 	 */
-	@BeforeClass
-	public static void setup() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, ClassNotFoundException, SQLException{
+	@Before
+	public void doReset() throws NoSuchFieldException, IllegalAccessException, SQLException{
 		driver = new MockJDBCDriver();
 		mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
 
 
     	mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
     	expect(mockConfig.getStatementsCacheSize()).andReturn(0).anyTimes();
-//    	expect(mockConfig.getConnectionHook()).andReturn(null).anyTimes(); 
     	expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
     	expect(mockConfig.getAcquireRetryAttempts()).andReturn(0).anyTimes();
     	expect(mockConfig.getDefaultTransactionIsolationValue()).andReturn(-1).anyTimes();
@@ -101,23 +97,16 @@ public class TestPoolWatchThread {
 
 		mockLogger.debug((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
+
+		reset(mockPartition, mockPool, mockLogger);
 	}
 
 	/** AfterClass cleanup.
 	 * @throws SQLException
 	 */
-	@AfterClass
-	public static void teardown() throws SQLException{
+	@After
+	public void teardown() throws SQLException{
 		driver.disable();
-	}
-
-
-	/**
-	 * Rest the mocks.
-	 */
-	@Before
-	public void doReset(){
-		reset(mockPartition, mockPool, mockLogger);
 	}
 
 	/** Tests the case where we cannot create more transactions.

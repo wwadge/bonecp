@@ -49,7 +49,7 @@ public class MockJDBCDriver implements Driver {
 	public MockJDBCDriver() throws SQLException{
 		// default constructor
 		DriverManager.registerDriver(this);
-		this.active = true;
+		active = true;
 	}
 
 	/** Stop intercepting requests.
@@ -58,7 +58,7 @@ public class MockJDBCDriver implements Driver {
 	public void unregister() throws SQLException{
 		this.connection = null;
 		this.mockJDBCAnswer = null;
-		this.active = false;
+		active = false;
 		DriverManager.deregisterDriver(this);
 	}
 
@@ -84,7 +84,7 @@ public class MockJDBCDriver implements Driver {
 	 */
 //	@Override
 	public synchronized boolean acceptsURL(String url) throws SQLException {
-		return this.active && url.startsWith("jdbc:mock"); // accept anything
+		return active && url.startsWith("jdbc:mock"); // accept anything
 	}
 
 	/** {@inheritDoc}

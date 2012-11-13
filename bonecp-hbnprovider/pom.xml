@@ -19,12 +19,14 @@
     <parent>
         <groupId>com.jolbox</groupId>
         <artifactId>bonecp-parent</artifactId>
-        <version>0.8.0-beta1-SNAPSHOT</version>
+        <version>0.8.0-beta2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+
     <artifactId>bonecp-provider</artifactId>
     <packaging>bundle</packaging>
+
     <name>BoneCP :: Hibernate provider</name>
     <description>Helper class for easier Hibernate intergration</description>
 
@@ -33,22 +35,10 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.4</version>
                 <configuration>
-                    <manifestLocation>${project.build.directory}/osgi</manifestLocation>
                     <instructions>
-                        <Import-Package>com.google.*;version="[0.8,1.0)",org.hibernate.*;version="[3.3.0,4.0.0)",*</Import-Package>
+                        <Import-Package>org.hibernate.*;version="<![CDATA[$<range;[==,=+);${hibernate.version}>]]>",*</Import-Package>
                     </instructions>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestFile>${project.build.directory}/osgi/MANIFEST.MF</manifestFile>
-                    </archive>
                 </configuration>
             </plugin>
 
@@ -66,15 +56,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <scope>provided</scope>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp-test-commons</artifactId>
-            <scope>test</scope>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -83,20 +72,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp-test-commons</artifactId>
             <scope>test</scope>
         </dependency>
  
@@ -107,9 +84,15 @@
         </dependency>
 
         <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp</artifactId>
-            <version>0.8.0-beta1-SNAPSHOT</version>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -54,17 +54,17 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
 @Ignore
 public class TestMemorizeTransactionProxy {
 	/** Mock handle. */
-	static Connection mockConnection;
+	private Connection mockConnection;
 	/** Mock handle. */
-	static Connection mockConnection2;
+	private Connection mockConnection2;
 	/** Mock handle. */
-	static CallableStatement mockCallableStatement;
+	private CallableStatement mockCallableStatement;
 	/** Mock handle. */
-	static Statement mockStatement;
+	private Statement mockStatement;
 	/** Mock handle. */
-	static PreparedStatement mockPreparedStatement;
+	private PreparedStatement mockPreparedStatement;
 	/** Mock handle. */
-	static Connection mockConnection3;
+	private Connection mockConnection3;
 	/** Config handle. */
 	private BoneCPConfig config;
 
@@ -188,9 +188,9 @@ public class TestMemorizeTransactionProxy {
 			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.mockConnection;
+					return mockConnection;
 				}
-				return TestMemorizeTransactionProxy.mockConnection2;
+				return mockConnection2;
 			}
 		});
 
@@ -275,7 +275,7 @@ public class TestMemorizeTransactionProxy {
 
 			// @Override
 			public Connection answer() throws SQLException {
-					return TestMemorizeTransactionProxy.mockConnection;
+					return mockConnection;
 			}
 		});
 
@@ -326,12 +326,12 @@ public class TestMemorizeTransactionProxy {
 			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.mockConnection;
+					return mockConnection;
 				}  if (count == 0){
 					count--;
-					return TestMemorizeTransactionProxy.mockConnection2;
+					return mockConnection2;
 				}
-					return TestMemorizeTransactionProxy.mockConnection3;
+					return mockConnection3;
 			}
 		});
 
@@ -405,9 +405,9 @@ public class TestMemorizeTransactionProxy {
 			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.mockConnection;
+					return mockConnection;
 				}
-					return TestMemorizeTransactionProxy.mockConnection2;
+					return mockConnection2;
 			}
 		});
 
@@ -480,9 +480,9 @@ public class TestMemorizeTransactionProxy {
 			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.mockConnection;
+					return mockConnection;
 				}
-					return TestMemorizeTransactionProxy.mockConnection2;
+					return mockConnection2;
 			}
 		});
 
@@ -570,9 +570,9 @@ public class TestMemorizeTransactionProxy {
 			// @Override
 			public Connection answer() throws SQLException {
 				if (count == 1){
-					return TestMemorizeTransactionProxy.mockConnection;
+					return mockConnection;
 				}
-					return TestMemorizeTransactionProxy.mockConnection2;
+					return mockConnection2;
 			}
 		});
 

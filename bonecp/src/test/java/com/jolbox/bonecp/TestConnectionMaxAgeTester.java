@@ -22,9 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.fail;
@@ -41,42 +39,33 @@ import java.util.concurrent.TransferQueue;
  */
 public class TestConnectionMaxAgeTester {
 	/** Mock handle. */
-	private static BoneCP mockPool;
+	private BoneCP mockPool;
 	/** Mock handle. */
-	private static ConnectionPartition mockConnectionPartition;
+	private ConnectionPartition mockConnectionPartition;
 	/** Mock handle. */
-	private static ScheduledExecutorService mockExecutor;
+	private ScheduledExecutorService mockExecutor;
 	/** Test class handle. */
-	private static ConnectionMaxAgeThread testClass;
+	private ConnectionMaxAgeThread testClass;
 	/** Mock handle. */
-	private static BoneCPConfig config;
-	/** Mock handle. */
-	private static Logger mockLogger;
+	private BoneCPConfig config;
 
-	/** Mock setup.
+	/**
+	 * Mock setup.
 	 * @throws ClassNotFoundException
+	 * @throws IllegalAccessException 
+	 * @throws NoSuchFieldException 
 	 */
-	@BeforeClass
-	public static void setup() throws ClassNotFoundException{
+	@Before
+	public void resetMocks() throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException{
 		mockPool = createNiceMock(BoneCP.class);
 		mockConnectionPartition = createNiceMock(ConnectionPartition.class);
 		mockExecutor = createNiceMock(ScheduledExecutorService.class);
 		
-		mockLogger = createNiceMock(Logger.class);
-		
-		makeThreadSafe(mockLogger, true);
 		config = new BoneCPConfig();
 		config.setMaxConnectionAgeInSeconds(1);
 		
 		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, false);
-	}
-
-	/**
-	 * Reset all mocks.
-	 */
-	@Before
-	public void resetMocks(){
-		reset(mockPool, mockConnectionPartition, mockExecutor, mockLogger);
+		TestUtils.mockLogger(testClass.getClass());
 	}
 	
 	/**

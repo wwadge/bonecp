@@ -35,7 +35,7 @@ public class TestBoundedLinkedTransferQueue {
 	/**
 	 * Handle to test class.
 	 */
-	static BoundedLinkedTransferQueue<Object> testClass = new BoundedLinkedTransferQueue<Object>(50);
+	private final BoundedLinkedTransferQueue<Object> testClass = new BoundedLinkedTransferQueue<Object>(50);
 	
 	/** Tests size param.
 	 * @throws IllegalArgumentException
@@ -58,7 +58,8 @@ public class TestBoundedLinkedTransferQueue {
 	 */
 	@Test
 	public void testRemainingCapacity() {
-		assertEquals(40, testClass.remainingCapacity());
+		testClass.offer(new Object());
+		assertEquals(49, testClass.remainingCapacity());
 	}
 
 	/**
@@ -81,9 +82,9 @@ public class TestBoundedLinkedTransferQueue {
 		while (!testClass.hasWaitingConsumer()){
 			Thread.sleep(50); // wait till take() has been registered
 		}
-		assertEquals(10, testClass.size());
+		assertEquals(0, testClass.size());
 		testClass.tryTransfer(new Object());
-		assertEquals(11, testClass.size());
+		assertEquals(1, testClass.size());
 	}
 	/**
 	 * Tests offer.
@@ -92,7 +93,7 @@ public class TestBoundedLinkedTransferQueue {
 	public void testOffer() {
 		Object o = new Object();
 		testClass.offer(o);
-		assertEquals(12, testClass.size());
+		assertEquals(1, testClass.size());
 	}
 
 	
@@ -105,9 +106,9 @@ public class TestBoundedLinkedTransferQueue {
 		testClass.clear();
 		Object o = new Object();
 		testClass.offer(o);
-		assertEquals(12, testClass.size());
+		assertEquals(1, testClass.size());
 		assertEquals(o, testClass.poll(9999, TimeUnit.SECONDS));
-		assertEquals(11, testClass.size());
+		assertEquals(0, testClass.size());
 	}
 
 	/**
@@ -118,9 +119,9 @@ public class TestBoundedLinkedTransferQueue {
 		testClass.clear();
 		Object o = new Object();
 		testClass.offer(o);
-		assertEquals(12, testClass.size());
+		assertEquals(1, testClass.size());
 		assertEquals(o, testClass.poll());
-		assertEquals(11, testClass.size());
+		assertEquals(0, testClass.size());
 	}
 
 	/**

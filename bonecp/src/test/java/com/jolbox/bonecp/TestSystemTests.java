@@ -38,9 +38,8 @@ import java.util.concurrent.ExecutionException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -53,11 +52,11 @@ import com.jolbox.bonecp.hooks.CustomHook;
 @SuppressWarnings("all") 
 public class TestSystemTests {
 
-	private static BoneCPConfig config;
-	private static MockJDBCDriver driver;
+	private BoneCPConfig config;
+	private MockJDBCDriver driver;
 
-	@BeforeClass
-	public static void setup() throws ClassNotFoundException, SQLException{
+	@Before
+	public void beforeTest() throws SQLException{
 		driver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			public Connection answer() throws SQLException {
@@ -65,15 +64,6 @@ public class TestSystemTests {
 			}
 		});
 		config = CommonTestUtils.getConfigClone();
-	}
-
-	@AfterClass
-	public static void teardown() throws SQLException{
-		driver.disable();
-	}
-	
-	@Before
-	public void beforeTest(){
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
 		config.setPassword(CommonTestUtils.password);
@@ -84,7 +74,10 @@ public class TestSystemTests {
 		config.setStatementsCachedPerConnection(30);
 	}
 
-
+	@After
+	public void teardown() throws SQLException{
+		driver.disable();
+	}
 		
 	/** Mostly for code coverage. 
 	 * @throws IOException 

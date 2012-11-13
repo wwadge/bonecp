@@ -23,8 +23,10 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+
     <artifactId>bonecp-spring</artifactId>
     <packaging>bundle</packaging>
+
     <name>BoneCP :: Spring support</name>
     <description>Helper classes for additional integration with the spring framework</description>
 
@@ -33,22 +35,10 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.4</version>
                 <configuration>
-                    <manifestLocation>${project.build.directory}/osgi</manifestLocation>
                     <instructions>
-                        <Import-Package>com.google.*;version="[0.8,1.0)",*</Import-Package>
+                        <Import-Package>org.springframework*;version="<![CDATA[$<range;[==,=+);${spring.version}>]]>",org.apache.commons.logging;version="[1.1,2)",*</Import-Package>
                     </instructions>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestFile>${project.build.directory}/osgi/MANIFEST.MF</manifestFile>
-                    </archive>
                 </configuration>
             </plugin>
 
@@ -66,15 +56,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <scope>provided</scope>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp-test-commons</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -83,20 +72,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp-test-commons</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -107,10 +84,15 @@
         </dependency>
 
         <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

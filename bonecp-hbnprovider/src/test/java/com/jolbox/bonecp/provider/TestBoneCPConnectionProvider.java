@@ -165,6 +165,7 @@ public class TestBoneCPConnectionProvider {
 	 * @throws SQLException 
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void testConfigure() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException, SQLException {
 		
 		Class.forName("com.jolbox.bonecp.MockJDBCDriver");

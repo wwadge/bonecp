@@ -30,8 +30,8 @@ import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.easymock.IAnswer;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.jolbox.bonecp.BoneCP;
@@ -48,13 +48,13 @@ import com.jolbox.bonecp.MockJDBCDriver;
 public class TestConnectionHook {
 
 	/** Mock support. */
-	private static BoneCPConfig mockConfig;
+	private BoneCPConfig mockConfig;
 	/** Pool handle. */
-	private static BoneCP poolClass;
+	private BoneCP poolClass;
 	/** Helper class. */
-	private static CustomHook hookClass;
+	private CustomHook hookClass;
 	/** Driver class. */
-	private static MockJDBCDriver driver;
+	private MockJDBCDriver driver;
 
 	/** Setups all mocks.
 	 * @throws SQLException
@@ -62,18 +62,18 @@ public class TestConnectionHook {
 	 * @throws CloneNotSupportedException 
 	 */
 	@SuppressWarnings("deprecation")
-	@BeforeClass
-	public static void setup() throws SQLException, ClassNotFoundException, CloneNotSupportedException{
+	@Before
+	public void setup() throws SQLException, ClassNotFoundException, CloneNotSupportedException{
 		ConnectionState.valueOf(ConnectionState.NOP.toString()); // coverage BS.
 		
-	driver = new MockJDBCDriver(new MockJDBCAnswer() {
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			public Connection answer() throws SQLException {
 				return new MockConnection();
 			}
 		});
+
 		hookClass = new CustomHook();
-		Class.forName("com.jolbox.bonecp.MockJDBCDriver");
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
 		
@@ -89,23 +89,20 @@ public class TestConnectionHook {
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		replay(mockConfig);
-		
+	
 		// once for no release threads, once with release threads....
 		poolClass = new BoneCP(mockConfig);
-	
 	}
 	
 	/** Unload the driver.
 	 * @throws SQLException
 	 */
-	@AfterClass
-	public static void destroy() throws SQLException{
+	@After
+	public void destroy() throws SQLException{
 		driver.disable();
 		poolClass.shutdown();
 		poolClass = null;
 	}
-	
-
 	
 	/**
 	 * Test method for {@link com.jolbox.bonecp.hooks.AbstractConnectionHook#onAcquire(com.jolbox.bonecp.ConnectionHandle)}.
@@ -318,7 +315,7 @@ public class TestConnectionHook {
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
 		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
-		expect(mockConfig.getConnectionHook()).andReturn( new CoverageHook()).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
 		
 		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
