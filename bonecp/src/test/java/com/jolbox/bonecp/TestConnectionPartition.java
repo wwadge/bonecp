@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import com.google.common.base.FinalizableReferenceQueue;
 import com.jolbox.bonecp.proxy.ConnectionProxy;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -42,22 +44,16 @@ public class TestConnectionPartition {
 	/** mock handle. */
 	private BoneCP mockPool = createNiceMock(BoneCP.class);
 	/** mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 	/** mock handle. */
-	private static BoneCPConfig mockConfig;
+	private BoneCPConfig mockConfig;
 	/** mock handle. */
-	private static ConnectionPartition testClass;
+	private ConnectionPartition testClass;
 
-
-	/**
-	 * Tests the constructor. Makes sure release helper threads are launched (+ setup other config items).
-	 * @throws NoSuchFieldException 
-	 * @throws SecurityException 
-	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException 
-	 */
-	@Test
-	public void testConstructor() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+	@Before
+	public void setUp() throws NoSuchFieldException, IllegalAccessException
+	{
+		mockPool = createNiceMock(BoneCP.class);
 		mockConfig = createNiceMock(BoneCPConfig.class);
 		expect(mockConfig.getAcquireIncrement()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
@@ -77,6 +73,17 @@ public class TestConnectionPartition {
 		mockLogger.error((String)anyObject());
 		expectLastCall().anyTimes();
 		replay(mockLogger);
+	}
+
+	/**
+	 * Tests the constructor. Makes sure release helper threads are launched (+ setup other config items).
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	@Test
+	public void testConstructor() {
 		verify(this.mockPool, mockConfig);
 		reset(this.mockPool, mockConfig);
 	}
@@ -264,7 +271,7 @@ public class TestConnectionPartition {
 		expect(mockConnectionHandle.getInternalConnection()).andReturn(connection).anyTimes();
 		mockConnection.close();
 		expectLastCall().once();
-		reset(this.mockPool);
+		reset(this.mockPool, this.mockConfig);
 		Map<Connection, Reference<ConnectionHandle>> refs = new HashMap<Connection, Reference<ConnectionHandle>>();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(refs).anyTimes();
 		FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
