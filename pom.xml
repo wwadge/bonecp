@@ -353,6 +353,9 @@
 	<profiles>
 		<profile>
 			<id>JDK5</id>
+			<activation>
+				<jdk>[1.5,1.6)</jdk>
+			</activation>
 			<properties>
 				<javac.src.version>1.5</javac.src.version>
 				<javac.target.version>1.5</javac.target.version>
@@ -460,20 +463,15 @@
 							</replacements>
 						</configuration>
 					</plugin>
-
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<fork>true</fork>
-							<executable>${jdk5home}/bin/javac</executable>
-						</configuration>
-					</plugin>
 				</plugins>
 			</build>
 		</profile>
 
 		<profile>
 			<id>JDK6</id>
+			<activation>
+				<jdk>[1.6,1.7)</jdk>
+			</activation>
 			<properties>
 				<javac.src.version>1.6</javac.src.version>
 				<javac.target.version>1.6</javac.target.version>
@@ -565,19 +563,15 @@
 							</replacements>
 						</configuration>
 					</plugin>
-
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<fork>true</fork>
-							<executable>${jdk6home}/bin/javac</executable>
-						</configuration>
-					</plugin>
 				</plugins>
 			</build>
 		</profile>
+
 		<profile>
 			<id>JDK7</id>
+			<activation>
+				<jdk>[1.7,)</jdk>
+			</activation>
 			<properties>
 				<javac.src.version>1.7</javac.src.version>
 				<javac.target.version>1.7</javac.target.version>
@@ -673,8 +667,6 @@
 					<plugin>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<fork>true</fork>
-							<executable>${jdk7home}/bin/javac</executable>
 							<excludes>
 								<exclude>**/jsr166y/*.java</exclude>
 							</excludes>
