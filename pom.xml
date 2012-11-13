@@ -1,21 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- | Copyright 2009-2011 Wallace Wadge | | Licensed under the Apache License, 
-	Version 2.0 (the "License"); | you may not use this file except in compliance 
-	with the License. | You may obtain a copy of the License at | | http://www.apache.org/licenses/LICENSE-2.0 
-	| | Unless required by applicable law or agreed to in writing, software | 
-	distributed under the License is distributed on an "AS IS" BASIS, | WITHOUT 
-	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. | See the 
-	License for the specific language governing permissions and | limitations 
-	under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<!--
+ |  Copyright 2009-2011 Wallace Wadge
+ |
+ |  Licensed under the Apache License, Version 2.0 (the "License");
+ |  you may not use this file except in compliance with the License.
+ |  You may obtain a copy of the License at
+ |
+ |      http://www.apache.org/licenses/LICENSE-2.0
+ |
+ |  Unless required by applicable law or agreed to in writing, software
+ |  distributed under the License is distributed on an "AS IS" BASIS,
+ |  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ |  See the License for the specific language governing permissions and
+ |  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
 	<version>0.8.0-beta2-SNAPSHOT</version>
 	<packaging>pom</packaging>
+
 	<name>BoneCP</name>
 	<description>The fast Java JDBC Database Connection pool</description>
+
 	<url>http://jolbox.com</url>
 	<inceptionYear>2009</inceptionYear>
 
@@ -24,7 +35,6 @@
 		<connection>scm:git:ssh://github.com/wwadge/bonecp.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/wwadge/bonecp.git</developerConnection>
 	</scm>
-
 
 	<organization>
 		<name>JolBox</name>
@@ -92,11 +102,10 @@
 				<version>1.2</version>
 			</dependency>
 
-			<!-- Under jdk5, we fall back to v11 since that's the last one supported -->
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
-				<version>13.0.1</version>
+				<version>${guava.version}</version>
 			</dependency>
 
 			<dependency>
@@ -109,14 +118,12 @@
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp-test-commons</artifactId>
 				<version>${project.version}</version>
-				<classifier>${project.classifier}</classifier>
 			</dependency>
 
 			<dependency>
 				<groupId>com.jolbox</groupId>
-				<artifactId>bonecp</artifactId>
+				<artifactId>bonecp${project.specifier}</artifactId>
 				<version>${project.version}</version>
-				<classifier>${project.classifier}</classifier>
 			</dependency>
 
 			<dependency>
@@ -141,57 +148,57 @@
 				<groupId>c3p0</groupId>
 				<artifactId>c3p0</artifactId>
 				<version>0.9.1.2</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>commons-dbcp</groupId>
 				<artifactId>commons-dbcp</artifactId>
 				<version>1.4</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>org.easymock</groupId>
 				<artifactId>easymock</artifactId>
 				<version>3.1</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-core</artifactId>
 				<version>${hibernate.version}</version>
-				<scope>provided</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>4.10</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>com.thoughtworks.qdox</groupId>
 				<artifactId>qdox</artifactId>
 				<version>1.12</version>
-				<scope>test</scope>
 			</dependency>
-			<!-- <dependency> <groupId>hsqldb</groupId> <artifactId>hsqldb</artifactId> 
-				<version>1.8.0.7</version> <scope>compile</scope> </dependency> -->
 		</dependencies>
 	</dependencyManagement>
 
 	<properties>
+		<!-- Set default encoding to UTF-8 (most plugins) -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<javac.src.version>1.7</javac.src.version>
-		<javac.target.version>1.7</javac.target.version>
+		<project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+
+		<!-- Set compiler source and target versions (m-compiler-p) -->
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>${maven.compiler.target}</maven.compiler.source>
+
+		<!-- Set compiler to be more verbose (m-compiler-p) -->
+		<maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
+		<maven.compiler.showWarnings>true</maven.compiler.showWarnings>
+
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
 		<implementation.build>${maven.build.timestamp}</implementation.build>
 
+		<guava.version>13.0.1</guava.version>
 		<hibernate.version>4.1.7.Final</hibernate.version>
 		<spring.version>3.2.0.M2</spring.version>
 	</properties>
@@ -201,8 +208,14 @@
 			<plugins>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.5.1</version>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-deploy-plugin</artifactId>
-					<version>2.5</version>
+					<version>2.7</version>
 				</plugin>
 
 				<plugin>
@@ -211,7 +224,6 @@
 					<version>2.3.7</version>
 					<extensions>true</extensions>
 					<configuration>
-						<manifestLocation>${project.build.directory}/osgi</manifestLocation>
 						<instructions>
 							<_provider-policy><![CDATA[$<range;[==,=+)>]]></_provider-policy>
 							<_consumer-policy><![CDATA[$<range;[==,+)>]]></_consumer-policy>
@@ -223,7 +235,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>2.3.1</version>
+					<version>2.4</version>
 					<configuration>
 						<archive>
 							<manifest>
@@ -232,8 +244,8 @@
 							</manifest>
 							<manifestEntries>
 								<Implementation-Build>${implementation.build}</Implementation-Build>
-								<X-Compile-Source-JDK>${javac.src.version}</X-Compile-Source-JDK>
-								<X-Compile-Target-JDK>${javac.target.version}</X-Compile-Target-JDK>
+								<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+								<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
 							</manifestEntries>
 						</archive>
 					</configuration>
@@ -258,36 +270,39 @@
 						<tarLongFileMode>gnu</tarLongFileMode>
 					</configuration>
 				</plugin>
-				<!-- <plugin> <groupId>com.google.code.replacer</groupId> <artifactId>replacer</artifactId> 
-					<version>1.3.7</version> <executions> <execution> <phase>process-sources</phase> 
-					<goals> <goal>replace</goal> </goals> </execution> </executions> <configuration> 
-					<regex>false</regex> <includes> <include>**/*.java</include> </includes> 
-					</configuration> </plugin> -->
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-release-plugin</artifactId>
-					<version>2.1</version>
+					<version>2.3.2</version>
 					<configuration>
 						<mavenExecutorId>forked-path</mavenExecutorId>
 						<useReleaseProfile>false</useReleaseProfile>
 						<arguments>${arguments} -Prelease,${otherprofile}</arguments>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>com.google.code.maven-replacer-plugin</groupId>
+					<artifactId>replacer</artifactId>
+					<version>1.5.1</version>
+					<executions>
+						<execution>
+							<phase>process-sources</phase>
+							<goals>
+								<goal>replace</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<regex>false</regex>
+						<includes>
+							<include>**/*.java</include>
+						</includes>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<verbose>false</verbose>
-					<source>${javac.src.version}</source>
-					<target>${javac.target.version}</target>
-				</configuration>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
@@ -300,22 +315,23 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.7.2</version>
+				<version>2.12.4</version>
 				<inherited>false</inherited>
 				<configuration>
-					<forkMode>once</forkMode>
 					<reportFormat>html</reportFormat>
-					<classesDirectory>${project.build.directory}/generated-classes/emma/classes
-                    </classesDirectory>
+					<classesDirectory>${project.build.directory}/generated-classes/emma/classes</classesDirectory>
 				</configuration>
 			</plugin>
 
 			<plugin>
 				<groupId>com.mycila.maven-license-plugin</groupId>
 				<artifactId>maven-license-plugin</artifactId>
-				<version>1.5.1</version>
+				<version>1.9.0</version>
+				<inherited>false</inherited>
 				<configuration>
-					<header>docs/apache-header.txt</header>
+					<header>${basedir}/docs/apache-header.txt</header>
+					<failIfMissing>true</failIfMissing>
+					<aggregate>true</aggregate>
 					<includes>
 						<include>**/*.java</include>
 					</includes>
@@ -325,7 +341,8 @@
 				</configuration>
 				<executions>
 					<execution>
-						<phase>test</phase>
+						<id>check-headers</id>
+						<phase>verify</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
@@ -338,13 +355,13 @@
 			<extension>
 				<groupId>org.apache.maven.scm</groupId>
 				<artifactId>maven-scm-provider-gitexe</artifactId>
-				<version>1.3</version>
+				<version>1.8.1</version>
 			</extension>
 
 			<extension>
 				<groupId>org.apache.maven.scm</groupId>
 				<artifactId>maven-scm-manager-plexus</artifactId>
-				<version>1.3</version>
+				<version>1.8.1</version>
 			</extension>
 		</extensions>
 
@@ -357,64 +374,23 @@
 				<jdk>[1.5,1.6)</jdk>
 			</activation>
 			<properties>
-				<javac.src.version>1.5</javac.src.version>
-				<javac.target.version>1.5</javac.target.version>
-				<project.classifier>jdk5</project.classifier>
+				<project.specifier>-jdk5</project.specifier>
+
+				<!-- Override compiler target -->
+				<maven.compiler.target>1.5</maven.compiler.target>
+
+				<!-- Under jdk5, we fall back to v11 since that's the last one supported -->
+				<guava.version>11.0.2</guava.version>
+				
+				<hibernate.version>3.6.9.Final</hibernate.version>
 			</properties>
-
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>org.hibernate</groupId>
-						<artifactId>hibernate-core</artifactId>
-						<version>3.6.9.Final</version>
-						<scope>provided</scope>
-					</dependency>
-
-					<dependency>
-						<groupId>com.google.guava</groupId>
-						<artifactId>guava</artifactId>
-						<version>11.0.2</version>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-
 
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-jar-plugin</artifactId>
-						<configuration>
-							<classifier>${project.classifier}</classifier>
-						</configuration>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.felix</groupId>
-						<artifactId>maven-bundle-plugin</artifactId>
-						<configuration>
-							<classifier>${project.classifier}</classifier>
-						</configuration>
-					</plugin>
-
-					<plugin>
 						<groupId>com.google.code.maven-replacer-plugin</groupId>
 						<artifactId>replacer</artifactId>
-						<version>1.5.0</version>
-						<executions>
-							<execution>
-								<phase>process-sources</phase>
-								<goals>
-									<goal>replace</goal>
-								</goals>
-							</execution>
-						</executions>
 						<configuration>
-							<regex>false</regex>
-							<includes>
-								<include>**/*.java</include>
-							</includes>
 							<replacements>
 								<replacement>
 									<token>// #ifdef JDK6</token>
@@ -473,9 +449,10 @@
 				<jdk>[1.6,1.7)</jdk>
 			</activation>
 			<properties>
-				<javac.src.version>1.6</javac.src.version>
-				<javac.target.version>1.6</javac.target.version>
-				<project.classifier>jdk6</project.classifier>
+				<project.specifier>-jdk6</project.specifier>
+
+				<!-- Override compiler target -->
+				<maven.compiler.target>1.6</maven.compiler.target>
 			</properties>
 
 			<modules>
@@ -484,41 +461,10 @@
 
 			<build>
 				<plugins>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-jar-plugin</artifactId>
-						<configuration>
-							<classifier>${project.classifier}</classifier>
-						</configuration>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.felix</groupId>
-						<artifactId>maven-bundle-plugin</artifactId>
-						<configuration>
-							<classifier>${project.classifier}</classifier>
-						</configuration>
-					</plugin>
-
 					<plugin>
 						<groupId>com.google.code.maven-replacer-plugin</groupId>
 						<artifactId>replacer</artifactId>
-						<version>1.5.0</version>
-						<executions>
-							<execution>
-								<phase>process-sources</phase>
-								<goals>
-									<goal>replace</goal>
-								</goals>
-							</execution>
-						</executions>
 						<configuration>
-							<regex>false</regex>
-							<includes>
-								<include>**/*.java</include>
-							</includes>
-
 							<replacements>
 								<replacement>
 									<token>// #ifdef JDK7</token>
@@ -573,9 +519,7 @@
 				<jdk>[1.7,)</jdk>
 			</activation>
 			<properties>
-				<javac.src.version>1.7</javac.src.version>
-				<javac.target.version>1.7</javac.target.version>
-				<project.classifier>jdk7</project.classifier>
+				<project.specifier>-jdk7</project.specifier>
 			</properties>
 
 			<modules>
@@ -584,41 +528,10 @@
 
 			<build>
 				<plugins>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-jar-plugin</artifactId>
-						<configuration>
-							<classifier>${project.classifier}</classifier>
-						</configuration>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.felix</groupId>
-						<artifactId>maven-bundle-plugin</artifactId>
-						<configuration>
-							<classifier>${project.classifier}</classifier>
-						</configuration>
-					</plugin>
-
 					<plugin>
 						<groupId>com.google.code.maven-replacer-plugin</groupId>
 						<artifactId>replacer</artifactId>
-						<version>1.5.0</version>
-						<executions>
-							<execution>
-								<phase>process-sources</phase>
-								<goals>
-									<goal>replace</goal>
-								</goals>
-							</execution>
-						</executions>
 						<configuration>
-							<regex>false</regex>
-							<includes>
-								<include>**/*.java</include>
-							</includes>
-
 							<replacements>
 								<replacement>
 									<token>/* #ifdef JDK7</token>
@@ -663,18 +576,10 @@
 							</replacements>
 						</configuration>
 					</plugin>
-
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<excludes>
-								<exclude>**/jsr166y/*.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
 				</plugins>
 			</build>
 		</profile>
+
 		<profile>
 			<id>release</id>
 			<build>
@@ -697,8 +602,8 @@
 										</manifest>
 										<manifestEntries>
 											<Implementation-Build>${implementation.build}</Implementation-Build>
-											<X-Compile-Source-JDK>${javac.src.version}</X-Compile-Source-JDK>
-											<X-Compile-Target-JDK>${javac.target.version}</X-Compile-Target-JDK>
+											<X-Compile-Source-JDK>${maven.compiloer.source}</X-Compile-Source-JDK>
+											<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
 										</manifestEntries>
 									</archive>
 								</configuration>
@@ -723,8 +628,8 @@
 										</manifest>
 										<manifestEntries>
 											<Implementation-Build>${implementation.build}</Implementation-Build>
-											<X-Compile-Source-JDK>${javac.src.version}</X-Compile-Source-JDK>
-											<X-Compile-Target-JDK>${javac.target.version}</X-Compile-Target-JDK>
+											<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+											<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
 										</manifestEntries>
 									</archive>
 								</configuration>
@@ -774,7 +679,6 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>surefire-report-maven-plugin</artifactId>
 				<version>2.7.2</version>
-				<!-- <version>2.6</version> -->
 				<inherited>true</inherited>
 			</plugin>
 
