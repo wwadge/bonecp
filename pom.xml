@@ -189,7 +189,7 @@
 
 		<!-- Set compiler source and target versions (m-compiler-p) -->
 		<maven.compiler.target>1.7</maven.compiler.target>
-		<maven.compiler.source>${maven.compiler.target}</maven.compiler.source>
+		<maven.compiler.source>1.7</maven.compiler.source>
 
 		<!-- Set compiler to be more verbose (m-compiler-p) -->
 		<maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
@@ -203,6 +203,10 @@
 		<spring.version>3.2.0.M2</spring.version>
 	</properties>
 
+	<prerequisites>
+		<maven>3.0</maven>
+	</prerequisites>
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -210,6 +214,16 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>2.5.1</version>
+					<configuration>
+						<compilerId>javac</compilerId>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.codehaus.plexus</groupId>
+							<artifactId>plexus-compiler-eclipse</artifactId>
+							<version>1.9.2</version>
+						</dependency>
+					</dependencies>
 				</plugin>
 
 				<plugin>
@@ -303,6 +317,27 @@
 		</pluginManagement>
 
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.1.1</version>
+				<executions>
+					<execution>
+						<id>enforce</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireJavaVersion>
+									<version>1.7</version>
+								</requireJavaVersion>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
