@@ -8,14 +8,14 @@
 
 		<!-- Sets the minimum number of connections that will be contained in every partition. 
 		     Also refer  to {@link #setPoolAvailabilityThreshold(int)}. -->
-		<property name="minConnectionsPerPartition">20</property>
+		<property name="minConnectionsPerPartition">0</property>
 
 		<!-- Sets the maximum number of connections that will be contained in every partition. 
 		      Setting this to 5 with 3 partitions means you will have 15 
 		     unique connections to the database.  Note that the connection pool will not 
 		     create all these connections in one go but rather start off  with 
 		     minConnectionsPerPartition and gradually increase connections as required. -->
-		<property name="maxConnectionsPerPartition">30</property>
+		<property name="maxConnectionsPerPartition">10</property>
 
 		<!-- Sets the acquireIncrement property.   When the available connections are about to 
 		     run out, BoneCP will dynamically create new ones in batches.  This property 
@@ -218,34 +218,34 @@
 		     is intended  for debugging only. -->
 		<property name="detectUnresolvedTransactions">false</property>
 
-		<!-- Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED.  DEFAULT strategy 
-		     operates in a manner that has been used in the pool since the 
-		     very first version: it tries to obtain a connection from a queue.  
-		      CACHED stores each connection in a thread-local variable so that next time 
-		     the same thread asks for a connection, it gets the same one assigned 
-		     to it (if it asks for more than one, it will be allocated 
-		     a new one). This is very fast but you must ensure that the 
-		     number of threads  asking for a connection is less than or equal 
-		     to the number  of connections you have made  available. Should you 
-		     exceed this limit, the pool will switch back (permanently) to the DEFAULT  
-		     strategy which will cause a one-time performance hit. Use this strategy if your 
-		     threads are  managed eg in a Tomcat environment where you can limit 
-		     the number of threads that it can  handle. A typical use case 
-		     would be a web service that always requires some form of database access, 
-		      therefore a service would have little point in accepting a new incoming 
-		     socket connection if it  still has to wait in order to obtain 
-		     a connection.   Essentially this means that you are pushing back the 
-		     lock down to the socket or thread layer.  While the first few 
-		     thread hits will be slower than in the DEFAULT strategy, significant performance  
-		     gains are to be expected as the thread gets increasingly re-used (i.e. initially 
-		     you should expect the first few rounds to be measurably slower than the 
-		     DEFAULT strategy but once the caches get more hits you should get >2x 
-		     better performance).  Threads that are killed off are detected during the next 
-		     garbage collection and result in  their allocated connections from being taken back 
-		     though since GC timing is not guaranteed you should ideally set your minimum 
-		     pool size to be equal to the maximum pool size.  Therefore for 
-		     best results, make sure that the configured minConnectionPerPartition = maxConnectionPerPartition = min Threads 
-		     = max Threads. -->
+		<!-- Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED. This is an 
+		     experimental feature!  DEFAULT strategy operates in a manner that has been used 
+		     in the pool since the very first version: it tries to obtain a 
+		     connection from a queue.   CACHED stores each connection in a thread-local 
+		     variable so that next time the same thread asks for a connection, it 
+		     gets the same one assigned to it (if it asks for more than 
+		     one, it will be allocated a new one). This is very fast but 
+		     you must ensure that the number of threads  asking for a connection 
+		     is less than or equal to the number  of connections you have 
+		     made  available. Should you exceed this limit, the pool will switch back 
+		     (permanently) to the DEFAULT  strategy which will cause a one-time performance hit. 
+		     Use this strategy if your threads are  managed eg in a Tomcat 
+		     environment where you can limit the number of threads that it can  
+		     handle. A typical use case would be a web service that always requires 
+		     some form of database access,  therefore a service would have little point 
+		     in accepting a new incoming socket connection if it  still has to 
+		     wait in order to obtain a connection.   Essentially this means that 
+		     you are pushing back the lock down to the socket or thread layer. 
+		      While the first few thread hits will be slower than in the 
+		     DEFAULT strategy, significant performance  gains are to be expected as the thread 
+		     gets increasingly re-used (i.e. initially you should expect the first few rounds to 
+		     be measurably slower than the DEFAULT strategy but once the caches get more 
+		     hits you should get >2x better performance).  Threads that are killed off 
+		     are detected during the next garbage collection and result in  their allocated 
+		     connections from being taken back though since GC timing is not guaranteed you 
+		     should ideally set your minimum pool size to be equal to the maximum 
+		     pool size.  Therefore for best results, make sure that the configured minConnectionPerPartition 
+		     = maxConnectionPerPartition = min Threads = max Threads. -->
 		<property name="poolStrategy">DEFAULT</property>
 
 		<!-- If true, track statements and close them if application forgot to do so. 
