@@ -23,7 +23,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.fail;
@@ -49,26 +48,24 @@ public class TestConnectionMaxAgeTester {
 	private ConnectionMaxAgeThread testClass;
 	/** Mock handle. */
 	private BoneCPConfig config;
-	/** Mock handle. */
-	private Logger mockLogger;
 
 	/**
 	 * Mock setup.
 	 * @throws ClassNotFoundException
+	 * @throws IllegalAccessException 
+	 * @throws NoSuchFieldException 
 	 */
 	@Before
-	public void resetMocks() throws ClassNotFoundException{
+	public void resetMocks() throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException{
 		mockPool = createNiceMock(BoneCP.class);
 		mockConnectionPartition = createNiceMock(ConnectionPartition.class);
 		mockExecutor = createNiceMock(ScheduledExecutorService.class);
 		
-		mockLogger = createNiceMock(Logger.class);
-		
-		makeThreadSafe(mockLogger, true);
 		config = new BoneCPConfig();
 		config.setMaxConnectionAgeInSeconds(1);
 		
 		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, false);
+		TestUtils.mockLogger(testClass.getClass());
 	}
 	
 	/**
