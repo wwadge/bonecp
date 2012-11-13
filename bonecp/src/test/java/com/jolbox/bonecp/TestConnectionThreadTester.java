@@ -21,7 +21,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -34,25 +33,25 @@ import static org.easymock.EasyMock.*;
  */
 public class TestConnectionThreadTester {
 	/** Mock handle. */
-	private static BoneCP mockPool;
+	private BoneCP mockPool;
 	/** Mock handle. */
-	private static ConnectionPartition mockConnectionPartition;
+	private ConnectionPartition mockConnectionPartition;
 	/** Mock handle. */
-	private static ScheduledExecutorService mockExecutor;
+	private ScheduledExecutorService mockExecutor;
 	/** Test class handle. */
 	private ConnectionTesterThread testClass;
 	/** Mock handle. */
-	private static ConnectionHandle mockConnection;
+	private ConnectionHandle mockConnection;
 	/** Mock handle. */
-	private static BoneCPConfig config;
+	private BoneCPConfig config;
 	/** Mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 
 	/** Mock setup.
 	 * @throws ClassNotFoundException
 	 */
-	@BeforeClass
-	public static void setup() throws ClassNotFoundException{
+	@Before
+	public void resetMocks() throws ClassNotFoundException{
 		mockPool = createNiceMock(BoneCP.class);
 		mockConnectionPartition = createNiceMock(ConnectionPartition.class);
 		mockExecutor = createNiceMock(ScheduledExecutorService.class);
@@ -63,15 +62,6 @@ public class TestConnectionThreadTester {
 		config = new BoneCPConfig();
 		config.setIdleMaxAgeInMinutes(100);
 		config.setIdleConnectionTestPeriodInMinutes(100);
-		
-	}
-
-	/**
-	 * Reset all mocks.
-	 */
-	@Before
-	public void resetMocks(){
-		reset(mockPool, mockConnectionPartition, mockExecutor, mockConnection, mockLogger);
 	}
 	
 	/** Tests that a connection that is marked broken is closed internally and that the partition is marked as being 

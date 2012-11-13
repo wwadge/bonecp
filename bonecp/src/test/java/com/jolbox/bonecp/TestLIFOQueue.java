@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 /** 
@@ -31,13 +31,13 @@ import org.junit.Test;
 public class TestLIFOQueue {
 
 	/** Handle. */
-	private static LIFOQueue<Object> testClass;
+	private LIFOQueue<Object> testClass;
 
 	/**
 	 * Class setup.
 	 */
-	@BeforeClass
-	public static void setup(){
+	@Before
+	public void setup(){
 		testClass = new LIFOQueue<Object>(); // coverage
 		testClass = new LIFOQueue<Object>(20);
 	}
@@ -50,8 +50,8 @@ public class TestLIFOQueue {
 	@Test
 	public void testTryTransferE() {
 		Object o = new Object();
-		TestLIFOQueue.testClass.tryTransfer(o);
-		assertEquals(o, TestLIFOQueue.testClass.poll());
+		testClass.tryTransfer(o);
+		assertEquals(o, testClass.poll());
 	}
 
 	/**
@@ -61,8 +61,8 @@ public class TestLIFOQueue {
 	@Test
 	public void testTransfer() throws InterruptedException {
 		Object o = new Object();
-		TestLIFOQueue.testClass.transfer(o);
-		assertEquals(o, TestLIFOQueue.testClass.poll());
+		testClass.transfer(o);
+		assertEquals(o, testClass.poll());
 	}
 
 	/**
@@ -72,8 +72,8 @@ public class TestLIFOQueue {
 	@Test
 	public void testTryTransferTimeUnit() throws InterruptedException {
 		Object o = new Object();
-		TestLIFOQueue.testClass.tryTransfer(o, 9999, TimeUnit.SECONDS);
-		assertEquals(o, TestLIFOQueue.testClass.poll());
+		testClass.tryTransfer(o, 9999, TimeUnit.SECONDS);
+		assertEquals(o, testClass.poll());
 		
 	}
 
@@ -82,7 +82,7 @@ public class TestLIFOQueue {
 	 */
 	@Test
 	public void testHasWaitingConsumer() {
-		assertEquals(false, TestLIFOQueue.testClass.hasWaitingConsumer());
+		assertEquals(false, testClass.hasWaitingConsumer());
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class TestLIFOQueue {
 	 */
 	@Test
 	public void testGetWaitingConsumerCount() {
-		assertEquals(0, TestLIFOQueue.testClass.getWaitingConsumerCount());
+		assertEquals(0, testClass.getWaitingConsumerCount());
 	}
 
 	/**
@@ -99,8 +99,8 @@ public class TestLIFOQueue {
 	@Test
 	public void testOfferE() {
 		Object o = new Object();
-		TestLIFOQueue.testClass.offer(o);
-		assertEquals(o, TestLIFOQueue.testClass.poll());
+		testClass.offer(o);
+		assertEquals(o, testClass.poll());
 	}
 
 }

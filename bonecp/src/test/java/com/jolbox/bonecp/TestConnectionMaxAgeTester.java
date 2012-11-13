@@ -22,7 +22,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -41,23 +40,24 @@ import java.util.concurrent.TransferQueue;
  */
 public class TestConnectionMaxAgeTester {
 	/** Mock handle. */
-	private static BoneCP mockPool;
+	private BoneCP mockPool;
 	/** Mock handle. */
-	private static ConnectionPartition mockConnectionPartition;
+	private ConnectionPartition mockConnectionPartition;
 	/** Mock handle. */
-	private static ScheduledExecutorService mockExecutor;
+	private ScheduledExecutorService mockExecutor;
 	/** Test class handle. */
-	private static ConnectionMaxAgeThread testClass;
+	private ConnectionMaxAgeThread testClass;
 	/** Mock handle. */
-	private static BoneCPConfig config;
+	private BoneCPConfig config;
 	/** Mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 
-	/** Mock setup.
+	/**
+	 * Mock setup.
 	 * @throws ClassNotFoundException
 	 */
-	@BeforeClass
-	public static void setup() throws ClassNotFoundException{
+	@Before
+	public void resetMocks() throws ClassNotFoundException{
 		mockPool = createNiceMock(BoneCP.class);
 		mockConnectionPartition = createNiceMock(ConnectionPartition.class);
 		mockExecutor = createNiceMock(ScheduledExecutorService.class);
@@ -69,14 +69,6 @@ public class TestConnectionMaxAgeTester {
 		config.setMaxConnectionAgeInSeconds(1);
 		
 		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, false);
-	}
-
-	/**
-	 * Reset all mocks.
-	 */
-	@Before
-	public void resetMocks(){
-		reset(mockPool, mockConnectionPartition, mockExecutor, mockLogger);
 	}
 	
 	/**

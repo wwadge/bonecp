@@ -22,7 +22,8 @@ import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-import org.junit.AfterClass;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,13 +40,13 @@ import static org.junit.Assert.*;
 @SuppressWarnings("deprecation")
 public class TestStatementCache {
 	/** Mock handle. */
-	private static IStatementCache mockCache;
+	private IStatementCache mockCache;
 	/** Mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 	/** Config clone. */
-	private static BoneCPConfig config;
+	private BoneCPConfig config;
 	/** Mock handle. */
-	private static MockJDBCDriver driver;
+	private MockJDBCDriver driver;
 
 	/** Mock setup.
 	 * @throws ClassNotFoundException
@@ -53,6 +54,15 @@ public class TestStatementCache {
 	 */
 	@BeforeClass
 	public static void setup() throws ClassNotFoundException, SQLException{
+	}
+
+	/**
+	 * Init.
+	 * @throws SQLException 
+	 */
+	
+	@Before
+	public void beforeTest() throws SQLException{
 		driver = new MockJDBCDriver(new MockJDBCAnswer() {
 			
 			public Connection answer() throws SQLException {
@@ -62,22 +72,6 @@ public class TestStatementCache {
 		mockCache = createNiceMock(IStatementCache.class);
 		mockLogger = createNiceMock(Logger.class);
 		config = CommonTestUtils.getConfigClone();
-	}
-
-	/** AfterClass cleanup.
-	 * @throws SQLException
-	 */
-	@AfterClass
-	public static void teardown() throws SQLException{
-		driver.disable();
-	}
-	
-	/**
-	 * Init.
-	 */
-	
-	@Before
-	public void beforeTest(){
 		config.setJdbcUrl(CommonTestUtils.url);
 		config.setUsername(CommonTestUtils.username);
 		config.setPassword(CommonTestUtils.password);
@@ -90,7 +84,14 @@ public class TestStatementCache {
 		config.setStatisticsEnabled(true);
 	}
 
-
+	/** After cleanup.
+	 * @throws SQLException
+	 */
+	@After
+	public void teardown() throws SQLException{
+		driver.disable();
+	}
+	
 	
 	/** Prepared statement tests.
 	 * @throws SQLException

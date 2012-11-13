@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 
 import org.easymock.EasyMock;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;
@@ -44,7 +44,7 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  */
 public class TestBoneCPConfig {
 	/** Config handle. */
-	static BoneCPConfig config;
+	private BoneCPConfig config;
 	
 	/** Stub out any calls to logger.
 	 * @throws SecurityException
@@ -53,8 +53,8 @@ public class TestBoneCPConfig {
 	 * @throws IllegalAccessException
 	 * @throws CloneNotSupportedException 
 	 */
-	@BeforeClass
-	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
+	@Before
+	public void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException{
 		config = CommonTestUtils.getConfigClone();
 	}
 

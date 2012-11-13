@@ -17,10 +17,10 @@
 /**
  * 
  */
+
 package com.jolbox.bonecp;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -33,13 +33,13 @@ import static org.easymock.EasyMock.*;
  */
 public class TestCloseThreadMonitor {
 	/** Mock handle. */
-	private static ConnectionHandle mockConnection;
+	private ConnectionHandle mockConnection;
 	/** Mock handle. */
-	private static Logger mockLogger;
+	private Logger mockLogger;
 	/** Mock handle. */
-	private static Thread mockThread;
+	private Thread mockThread;
 	/** Class under test. */
-	private static CloseThreadMonitor testClass;
+	private CloseThreadMonitor testClass;
  
 	/**
 	 * Test setup
@@ -48,20 +48,12 @@ public class TestCloseThreadMonitor {
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	@BeforeClass
-	public static void setup() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+	@Before
+	public void before() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		mockConnection = createNiceMock(ConnectionHandle.class);
 		mockThread = createNiceMock(Thread.class);
 		testClass = new CloseThreadMonitor(mockThread, mockConnection, "fakeexception", 0);
-    mockLogger = TestUtils.mockLogger(testClass.getClass());
-	}
-	
-	/**
-	 * Reset mocks.
-	 */
-	@Before
-	public void before(){
-		reset(mockConnection, mockLogger, mockThread);
+		mockLogger = TestUtils.mockLogger(testClass.getClass());
 	}
 	
 	/** Tests the normal case.
