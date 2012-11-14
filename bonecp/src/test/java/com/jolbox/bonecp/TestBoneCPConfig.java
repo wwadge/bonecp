@@ -97,7 +97,7 @@ public class TestBoneCPConfig {
 	@Test
 	public void testXMLConfigWithUnfoundSection() throws Exception{
 		BoneCPConfig config = new BoneCPConfig("non-existant");
-		assertEquals(20, config.getMinConnectionsPerPartition());
+		assertEquals(0, config.getMinConnectionsPerPartition());
 	}
 	/**
 	 * Test error condition for xml config.

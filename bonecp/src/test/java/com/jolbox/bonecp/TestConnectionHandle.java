@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -842,7 +843,7 @@ public class TestConnectionHandle {
 
 	/**
 	 */
-	/* #ifdef JDK6
+	// #ifdef JDK>6
 	@Test
 	public void testSetClientInfo() {
 		Properties prop = new Properties();
@@ -860,12 +861,12 @@ public class TestConnectionHandle {
 		replay(this.mockConnection);
 		this.testClass.setClientInfo(name, value);
 		verify(this.mockConnection);
-		} catch (SQLClientInfoException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 
 	}
-	 #endif JDK6 */
+	 // #endif JDK>6
 	
 	/** Tests that a thrown exception will call the onAcquireFail hook.
 	 * @throws SQLException
