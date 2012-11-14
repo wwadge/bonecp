@@ -2,13 +2,18 @@ BoneCP Targets JDK 1.5, 1.6 and 1.7. You will have to select the target compiler
 
 
 JDK5, on a mac
-mvn clean compile -PJDK5 -Djdk5home=/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Home/
+mvn clean compile -P\!JDK6,\!JDK7 
 
 JDK6, on a mac
-mvn clean compile -PJDK6 -Djdk6home=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/
+mvn clean compile -P\!JDK5,\!JDK7 
 
 JDK7 (default)
-mvn clean compile -PJDK7 -Djdk7home=/Library/Java/JavaVirtualMachines/jdk1.7.0_09.jdk/Contents/Home/
+mvn clean compile -P\!JDK5,\!JDK6 
 
 
 Note: Hibernate-provider project is no longer being maintained for jdk5
+
+
+The examples above :
+a) Use a \ to escape the !, this is not relevant in Windows land
+b) Normally it will just detect the compiler you have so you do not need to specify any profile
