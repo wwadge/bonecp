@@ -700,6 +700,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	}
 
 	/** If enabled, log SQL statements being executed. 
+	 * You will also need to set your log4j settings ("com.jolbox.bonecp") to DEBUG 
 	 * @param logStatementsEnabled the logStatementsEnabled to set
 	 */
 	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
