@@ -57,7 +57,7 @@
     <dependencies>
         <dependency>
             <groupId>com.jolbox</groupId>
-            <artifactId>bonecp</artifactId>
+            <artifactId>bonecp${project.specifier}</artifactId>
         </dependency>
 
         <dependency>
