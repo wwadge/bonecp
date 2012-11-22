@@ -100,7 +100,10 @@
 		     Enabling this option will have a big negative impact on pool performance. -->
 		<property name="closeConnectionWatch">false</property>
 
-		<!-- If enabled, log SQL statements being executed. -->
+		<!-- If enabled, log SQL statements being executed. This will also "fill in" the 
+		     parameters  for prepared statements so that you can see exactly what values 
+		     where bound at the time  you executed the statement. You will also 
+		     need to set your log4j settings ("com.jolbox.bonecp") to DEBUG -->
 		<property name="logStatementsEnabled">false</property>
 
 		<!-- Sets the number of ms to wait before attempting to obtain a connection 

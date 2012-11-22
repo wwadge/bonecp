@@ -122,7 +122,7 @@
 
 			<dependency>
 				<groupId>com.jolbox</groupId>
-				<artifactId>bonecp${project.specifier}</artifactId>
+				<artifactId>bonecp</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -210,6 +210,31 @@
 	<build>
 		<pluginManagement>
 			<plugins>
+<!--
+<plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>build-helper-maven-plugin</artifactId>
+    <version>1.7</version>
+    <executions>
+        <execution>
+            <id>attach-source-jar</id>
+            <phase>package</phase>
+            <goals>
+                <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+                <artifacts>
+                    <artifact>
+                        <file>${project.build.directory}/${project.build.finalName}-prod-sources.jar</file>
+                        <type>jar</type>
+                        <classifier>${project.specifier}</classifier>
+                    </artifact>
+                </artifacts>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+-->
 				 <plugin>
                 <groupId>org.eclipse.m2e</groupId>
                 <artifactId>lifecycle-mapping</artifactId>
@@ -242,13 +267,6 @@
 					<configuration>
 						<compilerId>javac</compilerId>
 					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.codehaus.plexus</groupId>
-							<artifactId>plexus-compiler-eclipse</artifactId>
-							<version>1.9.2</version>
-						</dependency>
-					</dependencies>
 				</plugin>
 
 				<plugin>
@@ -430,14 +448,15 @@
 	<profiles>
 		<profile>
 			<id>JDK5</id>
-			<activation>
+	<!--		<activation>
 				<jdk>[1.5,1.6)</jdk> 
 			</activation>
-			<properties>
+	-->		<properties>
 				<project.specifier>-jdk5</project.specifier>
 
 				<!-- Override compiler target -->
 				<maven.compiler.target>1.5</maven.compiler.target>
+				<maven.compiler.source>1.5</maven.compiler.source>
 
 				<!-- Under jdk5, we fall back to v11 since that's the last one supported -->
 				<guava.version>11.0.2</guava.version>
@@ -499,20 +518,30 @@
 							</replacements>
 						</configuration>
 					</plugin>
+
+					<plugin>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<fork>true</fork>
+							<executable>${jdk5home}/bin/javac</executable>
+						</configuration>
+					</plugin>
+
 				</plugins>
 			</build>
 		</profile>
 
 		<profile>
 			<id>JDK6</id>
-			<activation>
+		<!--	<activation>
 				<jdk>[1.6,1.7)</jdk>
 			</activation>
-			<properties>
+		-->	<properties>
 				<project.specifier>-jdk6</project.specifier>
 
 				<!-- Override compiler target -->
 				<maven.compiler.target>1.6</maven.compiler.target>
+				<maven.compiler.source>1.6</maven.compiler.source>
 			</properties>
 
 			<modules>
@@ -569,15 +598,26 @@
 							</replacements>
 						</configuration>
 					</plugin>
+
+					<plugin>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<fork>true</fork>
+							<executable>${jdk6home}/bin/javac</executable>
+						</configuration>
+					</plugin>
+
 				</plugins>
 			</build>
 		</profile>
 
 		<profile>
 			<id>JDK7</id>
-			<activation>
-				<jdk>[1.7,)</jdk>
+
+		<!--	<activation>
+				 <jdk>[1.7,)</jdk> 
 			</activation>
+-->
 			<properties>
 				<project.specifier>-jdk7</project.specifier>
 			</properties>
@@ -636,6 +676,17 @@
 							</replacements>
 						</configuration>
 					</plugin>
+					<plugin>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<fork>true</fork>
+							<executable>${jdk7home}/bin/javac</executable>
+							<excludes>
+								<exclude>**/jsr166y/*.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+
 				</plugins>
 			</build>
 		</profile>

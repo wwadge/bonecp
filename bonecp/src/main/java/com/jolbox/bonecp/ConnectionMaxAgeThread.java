@@ -91,7 +91,7 @@ public class ConnectionMaxAgeThread implements Runnable {
 					
 					if (this.lifoMode){
 						// we can't put it back normally or it will end up in front again.
-						if (!((LIFOQueue<ConnectionHandle>)connection.getOriginatingPartition().getFreeConnections()).offerLast(connection)){
+						if (!(connection.getOriginatingPartition().getFreeConnections().offer(connection))){
 							connection.internalClose();
 						}
 					} else {
@@ -101,8 +101,12 @@ public class ConnectionMaxAgeThread implements Runnable {
 
 					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with (avoid CPU spikes)...
 				}
+			} catch (InterruptedException e){
+				logger.error("Connection max age thread received interrupt request. Shutting down thread", e);
 
-			} catch (Exception e) {
+				this.scheduler.shutdownNow();
+				return;
+			} catch (Throwable e) {
 				if (this.scheduler.isShutdown()){
 					logger.debug("Shutting down connection max age thread.");
 					break;

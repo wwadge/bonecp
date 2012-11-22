@@ -23,7 +23,6 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>bonecp-test-commons</artifactId>
     <name>BoneCP :: Test Commons</name>
 

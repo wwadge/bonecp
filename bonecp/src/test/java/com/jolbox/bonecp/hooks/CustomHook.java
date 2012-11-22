@@ -40,6 +40,8 @@ public class CustomHook extends AbstractConnectionHook{
 	public int queryTimeout;
 	/** junit helper.*/
 	public int markPossiblyBroken;
+	/** junit helper.*/
+	public int connectionException;
 
 	@Override
 	public synchronized void onAcquire(ConnectionHandle connection) {
@@ -72,7 +74,7 @@ public class CustomHook extends AbstractConnectionHook{
 	}
 	
 	@Override
-	public synchronized void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
+	public void onQueryExecuteTimeLimitExceeded(String sql, Map<Object, Object> logParams){
 		this.queryTimeout++;
 	}
 	
@@ -82,4 +84,10 @@ public class CustomHook extends AbstractConnectionHook{
 		this.markPossiblyBroken++;
 		return ConnectionState.NOP;
 	}
+	
+	public boolean onConnectionException(ConnectionHandle connection, String state, Throwable t) {
+		this.connectionException++;
+		return true; // keep the default behaviour
+	}
+
 }

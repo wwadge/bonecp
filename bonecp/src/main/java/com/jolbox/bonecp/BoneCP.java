@@ -27,10 +27,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,9 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
-
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.TransferQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +51,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.jolbox.bonecp.hooks.AcquireFailConfig;
+import com.jolbox.bonecp.hooks.ConnectionHook;
 
 
 
@@ -238,11 +238,77 @@ public class BoneCP implements Serializable, Closeable {
 		}
 
 	}
+	
+	/** Obtains a database connection, retrying if necessary.
+	 * @param connectionHandle 
+	 * @param pool pool handle
+	 * @param url url to obtain connection from
+	 * @return A DB connection.
+	 * @throws SQLException
+	 */
+	protected Connection obtainInternalConnection(ConnectionHandle connectionHandle) throws SQLException {
+		boolean tryAgain = false;
+		Connection result = null;
+		String url = this.getConfig().getJdbcUrl();
+		
+		int acquireRetryAttempts = this.getConfig().getAcquireRetryAttempts();
+		long acquireRetryDelayInMs = this.getConfig().getAcquireRetryDelayInMs();
+		AcquireFailConfig acquireConfig = new AcquireFailConfig();
+		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
+		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelayInMs);
+		acquireConfig.setLogMessage("Failed to acquire connection to "+url);
+		ConnectionHook connectionHook = this.getConfig().getConnectionHook();
+		do{ 
+			result = null;
+			try { 
+				// keep track of this hook.
+				result = this.obtainRawInternalConnection();
+				tryAgain = false;
+
+				if (acquireRetryAttempts != this.getConfig().getAcquireRetryAttempts()){
+					logger.info("Successfully re-established connection to "+url);
+				}
+				
+				this.getDbIsDown().set(false);
+				
+				// call the hook, if available.
+				if (connectionHook != null){
+					connectionHook.onAcquire(connectionHandle);
+				}
+
+				
+				ConnectionHandle.sendInitSQL(result, this.getConfig().getInitSQL());
+			} catch (SQLException e) {
+				// call the hook, if available.
+				if (connectionHook != null){
+					tryAgain = connectionHook.onAcquireFail(e, acquireConfig);
+				} else {
+					logger.error(String.format("Failed to acquire connection to %s. Sleeping for %d ms. Attempts left: %d", url, acquireRetryDelayInMs, acquireRetryAttempts), e);
+
+					try {
+						Thread.sleep(acquireRetryDelayInMs);
+						if (acquireRetryAttempts > -1){
+							tryAgain = (acquireRetryAttempts--) != 0;
+						}
+					} catch (InterruptedException e1) {
+						tryAgain=false;
+					}
+				}
+				if (!tryAgain){
+					throw e;
+				}
+			}
+		} while (tryAgain);
+
+		return result;
+
+	}
 
 	/** Returns a database connection by using Driver.getConnection() or DataSource.getConnection()
 	 * @return Connection handle
 	 * @throws SQLException on error
 	 */
+	@SuppressWarnings("resource")
 	protected Connection obtainRawInternalConnection()
 	throws SQLException {
 		Connection result = null;
@@ -376,21 +442,13 @@ public class BoneCP implements Serializable, Closeable {
 
 			ConnectionPartition connectionPartition = new ConnectionPartition(this);
 			this.partitions[p]=connectionPartition;
-			TransferQueue<ConnectionHandle> connectionHandles;
-			if (config.getMaxConnectionsPerPartition() == config.getMinConnectionsPerPartition()){
-				// if we have a pool that we don't want resized, make it even faster by ignoring
-				// the size constraints.
-				connectionHandles = queueLIFO ? new LIFOQueue<ConnectionHandle>() :  new LinkedTransferQueue<ConnectionHandle>();
-			} else {
-				connectionHandles = queueLIFO ? new LIFOQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition()) : new BoundedLinkedTransferQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition());
-			}
+			BlockingQueue<ConnectionHandle> connectionHandles = new LinkedBlockingQueue<ConnectionHandle>(this.config.getMaxConnectionsPerPartition());
 
 			this.partitions[p].setFreeConnections(connectionHandles);
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
-					final ConnectionHandle handle = ConnectionHandle.createConnectionHandle(config.getJdbcUrl(), config.getUsername(), config.getPassword(), this);
-					this.partitions[p].addFreeConnection(handle);
+					this.partitions[p].addFreeConnection(new ConnectionHandle(this));
 				}
 
 			}
@@ -607,12 +665,10 @@ public class BoneCP implements Serializable, Closeable {
 			connectionHandle.inUseInThreadLocalContext.set(false);
 			((CachedConnectionStrategy)this.connectionStrategy).tlConnections.set(connectionHandle);
 		} else {
-			TransferQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
-			if (!queue.tryTransfer(connectionHandle)){
-				if (!queue.offer(connectionHandle)){
+			BlockingQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
+				if (!queue.offer(connectionHandle)){ // this shouldn't fail
 					connectionHandle.internalClose();
 				}
-			}
 		}
 
 
@@ -626,11 +682,9 @@ public class BoneCP implements Serializable, Closeable {
 	public boolean isConnectionHandleAlive(ConnectionHandle connection) {
 		Statement stmt = null;
 		boolean result = false;
-		boolean logicallyClosed = connection.logicallyClosed;
+		boolean logicallyClosed = connection.logicallyClosed.get();
 		try {
-			if (logicallyClosed){
-				connection.logicallyClosed = false; // avoid checks later on if it's marked as closed.
-			}
+			connection.logicallyClosed.compareAndSet(true, false); // avoid checks later on if it's marked as closed.
 			String testStatement = this.config.getConnectionTestStatement();
 			ResultSet rs = null;
 
@@ -652,7 +706,7 @@ public class BoneCP implements Serializable, Closeable {
 			// connection must be broken!
 			result = false;
 		} finally {
-			connection.logicallyClosed = logicallyClosed;
+			connection.logicallyClosed.set(logicallyClosed);
 			connection.setConnectionLastResetInMs(System.currentTimeMillis());
 			result = closeStatement(stmt, result);
 		}

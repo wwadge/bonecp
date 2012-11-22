@@ -103,11 +103,9 @@ public class TestConnectionHandle {
 		this.mockPool.closeConnectionWatch=true;
 		this.mockLogger = TestUtils.mockLogger(testClass.getClass());
 
-		Field field = this.testClass.getClass().getDeclaredField("logicallyClosed");
-		field.setAccessible(true);
-		field.set(this.testClass, false);
+		this.testClass.logicallyClosed.set(false);
 		
-		field = this.testClass.getClass().getDeclaredField("statisticsEnabled");
+		Field field = this.testClass.getClass().getDeclaredField("statisticsEnabled");
 		field.setAccessible(true);
 		field.set(this.testClass, true);
 		
@@ -122,82 +120,6 @@ public class TestConnectionHandle {
 	/** For test. */
 	static int count=1;
 
-	/** Tests obtaining internal connection.
-	 * @throws SQLException
-	 * @throws ClassNotFoundException
-	 */
-	@Test
-	public void testObtainInternalConnection() throws SQLException, ClassNotFoundException{
-		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
-
-		this.testClass.url = "jdbc:mock:driver";
-		this.config.setAcquireRetryDelayInMs(1);
-		CustomHook testHook = new CustomHook();
-		this.config.setConnectionHook(testHook);
-		// make it fail the first time and succeed the second time
-		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
-		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
-		replay(this.mockPool);
-		this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
-		// get counts on our hooks
-		
-		assertEquals(1, testHook.fail);
-		assertEquals(1, testHook.acquire);
-		
-		// Test 2: Same thing but without the hooks
-		reset(this.mockPool);
-		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
-		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
-		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
-		count=1;
-		this.config.setConnectionHook(null);
-		replay(this.mockPool);
-		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock"));
-		
-		// Test 3: Keep failing
-		reset(this.mockPool);
-		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
-		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).anyTimes();
-		replay(this.mockPool);
-		count=99;
-		this.config.setAcquireRetryAttempts(2);
-		try{
-			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
-			fail("Should have thrown an exception");
-		} catch (SQLException e){
-			// expected behaviour
-		}
-		 
-		//	Test 4: Get signalled to interrupt fail delay
-		count=99;
-		this.config.setAcquireRetryAttempts(2);
-		this.config.setAcquireRetryDelayInMs(7000);
-		final Thread currentThread = Thread.currentThread();
-
-		try{
-			new Thread(new Runnable() {
-				
-//				@Override
-				public void run() {
-					while (!currentThread.getState().equals(State.TIMED_WAITING)){
-						try {
-							Thread.sleep(50);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-					currentThread.interrupt();
-				}
-			}).start();
-			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
-			fail("Should have thrown an exception");
-		} catch (SQLException e){
-			// expected behaviour
-		}
-		this.config.setAcquireRetryDelayInMs(10);
-		
-		
-	}
 
 	/** Test bounce of inner connection.
 	 * @throws IllegalArgumentException
@@ -323,11 +245,10 @@ public class TestConnectionHandle {
 		assertTrue(this.interrupted); // thread should have been interrupted 
 
 		// logically mark the connection as closed
-		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
-
-		field.setAccessible(true);
-		Assert.assertTrue(field.getBoolean(this.testClass));
+		Assert.assertTrue(this.testClass.logicallyClosed.get());
 		assertTrue(this.testClass.isClosed());
+
+		
 
 
 		this.testClass.renewConnection();
@@ -380,9 +301,8 @@ public class TestConnectionHandle {
 		field.setAccessible(true);
 		field.set(this.testClass, true);
 
-		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
-		field.setAccessible(true);
-		field.set(this.testClass, true);
+		this.testClass.logicallyClosed.set(true);
+
 
 		field = this.testClass.getClass().getDeclaredField("doubleCloseException");
 		field.setAccessible(true);
@@ -459,10 +379,8 @@ public class TestConnectionHandle {
 		method.invoke(this.testClass);
 
 		// logically mark the connection as closed
-		Field field = this.testClass.getClass().getDeclaredField("logicallyClosed");
+		this.testClass.logicallyClosed.set(true);
 
-		field.setAccessible(true);
-		field.set(this.testClass, true);
 		try{
 			method.invoke(this.testClass);
 			fail("Should have thrown an exception");
@@ -483,12 +401,11 @@ public class TestConnectionHandle {
 		field.setAccessible(true);
 		field.set(this.testClass, true);
 
-		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
-		field.setAccessible(true);
-		field.set(this.testClass, true);
+		this.testClass.logicallyClosed.set(true);
+
 
 		this.testClass.renewConnection();
-		assertFalse(field.getBoolean(this.testClass));
+		assertFalse(	this.testClass.logicallyClosed.get());
 
 
 	}
@@ -531,9 +448,8 @@ public class TestConnectionHandle {
 		assertEquals(this.mockConnection, this.testClass.getInternalConnection());
 		assertEquals(this.mockConnection, this.testClass.getRawConnection());
 
-		field = this.testClass.getClass().getDeclaredField("logicallyClosed");
-		field.setAccessible(true);
-		field.setBoolean(this.testClass, true);
+		this.testClass.logicallyClosed.set(true);
+
 		assertTrue(this.testClass.isClosed());
 
 		this.testClass.setLogStatementsEnabled(true);
@@ -867,28 +783,28 @@ public class TestConnectionHandle {
 
 	}
 	 // #endif JDK>6
-	
-	/** Tests that a thrown exception will call the onAcquireFail hook.
-	 * @throws SQLException
-	 */
-	@Test
-	public void testConstructorFail() throws SQLException{
-		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
-		ConnectionHook mockConnectionHook = createNiceMock(CoverageHook.class);
-		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
-//		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once();
-		expect(mockConfig.getConnectionHook()).andReturn(mockConnectionHook).once();
-		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
-		replay(this.mockPool, mockConfig, mockConnectionHook);
-		try{
-			ConnectionHandle.createConnectionHandle("", "", "", this.mockPool);
-			fail("Should throw an exception");
-		} catch (Throwable t){
-			// do nothing.
-		}
-		verify(this.mockPool, mockConfig, this.mockPool);
-	}
-
+//	
+//	/** Tests that a thrown exception will call the onAcquireFail hook.
+//	 * @throws SQLException
+//	 */
+//	@Test
+//	public void testConstructorFail() throws SQLException{
+//		BoneCPConfig mockConfig = createNiceMock(BoneCPConfig.class);
+//		ConnectionHook mockConnectionHook = createNiceMock(CoverageHook.class);
+//		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+////		expect(mockConfig.getReleaseHelperThreads()).andReturn(1).once();
+//		expect(mockConfig.getConnectionHook()).andReturn(mockConnectionHook).once();
+//		expect(mockConnectionHook.onAcquireFail((Throwable)anyObject(), (AcquireFailConfig)anyObject())).andReturn(false).once();
+//		replay(this.mockPool, mockConfig, mockConnectionHook);
+//		try{
+//			new ConnectionH("", "", "", this.mockPool);
+//			fail("Should throw an exception");
+//		} catch (Throwable t){
+//			// do nothing.
+//		}
+//		verify(this.mockPool, mockConfig, this.mockPool);
+//	}
+//
 
 	/**
 	 * Test for clear statement caches.

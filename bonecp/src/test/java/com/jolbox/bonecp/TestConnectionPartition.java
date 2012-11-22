@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -145,7 +146,7 @@ public class TestConnectionPartition {
 	public void testFreeConnection() throws SQLException  {
 		int count = testClass.getCreatedConnections();
 
-		BoundedLinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(BoundedLinkedTransferQueue.class);
+		LinkedBlockingQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedBlockingQueue.class);
 		makeThreadSafe(freeConnections, true);
 		testClass.setFreeConnections(freeConnections);
 		assertEquals(freeConnections, testClass.getFreeConnections());
@@ -174,7 +175,7 @@ public class TestConnectionPartition {
 	public void testFreeConnectionFailing() throws SQLException  {
 		int count = testClass.getCreatedConnections();
 
-		BoundedLinkedTransferQueue<ConnectionHandle> freeConnections = createNiceMock(BoundedLinkedTransferQueue.class);
+		LinkedBlockingQueue<ConnectionHandle> freeConnections = createNiceMock(LinkedBlockingQueue.class);
 		makeThreadSafe(freeConnections, true);
 
 		testClass.setFreeConnections(freeConnections);

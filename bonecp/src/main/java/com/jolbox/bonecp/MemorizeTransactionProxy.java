@@ -146,7 +146,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 					return method.invoke(this.target, args);
 				} catch (InvocationTargetException t){
 					throw t.getCause(); // we tried running it, but playback mode also blew up. Throw out the cause, not the
-										// wrapped invocationtargetexception.
+					// wrapped invocationtargetexception.
 				} 
 			}
 
@@ -178,7 +178,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 				// when we commit/close/rollback, destroy our log. Does this work if we have nested transactions???? Fixme?
 				if (!con.isInReplayMode() && (this.target instanceof Connection) && clearLogConditions.contains(method.getName())){
 					con.getReplayLog().clear();
-//					con.recoveryResult.getReplaceTarget().clear();
+					//					con.recoveryResult.getReplaceTarget().clear();
 				}
 
 
@@ -220,9 +220,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 
 					}
 				} 
-				
-					
-				
+
+
+
 				// it must some user-level error eg setting a preparedStatement parameter that is out of bounds. Just throw it back to the user.
 				throw t.getCause();
 
@@ -241,7 +241,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	 * @throws InvocationTargetException
 	 */
 	private Object runWithPossibleProxySwap(Method method, Object target, Object[] args)
-	throws IllegalAccessException, InvocationTargetException {
+			throws IllegalAccessException, InvocationTargetException {
 		Object result;
 		// swap with proxies to these too.
 		if (method.getName().equals("createStatement")){
@@ -266,18 +266,18 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 	private TransactionRecoveryResult attemptRecovery(List<ReplayLog> oldReplayLog) throws SQLException{
 		boolean tryAgain = false;
 		Throwable failedThrowable = null;
-		
+
 		ConnectionHandle con = this.connectionHandle.get();
 		TransactionRecoveryResult recoveryResult = con.recoveryResult;
 		ConnectionHook connectionHook = con.getPool().getConfig().getConnectionHook();
-		
+
 		int acquireRetryAttempts = con.getPool().getConfig().getAcquireRetryAttempts();
 		long acquireRetryDelay = con.getPool().getConfig().getAcquireRetryDelayInMs();
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
 		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelay);
 		acquireConfig.setLogMessage("Failed to replay transaction");
-		
+
 		Map<Object, Object> replaceTarget = new HashMap<Object, Object>();
 		do{
 			replaceTarget.clear(); 
@@ -299,7 +299,12 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 			} catch(Throwable t){
 				// do nothing - also likely to fail here
 			}
-			con.setInternalConnection(memorize(con.obtainInternalConnection(con.getPool(), con.getUrl()), con));
+			try{
+				con.setInternalConnection(memorize(con.getPool().obtainInternalConnection(con), con));
+			} catch(SQLException e){
+				throw con.markPossiblyBroken(e);
+			}
+
 			con.getOriginatingPartition().trackConnectionFinalizer(con); // track this too.
 
 			for (ReplayLog replay: oldReplayLog){
@@ -372,17 +377,17 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		for (ReplayLog replay: oldReplayLog){
 			replay.setTarget(replaceTarget.get(replay.getTarget())); // fix our log
 		}
-		
+
 		if (failedThrowable != null){
-		// #ifdef JDK>6
-		throw new SQLException(failedThrowable.getMessage(), failedThrowable);
-		 // #endif JDK>6
-		/* #ifdef JDK5
+			// #ifdef JDK>6
+			throw new SQLException(failedThrowable.getMessage(), failedThrowable);
+			// #endif JDK>6
+			/* #ifdef JDK5
 			throw new SQLException(PoolUtil.stringifyException(failedThrowable));
 		#endif JDK5 */
 		}
-		
-		
+
+
 		return recoveryResult;
 	}
 

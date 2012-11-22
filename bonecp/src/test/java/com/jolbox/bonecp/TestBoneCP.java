@@ -32,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
+import java.lang.Thread.State;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -46,8 +47,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -69,6 +72,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.hooks.CustomHook;
 
 /**
  * @author wwadge
@@ -86,7 +90,7 @@ public class TestBoneCP {
 	/** Mock handle. */
 	private ExecutorService mockConnectionsScheduler;
 	/** Mock handle. */
-	private BoundedLinkedTransferQueue<ConnectionHandle> mockConnectionHandles;
+	private LinkedBlockingQueue<ConnectionHandle> mockConnectionHandles;
 	/** Mock handle. */
 	private ConnectionHandle mockConnection;
 	/** Mock handle. */
@@ -168,7 +172,7 @@ public class TestBoneCP {
 		mockConnectionsScheduler = EasyMock.createNiceMock(ExecutorService.class);
 		field.set(testClass, mockConnectionsScheduler);
 
-		mockConnectionHandles = EasyMock.createNiceMock(BoundedLinkedTransferQueue.class);
+		mockConnectionHandles = EasyMock.createNiceMock(LinkedBlockingQueue.class);
 		mockConnection = EasyMock.createNiceMock(ConnectionHandle.class);
 		mockLock = EasyMock.createNiceMock(Lock.class);
 		mockLogger = TestUtils.mockLogger(testClass.getClass());
@@ -203,8 +207,84 @@ public class TestBoneCP {
 		testShutdownClose(true);
 	}
 	
-	
-	
+
+	/** Tests obtaining internal connection.
+	 * @throws SQLException
+	 * @throws ClassNotFoundException
+	 *
+	@Test
+	public void testObtainInternalConnection() throws SQLException, ClassNotFoundException{
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+
+		this.testClass.url = "jdbc:mock:driver";
+		this.config.setAcquireRetryDelayInMs(1);
+		CustomHook testHook = new CustomHook();
+		this.config.setConnectionHook(testHook);
+		// make it fail the first time and succeed the second time
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
+		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
+		replay(this.mockPool);
+		this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
+		// get counts on our hooks
+		
+		assertEquals(1, testHook.fail);
+		assertEquals(1, testHook.acquire);
+		
+		// Test 2: Same thing but without the hooks
+		reset(this.mockPool);
+		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
+		count=1;
+		this.config.setConnectionHook(null);
+		replay(this.mockPool);
+		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock"));
+		
+		// Test 3: Keep failing
+		reset(this.mockPool);
+		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).anyTimes();
+		replay(this.mockPool);
+		count=99;
+		this.config.setAcquireRetryAttempts(2);
+		try{
+			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
+			fail("Should have thrown an exception");
+		} catch (SQLException e){
+			// expected behaviour
+		}
+		 
+		//	Test 4: Get signalled to interrupt fail delay
+		count=99;
+		this.config.setAcquireRetryAttempts(2);
+		this.config.setAcquireRetryDelayInMs(7000);
+		final Thread currentThread = Thread.currentThread();
+
+		try{
+			new Thread(new Runnable() {
+				
+//				@Override
+				public void run() {
+					while (!currentThread.getState().equals(State.TIMED_WAITING)){
+						try {
+							Thread.sleep(50);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					currentThread.interrupt();
+				}
+			}).start();
+			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
+			fail("Should have thrown an exception");
+		} catch (SQLException e){
+			// expected behaviour
+		}
+		this.config.setAcquireRetryDelayInMs(10);
+		
+		
+	}
+	*/
 
 
 	/**
@@ -773,6 +853,7 @@ public class TestBoneCP {
 	@Test
 	public void testInternalReleaseConnectionWhereConnectionIsBroken() throws InterruptedException, SQLException {
 		// Test case where connection is broken
+		mockConnection.logicallyClosed = new AtomicBoolean(false);
 		reset(mockConnection,mockPartition, mockConnectionHandles);
 		expect(mockConnection.isPossiblyBroken()).andReturn(true).once();
 		expect(mockConfig.getConnectionTestStatement()).andReturn(null).once();
@@ -836,7 +917,6 @@ public class TestBoneCP {
 		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
 	
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
-		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 		replay(mockRealConnection, mockPartition, mockConnectionHandles, mockConnection);
 		testClass.putConnectionBackInPartition(mockConnection);
@@ -857,7 +937,6 @@ public class TestBoneCP {
 		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
 
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
-		expect(mockConnectionHandles.tryTransfer(mockConnection)).andReturn(false).anyTimes();
 		expect(mockConnectionHandles.offer(mockConnection)).andReturn(true).once();
 		expect(mockConnection.isTxResolved()).andReturn(false).once();
 		Connection mockInternalConnection = EasyMock.createNiceMock(Connection.class);
@@ -881,6 +960,7 @@ public class TestBoneCP {
 	public void testIsConnectionHandleAlive() throws SQLException {
 		// Test 1: Normal case (+ without connection test statement)
 		expect(mockConfig.getConnectionTestStatement()).andReturn(null).once();
+		mockConnection.logicallyClosed=new AtomicBoolean();
 		expect(mockConnection.getMetaData()).andReturn(mockDatabaseMetadata).once();
 		expect(mockDatabaseMetadata.getTables((String)anyObject(), (String)anyObject(), (String)anyObject(), (String[])anyObject())).andReturn(mockResultSet).once();
 		mockResultSet.close();
@@ -902,6 +982,7 @@ public class TestBoneCP {
 		reset(mockConfig, mockConnection, mockDatabaseMetadata, mockResultSet);
 		expect(mockConfig.getConnectionTestStatement()).andReturn(null).once();
 		expect(mockConnection.getMetaData()).andThrow(new SQLException()).once();
+		mockConnection.logicallyClosed = new AtomicBoolean(false);
 
 		replay(mockConfig, mockConnection, mockDatabaseMetadata, mockResultSet);
 		assertFalse(testClass.isConnectionHandleAlive(mockConnection));
@@ -926,6 +1007,7 @@ public class TestBoneCP {
 		//		mockResultSet.close();
 		//		expectLastCall().once();
 
+		mockConnection.logicallyClosed = new AtomicBoolean(true);
 		replay(mockConfig, mockConnection, mockDatabaseMetadata,mockStatement);
 		assertTrue(testClass.isConnectionHandleAlive(mockConnection));
 		verify(mockConfig, mockConnection,mockDatabaseMetadata, mockStatement);
@@ -949,7 +1031,7 @@ public class TestBoneCP {
 		replay(mockConfig, mockConnection, mockDatabaseMetadata,mockStatement, mockResultSet);
 		//		assertFalse(testClass.isConnectionHandleAlive(mockConnection));
 		try{
-			mockConnection.logicallyClosed=true;// (code coverage)
+			mockConnection.logicallyClosed = new AtomicBoolean(true);// (code coverage)
 			testClass.isConnectionHandleAlive(mockConnection);
 			fail("Should have thrown an exception");
 		} catch (RuntimeException e){
@@ -976,6 +1058,7 @@ public class TestBoneCP {
 		mockStatement.close();
 		expectLastCall().andThrow(new SQLException()).once();
 
+		mockConnection.logicallyClosed = new AtomicBoolean(false);
 		replay(mockConfig, mockConnection, mockDatabaseMetadata,mockStatement, mockResultSet);
 		try{
 			testClass.isConnectionHandleAlive(mockConnection);

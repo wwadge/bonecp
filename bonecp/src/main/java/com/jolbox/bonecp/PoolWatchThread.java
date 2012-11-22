@@ -106,9 +106,7 @@ public class PoolWatchThread implements Runnable {
 				if (this.pool.poolShuttingDown){
 					break;
 				}
-				ConnectionHandle handle = ConnectionHandle.createConnectionHandle(this.partition.getUrl(), this.partition.getUsername(), this.partition.getPassword(), this.pool);
-				this.partition.addFreeConnection(handle);
-
+				this.partition.addFreeConnection(new ConnectionHandle(this.pool));
 			}
 		} catch (Exception e) {
 			logger.error("Error in trying to obtain a connection. Retrying in "+this.acquireRetryDelayInMs+"ms", e);

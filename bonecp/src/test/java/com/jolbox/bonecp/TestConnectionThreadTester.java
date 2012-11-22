@@ -15,16 +15,24 @@
  */
 package com.jolbox.bonecp;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.makeThreadSafe;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
-
-import static org.easymock.EasyMock.*;
 
 /**
  * Test for connection thread tester
@@ -70,7 +78,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testConnectionMarkedBroken() throws SQLException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		BlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		BoneCPConfig localconfig = config.clone();
@@ -96,7 +104,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testIdleConnectionIsKilled() throws SQLException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
@@ -126,7 +134,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testIdleConnectionIsKilledWithFailure() throws SQLException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
@@ -156,7 +164,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testIdleConnectionIsSentKeepAlive() throws SQLException, InterruptedException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
 		localconfig.setIdleConnectionTestPeriodInMinutes(1);
@@ -184,7 +192,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testIdleMaxAge() throws SQLException, InterruptedException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
 		localconfig.setIdleConnectionTestPeriodInMinutes(0);
@@ -213,7 +221,7 @@ public class TestConnectionThreadTester {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testIdleMaxAgeLifoMode() throws SQLException, InterruptedException, CloneNotSupportedException {
-		LIFOQueue<ConnectionHandle> mockFreeConnections = createNiceMock(LIFOQueue.class);
+		BlockingQueue<ConnectionHandle> mockFreeConnections = createNiceMock(LinkedBlockingQueue.class);
 		expect(mockFreeConnections.poll()).andReturn(mockConnection).once();
 		BoneCPConfig localconfig = config.clone();
 		localconfig.setIdleConnectionTestPeriodInMinutes(0);
@@ -222,7 +230,7 @@ public class TestConnectionThreadTester {
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockFreeConnections).anyTimes();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockConnectionPartition).once();
 		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2).anyTimes();
-		expect(mockFreeConnections.offerLast((ConnectionHandle)anyObject())).andReturn(false).anyTimes();
+		expect(mockFreeConnections.offer((ConnectionHandle)anyObject())).andReturn(false).anyTimes();
 		mockConnection.internalClose();
 		expectLastCall().once();
 		expect(mockConnection.isPossiblyBroken()).andReturn(false);
@@ -242,7 +250,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testIdleConnectionFailedKeepAlive() throws SQLException, InterruptedException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
 		localconfig.setIdleConnectionTestPeriodInMinutes(1);
@@ -274,7 +282,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testInterruptedException() throws SQLException, InterruptedException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
 		localconfig.setIdleConnectionTestPeriodInMinutes(1);
@@ -302,7 +310,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testExceptionSpurious() throws SQLException, InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(10);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(10);
 		fakeFreeConnections.add(mockConnection);
 		BoneCPConfig localconfig = config.clone();
 		localconfig.setIdleConnectionTestPeriodInMinutes(1);
@@ -340,7 +348,7 @@ public class TestConnectionThreadTester {
 	 * @throws CloneNotSupportedException */
 	@Test
 	public void testExceptionOnCloseConnection() throws SQLException, InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, CloneNotSupportedException {
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeFreeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeFreeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 		fakeFreeConnections.add(mockConnection);
 		
 		BoneCPConfig localconfig = config.clone();

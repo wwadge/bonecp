@@ -16,19 +16,26 @@
 
 package com.jolbox.bonecp;
 
-import java.lang.reflect.Field;
-import java.sql.SQLException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.anyLong;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.fail;
 
-
+import java.lang.reflect.Field;
+import java.sql.SQLException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TransferQueue;
+
+import org.junit.Before;
+import org.junit.Test;
 
 
 
@@ -109,7 +116,7 @@ public class TestConnectionMaxAgeTester {
 	@SuppressWarnings("unchecked")
 	public void testConnectionNotExpiredLifoMode() throws SQLException{
 		 
-		LIFOQueue<ConnectionHandle> mockQueue = createNiceMock(LIFOQueue.class);
+		BlockingQueue<ConnectionHandle> mockQueue = createNiceMock(LinkedBlockingQueue.class);
 		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
 		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
@@ -121,7 +128,7 @@ public class TestConnectionMaxAgeTester {
 		
 
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockConnectionPartition).anyTimes();
-		expect(mockQueue.offerLast(mockConnection)).andReturn(false).anyTimes();
+		expect(mockQueue.offer(mockConnection)).andReturn(false).anyTimes();
 		mockConnection.internalClose();
 		
 		replay(mockQueue, mockExecutor, mockConnectionPartition, mockConnection, mockPool);

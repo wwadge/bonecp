@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -254,9 +255,7 @@ public class TestConnectionHook {
 	 * @throws SQLException 
 	 * @throws CloneNotSupportedException 
 	 */
-	@SuppressWarnings("deprecation")
-	@Test
-	public void testonQueryExecuteTimeLimitExceeded() throws SQLException, CloneNotSupportedException {
+	public void onQueryExecuteTimeLimitExceeded(boolean coverage) throws SQLException, CloneNotSupportedException {
 		reset(mockConfig);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
@@ -265,9 +264,8 @@ public class TestConnectionHook {
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
-		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
-		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(coverage ? new CoverageHook() : hookClass).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
 		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
 		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
@@ -290,8 +288,6 @@ public class TestConnectionHook {
 			Connection con = poolClass.getConnection();
 			con.prepareStatement("").execute();
 			
-		
-		assertEquals(1, hookClass.queryTimeout);
 		reset(mockPreparedStatement, mockConnection);
 		poolClass.close();
 	}
@@ -301,11 +297,77 @@ public class TestConnectionHook {
 	 * @throws SQLException 
 	 * @throws CloneNotSupportedException 
 	 */
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testonQueryExecuteTimeLimitExceededCoverage() throws SQLException, CloneNotSupportedException {
-		Connection mockConnection = createNiceMock(Connection.class);
-		reset(mockConfig, mockConnection);
+		onQueryExecuteTimeLimitExceeded(true);
+	}
+
+	/**
+	 * Test method.
+	 * @throws SQLException 
+	 * @throws CloneNotSupportedException 
+	 */
+	@Test
+	public void testonQueryExecuteTimeLimitExceeded() throws SQLException, CloneNotSupportedException {
+		onQueryExecuteTimeLimitExceeded(false);
+		assertEquals(1, hookClass.queryTimeout);
+		
+	}
+
+	
+	public void markPossiblyBroken(boolean coverage) throws SQLException, CloneNotSupportedException{
+			reset(mockConfig);
+			expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
+			expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
+			expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
+			expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(10000L).anyTimes();
+			expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+			expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
+			expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
+			expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
+			expect(mockConfig.getConnectionHook()).andReturn(coverage ? new CoverageHook() : hookClass).anyTimes();
+			expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
+			expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
+			expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
+			expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+			
+			PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
+			Connection mockConnection = createNiceMock(Connection.class);
+			expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
+			expect(mockPreparedStatement.execute()).andThrow(new SQLException("reason", "1234")).once();
+			driver.setConnection(mockConnection);
+			replay(mockConfig, mockPreparedStatement, mockConnection);
+			
+				poolClass = new BoneCP(mockConfig);	
+				Connection con = poolClass.getConnection();
+				try{
+					con.prepareStatement("").execute();
+					fail("Should throw exception");
+				} catch (Exception e){
+					// nothing
+				}
+				
+				
+			
+			reset(mockPreparedStatement, mockConnection);
+			poolClass.close();
+	}
+	
+
+	@Test
+	public void testOnMarkPossiblyBrokenCoverage() throws SQLException, CloneNotSupportedException{
+		markPossiblyBroken(true);
+	}
+
+	@Test
+	public void testOnMarkPossiblyBroken() throws SQLException, CloneNotSupportedException{
+		markPossiblyBroken(false);
+		assertEquals(1, hookClass.markPossiblyBroken);
+	}
+
+	
+	public void connectionException(boolean coverage) throws SQLException, CloneNotSupportedException{
+		reset(mockConfig);
 		expect(mockConfig.getPartitionCount()).andReturn(1).anyTimes();
 		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(5).anyTimes();
 		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(5).anyTimes();
@@ -313,30 +375,45 @@ public class TestConnectionHook {
 		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
 		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
 		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock").anyTimes();
-		expect(mockConfig.getReleaseHelperThreads()).andReturn(0).anyTimes();
 		expect(mockConfig.isDisableConnectionTracking()).andReturn(true).anyTimes();
-		expect(mockConfig.getConnectionHook()).andReturn(hookClass).anyTimes();
+		expect(mockConfig.getConnectionHook()).andReturn(coverage ? new CoverageHook() : hookClass).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(200L).anyTimes();
-		
-		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
-		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
 		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
 		
-		expect(mockPreparedStatement.execute()).andAnswer(new IAnswer<Boolean>() {
-			
-			public Boolean answer() throws Throwable {
-				Thread.sleep(300); // something that exceeds our limit
-				return false;
-			}
-		}).once();
+		PreparedStatement mockPreparedStatement = createNiceMock(PreparedStatement.class);
+		Connection mockConnection = createNiceMock(Connection.class);
+		expect(mockConnection.prepareStatement("")).andReturn(mockPreparedStatement).anyTimes();
+		expect(mockPreparedStatement.execute()).andThrow(new SQLException("reason", "8999")).once();
 		driver.setConnection(mockConnection);
 		replay(mockConfig, mockPreparedStatement, mockConnection);
 		
 			poolClass = new BoneCP(mockConfig);	
 			Connection con = poolClass.getConnection();
-			con.prepareStatement("").execute();
+			try{
+				con.prepareStatement("").execute();
+				fail("Should throw exception");
+			} catch (Exception e){
+				// nothing
+			}
+			
 			
 		
-		assertEquals(1, hookClass.queryTimeout);
-	}
+		reset(mockPreparedStatement, mockConnection);
+		poolClass.close();
+}
+
+
+@Test
+public void testConnectionExceptionCoverage() throws SQLException, CloneNotSupportedException{
+	connectionException(true);
+}
+
+@Test
+public void testOnConnectionException() throws SQLException, CloneNotSupportedException{
+	connectionException(false);
+	assertEquals(1, hookClass.connectionException);
+}
+	
 }

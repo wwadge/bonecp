@@ -124,7 +124,7 @@ public class ConnectionTesterThread implements Runnable {
 						
 						if (this.lifoMode){
 							// we can't put it back normally or it will end up in front again.
-							if (!((LIFOQueue<ConnectionHandle>)connection.getOriginatingPartition().getFreeConnections()).offerLast(connection)){
+							if (!(connection.getOriginatingPartition().getFreeConnections().offer(connection))){
 								connection.internalClose();
 							}
 						} else {
@@ -139,7 +139,11 @@ public class ConnectionTesterThread implements Runnable {
 //				logger.debug("Next check in "+nextCheckInMs);
 				
 				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
-		} catch (Exception e) {
+		} catch(InterruptedException e){
+			logger.error("Connection tester thread interrupted exception received. Shutting down tester thread.", e);
+			return;
+		}
+		catch (Throwable e) {
 			if (this.scheduler.isShutdown()){
 				logger.debug("Shutting down connection tester thread.");
 			} else {

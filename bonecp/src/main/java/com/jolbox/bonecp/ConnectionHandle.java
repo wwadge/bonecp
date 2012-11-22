@@ -45,7 +45,6 @@ import java.util.concurrent.Executor;
 // #endif JDK7
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 import org.slf4j.Logger;
@@ -54,7 +53,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
-import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 import com.jolbox.bonecp.hooks.ConnectionState;
 import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
@@ -67,7 +65,7 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  */
 public class ConnectionHandle implements Connection{
 	/** Warning message. */
-//	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
+	//	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
 	/** Warning message. */
 	private static final String SET_AUTO_COMMIT_FALSE_WAS_CALLED_MESSAGE = "setAutoCommit(false) was called but transaction was not COMMITted or ROLLBACKed properly before it was closed.\n";
 	/** Exception message. */
@@ -105,7 +103,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	protected boolean possiblyBroken;
 	/** If true, we've called close() on this connection. */
-	protected boolean logicallyClosed = false;
+	protected AtomicBoolean logicallyClosed = new AtomicBoolean();
 	/** Original partition. */
 	private ConnectionPartition originatingPartition = null;
 	/** Prepared Statement Cache. */
@@ -186,102 +184,25 @@ public class ConnectionHandle implements Connection{
 	private ConcurrentMap<Statement, String> trackedStatement = new MapMaker().makeMap();
 	/** Avoid creating a new string object each time. */
 	private String noStackTrace = "";
-	
-	/** Create a connection Handle.
-	 *   
-	 * @param url
-	 *            JDBC connection string
-	 * @param username
-	 *            user to use
-	 * @param password
-	 *            password for db
-	 * @param pool
-	 *            pool handle.
-	 * @throws SQLException
-	 *             on error
-	 * @return connection handle.
-	 */
-	public static ConnectionHandle createConnectionHandle(String url, String username, String password, BoneCP pool) throws SQLException{
-		return new ConnectionHandle(url, username, password, pool);
+
+	protected ConnectionHandle(BoneCP pool) throws SQLException{
+		this(null, pool);
 	}
-	
 	
 	/**
 	 * Connection wrapper constructor
 	 * 
-	 * @param url
-	 *            JDBC connection string
-	 * @param username
-	 *            user to use
-	 * @param password
-	 *            password for db
 	 * @param pool
 	 *            pool handle.
 	 * @throws SQLException
 	 *             on error
 	 */
-	private ConnectionHandle(String url, String username, String password,
-			BoneCP pool) throws SQLException {
-
+	protected ConnectionHandle(Connection connection, BoneCP pool) throws SQLException {
+		boolean newConnection = connection == null;
 		this.pool = pool;
-		this.connection = obtainInternalConnection(pool, url);
-		fillConnectionFields(pool, url);
-	}
-	
-	/**
-	 * Creates the connection handle again. We use this method to create a brand new connection
-	 * handle. That way if the application (wrongly) tries to do something else with the connection
-	 * that has already been "closed", it will fail.
-	 * @return ConnectionHandle
-	 * @throws SQLException
-	 */
-	public ConnectionHandle recreateConnectionHandle() throws SQLException{
-		ConnectionHandle handle = new ConnectionHandle();
-		handle.pool = this.pool;
-		handle.connection = this.connection;
-		handle.originatingPartition = this.originatingPartition;
-		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
-		handle.connectionLastResetInMs = this.connectionLastResetInMs;
-		handle.connectionLastUsedInMs = this.connectionLastUsedInMs;
-		handle.possiblyBroken = this.possiblyBroken;
-		handle.preparedStatementCache = this.preparedStatementCache;
-		handle.callableStatementCache = this.callableStatementCache;
-		handle.debugHandle  = this.debugHandle;
-		handle.connectionHook = this.connectionHook;
-		handle.doubleCloseCheck = this.doubleCloseCheck;
-		handle.doubleCloseException = this.doubleCloseException;
-		handle.logStatementsEnabled = this.logStatementsEnabled;
-		handle.replayLog = this.replayLog;
-		handle.inReplayMode = this.inReplayMode;
-		handle.recoveryResult = this.recoveryResult;
-		handle.url = this.url;
-		handle.threadUsingConnection = this.threadUsingConnection;
-		handle.maxConnectionAgeInMs = this.maxConnectionAgeInMs;
-		handle.statisticsEnabled = this.statisticsEnabled;
-		handle.statistics = this.statistics;
-		handle.threadWatch = this.threadWatch;
-		handle.finalizableRefs = this.finalizableRefs;
-		handle.connectionTrackingDisabled = this.connectionTrackingDisabled;
-		handle.txResolved = this.txResolved;
-		handle.detectUnresolvedTransactions = this.detectUnresolvedTransactions;
-		handle.autoCommitStackTrace = this.autoCommitStackTrace;
-		handle.inUseInThreadLocalContext = this.inUseInThreadLocalContext;
-		handle.detectUnclosedStatements = this.detectUnclosedStatements;
-		handle.closeOpenStatements = this.closeOpenStatements;
-		handle.trackedStatement = this.trackedStatement;
-		handle.noStackTrace = "";
-		this.connection = null;
-		return handle;
-	}
+		this.connectionHook = pool.getConfig().getConnectionHook();
 
-	/** Fills in any default fields in this handle.
-	 * @param pool
-	 * @param url
-	 * @throws SQLException 
-	 */
-	private void fillConnectionFields(BoneCP pool, String url) throws SQLException {
-		this.pool = pool;
-		this.url = url;
+		this.url = pool.getConfig().getJdbcUrl();
 		this.finalizableRefs = pool.getFinalizableRefs(); 
 		this.defaultReadOnly = pool.getConfig().getDefaultReadOnly();
 		this.defaultCatalog = pool.getConfig().getDefaultCatalog();
@@ -296,22 +217,30 @@ public class ConnectionHandle implements Connection{
 		this.closeOpenStatements = pool.getConfig().isCloseOpenStatements();
 		this.threadUsingConnection = null;
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
+
+		this.maxConnectionAgeInMs = pool.getConfig().getMaxConnectionAge(TimeUnit.MILLISECONDS);
+		this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
+		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
+		int cacheSize = pool.getConfig().getStatementsCacheSize();
+		if ( (cacheSize > 0) && newConnection ) {
+			this.preparedStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
+			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
+			this.statementCachingEnabled = true;
+		}
+
+
+		try{
+			this.connection = newConnection ? pool.obtainInternalConnection(this) : connection;
+		} catch(SQLException e){
+			throw markPossiblyBroken(e);
+		}
+
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
 			this.replayLog = new ArrayList<ReplayLog>(30);
 			// this kick-starts recording everything
 			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
 		}
 
-		this.maxConnectionAgeInMs = pool.getConfig().getMaxConnectionAge(TimeUnit.MILLISECONDS);
-		this.doubleCloseCheck = pool.getConfig().isCloseConnectionWatch();
-		this.logStatementsEnabled = pool.getConfig().isLogStatementsEnabled();
-		int cacheSize = pool.getConfig().getStatementsCacheSize();
-		if (cacheSize > 0) {
-			this.preparedStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
-			this.callableStatementCache = new StatementCache(cacheSize, pool.getConfig().isStatisticsEnabled(), pool.getStatistics());
-			this.statementCachingEnabled = true;
-		}
-		
 		if (this.defaultAutoCommit != null){
 			setAutoCommit(this.defaultAutoCommit);
 		}
@@ -324,74 +253,34 @@ public class ConnectionHandle implements Connection{
 		if (this.defaultTransactionIsolationValue != -1){
 			setTransactionIsolation(this.defaultTransactionIsolationValue);
 		}
-		
-		
+
 	}
 
-
-	/** Obtains a database connection, retrying if necessary.
-	 * @param pool pool handle
-	 * @param url url to obtain connection from
-	 * @return A DB connection.
+	/**
+	 * Creates the connection handle again. We use this method to create a brand new connection
+	 * handle. That way if the application (wrongly) tries to do something else with the connection
+	 * that has already been "closed", it will fail.
+	 * @return ConnectionHandle
 	 * @throws SQLException
 	 */
-	protected Connection obtainInternalConnection(BoneCP pool, String url) throws SQLException {
-		boolean tryAgain = false;
-		Connection result = null;
-
-		int acquireRetryAttempts = pool.getConfig().getAcquireRetryAttempts();
-		long acquireRetryDelayInMs = pool.getConfig().getAcquireRetryDelayInMs();
-		AcquireFailConfig acquireConfig = new AcquireFailConfig();
-		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(acquireRetryAttempts));
-		acquireConfig.setAcquireRetryDelayInMs(acquireRetryDelayInMs);
-		acquireConfig.setLogMessage("Failed to acquire connection to "+url);
-		this.connectionHook = pool.getConfig().getConnectionHook();
-		do{ 
-			try { 
-				// keep track of this hook.
-				this.connection = pool.obtainRawInternalConnection();
-				tryAgain = false;
-
-				if (acquireRetryAttempts != pool.getConfig().getAcquireRetryAttempts()){
-					logger.info("Successfully re-established connection to "+url);
-				}
-				
-				pool.getDbIsDown().set(false);
-				
-				// call the hook, if available.
-				if (this.connectionHook != null){
-					this.connectionHook.onAcquire(this);
-				}
-
-				
-				sendInitSQL();
-				result = this.connection;
-			} catch (SQLException e) {
-				// call the hook, if available.
-				if (this.connectionHook != null){
-					tryAgain = this.connectionHook.onAcquireFail(e, acquireConfig);
-				} else {
-					logger.error(String.format("Failed to acquire connection to %s. Sleeping for %d ms. Attempts left: %d", url, acquireRetryDelayInMs, acquireRetryAttempts), e);
-
-					try {
-						Thread.sleep(acquireRetryDelayInMs);
-						if (acquireRetryAttempts > -1){
-							tryAgain = (acquireRetryAttempts--) != 0;
-						}
-					} catch (InterruptedException e1) {
-						tryAgain=false;
-					}
-				}
-				if (!tryAgain){
-					throw markPossiblyBroken(e);
-				}
-			}
-		} while (tryAgain);
-
-		return result;
-
+	public ConnectionHandle recreateConnectionHandle() throws SQLException{
+		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool);
+		handle.originatingPartition = this.originatingPartition;
+		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
+		handle.connectionLastResetInMs = this.connectionLastResetInMs;
+		handle.connectionLastUsedInMs = this.connectionLastUsedInMs;
+		handle.preparedStatementCache = this.preparedStatementCache;
+		handle.callableStatementCache = this.callableStatementCache;
+		handle.debugHandle  = this.debugHandle;
+		handle.connectionHook = this.connectionHook;
+		this.connection = null;
+		return handle;
 	}
-	
+
+
+
+
+
 	/** Private -- used solely for unit testing. 
 	 * @param connection
 	 * @param preparedStatementCache
@@ -410,10 +299,10 @@ public class ConnectionHandle implements Connection{
 		if (cacheSize > 0) {
 			handle.statementCachingEnabled = true;
 		}
-		
+
 		return handle;
 	}
-		
+
 	/**
 	 * Create a dummy handle. 
 	 */
@@ -425,15 +314,24 @@ public class ConnectionHandle implements Connection{
 	 * @throws SQLException on error
 	 */
 	public void sendInitSQL() throws SQLException {
-		// fetch any configured setup sql.
-		String initSQL = this.pool.getConfig().getInitSQL();
-		if (initSQL != null){
-			Statement stmt = this.connection.createStatement();
-			stmt.execute(initSQL);
-			stmt.close();
-		}
+		sendInitSQL(this.connection, this.pool.getConfig().getInitSQL());
 	}
 
+
+	protected static void sendInitSQL(Connection connection, String initSQL) throws SQLException{
+		// fetch any configured setup sql.
+		if (initSQL != null){
+			Statement stmt = null;
+			try{
+				stmt = connection.createStatement();
+				stmt.execute(initSQL);
+			} finally{
+				if (stmt != null){
+					stmt.close();
+				}
+			}
+		}
+	}
 
 
 	/** 
@@ -468,7 +366,7 @@ public class ConnectionHandle implements Connection{
 
 		// FIXME: We should look into this.connection.getMetaData().getSQLStateType();
 		// to determine if we have SQL:92 or X/OPEN sqlstatus codes.
-		
+
 		//		char firstChar = state.charAt(0);
 		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
@@ -505,7 +403,7 @@ public class ConnectionHandle implements Connection{
 	 * 
 	 */
 	private void checkClosed() throws SQLException {
-		if (this.logicallyClosed) {
+		if (this.logicallyClosed.get()) {
 			throw new SQLException("Connection is closed!");
 		}
 	}
@@ -517,7 +415,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	public void close() throws SQLException {
 		try {
-			if (!this.logicallyClosed) {
+			if (this.logicallyClosed.compareAndSet(false, true)) {
 				
 				if (this.resetConnectionOnClose /*FIXME: && !getAutoCommit() && !isTxResolved() */){
 					/*if (this.autoCommitStackTrace != null){
@@ -531,28 +429,15 @@ public class ConnectionHandle implements Connection{
 						setAutoCommit(true);
 					}
 				}
-				
-				// restore sanity
-				if (this.defaultAutoCommit != null && getAutoCommit() != this.defaultAutoCommit){
-					setAutoCommit(this.defaultAutoCommit);
-				}
-				if (this.defaultReadOnly != null && isReadOnly() != this.defaultReadOnly){
-					setReadOnly(this.defaultReadOnly);
-				}
-				if (this.defaultCatalog != null && !this.defaultCatalog.equals(getCatalog())){
-					setCatalog(this.defaultCatalog);
-				}
-				if (this.defaultTransactionIsolationValue != -1 && getTransactionIsolation() != this.defaultTransactionIsolationValue){
-					this.setTransactionIsolation(this.defaultTransactionIsolationValue);
-				}
+
 
 				if (this.threadWatch != null){
 					this.threadWatch.interrupt(); // if we returned the connection to the pool, terminate thread watch thread if it's
-												  // running even if thread is still alive (eg thread has been recycled for use in some
-												  // container).
+					// running even if thread is still alive (eg thread has been recycled for use in some
+					// container).
 					this.threadWatch = null;
 				}
-				
+
 				if (this.closeOpenStatements){
 					for (Entry<Statement, String> statementEntry: this.trackedStatement.entrySet()){
 						statementEntry.getKey().close();
@@ -562,12 +447,11 @@ public class ConnectionHandle implements Connection{
 					}
 					this.trackedStatement.clear();
 				} 
-				
-				this.logicallyClosed = true;
+
 				if (!this.connectionTrackingDisabled){
 					pool.getFinalizableRefs().remove(this.connection);
 				}
-				
+
 				ConnectionHandle handle = this.recreateConnectionHandle();
 				this.pool.releaseConnection(handle);
 
@@ -596,12 +480,12 @@ public class ConnectionHandle implements Connection{
 			clearStatementCaches(true);
 			if (this.connection != null){ // safety!
 				this.connection.close();
-				
+
 				if (!this.connectionTrackingDisabled && this.finalizableRefs != null){
 					this.finalizableRefs.remove(this.connection);
 				}
 			}
-			this.logicallyClosed = true;
+			this.logicallyClosed.set(true);
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
 		}
@@ -672,7 +556,7 @@ public class ConnectionHandle implements Connection{
 
 	@Override
 	public Struct createStruct(String typeName, Object[] attributes)
-	throws SQLException {
+			throws SQLException {
 		Struct result = null;
 		checkClosed();
 		try {
@@ -683,9 +567,9 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-  @Override
+	@Override
 	public Array createArrayOf(String typeName, Object[] elements)
-	throws SQLException {
+			throws SQLException {
 		Array result = null;
 		checkClosed();
 		try {
@@ -746,31 +630,31 @@ public class ConnectionHandle implements Connection{
 	// #endif JDK>6
 
 	// #ifdef JDK7
-  @Override
-  public void setSchema(String schema) throws SQLException {
-    this.connection.setSchema(schema);
-  }
+	@Override
+	public void setSchema(String schema) throws SQLException {
+		this.connection.setSchema(schema);
+	}
 
-  @Override
-  public String getSchema() throws SQLException {
-    return this.connection.getSchema();
-  }
+	@Override
+	public String getSchema() throws SQLException {
+		return this.connection.getSchema();
+	}
 
-  @Override
-  public void abort(Executor executor) throws SQLException {
-    this.connection.abort(executor);
-  }
+	@Override
+	public void abort(Executor executor) throws SQLException {
+		this.connection.abort(executor);
+	}
 
-  @Override
-  public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-    this.connection.setNetworkTimeout(executor, milliseconds);
-  }
+	@Override
+	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+		this.connection.setNetworkTimeout(executor, milliseconds);
+	}
 
-  @Override
-  public int getNetworkTimeout() throws SQLException {
-    return this.connection.getNetworkTimeout();
-  }
-  // #endif JDK7
+	@Override
+	public int getNetworkTimeout() throws SQLException {
+		return this.connection.getNetworkTimeout();
+	}
+	// #endif JDK7
 
 	public Statement createStatement() throws SQLException {
 		Statement result = null;
@@ -787,7 +671,7 @@ public class ConnectionHandle implements Connection{
 	}
 
 	public Statement createStatement(int resultSetType, int resultSetConcurrency)
-	throws SQLException {
+			throws SQLException {
 		Statement result = null;
 		checkClosed();
 		try {
@@ -804,7 +688,7 @@ public class ConnectionHandle implements Connection{
 
 	public Statement createStatement(int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
-	throws SQLException {
+					throws SQLException {
 		Statement result = null;
 		checkClosed();
 		try {
@@ -830,7 +714,7 @@ public class ConnectionHandle implements Connection{
 		}
 		return result;
 	}
-	
+
 
 	public String getCatalog() throws SQLException {
 		String result = null;
@@ -906,7 +790,7 @@ public class ConnectionHandle implements Connection{
 	 */
 	//	@Override
 	public boolean isClosed() {
-		return this.logicallyClosed;
+		return this.logicallyClosed.get();
 	}
 
 	public boolean isReadOnly() throws SQLException {
@@ -1056,7 +940,7 @@ public class ConnectionHandle implements Connection{
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		StatementHandle result = null;
 		String cacheKey = null;
-		
+
 		checkClosed(); 
 
 		try {
@@ -1086,7 +970,7 @@ public class ConnectionHandle implements Connection{
 				this.statistics.addStatementPrepareTime(System.nanoTime()-statStart);
 				this.statistics.incrementStatementsPrepared();
 			}
-			
+
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
 		}
@@ -1114,7 +998,7 @@ public class ConnectionHandle implements Connection{
 				result = new PreparedStatementHandle(this.connection.prepareStatement(sql, autoGeneratedKeys), sql, this, cacheKey, this.preparedStatementCache);
 				result.setLogicallyOpen();
 			}
-			
+
 			if (this.pool.closeConnectionWatch  && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
@@ -1136,7 +1020,7 @@ public class ConnectionHandle implements Connection{
 	}
 
 	public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
-	throws SQLException {
+			throws SQLException {
 		StatementHandle result = null;
 		String cacheKey = null;
 
@@ -1162,7 +1046,7 @@ public class ConnectionHandle implements Connection{
 			if (this.pool.closeConnectionWatch  && this.statementCachingEnabled){ // debugging mode enabled?
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
-			
+
 			if (this.closeOpenStatements){
 				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
 			}
@@ -1180,7 +1064,7 @@ public class ConnectionHandle implements Connection{
 	}
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames)
-	throws SQLException {
+			throws SQLException {
 		StatementHandle result = null;
 		String cacheKey = null;
 
@@ -1264,7 +1148,7 @@ public class ConnectionHandle implements Connection{
 	}
 
 	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
-	throws SQLException {
+			throws SQLException {
 		StatementHandle result = null;
 		String cacheKey = null;
 
@@ -1275,7 +1159,7 @@ public class ConnectionHandle implements Connection{
 			if (this.statisticsEnabled){
 				statStart = System.nanoTime();
 			}
-			
+
 			if (this.statementCachingEnabled) {
 				cacheKey = this.preparedStatementCache.calculateCacheKey(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 				result = this.preparedStatementCache.get(cacheKey);
@@ -1457,7 +1341,7 @@ public class ConnectionHandle implements Connection{
 		return getConnectionLastResetInMs();
 	}
 
-	
+
 	/**
 	 * @param connectionLastReset
 	 *            the connectionLastReset to set
@@ -1500,7 +1384,7 @@ public class ConnectionHandle implements Connection{
 	 * (although it was never really physically closed)
 	 */
 	protected void renewConnection() {
-		this.logicallyClosed = false;
+		this.logicallyClosed.set(false);
 		this.threadUsingConnection = Thread.currentThread();
 		if (this.doubleCloseCheck){
 			this.doubleCloseException = null;
@@ -1718,17 +1602,21 @@ public class ConnectionHandle implements Connection{
 	protected void setAutoCommitStackTrace(String autoCommitStackTrace) {
 		this.autoCommitStackTrace = autoCommitStackTrace;
 	}
-	
-			
+
+
 	/**
 	 * Destroys the internal connection handle and creates a new one. 
 	 * @throws SQLException 
 	 */
 	public void refreshConnection() throws SQLException{
 		this.connection.close(); // if it's still in use, close it.
-		this.connection = this.pool.obtainRawInternalConnection();
+		try{
+			this.connection = this.pool.obtainRawInternalConnection();
+		} catch(SQLException e){
+			throw markPossiblyBroken(e);
+		}
 	}
-	
+
 	/** Stop tracking the given statement.
 	 * @param statement
 	 */
@@ -1746,6 +1634,6 @@ public class ConnectionHandle implements Connection{
 	public String getUrl() {
 		return this.url;
 	}
-	
-	
+
+
 }

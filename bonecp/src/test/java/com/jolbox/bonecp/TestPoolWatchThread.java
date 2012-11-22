@@ -23,9 +23,11 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.reset;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.easymock.EasyMock;
@@ -152,7 +154,7 @@ public class TestPoolWatchThread {
 	public void testRunCreateConnections() throws InterruptedException, SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, SQLException{
 		expect(mockLogger.isDebugEnabled()).andReturn(true).anyTimes();
 
-		BoundedLinkedTransferQueue<ConnectionHandle> fakeConnections = new BoundedLinkedTransferQueue<ConnectionHandle>(100);
+		LinkedBlockingQueue<ConnectionHandle> fakeConnections = new LinkedBlockingQueue<ConnectionHandle>(100);
 //		mockPartition.almostFullWait();
 //		expectLastCall().anyTimes();
 		expect(mockPartition.getMaxConnections()).andAnswer(new IAnswer<Integer>() {
@@ -184,7 +186,7 @@ public class TestPoolWatchThread {
 
 		mockPartition.addFreeConnection((ConnectionHandle)anyObject());
 		expectLastCall().once();
-		expect(mockPool.obtainRawInternalConnection()).andReturn(EasyMock.createNiceMock(ConnectionHandle.class)).anyTimes();
+		expect(mockPool.obtainInternalConnection((ConnectionHandle)anyObject())).andReturn(EasyMock.createNiceMock(Connection.class)).anyTimes();
 		expect(mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
     	expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		replay(mockPool, mockPartition, mockLogger);

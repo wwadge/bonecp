@@ -165,10 +165,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If true, print out a stack trace of where a statement was opened but not closed before
 	 * the connection was closed. See also: closeOpenStatements. */
 	private boolean detectUnclosedStatements;
-	
+
 	/** If set, pool will call this for every new connection that's created. */
 	private Properties clientInfo;
-	
+
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
 	 */
@@ -614,7 +614,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setReleaseHelperThreads(int releaseHelperThreads) {
 		logger.warn("releaseHelperThreads has been deprecated -- it tends to slow down your application more.");
-//		this.releaseHelperThreads = releaseHelperThreads;
+		//		this.releaseHelperThreads = releaseHelperThreads;
 	}
 
 	/** {@inheritDoc}
@@ -699,7 +699,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return this.logStatementsEnabled;
 	}
 
-	/** If enabled, log SQL statements being executed. 
+	/** If enabled, log SQL statements being executed. This will also "fill in" the parameters 
+	 * for prepared statements so that you can see exactly what values where bound at the time 
+	 * you executed the statement.
 	 * You will also need to set your log4j settings ("com.jolbox.bonecp") to DEBUG 
 	 * @param logStatementsEnabled the logStatementsEnabled to set
 	 */
@@ -1131,7 +1133,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setStatementReleaseHelperThreads(int statementReleaseHelperThreads) {
 		logger.warn("statementReleaseHelperThreads has been deprecated -- it tends to slow down your application more.");
-	//	this.statementReleaseHelperThreads = statementReleaseHelperThreads;
+		//	this.statementReleaseHelperThreads = statementReleaseHelperThreads;
 	}
 
 
@@ -1379,7 +1381,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @throws Exception
 	 */
 	private void setXMLProperties(InputStream xmlConfigFile, String sectionName)
-	throws Exception {
+			throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db;
 		// ugly XML parsing, but this is built-in the JDK.
@@ -1541,7 +1543,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isExternalAuth() {
 		return this.externalAuth;
 	}
-	
+
 
 	/**
 	 * If set to true, no attempts at passing in a username/password will be attempted
@@ -1567,9 +1569,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("Unrecognised pool strategy. Allowed values are DEFAULT and CACHED. Setting to DEFAULT.");
 			this.poolStrategy = "DEFAULT";
 		} 
-		
+
 		this.poolStrategy = this.poolStrategy.toUpperCase();
-		
+
 		if ((this.poolAvailabilityThreshold < 0) || (this.poolAvailabilityThreshold > 100)){
 			this.poolAvailabilityThreshold = 20;
 		}
@@ -1673,8 +1675,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				this.driverProperties.setProperty(PASSWORD, this.password);
 			}
 
-		
-			
+
+
 			// maintain sanity between the two states 
 			this.username = this.driverProperties.getProperty(USER);
 			this.password = this.driverProperties.getProperty(PASSWORD);
@@ -1709,13 +1711,15 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * 
 	 */
 	protected void loadProperties(String filename) {
-	    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		URL url = classLoader.getResource(filename);
-		if (url != null){
-			try {
-				this.setXMLProperties(url.openStream(), null);
-			} catch (Exception e) {
-				// do nothing
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		if (classLoader != null){
+			URL url = classLoader.getResource(filename);
+			if (url != null){
+				try {
+					this.setXMLProperties(url.openStream(), null);
+				} catch (Exception e) {
+					// do nothing
+				} 
 			}
 		}
 	}
@@ -1730,7 +1734,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		} else {
 			result = String.format(CONFIG_TOSTRING, this.jdbcUrl,
 					this.username, this.partitionCount, this.maxConnectionsPerPartition, this.minConnectionsPerPartition, 
-					 getIdleMaxAgeInMinutes(), 
+					getIdleMaxAgeInMinutes(), 
 					getIdleConnectionTestPeriodInMinutes(), this.poolStrategy);
 		}
 
@@ -1779,7 +1783,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		return clone;
 	}
 
-	
+
 	/** Returns true if this instance has the same config as a given config.
 	 * @param that
 	 * @return true if the instance has the same config, false otherwise.
@@ -1814,7 +1818,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				&& Objects.equal(this.poolName, that.getPoolName())
 				&& Objects.equal(this.disableConnectionTracking, that.isDisableConnectionTracking())
 
-		){
+				){
 			return true;
 		} 
 
@@ -1828,7 +1832,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isDeregisterDriverOnClose() {
 		return this.deregisterDriverOnClose;
 	}
-	
+
 
 	/**
 	 * If set to true, try to unregister the JDBC driver when pool is shutdown. 
@@ -1845,7 +1849,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isNullOnConnectionTimeout() {
 		return this.nullOnConnectionTimeout;
 	}
-	
+
 
 	/**
 	 * Sets the nullOnConnectionTimeout.  
@@ -1866,7 +1870,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isResetConnectionOnClose() {
 		return this.resetConnectionOnClose;
 	}
-	
+
 
 	/**
 	 * If true, issue a reset (rollback) on connection close in case client forgot it.
@@ -1883,7 +1887,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isDetectUnresolvedTransactions() {
 		return this.detectUnresolvedTransactions;
 	}
-	
+
 
 	/**
 	 * If true, and resetConnectionOnClose is also true, the pool will print out a stack 
@@ -1903,7 +1907,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public String getPoolStrategy() {
 		return this.poolStrategy;
 	}
-	
+
 
 	/**
 	 * Sets the poolStrategy. Currently supported strategies are DEFAULT and CACHED. This is an experimental feature!
@@ -1948,7 +1952,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isCloseOpenStatements() {
 		return this.closeOpenStatements;
 	}
-	
+
 
 	/**
 	 * If true, track statements and close them if application forgot to do so. See also: 
@@ -1969,7 +1973,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public boolean isDetectUnclosedStatements() {
 		return this.detectUnclosedStatements;
 	}
-	
+
 
 	/**
 	 * Sets the detectUnclosedStatements. If true, print out a stack trace of where a statement was opened but not closed before
@@ -1979,7 +1983,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setDetectUnclosedStatements(boolean detectUnclosedStatements) {
 		this.detectUnclosedStatements = detectUnclosedStatements;
 	}
-	
+
 	/** If set, pool will call this for every new connection that's created.
 	 * @param properties Properties to set. 
 	 *  
@@ -1995,7 +1999,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public Properties getClientInfo() {
 		return this.clientInfo;
 	}
-	
 
-	
+
+
 }
