@@ -308,7 +308,6 @@ public class BoneCP implements Serializable, Closeable {
 	 * @return Connection handle
 	 * @throws SQLException on error
 	 */
-	@SuppressWarnings("resource")
 	protected Connection obtainRawInternalConnection()
 	throws SQLException {
 		Connection result = null;
@@ -395,13 +394,7 @@ public class BoneCP implements Serializable, Closeable {
 				if (config.getConnectionHook() != null){
 					config.getConnectionHook().onAcquireFail(e, acquireConfig);
 				}
-				// #ifdef JDK>6
-				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)), e);
-				// #endif JDK>6
-
-				/* #ifdef JDK5
-				throw new SQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)));
-				#endif JDK5 */
+				throw PoolUtil.generateSQLException(String.format(ERROR_TEST_CONNECTION, config.getJdbcUrl(), config.getUsername(), PoolUtil.stringifyException(e)), e);
 
 			}
 		}

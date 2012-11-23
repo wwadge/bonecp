@@ -736,18 +736,14 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	}
 
  	// #endif JDK>6 
-
-	// #ifdef JDK7
-  @Override
+ 
   public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
     return this.internalCallableStatement.getObject(parameterIndex, type);
   }
-
-  @Override
+ 
   public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
     return this.internalCallableStatement.getObject(parameterName, type);
   }
-  // #endif JDK7
 
 
 	/**
@@ -1029,7 +1025,6 @@ public class CallableStatementHandle extends PreparedStatementHandle implements
 	 * 
 	 * @see java.sql.CallableStatement#getObject(int, java.util.Map)
 	 */
-	// @Override
 	public Object getObject(int parameterIndex, Map<String, Class<?>> map)
 			throws SQLException {
 		checkClosed();

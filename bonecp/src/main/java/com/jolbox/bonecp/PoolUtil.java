@@ -31,7 +31,18 @@ import java.util.Map;
  * @author wallacew
  *
  */
+@SuppressWarnings("unchecked")
 public class PoolUtil {
+
+	private static Class<Throwable> sqlExceptionClass;
+
+	static{
+		try {
+			sqlExceptionClass = (Class<Throwable>) Class.forName("java.sql.SQLException");
+		} catch (Exception e) {
+			// do nothing
+		}
+	}	   
 
 	/** Returns sql statement used in this prepared statement together with the parameters.
 	 * @param sql base sql statement
@@ -41,7 +52,7 @@ public class PoolUtil {
 	public static String fillLogParams(String sql, Map<Object, Object> logParams) {
 		StringBuilder result = new StringBuilder();
 		Map<Object, Object> tmpLogParam = (logParams == null ? new HashMap<Object, Object>() : logParams);
-		
+
 		Iterator<Object> it = tmpLogParam.values().iterator();
 		boolean inQuote = false;
 		boolean inQuote2 = false;
@@ -175,5 +186,18 @@ public class PoolUtil {
 		result = "------\r\n" + sw.toString() + "------\r\n";
 		// closing a stringwriter has no effect.
 		return result;
-	}		  
+	}	
+
+	public static SQLException generateSQLException(String reason, Throwable t) {
+		// slow, but this is for exceptional cases only
+		try {
+			// try JDK6/7 style constructor
+				return (SQLException)sqlExceptionClass.getConstructor(String.class, Throwable.class).newInstance(reason, t);
+		} catch (Exception e) {
+			// fallback to JDK5
+			return new SQLException(PoolUtil.stringifyException(t));
+		}
+
+	}
+
 }

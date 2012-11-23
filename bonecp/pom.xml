@@ -19,7 +19,7 @@
     <parent> 
         <groupId>com.jolbox</groupId>
         <artifactId>bonecp-parent</artifactId>
-        <version>0.8.0-beta2-SNAPSHOT</version>
+        <version>0.8.0-beta3-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -33,11 +33,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <configuration>
-                    <instructions>
-						<Private-Package>jsr166y</Private-Package>
-                    </instructions>
-                </configuration>
+               
             </plugin>
 
             <plugin>
@@ -53,24 +49,6 @@
         </plugins>
     </build>
     
-    <profiles>
-    	<profile>
-    		<id>JDK7</id>
-    		<build>
-    			<plugins>
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<excludes>
-								<exclude>**/jsr166y/*.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-				</plugins>
-    		</build>
-    	</profile>
-    </profiles>
-
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -85,6 +63,12 @@
         <dependency>
             <groupId>com.jolbox</groupId>
             <artifactId>bonecp-test-commons</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency> 
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp-jdk-compat</artifactId>
             <scope>test</scope>
         </dependency>
 

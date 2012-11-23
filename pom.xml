@@ -21,7 +21,7 @@
 
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
-	<version>0.8.0-beta2-SNAPSHOT</version>
+	<version>0.8.0-beta3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>BoneCP</name>
@@ -88,6 +88,7 @@
 	</contributors>
 
 	<modules>
+		<module>bonecp-jdk-compat</module>
 		<module>bonecp</module>
 		<module>bonecp-spring</module>
 		<module>bonecp-test-commons</module>
@@ -112,6 +113,13 @@
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-jdbc</artifactId>
 				<version>${spring.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>com.jolbox</groupId>
+				<artifactId>bonecp-jdk-compat</artifactId>
+				<version>${project.version}</version>
+				<scope>test</scope>
 			</dependency>
 
 			<dependency>
@@ -188,8 +196,8 @@
 		<project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
 
 		<!-- Set compiler source and target versions (m-compiler-p) -->
-		<maven.compiler.target>1.7</maven.compiler.target>
-		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.5</maven.compiler.target>
+		<maven.compiler.source>1.5</maven.compiler.source>
 
 		<!-- Set compiler to be more verbose (m-compiler-p) -->
 		<maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
@@ -210,62 +218,14 @@
 	<build>
 		<pluginManagement>
 			<plugins>
-<!--
-<plugin>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>build-helper-maven-plugin</artifactId>
-    <version>1.7</version>
-    <executions>
-        <execution>
-            <id>attach-source-jar</id>
-            <phase>package</phase>
-            <goals>
-                <goal>attach-artifact</goal>
-            </goals>
-            <configuration>
-                <artifacts>
-                    <artifact>
-                        <file>${project.build.directory}/${project.build.finalName}-prod-sources.jar</file>
-                        <type>jar</type>
-                        <classifier>${project.specifier}</classifier>
-                    </artifact>
-                </artifacts>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
--->
-				 <plugin>
-                <groupId>org.eclipse.m2e</groupId>
-                <artifactId>lifecycle-mapping</artifactId>
-                <version>1.0.0</version>
-                <configuration>
-                    <lifecycleMappingMetadata>
-							        <pluginExecutions>
-								          <pluginExecution>
-									          <pluginExecutionFilter>
-									            <groupId>com.google.code.maven-replacer-plugin</groupId>
-									            <artifactId>replacer</artifactId>
-									            <versionRange>1.5.1</versionRange>
-									            <goals>
-									              <goal>replace</goal>
-									            </goals>
-									          </pluginExecutionFilter>
-									          <action>
-									              <execute></execute>
-									          </action>
-									          <comment>source: </comment>
-								         </pluginExecution>
-	                    </pluginExecutions>
-                    </lifecycleMappingMetadata>
-                </configuration>
-            </plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>2.5.1</version>
 					<configuration>
 						<compilerId>javac</compilerId>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
 					</configuration>
 				</plugin>
 
@@ -334,53 +294,13 @@
 					<configuration>
 						<mavenExecutorId>forked-path</mavenExecutorId>
 						<useReleaseProfile>false</useReleaseProfile>
-						<arguments>${arguments} -Prelease,${otherprofile}</arguments>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>com.google.code.maven-replacer-plugin</groupId>
-					<artifactId>replacer</artifactId>
-					<version>1.5.1</version>
-					<executions>
-						<execution>
-							<phase>process-sources</phase>
-							<goals>
-								<goal>replace</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<regex>false</regex>
-						<includes>
-							<include>**/*.java</include>
-						</includes>
+						<arguments>${arguments} -Prelease</arguments>
 					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
 
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>1.1.1</version>
-				<executions>
-					<execution>
-						<id>enforce</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireJavaVersion>
-									<version>1.7</version>
-								</requireJavaVersion>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
@@ -413,9 +333,6 @@
 					<includes>
 						<include>**/*.java</include>
 					</includes>
-					<excludes>
-						<exclude>**/jsr166y/*</exclude>
-					</excludes>
 				</configuration>
 				<executions>
 					<execution>
@@ -452,7 +369,6 @@
 				<jdk>[1.5,1.6)</jdk> 
 			</activation>
 	-->		<properties>
-				<project.specifier>-jdk5</project.specifier>
 
 				<!-- Override compiler target -->
 				<maven.compiler.target>1.5</maven.compiler.target>
@@ -466,59 +382,6 @@
 
 			<build>
 				<plugins>
-					<plugin>
-						<groupId>com.google.code.maven-replacer-plugin</groupId>
-						<artifactId>replacer</artifactId>
-						<configuration>
-							<replacements>
-								<replacement>
-									<token>// #ifdef JDK6</token>
-									<value>/* #ifdef JDK6</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK6</token>
-									<value>#endif JDK6 */</value>
-								</replacement>
-								<replacement>
-									<token>// #ifdef JDK&gt;6</token>
-									<value>/* #ifdef JDK&gt;6</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK6</token>
-									<value>#endif JDK6 */</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK&gt;6</token>
-									<value>#endif JDK&gt;6 */</value>
-								</replacement>
-								<replacement>
-									<token>// #ifdef JDK7</token>
-									<value>/* #ifdef JDK7</value>
-								</replacement>
-								<replacement>
-									<token>java.util.concurrent.LinkedTransferQueue</token>
-									<value>jsr166y.LinkedTransferQueue</value>
-								</replacement>
-								<replacement>
-									<token>java.util.concurrent.TransferQueue</token>
-									<value>jsr166y.TransferQueue</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK7</token>
-									<value>#endif JDK7 */</value>
-								</replacement>
-								<replacement>
-									<token>/* #ifdef JDK5</token>
-									<value>// #ifdef JDK5</value>
-								</replacement>
-								<replacement>
-									<token>#endif JDK5 */</token>
-									<value>// #endif JDK5</value>
-								</replacement>
-							</replacements>
-						</configuration>
-					</plugin>
-
 					<plugin>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
@@ -548,148 +411,8 @@
 				<module>bonecp-hbnprovider</module>
 			</modules>
 
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.google.code.maven-replacer-plugin</groupId>
-						<artifactId>replacer</artifactId>
-						<configuration>
-							<replacements>
-								<replacement>
-									<token>// #ifdef JDK7</token>
-									<value>/* #ifdef JDK7</value>
-								</replacement>
-								<replacement>
-									<token>java.util.concurrent.LinkedTransferQueue</token>
-									<value>jsr166y.LinkedTransferQueue</value>
-								</replacement>
-								<replacement>
-									<token>java.util.concurrent.TransferQueue</token>
-									<value>jsr166y.TransferQueue</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK7</token>
-									<value>#endif JDK7 */</value>
-								</replacement>
-								<replacement>
-									<token>/* #ifdef JDK6</token>
-									<value>// #ifdef JDK6</value>
-								</replacement>
-								<replacement>
-									<token>#endif JDK6 */</token>
-									<value>// #endif JDK6</value>
-								</replacement>
-								<replacement>
-									<token>/* #ifdef JDK&gt;6</token>
-									<value>// #ifdef JDK&gt;6</value>
-								</replacement>
-								<replacement>
-									<token>#endif JDK&gt;6 */</token>
-									<value>// #endif JDK&gt;6</value>
-								</replacement>
-								<replacement>
-									<token>// #ifdef JDK5</token>
-									<value>/* #ifdef JDK5</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK5</token>
-									<value>#endif JDK5 */</value>
-								</replacement>
-							</replacements>
-						</configuration>
-					</plugin>
-
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<fork>true</fork>
-							<executable>${jdk6home}/bin/javac</executable>
-						</configuration>
-					</plugin>
-
-				</plugins>
-			</build>
 		</profile>
 
-		<profile>
-			<id>JDK7</id>
-
-		<!--	<activation>
-				 <jdk>[1.7,)</jdk> 
-			</activation>
--->
-			<properties>
-				<project.specifier>-jdk7</project.specifier>
-			</properties>
-
-			<modules>
-				<module>bonecp-hbnprovider</module>
-			</modules>
-
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.google.code.maven-replacer-plugin</groupId>
-						<artifactId>replacer</artifactId>
-						<configuration>
-							<replacements>
-								<replacement>
-									<token>/* #ifdef JDK7</token>
-									<value>// #ifdef JDK7</value>
-								</replacement>
-								<replacement>
-									<token>jsr166y.LinkedTransferQueue</token>
-									<value>java.util.concurrent.LinkedTransferQueue</value>
-								</replacement>
-								<replacement>
-									<token>jsr166y.TransferQueue</token>
-									<value>java.util.concurrent.TransferQueue</value>
-								</replacement>
-								<replacement>
-									<value>// #endif JDK7</value>
-									<token>#endif JDK7 */</token>
-								</replacement>
-								<replacement>
-									<token>/* #ifdef JDK&gt;6</token>
-									<value>// #ifdef JDK&gt;6</value>
-								</replacement>
-								<replacement>
-									<token>#endif JDK&gt;6 */</token>
-									<value>// #endif JDK&gt;6</value>
-								</replacement>
-								<replacement>
-									<token>// #ifdef JDK6</token>
-									<value>/* #ifdef JDK6</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK6</token>
-									<value>#endif JDK6 */</value>
-								</replacement>
-								<replacement>
-									<token>// #ifdef JDK5</token>
-									<value>/* #ifdef JDK5</value>
-								</replacement>
-								<replacement>
-									<token>// #endif JDK5</token>
-									<value>#endif JDK5 */</value>
-								</replacement>
-							</replacements>
-						</configuration>
-					</plugin>
-					<plugin>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<fork>true</fork>
-							<executable>${jdk7home}/bin/javac</executable>
-							<excludes>
-								<exclude>**/jsr166y/*.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-
-				</plugins>
-			</build>
-		</profile>
 
 		<profile>
 			<id>release</id>

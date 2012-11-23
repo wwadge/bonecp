@@ -156,12 +156,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		try {
 			return this.multiDataSource.get(new UsernamePassword(username, password)).getConnection();
 		} catch (ExecutionException e) {
-			// #ifdef JDK>6
-			throw new SQLException(e);
-			// #endif JDK>6
-			/* #ifdef JDK5
-			 throw new SQLException(PoolUtil.stringifyException(e));
-			#endif JDK5 */
+			throw PoolUtil.generateSQLException("Unable to obtain connection", e);
 
 		}
 	}
@@ -185,14 +180,13 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 		throw new UnsupportedOperationException("getLoginTimeout is unsupported.");
 	}
 
-	// #ifdef JDK7
-  @Override
+	// #ifdef JDK7 
   public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
     throw new UnsupportedOperationException("getParentLogger is unsupported");
   }
-  // #endif JDK7
+  // #endif JDK7 
 
-  /**
+  /** 
 	 * Sets the log writer for this DataSource object to the given java.io.PrintWriter object.
 	 */
 	public void setLogWriter(PrintWriter out)

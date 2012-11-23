@@ -84,9 +84,6 @@ public abstract class AbstractConnectionStrategy implements ConnectionStrategy,S
 		}
 	}
 
-	// #ifdef JDK>6
-	@Override
-	// #endif JDK>6
 	public Connection getConnection() throws SQLException {
 		long statsObtainTime = preConnection();
 		
