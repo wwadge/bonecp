@@ -136,6 +136,7 @@ public class TestStatementCache {
 		dsb.shutdown();
 		statement.close();
 		con.close();
+		dsb.close();
 		CommonTestUtils.logPass();
 	}
 
@@ -191,7 +192,7 @@ public class TestStatementCache {
 		assertNull(cache.get("test1", new String[]{"1"}));
 		assertNull(cache.get("test1", 1, 1));
 		assertNull(cache.get("test1", 1, 1, 1));
-
+		dsb.close();
 		CommonTestUtils.logPass();
 	}
 	
@@ -240,6 +241,7 @@ public class TestStatementCache {
 		conn.close();
 		dsb.shutdown();
 		
+		dsb.close();
 		
 		CommonTestUtils.logPass();
 	}

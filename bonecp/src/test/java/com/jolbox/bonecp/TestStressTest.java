@@ -59,6 +59,7 @@ public class TestStressTest {
 		config.setReleaseHelperThreads(1);
 		config.setCloseConnectionWatch(true);
 		config.setServiceOrder("LIFO");
+		@SuppressWarnings("resource")
 		final BoneCP pool = new BoneCP(config);
 //		final Random rand = new Random();
 		while (true){
@@ -93,5 +94,6 @@ public class TestStressTest {
 		   System.out.println("Restarting...");
 		}
 //	Thread.sleep(10000);	
+		
 	}
 }

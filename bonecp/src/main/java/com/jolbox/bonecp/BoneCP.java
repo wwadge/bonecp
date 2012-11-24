@@ -66,7 +66,7 @@ public class BoneCP implements Serializable, Closeable {
 	/** Serialization UID */
 	private static final long serialVersionUID = -8386816681977604817L;
 	/** Exception message. */
-	private static final String ERROR_TEST_CONNECTION = "Unable to open a test connection to the given database. JDBC url = %s, username = %s. Terminating connection pool. Original Exception: %s";
+	private static final String ERROR_TEST_CONNECTION = "Unable to open a test connection to the given database. JDBC url = %s, username = %s. Terminating connection pool (set lazyInit to true if you expect to start your database after your app). Original Exception: %s";
 	/** Exception message. */
 	private static final String SHUTDOWN_LOCATION_TRACE = "Attempting to obtain a connection from a pool that has already been shutdown. \nStack trace of location where pool was shutdown follows:\n";
 	/** Exception message. */
@@ -144,6 +144,8 @@ public class BoneCP implements Serializable, Closeable {
 	@VisibleForTesting protected Properties clientInfo;
 	/** If false, we haven't made a dummy driver call first. */
 	private volatile boolean driverInitialized = false;
+	/** Keep track of our jvm version. */
+	private int jvmMajorVersion;
  
 	/**
 	 * Closes off this connection pool.
@@ -308,6 +310,7 @@ public class BoneCP implements Serializable, Closeable {
 	 * @return Connection handle
 	 * @throws SQLException on error
 	 */
+	@SuppressWarnings("resource")
 	protected Connection obtainRawInternalConnection()
 	throws SQLException {
 		Connection result = null;
@@ -344,11 +347,11 @@ public class BoneCP implements Serializable, Closeable {
 
 		if (props != null){
 			result = DriverManager.getConnection(url, props);
-		} else {
+		} else { 
 			result = DriverManager.getConnection(url, username, password);
 		}
 		// #ifdef JDK>6
-		if (this.clientInfo != null){
+		if (this.clientInfo != null && jvmMajorVersion > 5 ){
 			result.setClientInfo(this.clientInfo);
 		}
 		// #endif JDK>6
@@ -362,6 +365,17 @@ public class BoneCP implements Serializable, Closeable {
 	 * @throws SQLException on error
 	 */
 	public BoneCP(BoneCPConfig config) throws SQLException {
+		Class<?> clazz;
+		try {
+			jvmMajorVersion = 5;
+			clazz = Class.forName("java.sql.Connection");
+			clazz.getMethod("createClob"); // since 1.6
+			jvmMajorVersion = 6;
+			clazz.getMethod("getNetworkTimeout"); // since 1.7
+			jvmMajorVersion = 7;
+		} catch (Exception e) {
+			// should never happen
+		}
 		try {
 			this.config = config.clone(); // immutable
 		} catch (CloneNotSupportedException e1) {

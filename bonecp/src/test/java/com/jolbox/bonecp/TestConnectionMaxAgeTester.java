@@ -32,7 +32,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TransferQueue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -83,7 +82,7 @@ public class TestConnectionMaxAgeTester {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testConnectionExpired() throws SQLException{
 		 
-		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		BlockingQueue<ConnectionHandle> mockQueue = createNiceMock(LinkedBlockingQueue.class);
 		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
 		ConnectionHandle mockConnectionExpired = createNiceMock(ConnectionHandle.class);
@@ -147,7 +146,7 @@ public class TestConnectionMaxAgeTester {
 	@SuppressWarnings("unchecked")
 	public void testConnectionNotExpired() throws SQLException{
 		 
-		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		BlockingQueue<ConnectionHandle> mockQueue = createNiceMock(LinkedBlockingQueue.class);
 		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
 		ConnectionHandle mockConnection = createNiceMock(ConnectionHandle.class);
@@ -174,7 +173,7 @@ public class TestConnectionMaxAgeTester {
 	@SuppressWarnings({ "unchecked" })
 	public void testExceptionsCase() throws SQLException{
 		 
-		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		BlockingQueue<ConnectionHandle> mockQueue = createNiceMock(LinkedBlockingQueue.class);
 		expect(mockConnectionPartition.getAvailableConnections()).andReturn(2);
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
 		ConnectionHandle mockConnectionException = createNiceMock(ConnectionHandle.class);
@@ -195,7 +194,7 @@ public class TestConnectionMaxAgeTester {
 	@SuppressWarnings( "unchecked")
 	public void testExceptionsCaseWherePutInPartitionFails() throws SQLException{
 		 
-		TransferQueue<ConnectionHandle> mockQueue = createNiceMock(TransferQueue.class);
+		BlockingQueue<ConnectionHandle> mockQueue = createNiceMock(LinkedBlockingQueue.class);
 		expect(mockConnectionPartition.getAvailableConnections()).andReturn(1);
 		expect(mockConnectionPartition.getFreeConnections()).andReturn(mockQueue).anyTimes();
 		ConnectionHandle mockConnectionException = createNiceMock(ConnectionHandle.class);

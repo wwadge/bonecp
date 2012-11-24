@@ -32,7 +32,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-import java.lang.Thread.State;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -72,7 +71,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
-import com.jolbox.bonecp.hooks.CustomHook;
 
 /**
  * @author wwadge

@@ -115,6 +115,7 @@ public class TestStatementHandle {
 	 * @throws NoSuchMethodException
 	 * @throws NoSuchFieldException
 	 */
+	@SuppressWarnings("resource")
 	@Test
 	public void testRemainingForCoverage() throws SQLException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException{
 		Statement mockStatement = createNiceMock(Statement.class);
@@ -174,6 +175,7 @@ public class TestStatementHandle {
 		testClass.logStatementsEnabled = false;
 		testClass.addBatch("");
 		testClass.clearBatch();
+		
 	}
 	
 	/** temp */
@@ -211,6 +213,7 @@ public class TestStatementHandle {
 
 		StatementHandle handle = new StatementHandle(mockStatement, mockConnection, true);
 		handle.execute("test");
+		handle.close();
 		assertEquals(1, hook.queryTimeout);
 	}
 

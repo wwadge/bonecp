@@ -23,6 +23,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -35,6 +38,7 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.jolbox.bonecp.CommonTestUtils;
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
@@ -42,7 +46,7 @@ import com.jolbox.bonecp.hooks.ConnectionHook;
  * @author wwadge
  *
  */
-public class TestBoneCPConfig {
+public class TestBoneCPConfig { 
 	/** Config handle. */
 	private BoneCPConfig config;
 	
@@ -420,8 +424,12 @@ public class TestBoneCPConfig {
 	public void testLoadPropertyFileInvalid() throws CloneNotSupportedException, IOException{
 		BoneCPConfig config = new BoneCPConfig();
 		BoneCPConfig clone = config.clone();
-		
-		config.loadProperties("invalid-property-file.xml");
+		File f = File.createTempFile("bonecp-test", ".xml");
+		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+		bw.write("This file is meant to test invalid xml file parsing.");
+		config.loadProperties(f.getAbsolutePath()); // "invalid-property-file.xml");
+		bw.close();
+		f.delete();
 		assertTrue(config.hasSameConfiguration(clone));
 	}
 

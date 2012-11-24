@@ -1702,6 +1702,12 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			logger.warn("Queue service order is not set to FIFO or LIFO. Defaulting to FIFO.");
 			this.serviceOrder = "FIFO";
 		}
+		
+		if (this.logStatementsEnabled && !logger.isDebugEnabled()){
+			logger.warn("LogStatementsEnabled is set to true, but log4j level is not set at DEBUG. Disabling statement logging.");
+			logStatementsEnabled = false;
+			
+		}
 
 	}
 

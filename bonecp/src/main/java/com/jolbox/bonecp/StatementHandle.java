@@ -908,7 +908,6 @@ public class StatementHandle implements Statement{
 	}
 
 	// #ifdef JDK>6
-	@Override
 	public void setPoolable(boolean poolable)
 	throws SQLException {
 		checkClosed();
@@ -921,7 +920,6 @@ public class StatementHandle implements Statement{
 
 	}
 	
-	@Override
 	public boolean isWrapperFor(Class<?> iface)
 	throws SQLException {
 		boolean result = false;
@@ -934,7 +932,6 @@ public class StatementHandle implements Statement{
 		return result;
 	}
 
-	@Override
 	public <T> T unwrap(Class<T> iface)
 	throws SQLException {
 		T result = null;
@@ -949,7 +946,6 @@ public class StatementHandle implements Statement{
 
 	}
 
-	@Override
 	public boolean isPoolable()
 	throws SQLException {
 		boolean result = false;
@@ -966,12 +962,10 @@ public class StatementHandle implements Statement{
   // #endif JDK>6
 
 	// #ifdef JDK7
-  @Override
   public void closeOnCompletion() throws SQLException {
     this.internalStatement.closeOnCompletion();
   }
 
-  @Override
   public boolean isCloseOnCompletion() throws SQLException {
     return this.internalStatement.isCloseOnCompletion();
   }

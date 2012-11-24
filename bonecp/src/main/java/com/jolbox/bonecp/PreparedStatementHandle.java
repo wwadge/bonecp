@@ -272,7 +272,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 	}
 
 	// #ifdef JDK>6
-	@Override
 	public void setBinaryStream(int parameterIndex, InputStream x)
 	throws SQLException {
 		checkClosed();
@@ -288,7 +287,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setBinaryStream(int parameterIndex, InputStream x, long length)
 	throws SQLException {
 		checkClosed();
@@ -304,7 +302,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream)
 	throws SQLException {
 		checkClosed();
@@ -320,7 +317,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setAsciiStream(int parameterIndex, InputStream x, long length)
 	throws SQLException {
 		checkClosed();
@@ -336,7 +332,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setClob(int parameterIndex, Reader reader) throws SQLException {
 		checkClosed();
 		try {
@@ -351,7 +346,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
 		checkClosed();
 		try {
@@ -366,7 +360,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
 	throws SQLException {
 		checkClosed();
@@ -382,7 +375,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setClob(int parameterIndex, Reader reader, long length)
 	throws SQLException {
 		checkClosed();
@@ -399,7 +391,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setNCharacterStream(int parameterIndex, Reader value)
 	throws SQLException {
 		checkClosed();
@@ -416,7 +407,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setNCharacterStream(int parameterIndex, Reader value,
 			long length) throws SQLException {
 		checkClosed();
@@ -432,7 +422,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
 		checkClosed();
 		try {
@@ -447,7 +436,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
 		checkClosed();
 		try {
@@ -462,7 +450,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setNClob(int parameterIndex, Reader reader, long length)
 	throws SQLException {
 		checkClosed();
@@ -478,7 +465,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setNString(int parameterIndex, String value)
 	throws SQLException {
 		checkClosed();
@@ -494,7 +480,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setAsciiStream(int parameterIndex, InputStream x)
 	throws SQLException {
 		checkClosed();
@@ -509,7 +494,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 		}
 	}
 
-	@Override
 	public void setCharacterStream(int parameterIndex, Reader reader,
 			long length) throws SQLException {
 		checkClosed();
@@ -525,7 +509,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream, long length)
 	throws SQLException {
 		checkClosed();
@@ -541,7 +524,6 @@ public class PreparedStatementHandle extends StatementHandle implements
 
 	}
 
-	@Override
 	public void setCharacterStream(int parameterIndex, Reader reader)
 	throws SQLException {
 		checkClosed();

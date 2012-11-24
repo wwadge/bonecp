@@ -309,7 +309,7 @@ public class ConnectionHandle implements Connection{
 	private ConnectionHandle(){
 		// for static factory.
 	}
-
+ 
 	/** Sends any configured SQL init statement. 
 	 * @throws SQLException on error
 	 */
@@ -534,27 +534,22 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		return this.connection.isWrapperFor(iface);
 	}
 
-	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return this.connection.unwrap(iface);
 	}
 
-	@Override
 	public void setClientInfo(Properties properties) throws SQLClientInfoException {
 		this.connection.setClientInfo(properties);
 	}
 
-	@Override
 	public void setClientInfo(String name, String value) throws SQLClientInfoException {
 		this.connection.setClientInfo(name, value);
 	}
 
-	@Override
 	public Struct createStruct(String typeName, Object[] attributes)
 			throws SQLException {
 		Struct result = null;
@@ -567,7 +562,6 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-	@Override
 	public Array createArrayOf(String typeName, Object[] elements)
 			throws SQLException {
 		Array result = null;
@@ -580,7 +574,7 @@ public class ConnectionHandle implements Connection{
 
 		return result;
 	}
-	@Override
+
 	public Blob createBlob() throws SQLException {
 		Blob result = null;
 		checkClosed();
@@ -592,7 +586,6 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
-	@Override
 	public Clob createClob() throws SQLException {
 		Clob result = null;
 		checkClosed();
@@ -630,27 +623,22 @@ public class ConnectionHandle implements Connection{
 	// #endif JDK>6
 
 	// #ifdef JDK7
-	@Override
 	public void setSchema(String schema) throws SQLException {
 		this.connection.setSchema(schema);
 	}
 
-	@Override
 	public String getSchema() throws SQLException {
 		return this.connection.getSchema();
 	}
 
-	@Override
 	public void abort(Executor executor) throws SQLException {
 		this.connection.abort(executor);
 	}
 
-	@Override
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 		this.connection.setNetworkTimeout(executor, milliseconds);
 	}
 
-	@Override
 	public int getNetworkTimeout() throws SQLException {
 		return this.connection.getNetworkTimeout();
 	}

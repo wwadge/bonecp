@@ -219,9 +219,6 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 
 
 
-	// #ifdef JDK>6
-	@Override
-	// #endif JDK>6
 	public void terminateAllConnections() {
 		for (ConnectionHandle conn : this.finalizableRefs.keySet()){
 			this.pool.destroyConnection(conn);

@@ -168,6 +168,7 @@ public class TestMemorizeTransactionProxy {
 			// should throw an exception
 		}
 		mockDriver.disable();
+		pool.close();
 	}
 
 	/** Temp. */
@@ -259,6 +260,7 @@ public class TestMemorizeTransactionProxy {
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockCallableStatement2, mockStatement, mockStatement2);
 
 		mockDriver.disable();
+		pool.close();
 	}
 
 
@@ -309,6 +311,8 @@ public class TestMemorizeTransactionProxy {
 
 		verify(mockConnection, mockPreparedStatement);
 		mockDriver.disable();
+		pool.close();
+
 
 	}
 
@@ -388,6 +392,8 @@ public class TestMemorizeTransactionProxy {
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockPreparedStatement3);
 
 		mockDriver.disable();
+		pool.close();
+
 	}
 
 
@@ -464,6 +470,8 @@ public class TestMemorizeTransactionProxy {
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 
 		mockDriver.disable();
+		pool.close();
+
 	}
 
 	/** Interrupted
@@ -554,6 +562,8 @@ public class TestMemorizeTransactionProxy {
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 
 		mockDriver.disable();
+		pool.close();
+
 	}
 
 	/** Test hooks.
@@ -628,5 +638,7 @@ public class TestMemorizeTransactionProxy {
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2);
 
 		mockDriver.disable();
+		pool.close();
+
 	}
 }

@@ -16,16 +16,26 @@
 package com.jolbox.bonecp;
 
 
-import java.lang.Thread.State;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+import static org.easymock.EasyMock.anyInt;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.aryEq;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
-/* #ifdef JDK6
-import java.sql.SQLClientInfoException;
-#endif JDK6 */
-
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -36,11 +46,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import com.google.common.base.FinalizableReferenceQueue;
-import com.jolbox.bonecp.hooks.AcquireFailConfig;
-import com.jolbox.bonecp.hooks.ConnectionHook;
-import com.jolbox.bonecp.hooks.CoverageHook;
-import com.jolbox.bonecp.hooks.CustomHook;
+
 import junit.framework.Assert;
 
 import org.easymock.EasyMock;
@@ -48,10 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.*;
+import com.google.common.base.FinalizableReferenceQueue;
 
 /**
  * Mock unit testing for Connection Handle class.
