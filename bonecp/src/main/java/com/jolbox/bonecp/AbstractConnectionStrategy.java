@@ -106,4 +106,6 @@ public abstract class AbstractConnectionStrategy implements ConnectionStrategy,S
 		// usually overridden
 		return null; 
 	}
+	
+	
 }

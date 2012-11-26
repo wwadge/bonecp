@@ -40,4 +40,5 @@ public interface ConnectionStrategy {
 	/** Destroys all connections using this strategy.
 	 */
 	void terminateAllConnections();
+
 }

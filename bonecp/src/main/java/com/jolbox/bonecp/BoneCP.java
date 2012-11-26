@@ -225,7 +225,7 @@ public class BoneCP implements Serializable, Closeable {
 	protected void postDestroyConnection(ConnectionHandle handle){
 		ConnectionPartition partition = handle.getOriginatingPartition();
 
-		if (this.finalizableRefQueue != null){ //safety
+		if (this.finalizableRefQueue != null && handle.getInternalConnection() != null){ //safety
 			this.finalizableRefs.remove(handle.getInternalConnection());
 			//			assert o != null : "Did not manage to remove connection from finalizable ref queue";
 		}
@@ -435,7 +435,7 @@ public class BoneCP implements Serializable, Closeable {
 		this.closeConnectionWatch = config.isCloseConnectionWatch();
 		this.cachedPoolStrategy = config.getPoolStrategy() != null && config.getPoolStrategy().equalsIgnoreCase("CACHED");
 		if (this.cachedPoolStrategy){
-			this.connectionStrategy = CachedConnectionStrategy.getInstance(this, new DefaultConnectionStrategy(this));
+			this.connectionStrategy = new CachedConnectionStrategy(this, new DefaultConnectionStrategy(this));
 		} else {
 			this.connectionStrategy = new DefaultConnectionStrategy(this);
 		}

@@ -614,7 +614,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setReleaseHelperThreads(int releaseHelperThreads) {
 		logger.warn("releaseHelperThreads has been deprecated -- it tends to slow down your application more.");
-		//		this.releaseHelperThreads = releaseHelperThreads;
+		this.releaseHelperThreads = releaseHelperThreads;
 	}
 
 	/** {@inheritDoc}
@@ -1133,7 +1133,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	@Deprecated
 	public void setStatementReleaseHelperThreads(int statementReleaseHelperThreads) {
 		logger.warn("statementReleaseHelperThreads has been deprecated -- it tends to slow down your application more.");
-		//	this.statementReleaseHelperThreads = statementReleaseHelperThreads;
+		this.statementReleaseHelperThreads = statementReleaseHelperThreads;
 	}
 
 
@@ -1635,7 +1635,9 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.acquireRetryDelayInMs = 1000;
 		}
 
-		if (!this.externalAuth && this.datasourceBean == null && this.driverProperties == null 
+		if (!this.externalAuth && 
+				(this.datasourceBean == null) && 
+				this.driverProperties == null 
 				&& (this.jdbcUrl == null || this.jdbcUrl.trim().equals(""))){
 			logger.warn("JDBC url was not set in config!");
 		}
@@ -1990,7 +1992,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		this.detectUnclosedStatements = detectUnclosedStatements;
 	}
 
-	/** If set, pool will call this for every new connection that's created.
+	/** If set, pool will call this for every new connection that's created. JDK 1.6 and higher only.
 	 * @param properties Properties to set. 
 	 *  
 	 */

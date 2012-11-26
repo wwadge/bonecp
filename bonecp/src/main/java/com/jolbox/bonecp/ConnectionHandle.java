@@ -34,6 +34,7 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import com.jolbox.bonecp.hooks.ConnectionHook;
@@ -273,6 +275,7 @@ public class ConnectionHandle implements Connection{
 		handle.callableStatementCache = this.callableStatementCache;
 		handle.debugHandle  = this.debugHandle;
 		handle.connectionHook = this.connectionHook;
+		handle.inUseInThreadLocalContext = this.inUseInThreadLocalContext;
 		this.connection = null;
 		return handle;
 	}
@@ -452,6 +455,7 @@ public class ConnectionHandle implements Connection{
 					pool.getFinalizableRefs().remove(this.connection);
 				}
 
+				
 				ConnectionHandle handle = this.recreateConnectionHandle();
 				this.pool.releaseConnection(handle);
 
@@ -1621,6 +1625,21 @@ public class ConnectionHandle implements Connection{
 	 */
 	public String getUrl() {
 		return this.url;
+	}
+	
+	public String toString(){
+		
+		long timeMillis = System.currentTimeMillis();
+		
+		
+		return Objects.toStringHelper(this)
+			.add("url", this.pool.getConfig().getJdbcUrl())
+			.add("user", this.pool.getConfig().getUsername())
+			.add("debugHandle", this.debugHandle)
+			.add("lastResetAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastResetInMs))
+			.add("lastUsedAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastUsedInMs))
+			.add("creationTimeAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionCreationTimeInMs))
+			.toString();
 	}
 
 

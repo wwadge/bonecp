@@ -128,7 +128,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	public boolean execute() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -164,7 +164,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	public ResultSet executeQuery() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();
@@ -195,7 +195,7 @@ public class PreparedStatementHandle extends StatementHandle implements
 	public int executeUpdate() throws SQLException {
 		checkClosed();
 		try {
-			if (this.logStatementsEnabled && logger.isDebugEnabled()){
+			if (this.logStatementsEnabled){
 				logger.debug(PoolUtil.fillLogParams(this.sql, this.logParams));
 			}
 			long queryStartTime = queryTimerStart();

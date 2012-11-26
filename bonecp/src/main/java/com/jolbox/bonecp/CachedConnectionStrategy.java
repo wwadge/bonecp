@@ -61,78 +61,16 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	
 	
 	/**
-	 * Singleton.
+	 * @param defaultConnectionStrategy 
+	 * @param boneCP 
 	 */
-	private CachedConnectionStrategy(){ /* singleton */  }
-	
-	/**  Singleton pattern. */
-	private static class SingletonHolder {
-		 /** Singleton pattern. */
-	     @SuppressWarnings("synthetic-access")
-		public static final CachedConnectionStrategy INSTANCE = new CachedConnectionStrategy();
-	}
-
-	 
-	/** Singleton pattern.
-	 * @param pool
-	 * @param fallbackStrategy
-	 * @return CachedConnectionStrategy singleton instance
-	 */
-	public static ConnectionStrategy getInstance(BoneCP pool, ConnectionStrategy fallbackStrategy){
-		CachedConnectionStrategy cs = SingletonHolder.INSTANCE;
-		 cs.pool = pool;
-		 cs.fallbackStrategy = fallbackStrategy; 
-		 return cs;
+	public CachedConnectionStrategy(BoneCP pool, ConnectionStrategy fallbackStrategy){ 
+		 this.pool = pool;
+		 this.fallbackStrategy = fallbackStrategy; 
 	}
 	
-	/** Connections are stored here. No need for static here, this class is a singleton. */
-	protected ThreadLocal<ConnectionHandle> tlConnections = new ThreadLocal<ConnectionHandle>() {
- 
-		@Override
-		protected ConnectionHandle initialValue() {
-			ConnectionHandle result;
-			try {
-				// grab a connection from any other configured fallback strategy
-				result = pollFallbackConnection();
-				
-				if (result == null){
-					// oh-huh? either we are racing while resizing the pool or else no of threads > no of connections. Let's wait a bit 
-					// and try again one last time
-					for (int i=0; i < 4*3; i++){	// there is a slight race with the pool watch creation thread so spin for a bit
-																// no big deal if it keeps failing, we just switch to default connection strategy
-						result = pollFallbackConnection();
-						if (result != null){
-							break;
-						}
-						Uninterruptibles.sleepUninterruptibly(250, TimeUnit.MILLISECONDS);
-					}
-					
-				}
-			} catch (SQLException e) {
-				result = null; 
-			}
-			return result;
-		}
-
-
-
-		@Override
-		public ConnectionHandle get() {
-			ConnectionHandle result = super.get();
-			// have we got one that's cached and unused? Mark it as in use. 
-			if (result == null || !result.inUseInThreadLocalContext.compareAndSet(false, true)){
-				try {
-					// ... otherwise grab a new connection 
-					result = pollFallbackConnection();
-				} catch (SQLException e) {
-					result = null;
-				}
-			} 
-
-			return result;
-		}
-	};
-
+	/** Connections are stored here. */
+	protected ThreadLocal<ConnectionHandle> tlConnections = new CachedConnectionStrategyThreadLocal<ConnectionHandle>(this); 
 	/** Try to obtain a connection from the fallback strategy.
 	 * @return handle
 	 * @throws SQLException
@@ -199,7 +137,7 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	protected Connection getConnectionInternal() throws SQLException {
 		// try to get the connection from thread local storage.
 		ConnectionHandle result = this.tlConnections.get();
-		// we should always be successfull. If not, it means we have more threads asking
+		// we should always be successful. If not, it means we have more threads asking
 		// us for a connection than we've got available. This is not supported so we flip
 		// back our strategy.
 		if (result == null){
@@ -227,5 +165,9 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 		
 		this.fallbackStrategy.terminateAllConnections();
 	}
+
+
+
+	
 	
 }

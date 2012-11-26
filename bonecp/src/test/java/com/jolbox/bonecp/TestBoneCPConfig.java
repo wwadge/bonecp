@@ -27,10 +27,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -218,8 +222,11 @@ public class TestBoneCPConfig {
 		config.setIdleConnectionTestPeriodInMinutes(1);
 		config.setConnectionTimeoutInMs(1000);
 		config.setCloseConnectionWatchTimeoutInMs(1000);
+		Properties clientInfoProperties = new Properties();
+		config.setClientInfo(clientInfoProperties );
 		
 		config.setExternalAuth(true);
+		assertEquals(clientInfoProperties, config.getClientInfo());
 		assertEquals(true, config.isExternalAuth());
 		assertEquals("abc", config.getInitSQL());
 		assertEquals(hook, config.getConnectionHook());
@@ -240,7 +247,7 @@ public class TestBoneCPConfig {
 		assertEquals(2, config.getStatementCacheSize());
 		assertEquals(2, config.getPreparedStatementsCacheSize());
 		assertEquals(2, config.getPreparedStatementCacheSize());
-		assertEquals(0, config.getReleaseHelperThreads());
+		assertEquals(3, config.getReleaseHelperThreads());
 		assertEquals(5, config.getMaxConnectionsPerPartition());
 		assertEquals(5, config.getMinConnectionsPerPartition());
 		assertEquals(6, config.getAcquireIncrement());
@@ -257,10 +264,11 @@ public class TestBoneCPConfig {
 	}
 	/**
 	 * Config file scrubbing
+	 * @throws CloneNotSupportedException 
 	 */
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testConfigSanitize(){
+	public void testConfigSanitize() throws CloneNotSupportedException{
 		config.setMaxConnectionsPerPartition(-1);
 		config.setMinConnectionsPerPartition(-1);
 		config.setPartitionCount(-1);
@@ -296,6 +304,41 @@ public class TestBoneCPConfig {
 		config.setServiceOrder(null);
 		config.sanitize();
 		assertEquals("FIFO", config.getServiceOrder());
+
+		config.setServiceOrder("FOO");
+		config.sanitize();
+	
+
+		config.setStatementReleaseHelperThreads(-1);
+		config.sanitize();
+		assertEquals(0, config.getStatementReleaseHelperThreads());
+
+
+		config.setPoolStrategy(null);
+		config.sanitize();
+		assertEquals("DEFAULT", config.getPoolStrategy());
+
+		config.setPoolStrategy("UNKNOWN");
+		config.sanitize();
+		assertEquals("DEFAULT", config.getPoolStrategy());
+
+		config.setPoolStrategy("CACHED");
+		config.sanitize();
+		assertEquals("CACHED", config.getPoolStrategy());
+		
+		config.setReleaseHelperThreads(-1);
+		config.sanitize();
+		assertEquals(0, config.getReleaseHelperThreads());
+
+		config.setPoolAvailabilityThreshold(-1);
+		config.sanitize();
+		assertEquals(20, config.getPoolAvailabilityThreshold());
+
+
+		config.setPoolAvailabilityThreshold(120);
+		config.sanitize();
+		assertEquals(20, config.getPoolAvailabilityThreshold());
+
 		assertEquals(config.getMinConnectionsPerPartition(), config.getMaxConnectionsPerPartition());
 		assertEquals(20, config.getPoolAvailabilityThreshold());
 		
@@ -306,11 +349,19 @@ public class TestBoneCPConfig {
 		config.setDefaultTransactionIsolation("READ_COMMITTED");
 		config.sanitize();
 		assertEquals(Connection.TRANSACTION_READ_COMMITTED, config.getDefaultTransactionIsolationValue());
-		
+
+		config.setDefaultTransactionIsolation("READ COMMITTED");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_READ_COMMITTED, config.getDefaultTransactionIsolationValue());
+
 		config.setDefaultTransactionIsolation("READ_UNCOMMITTED");
 		config.sanitize();
 		assertEquals(Connection.TRANSACTION_READ_UNCOMMITTED, config.getDefaultTransactionIsolationValue());
-		
+
+		config.setDefaultTransactionIsolation("READ UNCOMMITTED");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_READ_UNCOMMITTED, config.getDefaultTransactionIsolationValue());
+
 		config.setDefaultTransactionIsolation("SERIALIZABLE");
 		config.sanitize();
 		assertEquals(Connection.TRANSACTION_SERIALIZABLE, config.getDefaultTransactionIsolationValue());
@@ -319,6 +370,10 @@ public class TestBoneCPConfig {
 		config.sanitize();
 		assertEquals(Connection.TRANSACTION_REPEATABLE_READ, config.getDefaultTransactionIsolationValue());
 		
+		config.setDefaultTransactionIsolation("REPEATABLE READ");
+		config.sanitize();
+		assertEquals(Connection.TRANSACTION_REPEATABLE_READ, config.getDefaultTransactionIsolationValue());
+
 		config.setDefaultTransactionIsolation("BAD_VALUE");
 		config.sanitize();
 		assertEquals(-1, config.getDefaultTransactionIsolationValue());
@@ -330,6 +385,21 @@ public class TestBoneCPConfig {
 		config.setJdbcUrl("");
 		config.setPassword(null);
 		config.sanitize();
+
+		BoneCPConfig clone = config.clone();
+		config.setJdbcUrl(null);
+		config.sanitize();
+
+		config.setExternalAuth(true);
+		config.sanitize();
+
+		config.setExternalAuth(false);
+		config.setDatasourceBean(new BoneCPDataSource());
+		config.sanitize();
+		
+		clone.setUsername("");
+		clone.sanitize();
+
 	}
 	
 	/**
@@ -337,6 +407,8 @@ public class TestBoneCPConfig {
 	 */
 	@Test
 	public void testDriverPropertiesConfigSanitize(){
+		BoneCPConfig config = new BoneCPConfig();
+		
 		config.setDatasourceBean(null);
 		config.setUsername("foo");
 		config.setPassword("bar");
@@ -427,7 +499,9 @@ public class TestBoneCPConfig {
 		File f = File.createTempFile("bonecp-test", ".xml");
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 		bw.write("This file is meant to test invalid xml file parsing.");
-		config.loadProperties(f.getAbsolutePath()); // "invalid-property-file.xml");
+		config.setConfigFile(f.getAbsolutePath());
+//		config.loadProperties(); // "invalid-property-file.xml");
+		config.sanitize(); // calls loadProperties eventually
 		bw.close();
 		f.delete();
 		assertTrue(config.hasSameConfiguration(clone));
