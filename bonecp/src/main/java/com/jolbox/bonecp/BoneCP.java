@@ -741,7 +741,7 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	public int getTotalLeased(){
 		int total=0;
-		for (int i=0; i < this.partitionCount; i++){
+		for (int i=0; i < this.partitionCount && this.partitions[i] != null; i++){
 			total+=this.partitions[i].getCreatedConnections()-this.partitions[i].getAvailableConnections();
 		}
 		return total;
@@ -753,7 +753,7 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	public int getTotalFree(){
 		int total=0;
-		for (int i=0; i < this.partitionCount; i++){
+		for (int i=0; i < this.partitionCount && this.partitions[i] != null ; i++){
 			total+=this.partitions[i].getAvailableConnections();
 		}
 		return total;
@@ -766,7 +766,7 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	public int getTotalCreatedConnections(){
 		int total=0;
-		for (int i=0; i < this.partitionCount; i++){
+		for (int i=0; i < this.partitionCount && this.partitions[i] != null; i++){
 			total+=this.partitions[i].getCreatedConnections();
 		}
 		return total;
