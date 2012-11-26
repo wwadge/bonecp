@@ -209,6 +209,7 @@
 		<guava.version>13.0.1</guava.version>
 		<hibernate.version>4.1.7.Final</hibernate.version>
 		<spring.version>3.2.0.M2</spring.version>
+		  <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
 	</properties>
 
 	<prerequisites>
@@ -221,11 +222,14 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.5.1</version>
+					<version>3.0</version>
 					<configuration>
 						<compilerId>javac</compilerId>
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.target}</target>
+  <compilerArguments>
+            <endorseddirs>${endorsed.dir}</endorseddirs>
+        </compilerArguments>
 					</configuration>
 				</plugin>
 

@@ -62,6 +62,8 @@ public class CommonTestUtils {
 	/** Config file handle. */
 	private static BoneCPConfig config = new BoneCPConfig();
 
+	public static int jvmMajorVersion;
+
 	static{
 		instanceMap = new HashMap<Class<?>, Object>();
 		instanceMap.put(int.class, 1);
@@ -76,6 +78,18 @@ public class CommonTestUtils {
 		instanceMap.put(String[].class, new String[]{"test","bar"});
 		instanceMap.put(String.class, "test");
 
+		Class<?> clazz;
+		try {
+			jvmMajorVersion = 5;
+			clazz = Class.forName("java.sql.Connection");
+			clazz.getMethod("createClob"); // since 1.6
+			jvmMajorVersion = 6;
+			clazz.getMethod("getNetworkTimeout"); // since 1.7
+			jvmMajorVersion = 7;
+		} catch (Exception e) {
+			// should never happen
+		}
+		
 
 	}
 	
@@ -169,7 +183,16 @@ public class CommonTestUtils {
 		if (!mockClass.equals(mockConnection)){
 			replay(mockConnection); 
 		}
-		method.invoke(testClass, args);
+		try{ 
+			method.invoke(testClass, args);
+		} catch (InvocationTargetException e){
+			if (e.getCause() instanceof NoSuchMethodError){
+				// do nothing, we must be running on an older jdk
+				reset(mockClass, mockConnection);
+				return;
+			} 
+			throw e;
+		}
 		try{
 			method.invoke(testClass, args); // and repeat the test with the fake exception trigger
 			fail("Should have thrown an exception");

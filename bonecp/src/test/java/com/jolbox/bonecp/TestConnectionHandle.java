@@ -157,6 +157,14 @@ public class TestConnectionHandle {
 		skipTests.add("recreateConnectionHandle");
 		skipTests.add("fillConnectionFields");
 		skipTests.add("createConnectionHandle");
+		if (CommonTestUtils.jvmMajorVersion < 7){
+			skipTests.add("getNetworkTimeout");
+			skipTests.add("setNetworkTimeout");
+			skipTests.add("getSchema");
+			skipTests.add("setSchema");
+			skipTests.add("abort");
+
+		}
 		
 		skipTests.add("sendInitSQL");
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
