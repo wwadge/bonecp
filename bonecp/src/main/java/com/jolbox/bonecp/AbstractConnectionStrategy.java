@@ -107,5 +107,12 @@ public abstract class AbstractConnectionStrategy implements ConnectionStrategy,S
 		return null; 
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.ConnectionStrategy#cleanupConnection(com.jolbox.bonecp.ConnectionHandle)
+	 */
+	public void cleanupConnection(ConnectionHandle oldHandle,
+			ConnectionHandle newHandle) {
+		// do nothing
+	}
 	
 }

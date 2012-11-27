@@ -19,9 +19,9 @@ package com.jolbox.bonecp;
 import java.lang.ref.Reference;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.FinalizableWeakReference;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 /** A connection strategy that is optimized to store/retrieve the connection inside a thread
  * local variable. This makes getting a connection in a managed thread environment such as Tomcat
@@ -51,14 +50,16 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	/** Just to give out a warning once. */
 	private volatile AtomicBoolean warnApp = new AtomicBoolean();
 	/** Keep track of connections tied to thread. */
-	final Map<ConnectionHandle, Reference<Thread>> finalizableRefs = new ConcurrentHashMap<ConnectionHandle, Reference<Thread>>();
+	final protected Map<ConnectionHandle, Reference<Thread>> threadFinalizableRefs = new ConcurrentHashMap<ConnectionHandle, Reference<Thread>>();
 	/** Keep track of connections tied to thread. */
 	private FinalizableReferenceQueue finalizableRefQueue = new FinalizableReferenceQueue();
 	/** Obtain connections using this fallback strategy at first (or if this strategy cannot
 	 * succeed.
 	 */
 	private ConnectionStrategy fallbackStrategy;
-	
+	 
+	/** Connections are stored here. */
+	protected CachedConnectionStrategyThreadLocal<SimpleEntry<ConnectionHandle, Boolean>> tlConnections;
 	
 	/**
 	 * @param defaultConnectionStrategy 
@@ -67,23 +68,9 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	public CachedConnectionStrategy(BoneCP pool, ConnectionStrategy fallbackStrategy){ 
 		 this.pool = pool;
 		 this.fallbackStrategy = fallbackStrategy; 
+		 tlConnections = new CachedConnectionStrategyThreadLocal<SimpleEntry<ConnectionHandle, Boolean>>(this, this.fallbackStrategy); 
 	}
 	
-	/** Connections are stored here. */
-	protected ThreadLocal<ConnectionHandle> tlConnections = new CachedConnectionStrategyThreadLocal<ConnectionHandle>(this); 
-	/** Try to obtain a connection from the fallback strategy.
-	 * @return handle
-	 * @throws SQLException
-	 */
-	ConnectionHandle pollFallbackConnection() throws SQLException{
-		ConnectionHandle result = (ConnectionHandle) this.fallbackStrategy.pollConnection();
-		// if we were successfull remember this connection to be able to shutdown cleanly.
-		if (result != null){
-			threadWatch(result);
-		}
-		
-		return result;
-	}
 	
 	
 	
@@ -92,43 +79,43 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	 * the strategy mode has already been flipped prior to calling this routine.
 	 * Called whenever our no of connection requests > no of threads. 
 	 */
-	private synchronized void stealExistingAllocations(){
+	protected synchronized void stealExistingAllocations(){
 		
-		for (ConnectionHandle handle: this.finalizableRefs.keySet()){
+		for (ConnectionHandle handle: this.threadFinalizableRefs.keySet()){
 			// if they're not in use, pretend they are in use now and close them off.
 			// this method assumes that the strategy has been flipped back to non-caching mode
 			// prior to this method invocation.
-			if (handle.inUseInThreadLocalContext.compareAndSet(false, true)){
+			if (handle.logicallyClosed.compareAndSet(true, false)){ 
 				try {
 					this.pool.releaseConnection(handle);
 				} catch (SQLException e) {
-					e.printStackTrace();
+					logger.error("Error releasing connection", e);
 				}
 			}
 		}
 		if (this.warnApp.compareAndSet(false, true)){ // only issue warning once.
 			logger.warn("Cached strategy chosen, but more threads are requesting a connection than are configured. Switching permanently to default strategy.");
 		}
-		this.finalizableRefs.clear();
+		this.threadFinalizableRefs.clear();
 		
 	}
 	
 	/** Keep track of this handle tied to which thread so that if the thread is terminated
 	 * we can reclaim our connection handle.
-	 * @param handle connection handle to track.
+	 * @param c connection handle to track.
 	 */
-	private void threadWatch(final ConnectionHandle handle) {
-		this.finalizableRefs.put(handle, new FinalizableWeakReference<Thread>(Thread.currentThread(), this.finalizableRefQueue) {
+	protected void threadWatch(final ConnectionHandle c) {
+		this.threadFinalizableRefs.put(c, new FinalizableWeakReference<Thread>(Thread.currentThread(), this.finalizableRefQueue) {
 			public void finalizeReferent() {
 					try {
 						if (!CachedConnectionStrategy.this.pool.poolShuttingDown){
 							logger.debug("Monitored thread is dead, closing off allocated connection.");
 						}
-						handle.close();
+						c.close();
 					} catch (SQLException e) {
 						e.printStackTrace();
 					}
-					CachedConnectionStrategy.this.finalizableRefs.remove(handle);
+					CachedConnectionStrategy.this.threadFinalizableRefs.remove(c);
 			}
 		});
 	}
@@ -136,7 +123,7 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	@Override
 	protected Connection getConnectionInternal() throws SQLException {
 		// try to get the connection from thread local storage.
-		ConnectionHandle result = this.tlConnections.get();
+		SimpleEntry<ConnectionHandle, Boolean> result = this.tlConnections.get();
 		// we should always be successful. If not, it means we have more threads asking
 		// us for a connection than we've got available. This is not supported so we flip
 		// back our strategy.
@@ -145,9 +132,10 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 			this.pool.connectionStrategy = this.fallbackStrategy;
 			stealExistingAllocations();
 			// get a connection as if under our fallback strategy now.
-			result = (ConnectionHandle) this.pool.connectionStrategy.getConnection();
+			return (ConnectionHandle) this.pool.connectionStrategy.getConnection();
 		}
-		return result;
+		
+		return result.getKey();
 	}
 
 	@Override
@@ -158,12 +146,21 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 
 
 	public void terminateAllConnections() {
-		for (ConnectionHandle conn : this.finalizableRefs.keySet()){
+		for (ConnectionHandle conn : this.threadFinalizableRefs.keySet()){
 			this.pool.destroyConnection(conn);
 		}
-		this.finalizableRefs.clear();
+		this.threadFinalizableRefs.clear();
 		
 		this.fallbackStrategy.terminateAllConnections();
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.jolbox.bonecp.AbstractConnectionStrategy#cleanupConnection(com.jolbox.bonecp.ConnectionHandle)
+	 */
+	@Override
+	public void cleanupConnection(ConnectionHandle oldHandle, ConnectionHandle newHandle) {
+		this.threadFinalizableRefs.remove(oldHandle);
+		this.threadWatch(newHandle);
 	}
 
 

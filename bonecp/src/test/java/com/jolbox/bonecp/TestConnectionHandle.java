@@ -400,6 +400,14 @@ public class TestConnectionHandle {
 		}
 	}
 
+	@Test 
+	public void testToString(){
+		expect(mockPool.getConfig()).andReturn(new BoneCPConfig()).anyTimes();
+		replay(mockPool);
+		assertNotNull(this.testClass.toString());
+	}
+
+	
 	/** Test renewal of connection.
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException

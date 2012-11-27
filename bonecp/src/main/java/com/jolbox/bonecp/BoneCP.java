@@ -25,6 +25,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -666,11 +667,9 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	protected void putConnectionBackInPartition(ConnectionHandle connectionHandle) throws SQLException {
 
-		if (this.cachedPoolStrategy && connectionHandle.inUseInThreadLocalContext.get()){
-			// this might fail if we have a thread that takes up more than one thread
-			// (we only track one)
-			connectionHandle.inUseInThreadLocalContext.set(false);
-			((CachedConnectionStrategy)this.connectionStrategy).tlConnections.set(connectionHandle);
+		if (this.cachedPoolStrategy && ((CachedConnectionStrategy)this.connectionStrategy).tlConnections.dumbGet().getValue()){
+			connectionHandle.logicallyClosed.set(true);
+			((CachedConnectionStrategy)this.connectionStrategy).tlConnections.set(new AbstractMap.SimpleEntry<ConnectionHandle, Boolean>(connectionHandle, false));
 		} else {
 			BlockingQueue<ConnectionHandle> queue = connectionHandle.getOriginatingPartition().getFreeConnections();
 				if (!queue.offer(connectionHandle)){ // this shouldn't fail

@@ -23,30 +23,24 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-// #ifdef JDK>6
-import java.sql.SQLClientInfoException;
-import java.sql.NClob;
 import java.sql.SQLXML;
-// #endif JDK>6
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
-// #ifdef JDK7
 import java.util.concurrent.Executor;
-// #endif JDK7
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,8 +150,6 @@ public class ConnectionHandle implements Connection{
 	@VisibleForTesting protected boolean detectUnresolvedTransactions;
 	/** Stack track dump. */
 	protected String autoCommitStackTrace;
-	/** If true, this connection is in use in a thread-local context. */
-	protected AtomicBoolean inUseInThreadLocalContext = new AtomicBoolean();
 	/** Config setting. */
 	private boolean detectUnclosedStatements;
 	/** Config setting. */
@@ -273,9 +265,7 @@ public class ConnectionHandle implements Connection{
 		handle.connectionLastUsedInMs = this.connectionLastUsedInMs;
 		handle.preparedStatementCache = this.preparedStatementCache;
 		handle.callableStatementCache = this.callableStatementCache;
-		handle.debugHandle  = this.debugHandle;
 		handle.connectionHook = this.connectionHook;
-		handle.inUseInThreadLocalContext = this.inUseInThreadLocalContext;
 		this.connection = null;
 		return handle;
 	}
@@ -457,6 +447,7 @@ public class ConnectionHandle implements Connection{
 
 				
 				ConnectionHandle handle = this.recreateConnectionHandle();
+				this.pool.connectionStrategy.cleanupConnection(this, handle);
 				this.pool.releaseConnection(handle);
 
 				if (this.doubleCloseCheck){
@@ -1630,7 +1621,6 @@ public class ConnectionHandle implements Connection{
 	public String toString(){
 		
 		long timeMillis = System.currentTimeMillis();
-		
 		
 		return Objects.toStringHelper(this)
 			.add("url", this.pool.getConfig().getJdbcUrl())

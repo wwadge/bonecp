@@ -27,14 +27,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -42,7 +38,6 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.jolbox.bonecp.CommonTestUtils;
 import com.jolbox.bonecp.hooks.AbstractConnectionHook;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
@@ -210,6 +205,8 @@ public class TestBoneCPConfig {
 		config.setPoolName("foo");
 		config.setDisableJMX(false);
 		config.setDatasourceBean(mockDataSource);
+		assertNotNull(config.toString());
+		
 		config.setQueryExecuteTimeLimit(123);
 		config.setQueryExecuteTimeLimitInMs(123);
 		config.setDisableConnectionTracking(true);

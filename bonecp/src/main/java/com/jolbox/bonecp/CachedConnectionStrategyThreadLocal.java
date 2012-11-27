@@ -18,7 +18,7 @@
  */
 package com.jolbox.bonecp;
 
-import java.sql.SQLException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -28,58 +28,65 @@ import com.google.common.util.concurrent.Uninterruptibles;
  * @author wwadge
  *
  */
-public class CachedConnectionStrategyThreadLocal<T> extends	ThreadLocal<ConnectionHandle> {
+public class CachedConnectionStrategyThreadLocal<T> extends	ThreadLocal<SimpleEntry<ConnectionHandle, Boolean>> {
 
+	private ConnectionStrategy fallbackStrategy;
 	private CachedConnectionStrategy ccs;
 
-	public CachedConnectionStrategyThreadLocal(CachedConnectionStrategy ccs){
+	public CachedConnectionStrategyThreadLocal(CachedConnectionStrategy ccs, ConnectionStrategy fallbackStrategy){
+		this.fallbackStrategy = fallbackStrategy;
 		this.ccs = ccs;
 	}
-	
+
 	@Override
-	protected ConnectionHandle initialValue() {
-		ConnectionHandle result;
-		try {
-			// grab a connection from any other configured fallback strategy
-			result = this.ccs.pollFallbackConnection();
-			
-			if (result == null){
-				// oh-huh? either we are racing while resizing the pool or else no of threads > no of connections. Let's wait a bit 
-				// and try again one last time
-				for (int i=0; i < 4*3; i++){	// there is a slight race with the pool watch creation thread so spin for a bit
-															// no big deal if it keeps failing, we just switch to default connection strategy
-					result = this.ccs.pollFallbackConnection();
-					if (result != null){
-						break;
-					}
-					Uninterruptibles.sleepUninterruptibly(250, TimeUnit.MILLISECONDS);
-				}
-				
+	protected SimpleEntry<ConnectionHandle, Boolean> initialValue() {
+		SimpleEntry<ConnectionHandle, Boolean> result = null;
+		ConnectionHandle c = null;
+		// grab a connection from any other configured fallback strategy
+		for (int i=0; i < 4*3; i++){	// there is a slight race with the pool watch creation thread so spin for a bit
+			// no big deal if it keeps failing, we just switch to default connection strategy
+			c = (ConnectionHandle)this.fallbackStrategy.pollConnection();
+			if (c != null){
+				break;
 			}
-		} catch (SQLException e) {
-			result = null; 
+
+			// oh-huh? either we are racing while resizing the pool or else no of threads > no of connections. Let's wait a bit 
+			// and try again one last time
+			Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
 		}
+
+
+		if (c != null){
+			result = new SimpleEntry<ConnectionHandle, Boolean>(c, false);
+			this.ccs.threadWatch(c);
+		}
+
 		return result;
 	}
 
 
-	public ConnectionHandle dumbGet(){
+	public SimpleEntry<ConnectionHandle, Boolean> dumbGet(){
 		return super.get();
 	}
 
 	@Override
-	public ConnectionHandle get() {
-		ConnectionHandle result = super.get();
+	public SimpleEntry<ConnectionHandle, Boolean> get() {
+		SimpleEntry<ConnectionHandle, Boolean> result = super.get();
 		// have we got one that's cached and unused? Mark it as in use. 
-		if (result == null || !result.inUseInThreadLocalContext.compareAndSet(false, true)){
-			try {
-				// ... otherwise grab a new connection 
-				result = this.ccs.pollFallbackConnection();
-			} catch (SQLException e) {
-				result = null;
+		if (result == null || result.getValue()){
+			// ... otherwise grab a new connection 
+			ConnectionHandle fallbackConnection = (ConnectionHandle)this.fallbackStrategy.pollConnection();
+			if (fallbackConnection == null){
+				return null;
 			}
+			result = new SimpleEntry<ConnectionHandle, Boolean>(fallbackConnection, false);
 		} 
 
+		if (result != null){
+			result.setValue(true);
+		}
+
+		result.getKey().logicallyClosed.set(false);
 		return result;
 	}
 }

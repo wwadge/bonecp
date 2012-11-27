@@ -51,7 +51,6 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  * @author wwadge
  *
  */
-@Ignore
 public class TestMemorizeTransactionProxy {
 	/** Mock handle. */
 	private Connection mockConnection;
@@ -321,6 +320,7 @@ public class TestMemorizeTransactionProxy {
 	 * @throws Throwable
 	 */
 	@Test
+	@Ignore
 	public void testReplayTransactionWithFailuresOnReplay() throws IllegalArgumentException, Throwable{
 
 		count = 1;

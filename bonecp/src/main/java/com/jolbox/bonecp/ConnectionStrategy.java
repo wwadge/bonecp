@@ -40,5 +40,8 @@ public interface ConnectionStrategy {
 	/** Destroys all connections using this strategy.
 	 */
 	void terminateAllConnections();
+	
+	/** Give a chance to do some cleanups before closing off the connection. */
+	void cleanupConnection(ConnectionHandle oldHandle, ConnectionHandle newHandle);
 
 }
