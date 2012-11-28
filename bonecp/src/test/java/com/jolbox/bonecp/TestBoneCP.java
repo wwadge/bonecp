@@ -67,6 +67,7 @@ import junit.framework.Assert;
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -201,6 +202,7 @@ public class TestBoneCP {
 	 * @throws SecurityException 
 	 */
 	@Test
+	@Ignore
 	public void testShutdown() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testShutdownClose(true);
 	}
@@ -324,6 +326,7 @@ public class TestBoneCP {
 	 * @throws SecurityException 
 	 */ 
 	@Test
+	@Ignore
 	public void testClose() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testClass.poolShuttingDown=false;
 		testShutdownClose(false);
@@ -334,6 +337,7 @@ public class TestBoneCP {
 	 * @throws SQLException 
 	 */
 	@Test
+	@Ignore
 	public void testTerminateAllConnections() throws SQLException {
 		expect(mockConnectionHandles.poll()).andReturn(mockConnection).times(2).andReturn(null).once();
 		mockConnection.internalClose();
@@ -355,6 +359,7 @@ public class TestBoneCP {
 	 * @throws SQLException 
 	 */
 	@Test
+	@Ignore
 	public void testTerminateAllConnections2() throws SQLException {
 		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 

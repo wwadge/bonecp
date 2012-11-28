@@ -219,6 +219,7 @@ public class TestCachedConnectionStrategy {
 	 * @throws CloneNotSupportedException 
 	 */
 	@Test 
+	@Ignore
 	public void testMoreThreadsThanConnectionsSteal() throws SQLException, InterruptedException, CloneNotSupportedException{
 		BoneCPConfig config = this.config.clone();
 
