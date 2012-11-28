@@ -79,6 +79,11 @@ public class PoolWatchThread implements Runnable {
 
 				if (maxNewConnections > 0 && !this.pool.poolShuttingDown){
 					fillConnections(Math.min(maxNewConnections, this.partition.getAcquireIncrement()));
+					// for the case where we have killed off all our connections due to network/db error
+					if (this.partition.getCreatedConnections() < this.partition.getMinConnections()){
+						fillConnections(this.partition.getMinConnections() - this.partition.getCreatedConnections() );
+							
+					}
 				}
 				
 				if (this.pool.poolShuttingDown){

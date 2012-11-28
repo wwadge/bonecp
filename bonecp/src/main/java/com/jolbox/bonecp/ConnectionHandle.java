@@ -342,8 +342,10 @@ public class ConnectionHandle implements Connection{
 		}
 
 		if (((sqlStateDBFailureCodes.contains(state) || connectionState.equals(ConnectionState.TERMINATE_ALL_CONNECTIONS)) && this.pool != null) && this.pool.getDbIsDown().compareAndSet(false, true) ){
-			logger.error("Database access problem. Killing off all remaining connections in the connection pool. SQL State = " + state);
+			logger.error("Database access problem. Killing off this connection and all remaining connections in the connection pool. SQL State = " + state);
 			this.pool.connectionStrategy.terminateAllConnections();
+			this.pool.destroyConnection(this);
+			this.logicallyClosed.set(true);
 			for (int i=0; i < this.pool.partitionCount; i++) {
 				// send a signal to try re-populating again.
 				this.pool.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
@@ -402,7 +404,7 @@ public class ConnectionHandle implements Connection{
 	}
 
 	/**
-	 * Release the connection if called. 
+	 * Release the connection back to the pool. 
 	 * 
 	 * @throws SQLException Never really thrown
 	 */

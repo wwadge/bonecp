@@ -18,6 +18,8 @@ package com.jolbox.bonecp;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /** The normal getConnection() strategy class in use. Attempts to get a connection from 
@@ -104,8 +106,10 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 			// close off all connections.
 			for (int i=0; i < this.pool.partitionCount; i++) {
 				this.pool.partitions[i].setUnableToCreateMoreTransactions(false); // we can create new ones now, this is an optimization
-				while ((conn = this.pool.partitions[i].getFreeConnections().poll()) != null){
-					this.pool.destroyConnection(conn);
+				List<ConnectionHandle> clist = new LinkedList<ConnectionHandle>(); 
+				this.pool.partitions[i].getFreeConnections().drainTo(clist);
+				for (ConnectionHandle c: clist){
+					this.pool.destroyConnection(c);
 				}
 
 			}
