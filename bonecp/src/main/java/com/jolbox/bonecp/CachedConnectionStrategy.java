@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.FinalizableWeakReference;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 /** A connection strategy that is optimized to store/retrieve the connection inside a thread
  * local variable. This makes getting a connection in a managed thread environment such as Tomcat
@@ -101,7 +103,7 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 	}
 	
 	/** Keep track of this handle tied to which thread so that if the thread is terminated
-	 * we can reclaim our connection handle.
+	 * we can reclaim our connection handle. We also 
 	 * @param c connection handle to track.
 	 */
 	protected void threadWatch(final ConnectionHandle c) {
@@ -163,6 +165,73 @@ public class CachedConnectionStrategy extends AbstractConnectionStrategy {
 		this.threadWatch(newHandle);
 	}
 
+
+
+/**
+ * This is moved here to aid testing by exposing a dumbGet() method.
+ * @author wwadge
+ *
+ */
+ protected class CachedConnectionStrategyThreadLocal<T> extends ThreadLocal<SimpleEntry<ConnectionHandle, Boolean>> {
+
+	private ConnectionStrategy fallbackStrategy;
+	private CachedConnectionStrategy ccs;
+
+	public CachedConnectionStrategyThreadLocal(CachedConnectionStrategy ccs, ConnectionStrategy fallbackStrategy){
+		this.fallbackStrategy = fallbackStrategy;
+		this.ccs = ccs;
+	}
+
+	@Override
+	protected SimpleEntry<ConnectionHandle, Boolean> initialValue() {
+		SimpleEntry<ConnectionHandle, Boolean> result = null;
+		ConnectionHandle c = null;
+		// grab a connection from any other configured fallback strategy
+		for (int i=0; i < 4*3; i++){	// there is a slight race with the pool watch creation thread so spin for a bit
+			// no big deal if it keeps failing, we just switch to default connection strategy
+			c = (ConnectionHandle)this.fallbackStrategy.pollConnection();
+			if (c != null){
+				break;
+			}
+
+			// oh-huh? either we are racing while resizing the pool or else no of threads > no of connections. Let's wait a bit 
+			// and try again one last time
+			Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+		}
+
+
+		if (c != null){
+			result = new SimpleEntry<ConnectionHandle, Boolean>(c, false);
+			this.ccs.threadWatch(c);
+		}
+
+		return result;
+	}
+
+
+	public SimpleEntry<ConnectionHandle, Boolean> dumbGet(){
+		return super.get();
+	}
+
+	@Override
+	public SimpleEntry<ConnectionHandle, Boolean> get() {
+		SimpleEntry<ConnectionHandle, Boolean> result = super.get();
+		// have we got one that's cached and unused? Mark it as in use. 
+		if (result == null || result.getValue()){
+			// ... otherwise grab a new connection 
+			ConnectionHandle fallbackConnection = (ConnectionHandle)this.fallbackStrategy.pollConnection();
+			if (fallbackConnection == null){
+				return null;
+			}
+			result = new SimpleEntry<ConnectionHandle, Boolean>(fallbackConnection, false);
+		} 
+
+		result.setValue(true);
+
+		result.getKey().logicallyClosed.set(false);
+		return result;
+	}
+}
 
 
 	

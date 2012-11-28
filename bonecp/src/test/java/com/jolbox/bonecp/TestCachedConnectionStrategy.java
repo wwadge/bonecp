@@ -40,6 +40,7 @@ import org.junit.Test;
 
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.FinalizableWeakReference;
+import com.jolbox.bonecp.CachedConnectionStrategy.CachedConnectionStrategyThreadLocal;
 
 /**
  * @author wwadge
@@ -67,6 +68,7 @@ public class TestCachedConnectionStrategy {
 		config.setPartitionCount(1);
 		config.setMaxConnectionsPerPartition(5);
 		config.setMinConnectionsPerPartition(5);
+		config.setDisableConnectionTracking(true);
 		config.setJdbcUrl("jdbc:mock");
 
 
@@ -78,6 +80,39 @@ public class TestCachedConnectionStrategy {
 		driver.unregister();
 	}
 
+	@Test
+	@Ignore
+	public void testThreadDies() throws CloneNotSupportedException, SQLException, InterruptedException{
+		BoneCPConfig config = this.config.clone();
+
+
+		poolClass = new BoneCP(config);
+		
+		Thread t = new Thread(){
+
+			public void run() {
+				try {
+					 Connection c = poolClass.getConnection();
+					 c = null; // die!
+						System.gc();
+						System.gc();
+						System.gc();
+
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		
+		t.start();
+		t.join();
+		t = null;
+		System.gc(); System.gc(); System.gc(); System.gc(); 
+		assertEquals(5, poolClass.partitions[0].getFreeConnections().size());
+		
+	}
+
+	
 	@Test
 	public void testNormalCase() throws SQLException {
 		poolClass = new BoneCP(config);
@@ -215,33 +250,6 @@ public class TestCachedConnectionStrategy {
 		assertEquals(5, poolClass.partitions[0].getFreeConnections().size());
 	}
 	 
-	@Test
-	@Ignore
-	public void testThreadDies() throws CloneNotSupportedException, SQLException, InterruptedException{
-		BoneCPConfig config = this.config.clone();
-
-
-		poolClass = new BoneCP(config);
-		
-		Thread t = new Thread(){
-
-			public void run() {
-				try {
-					 poolClass.getConnection();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		
-		t.start();
-		t.join();
-		System.gc();
-		System.gc();
-		System.gc();
-		assertEquals(5, poolClass.partitions[0].getFreeConnections().size());
-		
-	}
 	
 	@Test
 	public void testCoverage() throws SQLException{

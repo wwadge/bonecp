@@ -156,7 +156,7 @@ public class ConnectionTesterThread implements Runnable {
 	/** Closes off this connection
 	 * @param connection to close
 	 */
-	private void closeConnection(ConnectionHandle connection) {
+	protected void closeConnection(ConnectionHandle connection) {
 		if (connection != null) {
 			try {
 				connection.internalClose();

@@ -373,4 +373,11 @@ public class TestConnectionThreadTester {
 		this.testClass.run();
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection, mockLogger);
 	}
+	
+	@Test
+	public void testCoverage(){
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
+		this.testClass.closeConnection(null);
+			
+	}
 }
