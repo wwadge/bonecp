@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.FinalizableWeakReference;
+import com.google.common.base.Objects;
 
 /**
  * Connection Partition structure
@@ -303,5 +304,21 @@ public class ConnectionPartition implements Serializable{
 	 */
 	protected long getQueryExecuteTimeLimitinNanoSeconds(){
 		return this.queryExecuteTimeLimitInNanoSeconds;
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this)
+				.add("url", this.pool.getConfig().getJdbcUrl())
+				.add("user", this.pool.getConfig().getUsername())
+				.add("minConnections", this.getMinConnections())
+				.add("maxConnections", this.getMaxConnections())
+				.add("acquireIncrement", this.acquireIncrement)
+				.add("createdConnections", this.createdConnections)
+				.add("freeConnections", this.getFreeConnections())
+				.toString();
 	}
 }

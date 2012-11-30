@@ -32,7 +32,7 @@ import org.junit.Test;
 public class TestAbstractConnectionStrategy {
 
 	@Test
-	public void test() {
+	public void testCoverage() {
 		@SuppressWarnings("serial")
 		class X extends AbstractConnectionStrategy{
 				public void terminateAllConnections() {

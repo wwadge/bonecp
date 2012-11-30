@@ -32,15 +32,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -50,6 +53,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -138,6 +142,8 @@ public class TestBoneCP {
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
 		expect(mockConfig.getServiceOrder()).andReturn("LIFO").anyTimes();
+		mockConfig.sanitize();
+		expectLastCall().anyTimes();
 
 		expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
 		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
@@ -202,7 +208,6 @@ public class TestBoneCP {
 	 * @throws SecurityException 
 	 */
 	@Test
-	@Ignore
 	public void testShutdown() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testShutdownClose(true);
 	}
@@ -297,11 +302,13 @@ public class TestBoneCP {
 	 */
 	private void testShutdownClose(boolean doShutdown) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
 		expect(mockConfig.isDeregisterDriverOnClose()).andReturn(false).anyTimes();
-
+		expect(mockConfig.isDisableJMX()).andReturn(false).anyTimes();
+		expect(mockConfig.getPoolName()).andReturn("foo").anyTimes();
+		
 		expect(mockKeepAliveScheduler.shutdownNow()).andReturn(null).once();
 		expect(mockConnectionsScheduler.shutdownNow()).andReturn(null).once();
 
-		expect(mockConnectionHandles.poll()).andReturn(null).once();
+//		expect(mockConnectionHandles.poll()).andReturn(null).once();
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 	
 
@@ -318,6 +325,26 @@ public class TestBoneCP {
 		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles);
 	}
 
+
+	/**
+	 * Tests shutdown/close method coverage.
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void testShutdownCoverageClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InterruptedException {
+
+
+		expect(mockConnectionsScheduler.awaitTermination(5, TimeUnit.SECONDS)).andThrow(new InterruptedException()).once();
+
+		replay(mockConnectionsScheduler);
+		try{
+			testClass.shutdown();
+		} catch(Exception e){
+			// do nothing
+		}
+	}
+
+
 	/**
 	 * Test method for {@link com.jolbox.bonecp.BoneCP#close()}.
 	 * @throws IllegalAccessException 
@@ -326,32 +353,30 @@ public class TestBoneCP {
 	 * @throws SecurityException 
 	 */ 
 	@Test
-	@Ignore
 	public void testClose() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		testClass.poolShuttingDown=false;
 		testShutdownClose(false);
 	}
 
-	/**
-	 * Test method.
-	 * @throws SQLException 
-	 */
-	@Test
-	@Ignore
-	public void testTerminateAllConnections() throws SQLException {
-		expect(mockConnectionHandles.poll()).andReturn(mockConnection).times(2).andReturn(null).once();
-		mockConnection.internalClose();
-		expectLastCall().once().andThrow(new SQLException()).once();
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
-		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
-		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
-		replay(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
-
-		// test.
-		testClass.connectionStrategy.terminateAllConnections();
-		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
-	}
+//	/**
+//	 * Test method.
+//	 * @throws SQLException 
+//	 */
+//	@Test
+//	public void testTerminateAllConnections() throws SQLException {
+//	//	expect(mockConnectionHandles.poll()).andReturn(mockConnection).times(2).andReturn(null).once();
+//		mockConnection.destroyConnection();
+//		expectLastCall().once().andThrow(new SQLException()).once();
+//		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+//		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+//		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
+//		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+//		replay(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
+//
+//		// test.
+//		testClass.connectionStrategy.terminateAllConnections();
+//		verify(mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
+//	}
 
 
 	/**
@@ -359,17 +384,12 @@ public class TestBoneCP {
 	 * @throws SQLException 
 	 */
 	@Test
-	@Ignore
 	public void testTerminateAllConnections2() throws SQLException {
 		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
 
 		// same test but to cover the finally section
 		reset(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
-		expect(mockConnectionHandles.poll()).andReturn(mockConnection).anyTimes();
-		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
-		mockConnection.internalClose();
-		expectLastCall().once().andThrow(new RuntimeException()).once();
-		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getFreeConnections()).andThrow(new RuntimeException()).once();
 		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
 		replay(mockRealConnection, mockConnectionsScheduler, mockKeepAliveScheduler, mockPartition, mockConnectionHandles, mockConnection);
 
@@ -1192,9 +1212,12 @@ public class TestBoneCP {
 	/**
 	 * Coverage.
 	 * @throws SQLException 
+	 * @throws CloneNotSupportedException 
+	 * @throws ClassNotFoundException 
 	 */
+	@SuppressWarnings("resource")
 	@Test
-	public void testCoverage() throws SQLException{
+	public void testCoverage() throws SQLException, CloneNotSupportedException, ClassNotFoundException{
 		BoneCPConfig config = EasyMock.createNiceMock(BoneCPConfig.class);
 		expect(config.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(config.getMinConnectionsPerPartition()).andReturn(2).anyTimes();
@@ -1202,10 +1225,64 @@ public class TestBoneCP {
 		expect(config.getPartitionCount()).andReturn(1).anyTimes();
 		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
 		expect(config.getMaxConnectionAgeInSeconds()).andReturn(100000L).anyTimes();
+		expect(config.clone()).andThrow(new CloneNotSupportedException()).anyTimes();
 		replay(config);
+		try{
+			new BoneCP(config);
+		} catch(Exception e){
+			// nothing
+		}
+		
+		
 
 	}
 
+	@Test
+	@Ignore
+	public void testDetectJVMVersion() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, CloneNotSupportedException, SQLException{
+		AtomicInteger ai = new AtomicInteger();
+		
+				mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
+		expect(mockConfig.getClassLoader()).andReturn(new ClassLoader() {
+
+			@Override
+			public Class<?> findClass(String name)
+					throws ClassNotFoundException {
+				System.out.println(name);
+				if (name.equals("java.sql.Connection")){
+					throw new ClassNotFoundException();
+				}
+				return super.loadClass(name);
+			}
+			});
+
+		
+		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
+		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
+		expect(mockConfig.getMaxConnectionsPerPartition()).andReturn(1).anyTimes();
+		expect(mockConfig.getMinConnectionsPerPartition()).andReturn(1).anyTimes();
+		expect(mockConfig.getIdleConnectionTestPeriodInMinutes()).andReturn(0L).anyTimes();
+		expect(mockConfig.getIdleMaxAgeInMinutes()).andReturn(1000L).anyTimes();
+		expect(mockConfig.getUsername()).andReturn(CommonTestUtils.username).anyTimes();
+		expect(mockConfig.getPassword()).andReturn(CommonTestUtils.password).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
+		expect(mockConfig.getInitSQL()).andReturn(CommonTestUtils.TEST_QUERY).anyTimes();
+		expect(mockConfig.isCloseConnectionWatch()).andReturn(true).anyTimes();
+		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
+		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
+		expect(mockConfig.getServiceOrder()).andReturn("LIFO").anyTimes();
+		mockConfig.sanitize();
+		expectLastCall().anyTimes();
+
+		expect(mockConfig.getAcquireRetryDelayInMs()).andReturn(1000L).anyTimes();
+		expect(mockConfig.getPoolName()).andReturn("poolName").anyTimes();
+		expect(mockConfig.getPoolAvailabilityThreshold()).andReturn(20).anyTimes();
+		
+		replay(mockConfig);
+
+		BoneCP pool = new BoneCP(mockConfig);
+	assertEquals(5, pool.jvmMajorVersion);
+	}
 	/** JMX setup test
 	 * @throws SecurityException
 	 * @throws NoSuchFieldException

@@ -75,11 +75,11 @@ public class ConnectionHandle implements Connection{
 	/** Connection handle. */
 	private Connection connection = null;
 	/** Last time this connection was used by an application. */
-	private long connectionLastUsedInMs = System.currentTimeMillis();
+	private long connectionLastUsedInMs;
 	/** Last time we sent a reset to this connection. */
-	private long connectionLastResetInMs = System.currentTimeMillis();
+	private long connectionLastResetInMs;
 	/** Time when this connection was created. */
-	private long connectionCreationTimeInMs = System.currentTimeMillis();
+	private long connectionCreationTimeInMs;
 	/** Pool handle. */
 	private BoneCP pool; 
 	/** Config setting. */
@@ -125,7 +125,7 @@ public class ConnectionHandle implements Connection{
 	/** If true, connection is currently playing back a saved transaction. */
 	private boolean inReplayMode;
 	/** Map of translations + result from last recovery. */
-	protected TransactionRecoveryResult recoveryResult = new TransactionRecoveryResult();
+	protected TransactionRecoveryResult recoveryResult;
 	/** Connection url. */
 	protected String url;	
 	/** Keep track of the thread. */
@@ -151,9 +151,9 @@ public class ConnectionHandle implements Connection{
 	/** Stack track dump. */
 	protected String autoCommitStackTrace;
 	/** Config setting. */
-	private boolean detectUnclosedStatements;
+	protected boolean detectUnclosedStatements;
 	/** Config setting. */
-	private boolean closeOpenStatements;
+	protected boolean closeOpenStatements;
 
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -175,12 +175,12 @@ public class ConnectionHandle implements Connection{
 	 */
 	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01", "57P01", "HY000"); 
 	/** Keep track of open statements. */
-	private ConcurrentMap<Statement, String> trackedStatement = new MapMaker().makeMap();
+	private ConcurrentMap<Statement, String> trackedStatement;
 	/** Avoid creating a new string object each time. */
-	private String noStackTrace = "";
+	private final String noStackTrace = "";
 
 	protected ConnectionHandle(BoneCP pool) throws SQLException{
-		this(null, pool);
+		this(null, pool, false);
 	}
 	
 	/**
@@ -191,10 +191,16 @@ public class ConnectionHandle implements Connection{
 	 * @throws SQLException
 	 *             on error
 	 */
-	protected ConnectionHandle(Connection connection, BoneCP pool) throws SQLException {
+	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating) throws SQLException {
 		boolean newConnection = connection == null;
 		this.pool = pool;
 		this.connectionHook = pool.getConfig().getConnectionHook();
+	
+		if (!recreating){
+			connectionLastUsedInMs = System.currentTimeMillis();
+			connectionLastResetInMs = System.currentTimeMillis();
+			connectionCreationTimeInMs = System.currentTimeMillis();
+		}
 
 		this.url = pool.getConfig().getJdbcUrl();
 		this.finalizableRefs = pool.getFinalizableRefs(); 
@@ -209,6 +215,9 @@ public class ConnectionHandle implements Connection{
 		this.detectUnresolvedTransactions = pool.getConfig().isDetectUnresolvedTransactions();
 		this.detectUnclosedStatements = pool.getConfig().isDetectUnclosedStatements();
 		this.closeOpenStatements = pool.getConfig().isCloseOpenStatements();
+		if (this.closeOpenStatements){
+			trackedStatement = new MapMaker().makeMap();
+		}
 		this.threadUsingConnection = null;
 		this.connectionHook = this.pool.getConfig().getConnectionHook();
 
@@ -231,6 +240,7 @@ public class ConnectionHandle implements Connection{
 
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
 			this.replayLog = new ArrayList<ReplayLog>(30);
+			this.recoveryResult = new TransactionRecoveryResult();
 			// this kick-starts recording everything
 			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
 		}
@@ -258,7 +268,7 @@ public class ConnectionHandle implements Connection{
 	 * @throws SQLException
 	 */
 	public ConnectionHandle recreateConnectionHandle() throws SQLException{
-		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool);
+		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true);
 		handle.originatingPartition = this.originatingPartition;
 		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
 		handle.connectionLastResetInMs = this.connectionLastResetInMs;
@@ -266,6 +276,7 @@ public class ConnectionHandle implements Connection{
 		handle.preparedStatementCache = this.preparedStatementCache;
 		handle.callableStatementCache = this.callableStatementCache;
 		handle.connectionHook = this.connectionHook;
+		handle.possiblyBroken = this.possiblyBroken;
 		this.connection = null;
 		return handle;
 	}
@@ -286,6 +297,14 @@ public class ConnectionHandle implements Connection{
 		handle.connection = connection;
 		handle.preparedStatementCache = preparedStatementCache;
 		handle.callableStatementCache = callableStatementCache;
+		handle.connectionLastUsedInMs = System.currentTimeMillis();
+		handle.connectionLastResetInMs = System.currentTimeMillis();
+		handle.connectionCreationTimeInMs = System.currentTimeMillis();
+		handle.recoveryResult = new TransactionRecoveryResult();
+		handle.trackedStatement = new MapMaker().makeMap();
+		handle.url = "foo";
+		handle.closeOpenStatements = true;
+
 		handle.pool = pool;
 		handle.url=null;
 		int cacheSize = pool.getConfig().getStatementsCacheSize();
@@ -647,7 +666,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			result =new StatementHandle(this.connection.createStatement(), this, this.logStatementsEnabled);
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
@@ -662,7 +681,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			result = new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency), this, this.logStatementsEnabled);
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 		} catch (SQLException e) {
@@ -679,7 +698,7 @@ public class ConnectionHandle implements Connection{
 		try {
 			result = new StatementHandle(this.connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability), this, this.logStatementsEnabled);
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 		} catch (SQLException e) {
 			throw markPossiblyBroken(e);
@@ -688,6 +707,18 @@ public class ConnectionHandle implements Connection{
 		return result;
 	}
 
+
+	/**
+	 * Depending on options, return a stack trace or an empty string
+	 * @return
+	 */
+	private String maybeCaptureStackTrace() {
+		if (this.detectUnclosedStatements){
+			return this.pool.captureStackTrace(STATEMENT_NOT_CLOSED);
+		}
+		
+		return this.noStackTrace;
+	}
 
 	public boolean getAutoCommit() throws SQLException {
 		boolean result = false;
@@ -826,7 +857,7 @@ public class ConnectionHandle implements Connection{
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -866,7 +897,7 @@ public class ConnectionHandle implements Connection{
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -908,7 +939,7 @@ public class ConnectionHandle implements Connection{
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -948,7 +979,7 @@ public class ConnectionHandle implements Connection{
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			} 
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -989,7 +1020,7 @@ public class ConnectionHandle implements Connection{
 			}
 
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -1033,7 +1064,7 @@ public class ConnectionHandle implements Connection{
 			}
 
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -1076,7 +1107,7 @@ public class ConnectionHandle implements Connection{
 			}
 
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -1117,7 +1148,7 @@ public class ConnectionHandle implements Connection{
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){
@@ -1160,7 +1191,7 @@ public class ConnectionHandle implements Connection{
 				result.setOpenStackTrace(this.pool.captureStackTrace(STATEMENT_NOT_CLOSED));
 			}
 			if (this.closeOpenStatements){
-				this.trackedStatement.put(result, this.detectUnclosedStatements ? this.pool.captureStackTrace(STATEMENT_NOT_CLOSED) : this.noStackTrace);
+				this.trackedStatement.put(result, maybeCaptureStackTrace());
 			}
 
 			if (this.statisticsEnabled){

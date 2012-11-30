@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 /**
  * @author wwadge
@@ -246,6 +247,7 @@ public class TestConnectionPartition {
 		assertEquals(1, testClass.getMaxConnections());
 		assertEquals(1, testClass.getMinConnections());
 		assertEquals(1, testClass.getAcquireIncrement());
+		assertNotNull(testClass.toString());
 	}
 
 

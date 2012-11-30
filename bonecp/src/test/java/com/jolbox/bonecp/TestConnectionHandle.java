@@ -97,6 +97,7 @@ public class TestConnectionHandle {
 		expect(this.mockConnection.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		replay(this.mockConnection, this.mockPool);
 
+		this.config.setCloseOpenStatements(true);
 		this.config.setTransactionRecoveryEnabled(false);
 		this.config.setStatementsCacheSize(1);
 		this.config.setStatisticsEnabled(true);
@@ -170,6 +171,7 @@ public class TestConnectionHandle {
 		skipTests.add("$VRi"); // this only comes into play when code coverage is started. Eclemma bug?
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
 		replay(this.mockPool);
+		testClass.closeOpenStatements = true;
 		CommonTestUtils.testStatementBounceMethod(this.mockConnection, this.testClass, skipTests, this.mockConnection);
 	}
 
@@ -295,8 +297,12 @@ public class TestConnectionHandle {
 		replay(mockConfig, this.mockPool, this.mockConnection, mockStatement);
 		this.testClass.sendInitSQL();
 		verify(mockConfig, this.mockPool, this.mockConnection,  mockStatement);
-
-
+	}
+	
+	@Test
+	public void testCoverage(){
+		this.testClass.url = "foo";
+		assertEquals("foo", this.testClass.getUrl());
 	}
 
 	/**

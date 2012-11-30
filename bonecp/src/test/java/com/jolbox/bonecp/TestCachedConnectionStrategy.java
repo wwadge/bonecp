@@ -92,8 +92,7 @@ public class TestCachedConnectionStrategy {
 
 			public void run() {
 				try {
-					 Connection c = poolClass.getConnection();
-					 c = null; // die!
+					 poolClass.getConnection();
 						System.gc();
 						System.gc();
 						System.gc();

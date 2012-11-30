@@ -21,7 +21,11 @@ package com.jolbox.bonecp;
 import static org.junit.Assert.*;
 import static org.easymock.EasyMock.*;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,12 +58,16 @@ public class TestRobustness {
 		config.setAcquireRetryAttempts(1);
 		config.setAcquireRetryDelay(1, TimeUnit.MILLISECONDS);
 	}
-	
-	
+
+
 	@After
 	public void tearDown() throws SQLException{
 		driver.unregister();
 	}
+	
+	
+	
+	
 
 	@Test
 	public void testDBUnavailableRightAway() throws SQLException{
@@ -77,7 +85,7 @@ public class TestRobustness {
 			// nothing
 		}
 	}
-	
+
 	@Test
 	public void testFailOnceOnGetConnectionAfterSanityIsOk() throws SQLException{
 		final AtomicInteger ai = new AtomicInteger();
@@ -90,13 +98,13 @@ public class TestRobustness {
 				return new MockConnection();
 			}
 		});
-			BoneCP pool = new BoneCP(config);
-			// we shouldn't blow up - we have other tests to determine coverage/hooks etc
-			pool.close();
-		}
+		BoneCP pool = new BoneCP(config);
+		// we shouldn't blow up - we have other tests to determine coverage/hooks etc
+		pool.close();
+	}
 
 	@Test
-	public void testFailAlwaysOnGetConnectionAfterSanityIsOk() throws SQLException{
+	public void testFailOnAttemptingToPopulatePartitions() throws SQLException{
 		final AtomicInteger ai = new AtomicInteger();
 		driver = new MockJDBCDriver(new MockJDBCAnswer() {
 
@@ -107,7 +115,7 @@ public class TestRobustness {
 				return new MockConnection();
 			}
 		});
-		
+
 		try{
 			new BoneCP(config);
 			fail("We should fail the init");
@@ -115,7 +123,7 @@ public class TestRobustness {
 			// nothing
 		}
 	}
-	
+
 	/** Pretend we have a connection that triggers a non-fatal exception (eg duplicate key) 
 	 * @throws SQLException */
 	@Test
@@ -128,7 +136,7 @@ public class TestRobustness {
 				return mockConnection;
 			}
 		});
-	
+
 		BoneCP pool = new BoneCP(config);
 		expect(mockConnection.prepareStatement((String)anyObject())).andThrow(new SQLException("FOO", "FOO"));
 		replay(mockConnection);
@@ -139,10 +147,10 @@ public class TestRobustness {
 			assertEquals("FOO", e.getMessage());
 		}
 		pool.close();
-		
+
 	}
 
-	/** Pretend we have a connection that triggers a non-fatal exception (eg duplicate key) 
+	/** Pretend we have a connection that triggers a fatal DB/network exception. 
 	 * @throws SQLException */
 	@Test
 	public void testConnectionDies() throws SQLException{
@@ -154,11 +162,12 @@ public class TestRobustness {
 				return mockConnection;
 			}
 		});
-	
+
 		BoneCP pool = new BoneCP(config);
 		for(ConnectionHandle ch: pool.partitions[0].getFreeConnections()){
 			ch.setDebugHandle(123L);
 		}
+		// 08S01 is a specific db code that signals to the rest of the code to discard existing connections
 		expect(mockConnection.prepareStatement((String)anyObject())).andThrow(new SQLException("reason", "08S01"));
 		replay(mockConnection);
 		ConnectionHandle ch = null;
@@ -170,22 +179,108 @@ public class TestRobustness {
 			for(ConnectionHandle c: pool.partitions[0].getFreeConnections()){
 				assertNotSame(123L,c.getDebugHandle());// all connections should have been killed off
 			}
-			
-				for (int i=0; i < 5; i++){
-					if (pool.partitions[0].getFreeConnections().size() == 5){
-						break;
-					}
-					Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+
+			for (int i=0; i < 5; i++){
+				if (pool.partitions[0].getFreeConnections().size() == 5){
+					break;
 				}
-				assertEquals(5, pool.partitions[0].getFreeConnections().size());
+				Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+			}
+			assertEquals(5, pool.partitions[0].getFreeConnections().size());
 			assertTrue(ch.possiblyBroken);
 			assertEquals("reason", e.getMessage());
 			assertEquals("08S01", e.getSQLState());
 
 		}
-		
+
 		ch.close(); // shouldn't fail
 		assertTrue(ch.logicallyClosed.get()); // broken so should be marked as such
 		pool.close();
 	}
+	
+	/** Pretend we have multiple connections that triggers a fatal DB/network exception. 
+	 * @throws SQLException 
+	 * @throws InterruptedException */
+	@Test
+	public void testTwoConnectionsDieSimultaneously() throws SQLException, InterruptedException{
+		final Connection mockConnection1 = createNiceMock(Connection.class);
+		final Connection mockConnection2 = createNiceMock(Connection.class);
+		final AtomicInteger ai = new AtomicInteger();
+
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
+
+
+			public Connection answer() throws SQLException {
+				switch (ai.getAndIncrement()){ // skip sanity 1st connection, skip 2nd driver force load connection
+				case 2: return mockConnection1;
+				case 3: return mockConnection2;
+				default:
+					return createNiceMock(Connection.class);
+				}
+			}
+		});
+
+		final BoneCP pool = new BoneCP(config);
+		for(ConnectionHandle ch: pool.partitions[0].getFreeConnections()){
+			ch.setDebugHandle(123L);
+		}
+
+		// 08S01 is a specific db code that signals to the rest of the code to discard existing connections
+		expect(mockConnection1.prepareStatement((String)anyObject())).andThrow(new SQLException("reason", "08S01"));
+		expect(mockConnection2.prepareStatement((String)anyObject())).andThrow(new SQLException("reason", "08S01"));
+		expect(mockConnection1.getMetaData()).andThrow(new SQLException()).anyTimes(); // for isConnectionAlive
+		expect(mockConnection2.getMetaData()).andThrow(new SQLException()).anyTimes(); // for isConnectionAlive
+		replay(mockConnection1, mockConnection2);
+		final CountDownLatch cdl = new CountDownLatch(1);
+		final CountDownLatch cdlEnd = new CountDownLatch(2);
+		for (int i=0; i < 2; i++){
+			new Thread(new Runnable() {
+
+				public void run() {
+					ConnectionHandle ch = null ;
+					try {
+						cdl.await();
+
+						ch = (ConnectionHandle) pool.getConnection();
+						ch.prepareStatement("lalala");
+						fail("Should trigger exception");
+					} catch (SQLException e) {
+						assertTrue(ch.possiblyBroken);
+						assertEquals("reason", e.getMessage());
+						assertEquals("08S01", e.getSQLState());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					try {
+						ch.close();
+					} catch (SQLException e) {
+						fail(e.getMessage());
+					} // shouldn't fail
+					assertTrue(ch.logicallyClosed.get()); // broken so should be marked as such
+					cdlEnd.countDown();
+				}
+			}).start();
+		}
+
+		cdl.countDown();
+		cdlEnd.await();
+		for(ConnectionHandle c: pool.partitions[0].getFreeConnections()){
+			assertNotSame(123L,c.getDebugHandle());// all connections should have been killed off
+		}
+
+		for (int i=0; i < 5; i++){
+			if (pool.partitions[0].getFreeConnections().size() == 5){
+				break;
+			}
+			Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+		}
+		
+		assertEquals(5, pool.partitions[0].getFreeConnections().size()); // we should have 5 connections
+
+		pool.close();
+	}
+
+
+
+	
 }

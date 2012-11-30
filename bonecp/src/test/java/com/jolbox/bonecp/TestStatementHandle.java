@@ -68,6 +68,7 @@ public class TestStatementHandle {
 		expect(mockPool.getConfig()).andReturn(mockConfig).anyTimes();
 		expect(mockPool.getStatistics()).andReturn(new Statistics(mockPool)).anyTimes();
 		expect(mockConfig.isStatisticsEnabled()).andReturn(true).anyTimes();
+		expect(mockConfig.isCloseOpenStatements()).andReturn(true).anyTimes();
 		expect(mockConfig.getQueryExecuteTimeLimitInMs()).andReturn(1L).anyTimes();
 		expect(mockConfig.getConnectionHook()).andReturn(new CoverageHook()).anyTimes();
 		replay(mockConnection, mockPool, mockConfig);

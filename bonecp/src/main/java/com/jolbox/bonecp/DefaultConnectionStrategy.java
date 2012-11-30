@@ -102,7 +102,6 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 	public void terminateAllConnections(){
 		this.terminationLock.lock();
 		try{
-			ConnectionHandle conn;
 			// close off all connections.
 			for (int i=0; i < this.pool.partitionCount; i++) {
 				this.pool.partitions[i].setUnableToCreateMoreTransactions(false); // we can create new ones now, this is an optimization

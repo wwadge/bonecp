@@ -146,7 +146,7 @@ public class BoneCP implements Serializable, Closeable {
 	/** If false, we haven't made a dummy driver call first. */
 	private volatile boolean driverInitialized = false;
 	/** Keep track of our jvm version. */
-	private int jvmMajorVersion;
+	protected int jvmMajorVersion;
  
 	/**
 	 * Closes off this connection pool.
@@ -173,10 +173,7 @@ public class BoneCP implements Serializable, Closeable {
 					this.closeConnectionExecutor.shutdownNow();
 					this.closeConnectionExecutor.awaitTermination(5, TimeUnit.SECONDS);
 				}
-				if(!this.config.isDisableJMX()) {
-					unregisterJMX();
-				}
-
+				
 			} catch (InterruptedException e) {
 				// do nothing
 			}
@@ -369,7 +366,7 @@ public class BoneCP implements Serializable, Closeable {
 		Class<?> clazz;
 		try {
 			jvmMajorVersion = 5;
-			clazz = Class.forName("java.sql.Connection");
+			clazz = Class.forName("java.sql.Connection", true, config.getClassLoader());
 			clazz.getMethod("createClob"); // since 1.6
 			jvmMajorVersion = 6;
 			clazz.getMethod("getNetworkTimeout"); // since 1.7
@@ -497,7 +494,7 @@ public class BoneCP implements Serializable, Closeable {
 	 * @param doRegister if true, perform registration, if false unregister
 	 */
 	protected void registerUnregisterJMX(boolean doRegister) {
-		if (this.mbs == null){ // this way makes it easier for mocking.
+		if (this.mbs == null ){ // this way makes it easier for mocking.
 			this.mbs = ManagementFactory.getPlatformMBeanServer();
 		}
 		try {
@@ -652,7 +649,6 @@ public class BoneCP implements Serializable, Closeable {
 
 		connectionHandle.setConnectionLastUsedInMs(System.currentTimeMillis());
 		if (!this.poolShuttingDown){
-
 			putConnectionBackInPartition(connectionHandle);
 		} else {
 			connectionHandle.internalClose();
@@ -809,35 +805,6 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	public AtomicBoolean getDbIsDown() {
 		return this.dbIsDown;
-	}
-
-	/**
-	 * Unregisters JMX beans.
-	 */ 
-	protected void unregisterJMX() {
-		if (this.mbs == null){
-			return;
-		}
-		try {
-			String suffix = "";
-
-			if (this.config.getPoolName() != null){
-				suffix="-"+this.config.getPoolName();
-			}
-
-			ObjectName name = new ObjectName(MBEAN_BONECP +suffix);
-			ObjectName configname = new ObjectName(MBEAN_CONFIG + suffix);
-
-
-			if (this.mbs.isRegistered(name)){
-				this.mbs.unregisterMBean(name);
-			}
-			if (this.mbs.isRegistered(configname)){
-				this.mbs.unregisterMBean(configname);
-			}
-		} catch (Exception e) {
-			logger.error("Unable to unregister JMX", e);
-		}
 	}
 
 

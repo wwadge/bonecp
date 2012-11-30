@@ -177,7 +177,6 @@ public class CommonTestUtils {
 			expect(method.invoke(mockClass, args)).andReturn(null).once().andThrow(new SQLException()).once();
 		}
 
-		
 		expect(mockConnection.markPossiblyBroken((SQLException)EasyMock.anyObject())).andReturn(new SQLException()).anyTimes();
 		replay(mockClass);
 		if (!mockClass.equals(mockConnection)){
