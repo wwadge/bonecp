@@ -204,7 +204,7 @@ public class TestBoneCPConnectionProvider {
 		assertEquals(50, config.getMaxConnectionsPerPartition());
 		assertEquals(5, config.getAcquireIncrement());
 		assertEquals(5, config.getPartitionCount());
-		assertEquals(0, config.getReleaseHelperThreads());
+		assertEquals(3, config.getReleaseHelperThreads());
 		assertEquals(60, config.getIdleConnectionTestPeriodInMinutes());
 		assertEquals(240, config.getIdleMaxAgeInMinutes()); 
 		assertEquals(URL, config.getJdbcUrl());
