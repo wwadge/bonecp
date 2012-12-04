@@ -1985,7 +1985,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 	/**
 	 * Sets the detectUnclosedStatements. If true, print out a stack trace of where a statement was opened but not closed before
-	 * the connection was closed. {@link BoneCPConfig#closeOpenStatements}. 
+	 * the connection was closed. See also: {@link BoneCPConfig#closeOpenStatements}. 
 	 * @param detectUnclosedStatements the detectUnclosedStatements to set
 	 */
 	public void setDetectUnclosedStatements(boolean detectUnclosedStatements) {

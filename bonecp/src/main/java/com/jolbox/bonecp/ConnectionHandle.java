@@ -72,14 +72,16 @@ public class ConnectionHandle implements Connection{
 	private static final String UNCLOSED_LOG_ERROR_MESSAGE= "Statement was not properly closed off before this connection was closed.\n%s";
 	/** Exception message. */
 	private static final String CLOSED_TWICE_EXCEPTION_MESSAGE = "Connection closed from thread [%s] was closed again.\nStack trace of location where connection was first closed follows:\n";
+	/** This is only to aid code coverage since otherwise we are unable to cover the case of normal code but stmt set to null. */
+	protected static boolean testSupport;
 	/** Connection handle. */
-	private Connection connection = null;
+	protected Connection connection = null;
 	/** Last time this connection was used by an application. */
 	private long connectionLastUsedInMs;
 	/** Last time we sent a reset to this connection. */
 	private long connectionLastResetInMs;
 	/** Time when this connection was created. */
-	private long connectionCreationTimeInMs;
+	protected long connectionCreationTimeInMs;
 	/** Pool handle. */
 	private BoneCP pool; 
 	/** Config setting. */
@@ -91,7 +93,7 @@ public class ConnectionHandle implements Connection{
 	/** Config setting. */
 	private Boolean defaultAutoCommit;
 	/** Config setting. */
-	private boolean resetConnectionOnClose;
+	protected boolean resetConnectionOnClose;
 	/**
 	 * If true, this connection might have failed communicating with the
 	 * database. We assume that exceptions should be rare here i.e. the normal
@@ -107,15 +109,15 @@ public class ConnectionHandle implements Connection{
 	/** Prepared Statement Cache. */
 	private IStatementCache callableStatementCache = null;
 	/** Logger handle. */
-	private static final Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
+	protected static Logger logger = LoggerFactory.getLogger(ConnectionHandle.class);
 	/** An opaque handle for an application to use in any way it deems fit. */
 	private Object debugHandle;
 	/** Handle to the connection hook as defined in the config. */
 	private ConnectionHook connectionHook;
 	/** If true, give warnings if application tried to issue a close twice (for debugging only). */
-	private boolean doubleCloseCheck;
+	protected boolean doubleCloseCheck;
 	/** exception trace if doubleCloseCheck is enabled. */  
-	private volatile String doubleCloseException = null;
+	protected volatile String doubleCloseException = null;
 	/** If true, log sql statements. */
 	private boolean logStatementsEnabled;
 	/** Set to true if we have statement caching enabled. */
@@ -131,7 +133,7 @@ public class ConnectionHandle implements Connection{
 	/** Keep track of the thread. */
 	protected Thread threadUsingConnection;
 	/** Configured max connection age. */
-	private long maxConnectionAgeInMs;
+	@VisibleForTesting protected long maxConnectionAgeInMs;
 	/** if true, we care about statistics. */
 	private boolean statisticsEnabled;
 	/** Statistics handle. */
@@ -141,9 +143,9 @@ public class ConnectionHandle implements Connection{
 	 */
 	private volatile Thread threadWatch;
 	/** Handle to pool.finalizationRefs. */
-	private Map<Connection, Reference<ConnectionHandle>> finalizableRefs;
+	protected Map<Connection, Reference<ConnectionHandle>> finalizableRefs;
 	/** If true, connection tracking is disabled in the config. */
-	private boolean connectionTrackingDisabled;
+	protected boolean connectionTrackingDisabled;
 	/** If true, transaction has been marked as COMMITed or ROLLBACKed. */
 	@VisibleForTesting protected boolean txResolved = true;
 	/** Config setting. */
@@ -175,14 +177,14 @@ public class ConnectionHandle implements Connection{
 	 */
 	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01", "57P01", "HY000"); 
 	/** Keep track of open statements. */
-	private ConcurrentMap<Statement, String> trackedStatement;
+	protected ConcurrentMap<Statement, String> trackedStatement;
 	/** Avoid creating a new string object each time. */
 	private final String noStackTrace = "";
 
 	protected ConnectionHandle(BoneCP pool) throws SQLException{
 		this(null, pool, false);
 	}
-	
+
 	/**
 	 * Connection wrapper constructor
 	 * 
@@ -195,7 +197,7 @@ public class ConnectionHandle implements Connection{
 		boolean newConnection = connection == null;
 		this.pool = pool;
 		this.connectionHook = pool.getConfig().getConnectionHook();
-	
+
 		if (!recreating){
 			connectionLastUsedInMs = System.currentTimeMillis();
 			connectionLastResetInMs = System.currentTimeMillis();
@@ -321,7 +323,7 @@ public class ConnectionHandle implements Connection{
 	private ConnectionHandle(){
 		// for static factory.
 	}
- 
+
 	/** Sends any configured SQL init statement. 
 	 * @throws SQLException on error
 	 */
@@ -337,6 +339,9 @@ public class ConnectionHandle implements Connection{
 			try{
 				stmt = connection.createStatement();
 				stmt.execute(initSQL);
+				if (testSupport){ // only to aid code coverage, normally set to false
+					stmt = null;
+				}
 			} finally{
 				if (stmt != null){
 					stmt.close();
@@ -429,20 +434,21 @@ public class ConnectionHandle implements Connection{
 	 */
 	public void close() throws SQLException {
 		try {
-			if (this.logicallyClosed.compareAndSet(false, true)) {
-				
-				if (this.resetConnectionOnClose /*FIXME: && !getAutoCommit() && !isTxResolved() */){
-					/*if (this.autoCommitStackTrace != null){
+
+			if (this.resetConnectionOnClose /*FIXME: && !getAutoCommit() && !isTxResolved() */){
+				/*if (this.autoCommitStackTrace != null){
 						logger.debug(this.autoCommitStackTrace);
 						this.autoCommitStackTrace = null; 
 					} else {
 						logger.debug(DISABLED_AUTO_COMMIT_WARNING);
 					}*/
-					rollback();
-					if (!getAutoCommit()){
-						setAutoCommit(true);
-					}
+				rollback();
+				if (!getAutoCommit()){
+					setAutoCommit(true);
 				}
+			}
+
+			if (this.logicallyClosed.compareAndSet(false, true)) {
 
 
 				if (this.threadWatch != null){
@@ -466,7 +472,7 @@ public class ConnectionHandle implements Connection{
 					pool.getFinalizableRefs().remove(this.connection);
 				}
 
-				
+
 				ConnectionHandle handle = this.recreateConnectionHandle();
 				this.pool.connectionStrategy.cleanupConnection(this, handle);
 				this.pool.releaseConnection(handle);
@@ -710,13 +716,13 @@ public class ConnectionHandle implements Connection{
 
 	/**
 	 * Depending on options, return a stack trace or an empty string
-	 * @return
+	 * @return stacktrace / empty string
 	 */
-	private String maybeCaptureStackTrace() {
+	protected String maybeCaptureStackTrace() {
 		if (this.detectUnclosedStatements){
 			return this.pool.captureStackTrace(STATEMENT_NOT_CLOSED);
 		}
-		
+
 		return this.noStackTrace;
 	}
 
@@ -1569,7 +1575,8 @@ public class ConnectionHandle implements Connection{
 	 * @return true if the connection has expired.
 	 */
 	public boolean isExpired() {
-		return this.maxConnectionAgeInMs > 0 && isExpired(System.currentTimeMillis());
+		return this.maxConnectionAgeInMs > 0 
+				&& isExpired(System.currentTimeMillis());
 	}
 
 	/** Returns true if the given connection has exceeded the maxConnectionAge.
@@ -1577,7 +1584,8 @@ public class ConnectionHandle implements Connection{
 	 * @return true if the connection has expired.
 	 */
 	protected boolean isExpired(long currentTime) {
-		return this.maxConnectionAgeInMs > 0 && (currentTime - this.connectionCreationTimeInMs) > this.maxConnectionAgeInMs;
+		return this.maxConnectionAgeInMs > 0 
+				&& (currentTime - this.connectionCreationTimeInMs) > this.maxConnectionAgeInMs;
 	}
 
 	/**
@@ -1650,19 +1658,19 @@ public class ConnectionHandle implements Connection{
 	public String getUrl() {
 		return this.url;
 	}
-	
+
 	public String toString(){
-		
+
 		long timeMillis = System.currentTimeMillis();
-		
+
 		return Objects.toStringHelper(this)
-			.add("url", this.pool.getConfig().getJdbcUrl())
-			.add("user", this.pool.getConfig().getUsername())
-			.add("debugHandle", this.debugHandle)
-			.add("lastResetAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastResetInMs))
-			.add("lastUsedAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastUsedInMs))
-			.add("creationTimeAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionCreationTimeInMs))
-			.toString();
+				.add("url", this.pool.getConfig().getJdbcUrl())
+				.add("user", this.pool.getConfig().getUsername())
+				.add("debugHandle", this.debugHandle)
+				.add("lastResetAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastResetInMs))
+				.add("lastUsedAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastUsedInMs))
+				.add("creationTimeAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionCreationTimeInMs))
+				.toString();
 	}
 
 
