@@ -31,19 +31,21 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.Thread.State;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
+import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -65,17 +67,16 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
-
 import junit.framework.Assert;
 
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
 import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.hooks.CustomHook;
 
 /**
  * @author wwadge
@@ -106,6 +107,7 @@ public class TestBoneCP {
 	private MockResultSet mockResultSet;
 	/** Fake database driver. */
 	private MockJDBCDriver driver;
+	private BoneCP mockPool;
 
 	/**
 	 * Reset the mocks.
@@ -188,6 +190,7 @@ public class TestBoneCP {
 		mockLogger.error((String)anyObject(), anyObject());
 		expectLastCall().anyTimes();
 
+		mockPool = EasyMock.createNiceMock(BoneCP.class);
 		reset(mockConfig, mockKeepAliveScheduler, mockConnectionsScheduler, mockPartition, 
 				mockConnectionHandles, mockConnection, mockLock);
 	}
@@ -216,44 +219,46 @@ public class TestBoneCP {
 	/** Tests obtaining internal connection.
 	 * @throws SQLException
 	 * @throws ClassNotFoundException
-	 *
+	 */
 	@Test
 	public void testObtainInternalConnection() throws SQLException, ClassNotFoundException{
-		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
+		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		DataSource mockDataSourceBean = EasyMock.createNiceMock(DataSource.class);
+		expect(this.mockConfig.getDatasourceBean()).andReturn(mockDataSourceBean).anyTimes();
 
-		this.testClass.url = "jdbc:mock:driver";
-		this.config.setAcquireRetryDelayInMs(1);
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock:driver").anyTimes();
+		mockConfig.setAcquireRetryDelayInMs(1);
 		CustomHook testHook = new CustomHook();
-		this.config.setConnectionHook(testHook);
+		expect(mockConfig.getConnectionHook()).andReturn(testHook).anyTimes();
 		// make it fail the first time and succeed the second time
 		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
-		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
-		replay(this.mockPool);
-		this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
+		expect(mockDataSourceBean.getConnection()).andThrow(new SQLException()).once().andReturn(null).once(); // a call in obtainRaw
+		replay(this.mockPool, mockConfig, mockDataSourceBean);
+		this.testClass.obtainInternalConnection(mockConnection);
 		// get counts on our hooks
 		
 		assertEquals(1, testHook.fail);
 		assertEquals(1, testHook.acquire);
 		
 		// Test 2: Same thing but without the hooks
-		reset(this.mockPool);
+		reset(this.mockPool, mockDataSourceBean);
 		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
-		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
-		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
-		count=1;
-		this.config.setConnectionHook(null);
-		replay(this.mockPool);
-		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock"));
+		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockDataSourceBean.getConnection()).andThrow(new SQLException()).once().andReturn(this.mockConnection).once();
+		int count = 1;
+		mockConfig.setConnectionHook(null);
+		replay(this.mockPool, mockDataSourceBean);
+		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(mockConnection));
 		
 		// Test 3: Keep failing
-		reset(this.mockPool);
-		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
-		expect(this.mockPool.obtainRawInternalConnection()).andThrow(new SQLException()).anyTimes();
-		replay(this.mockPool);
+		reset(this.mockPool, mockDataSourceBean);
+		expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+		expect(mockDataSourceBean.getConnection()).andThrow(new SQLException()).anyTimes();
+		replay(this.mockPool, mockDataSourceBean);
 		count=99;
-		this.config.setAcquireRetryAttempts(2);
+		mockConfig.setAcquireRetryAttempts(2);
 		try{
-			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
+			this.testClass.obtainInternalConnection(mockConnection);
 			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// expected behaviour
@@ -261,8 +266,8 @@ public class TestBoneCP {
 		 
 		//	Test 4: Get signalled to interrupt fail delay
 		count=99;
-		this.config.setAcquireRetryAttempts(2);
-		this.config.setAcquireRetryDelayInMs(7000);
+		mockConfig.setAcquireRetryAttempts(2);
+		mockConfig.setAcquireRetryDelayInMs(7000);
 		final Thread currentThread = Thread.currentThread();
 
 		try{
@@ -280,16 +285,16 @@ public class TestBoneCP {
 					currentThread.interrupt();
 				}
 			}).start();
-			this.testClass.obtainInternalConnection(this.mockPool, "jdbc:mock");
+			this.testClass.obtainInternalConnection(mockConnection);
 			fail("Should have thrown an exception");
 		} catch (SQLException e){
 			// expected behaviour
 		}
-		this.config.setAcquireRetryDelayInMs(10);
+		mockConfig.setAcquireRetryDelayInMs(10);
 		
 		
 	}
-	*/
+	
 
 
 	/**
@@ -1238,24 +1243,10 @@ public class TestBoneCP {
 	}
 
 	@Test
-	@Ignore
 	public void testDetectJVMVersion() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, CloneNotSupportedException, SQLException{
 		AtomicInteger ai = new AtomicInteger();
 		
-				mockConfig = EasyMock.createNiceMock(BoneCPConfig.class);
-		expect(mockConfig.getClassLoader()).andReturn(new ClassLoader() {
-
-			@Override
-			public Class<?> findClass(String name)
-					throws ClassNotFoundException {
-				System.out.println(name);
-				if (name.equals("java.sql.Connection")){
-					throw new ClassNotFoundException();
-				}
-				return super.loadClass(name);
-			}
-			});
-
+		final Connection connection = EasyMock.createNiceMock(Connection.class);
 		
 		expect(mockConfig.clone()).andReturn(mockConfig).anyTimes();
 		expect(mockConfig.getPartitionCount()).andReturn(2).anyTimes();
@@ -1271,6 +1262,7 @@ public class TestBoneCP {
 		expect(mockConfig.isLogStatementsEnabled()).andReturn(true).anyTimes();
 		expect(mockConfig.getConnectionTimeoutInMs()).andReturn(Long.MAX_VALUE).anyTimes();
 		expect(mockConfig.getServiceOrder()).andReturn("LIFO").anyTimes();
+		expect(mockConfig.getClassLoader()).andReturn(this.getClass().getClassLoader()).anyTimes();
 		mockConfig.sanitize();
 		expectLastCall().anyTimes();
 
@@ -1280,8 +1272,18 @@ public class TestBoneCP {
 		
 		replay(mockConfig);
 
+		BoneCP.connectionClass = FakeTestClassJDK5.class.getCanonicalName();
 		BoneCP pool = new BoneCP(mockConfig);
-	assertEquals(5, pool.jvmMajorVersion);
+		assertEquals(5, pool.jvmMajorVersion);
+		
+		BoneCP.connectionClass = FakeTestClassJDK6.class.getCanonicalName();
+		pool = new BoneCP(mockConfig);
+		assertEquals(6, pool.jvmMajorVersion);
+
+		BoneCP.connectionClass = FakeTestClassJDK7.class.getCanonicalName();
+		pool = new BoneCP(mockConfig);
+		assertEquals(7, pool.jvmMajorVersion);
+
 	}
 	/** JMX setup test
 	 * @throws SecurityException

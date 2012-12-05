@@ -147,6 +147,8 @@ public class BoneCP implements Serializable, Closeable {
 	private volatile boolean driverInitialized = false;
 	/** Keep track of our jvm version. */
 	protected int jvmMajorVersion;
+	/** This is moved here to aid testing. */
+	protected static String connectionClass = "java.sql.Connection";
  
 	/**
 	 * Closes off this connection pool.
@@ -366,13 +368,13 @@ public class BoneCP implements Serializable, Closeable {
 		Class<?> clazz;
 		try {
 			jvmMajorVersion = 5;
-			clazz = Class.forName("java.sql.Connection", true, config.getClassLoader());
+			clazz = Class.forName(connectionClass , true, config.getClassLoader());
 			clazz.getMethod("createClob"); // since 1.6
 			jvmMajorVersion = 6;
 			clazz.getMethod("getNetworkTimeout"); // since 1.7
 			jvmMajorVersion = 7;
 		} catch (Exception e) {
-			// should never happen
+			// do nothing
 		}
 		try {
 			this.config = config.clone(); // immutable
