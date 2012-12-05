@@ -14,14 +14,13 @@
  |  See the License for the specific language governing permissions and
  |  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
-	<version>0.8.0-rc1-SNAPSHOT</version>
+	<version>0.8.0-rc1</version>
 	<packaging>pom</packaging>
 
 	<name>BoneCP</name>
@@ -34,7 +33,8 @@
 		<url>http://github.com/wwadge/bonecp</url>
 		<connection>scm:git:ssh://github.com/wwadge/bonecp.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/wwadge/bonecp.git</developerConnection>
-	</scm>
+	  <tag>bonecp-parent-0.8.0-rc1</tag>
+  </scm>
 
 	<organization>
 		<name>JolBox</name>
