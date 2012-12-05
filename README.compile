@@ -2,13 +2,17 @@ BoneCP Targets JDK 1.5, 1.6 and 1.7. You will have to select the target compiler
 
 
 JDK5, on a mac
-mvn clean compile -PJDK5 -Djdk5home=/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Home/
+mvn clean install -PJDK5 -Djdk5home=/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Home/
 
 JDK6, on a mac
-mvn clean compile -PJDK6 -Djdk6home=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/
+mvn clean install -PJDK6 -Djdk6home=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/
 
 JDK7 (default)
-mvn clean compile -PJDK7 -Djdk7home=/Library/Java/JavaVirtualMachines/jdk1.7.0_09.jdk/Contents/Home/
+mvn clean install -PJDK7 -Djdk7home=/Library/Java/JavaVirtualMachines/jdk1.7.0_09.jdk/Contents/Home/
 
 
-Note: Hibernate-provider project is no longer being maintained for jdk5
+Note #1: Hibernate-provider project is no longer being maintained for jdk5
+Note #2: To get around the issue whereby JDBC interfaces have evolved between JDK versions, there are fake interfaces that are used for compilation (not required to be present at runtime). Make sure you use
+"mvn clean install" at least once -- that will copy the generated fake interfaces into an local endorsed directory (not in your JDK installation).
+
+
