@@ -298,7 +298,6 @@ public class TestBoneCPConfig {
 		assertFalse(config.getStatementsCacheSize() == -1);
 
 		config.setMinConnectionsPerPartition(config.getMaxConnectionsPerPartition()+1);
-		config.setServiceOrder(null);
 		config.sanitize();
 		assertEquals("FIFO", config.getServiceOrder());
 
@@ -378,7 +377,6 @@ public class TestBoneCPConfig {
 		// coverage
 		BoneCPConfig config = new BoneCPConfig();
 		config.setDatasourceBean(null);
-		config.setDriverProperties(null);
 		config.setJdbcUrl("");
 		config.setPassword(null);
 		config.sanitize();

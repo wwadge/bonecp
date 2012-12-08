@@ -184,7 +184,7 @@ public class TestRobustness {
 				if (pool.partitions[0].getFreeConnections().size() == 5){
 					break;
 				}
-				Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+				Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
 			}
 			assertEquals(5, pool.partitions[0].getFreeConnections().size());
 			assertTrue(ch.possiblyBroken);

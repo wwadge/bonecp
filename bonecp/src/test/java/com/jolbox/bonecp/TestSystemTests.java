@@ -331,7 +331,7 @@ public class TestSystemTests {
 
 		for (int i=0; i < 10; i++) {
 			Thread.yield();
-			Thread.sleep(500); // give time for pool watch thread to fire up
+			Thread.sleep(200); // give time for pool watch thread to fire up
 			if (dsb.getTotalCreatedConnections() == 15) {
 				break;
 			}

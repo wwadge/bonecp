@@ -204,7 +204,7 @@ public class TestStatementHandle {
 			@SuppressWarnings("unqualified-field-access")
 			public Object answer() throws Throwable {
 				if (firstTime){
-					Thread.sleep(1300);
+					Thread.sleep(300);
 					firstTime=false;
 				}
 				return true;

@@ -458,13 +458,11 @@ public class MockConnection implements Connection {
 	}
 
 	// #ifdef JDK7
-	@Override
 	public NClob createNClob() throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public SQLXML createSQLXML() throws SQLException {
 		// TODO Auto-generated method stub
 		return null;

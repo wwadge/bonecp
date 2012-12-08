@@ -48,6 +48,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.FinalizableReferenceQueue;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -98,7 +101,7 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	private ExecutorService connectionsScheduler;
 	/** Configuration object used in constructor. */
-	private BoneCPConfig config;
+	@VisibleForTesting protected BoneCPConfig config;
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
 	private ListeningExecutorService asyncExecutor;
 	/** Logger class. */
@@ -129,8 +132,6 @@ public class BoneCP implements Serializable, Closeable {
 	/** statistics handle. */
 	protected Statistics statistics = new Statistics(this);
 	/** Config setting. */
-	@VisibleForTesting protected boolean externalAuth;
-	/** Config setting. */
 	@VisibleForTesting protected boolean nullOnConnectionTimeout;
 	/** Config setting. */
 	@VisibleForTesting
@@ -144,7 +145,7 @@ public class BoneCP implements Serializable, Closeable {
 	/** Config setting. */
 	@VisibleForTesting protected Properties clientInfo;
 	/** If false, we haven't made a dummy driver call first. */
-	private volatile boolean driverInitialized = false;
+	@VisibleForTesting protected volatile boolean driverInitialized = false;
 	/** Keep track of our jvm version. */
 	protected int jvmMajorVersion;
 	/** This is moved here to aid testing. */
@@ -288,10 +289,10 @@ public class BoneCP implements Serializable, Closeable {
 					logger.error(String.format("Failed to acquire connection to %s. Sleeping for %d ms. Attempts left: %d", url, acquireRetryDelayInMs, acquireRetryAttempts), e);
 
 					try {
-						Thread.sleep(acquireRetryDelayInMs);
-						if (acquireRetryAttempts > -1){
-							tryAgain = (acquireRetryAttempts--) != 0;
+						if (acquireRetryAttempts > 0){
+							Thread.sleep(acquireRetryDelayInMs);
 						}
+						tryAgain = (acquireRetryAttempts--) > 0;
 					} catch (InterruptedException e1) {
 						tryAgain=false;
 					}
@@ -320,8 +321,9 @@ public class BoneCP implements Serializable, Closeable {
 		String username = this.config.getUsername();
 		String password = this.config.getPassword();
 		Properties props = this.config.getDriverProperties();
-
-		if (this.externalAuth && props == null){
+		boolean externalAuth = this.config.isExternalAuth();
+		if (externalAuth && 
+				props == null){
 			props = new Properties();
 		}
 
@@ -351,7 +353,7 @@ public class BoneCP implements Serializable, Closeable {
 			result = DriverManager.getConnection(url, username, password);
 		}
 		// #ifdef JDK>6
-		if (this.clientInfo != null && jvmMajorVersion > 5 ){
+		if (this.clientInfo != null){ // we take care of null'ing this in the constructor if jdk < 6
 			result.setClientInfo(this.clientInfo);
 		}
 		// #endif JDK>6
@@ -377,7 +379,7 @@ public class BoneCP implements Serializable, Closeable {
 			// do nothing
 		}
 		try {
-			this.config = config.clone(); // immutable
+			this.config = Preconditions.checkNotNull(config).clone(); // immutable
 		} catch (CloneNotSupportedException e1) {
 			throw new SQLException("Cloning of the config failed");
 		}
@@ -387,14 +389,13 @@ public class BoneCP implements Serializable, Closeable {
 		this.closeConnectionWatchTimeoutInMs = config.getCloseConnectionWatchTimeoutInMs();
 		this.poolAvailabilityThreshold = config.getPoolAvailabilityThreshold();
 		this.connectionTimeoutInMs = config.getConnectionTimeoutInMs();
-		this.externalAuth = config.isExternalAuth();
 
 		if (this.connectionTimeoutInMs == 0){
 			this.connectionTimeoutInMs = Long.MAX_VALUE;
 		}
 		this.nullOnConnectionTimeout = config.isNullOnConnectionTimeout();
 		this.resetConnectionOnClose = config.isResetConnectionOnClose();
-		this.clientInfo = config.getClientInfo();
+		this.clientInfo = jvmMajorVersion > 5  ? config.getClientInfo() : null;
 		AcquireFailConfig acquireConfig = new AcquireFailConfig();
 		acquireConfig.setAcquireRetryAttempts(new AtomicInteger(0));
 		acquireConfig.setAcquireRetryDelayInMs(0);

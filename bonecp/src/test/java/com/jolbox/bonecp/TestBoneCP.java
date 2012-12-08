@@ -290,6 +290,22 @@ public class TestBoneCP {
 		} catch (SQLException e){
 			// expected behaviour
 		}
+		
+		// Test: No acquire delay
+				reset(this.mockPool, mockDataSourceBean, mockConfig);
+				expect(this.mockPool.getConfig()).andReturn(mockConfig).anyTimes();
+				expect(mockDataSourceBean.getConnection()).andThrow(new SQLException()).anyTimes();
+				mockConfig.setAcquireRetryAttempts(0);
+				replay(this.mockPool, mockDataSourceBean, mockConfig);
+				count=99;
+				try{
+					this.testClass.obtainInternalConnection(mockConnection);
+					fail("Should have thrown an exception");
+				} catch (SQLException e){
+					// expected behaviour
+				}
+				
+				
 		mockConfig.setAcquireRetryDelayInMs(10);
 		
 		
@@ -493,19 +509,24 @@ public class TestBoneCP {
 	 * @throws SecurityException 
 	 */
 	@Test
-	public void testGetConnectionViaDataSourceBean() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+	public void testGetRawConnectionViaDataSourceBean() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
 		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
-		expect(mockConfig.getJdbcUrl()).andReturn("").once().andReturn("jdbc:mock:foo").once();
+		expect(mockConfig.getJdbcUrl()).andReturn("").once().andReturn("jdbc:mock:foo").times(2);
 		expect(mockConfig.getUsername()).andReturn(null).anyTimes();
-		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once().andReturn(null).once();
-
-
+		expect(mockConfig.getDatasourceBean()).andReturn(mockDataSource).once().andReturn(null).times(2);
+		testClass.clientInfo = new Properties(); // coverage
 	
 		replay(mockConfig, mockDataSource);
 		testClass.obtainRawInternalConnection();
+	
 		// 2nd path
+		testClass.jvmMajorVersion=5;
 		testClass.obtainRawInternalConnection();
+
+		testClass.clientInfo = null;
+		testClass.obtainRawInternalConnection(); // coverage
+ 
 		verify(mockConfig, mockDataSource);
 	}
 
@@ -520,16 +541,63 @@ public class TestBoneCP {
 	 * @throws SecurityException 
 	 */
 	@Test
-	public void testGetConnectionWithExternalAuth() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
-		boolean oldValue = testClass.externalAuth;
-		testClass.externalAuth = true;
-		expect(mockConfig.getDriverProperties()).andReturn(null).once();
+	public void testGetRawConnectionWithExternalAuth() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		testClass.config = mockConfig;
+		expect(mockConfig.isExternalAuth()).andReturn(true).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
+		
+		replay(mockConfig);
+		assertNotNull(testClass.obtainRawInternalConnection());
+		verify(mockConfig);
+
+		// coverage
+		reset(mockConfig);
+		expect(mockConfig.isExternalAuth()).andReturn(false).once();
+		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once();
 		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
 		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
 		replay(mockConfig);
 		assertNotNull(testClass.obtainRawInternalConnection());
 		verify(mockConfig);
-		testClass.externalAuth = oldValue;
+		
+	}
+
+	@Test
+	public void testGetRawConnectionCoverage() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
+		testClass.config = mockConfig;
+		testClass.driverInitialized = false;
+		// coverage
+		reset(mockConfig);
+		expect(mockConfig.isExternalAuth()).andReturn(false).once();
+		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
+		replay(mockConfig);
+		assertNotNull(testClass.obtainRawInternalConnection());
+		verify(mockConfig);
+
+		//  coverage of exception
+		driver.setMockJDBCAnswer(new MockJDBCAnswer() {
+			
+			public Connection answer() throws SQLException {
+				throw new SQLException();
+			}
+		});
+		
+		reset(mockConfig);
+		expect(mockConfig.isExternalAuth()).andReturn(false).once();
+		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
+		replay(mockConfig);
+		try{
+			testClass.obtainRawInternalConnection();
+		} catch (SQLException e){
+			// nothing
+		}
+		driver.unregister();
+		
 	}
 
 
@@ -546,12 +614,15 @@ public class TestBoneCP {
 	public void testGetConnectionViaDriverProperties() throws SQLException, InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
 		//		DataSource mockDataSource = EasyMock.createNiceMock(DataSource.class);
 		//		expect(mockDataSource.getConnection()).andReturn(mockConnection).once();
-		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once();
-		expect(mockConfig.getDatasourceBean()).andReturn(null).once();
-		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).once();
+		expect(mockConfig.getDriverProperties()).andReturn(new Properties()).once().andReturn(null).once();
+		expect(mockConfig.getDatasourceBean()).andReturn(null).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
+		expect(mockConfig.isExternalAuth()).andReturn(true).once().andReturn(false).once();
 		replay(mockConfig);
 		testClass.obtainRawInternalConnection();
+		testClass.obtainRawInternalConnection(); // coverage
 		verify(mockConfig);
+		
 	}
 
 	/**

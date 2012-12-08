@@ -36,7 +36,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import static com.google.common.base.Preconditions.*;
 import com.jolbox.bonecp.hooks.ConnectionHook;
 
 
@@ -121,7 +123,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Disable connection tracking. */
 	private boolean disableConnectionTracking;
 	/** Used when the alternate way of obtaining a connection is required */
-	private Properties driverProperties;
+	@VisibleForTesting protected Properties driverProperties;
 	/** Time to wait before a call to getConnection() times out and returns an error. */ 
 	private long connectionTimeoutInMs = 0;
 	/** Time in ms to wait for close connection watch thread. */
@@ -131,7 +133,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** Config property. */
 	private String configFile;
 	/** Queue mode. Values currently understood are FIFO and LIFO. */
-	private String serviceOrder;
+	private String serviceOrder = "FIFO";
 	/** If true, keep track of some statistics. */
 	private boolean statisticsEnabled;
 	/** The default auto-commit state of created connections. */
@@ -180,7 +182,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param poolName to set.
 	 */
 	public void setPoolName(String poolName) {
-		this.poolName = poolName;
+		this.poolName = checkNotNull(poolName);
 	}
 
 	/** {@inheritDoc}
@@ -412,7 +414,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit Time granularity of given parameter. 
 	 */
 	public void setIdleConnectionTestPeriod(long idleConnectionTestPeriod, TimeUnit timeUnit) {
-		this.idleConnectionTestPeriodInSeconds = TimeUnit.SECONDS.convert(idleConnectionTestPeriod, timeUnit); 
+		this.idleConnectionTestPeriodInSeconds = TimeUnit.SECONDS.convert(idleConnectionTestPeriod, checkNotNull(timeUnit)); 
 	}
 
 	/** Deprecated. 
@@ -486,7 +488,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param timeUnit idleMaxAge time granularity.
 	 */
 	public void setIdleMaxAge(long idleMaxAge, TimeUnit timeUnit) {
-		this.idleMaxAgeInSeconds = TimeUnit.SECONDS.convert(idleMaxAge, timeUnit); 
+		this.idleMaxAgeInSeconds = TimeUnit.SECONDS.convert(idleMaxAge, checkNotNull(timeUnit)); 
 	}
 
 
@@ -513,7 +515,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param connectionTestStatement to set.
 	 */
 	public void setConnectionTestStatement(String connectionTestStatement) {
-		this.connectionTestStatement = connectionTestStatement;
+		this.connectionTestStatement = checkNotNull(connectionTestStatement);
 	}
 
 	/** Deprecated. Use getStatementsCacheSize() instead
@@ -671,7 +673,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param initSQL the initSQL to set
 	 */
 	public void setInitSQL(String initSQL) {
-		this.initSQL = initSQL;
+		this.initSQL = checkNotNull(initSQL);
 	}
 
 	/** Returns if BoneCP is configured to create a helper thread to watch over connection acquires that are never released (or released
@@ -817,8 +819,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param connectionHookClassName the connectionHook class name to set
 	 */
 	public void setConnectionHookClassName(String connectionHookClassName) {
-		this.connectionHookClassName = connectionHookClassName;
-		if (connectionHookClassName != null){
+		this.connectionHookClassName = checkNotNull(connectionHookClassName);
 			Object hookClass;
 			try {
 				hookClass = loadClass(connectionHookClassName).newInstance();
@@ -827,7 +828,6 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 				logger.error("Unable to create an instance of the connection hook class ("+connectionHookClassName+")");
 				this.connectionHook = null;
 			} 
-		}
 	}
 
 	/** Returns the connection hook class name as passed via the setter
@@ -1048,12 +1048,10 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param driverProperties the driverProperties to set
 	 */
 	public void setDriverProperties(Properties driverProperties) {
-		if (driverProperties != null){
 			// make a copy of the properties so that we don't attempt to create more connections
 			// later on and are possibly surprised by having different urls/usernames/etc
 			this.driverProperties = new Properties();
-			this.driverProperties.putAll(driverProperties);
-		}
+			this.driverProperties.putAll(checkNotNull(driverProperties));
 	}
 
 	/** Deprecated.
@@ -1216,7 +1214,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param configFile the configFile to set
 	 */
 	public void setConfigFile(String configFile) {
-		this.configFile = configFile;
+		this.configFile = checkNotNull(configFile);
 	}
 
 	/**
@@ -1232,7 +1230,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param serviceOrder the serviceOrder to set
 	 */
 	public void setServiceOrder(String serviceOrder) {
-		this.serviceOrder = serviceOrder;
+		this.serviceOrder = checkNotNull(serviceOrder);
 	}
 
 	/**
@@ -1281,7 +1279,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param defaultReadOnly the defaultReadOnly to set
 	 */
 	public void setDefaultReadOnly(Boolean defaultReadOnly) {
-		this.defaultReadOnly = defaultReadOnly;
+		this.defaultReadOnly = checkNotNull(defaultReadOnly);
 	}
 
 
@@ -1298,7 +1296,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param defaultCatalog the defaultCatalog to set
 	 */
 	public void setDefaultCatalog(String defaultCatalog) {
-		this.defaultCatalog = defaultCatalog;
+		this.defaultCatalog = checkNotNull(defaultCatalog);
 	}
 
 	/**
@@ -1315,7 +1313,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @param defaultTransactionIsolation the defaultTransactionIsolation to set
 	 */
 	public void setDefaultTransactionIsolation(String defaultTransactionIsolation) {
-		this.defaultTransactionIsolation = defaultTransactionIsolation;
+		this.defaultTransactionIsolation = checkNotNull(defaultTransactionIsolation);
 	}
 
 	/**
@@ -1353,7 +1351,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public BoneCPConfig(Properties props) throws Exception {
 		this();
-		this.setProperties(props);
+		this.setProperties(checkNotNull(props));
 	}
 
 
@@ -1362,7 +1360,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 * @throws Exception on parse errors
 	 */
 	public BoneCPConfig(String sectionName) throws Exception{
-		this(BoneCPConfig.class.getResourceAsStream("/bonecp-config.xml"), sectionName);
+		this(BoneCPConfig.class.getResourceAsStream("/bonecp-config.xml"), checkNotNull(sectionName));
 	}
 
 	/** Initialise the configuration by loading an XML file containing the settings. 
@@ -1372,7 +1370,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public BoneCPConfig(InputStream xmlConfigFile, String sectionName) throws Exception{
 		this();
-		setXMLProperties(xmlConfigFile, sectionName);
+		setXMLProperties(xmlConfigFile, checkNotNull(sectionName));
 	}
 
 	/**
@@ -1698,7 +1696,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 			this.connectionTestStatement = this.connectionTestStatement.trim();
 		}
 
-		this.serviceOrder = this.serviceOrder != null ? this.serviceOrder.toUpperCase() : "FIFO";
+		this.serviceOrder = this.serviceOrder.toUpperCase();
 
 		if (!(this.serviceOrder.equals("FIFO") || this.serviceOrder.equals("LIFO"))){
 			logger.warn("Queue service order is not set to FIFO or LIFO. Defaulting to FIFO.");

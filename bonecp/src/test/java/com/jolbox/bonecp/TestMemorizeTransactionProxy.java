@@ -499,7 +499,7 @@ public class TestMemorizeTransactionProxy {
 		this.config.setJdbcUrl("jdbc:mock:driver");
 		this.config.setMinConnectionsPerPartition(2);
 		this.config.setMaxConnectionsPerPartition(2);
-		this.config.setAcquireRetryDelayInMs(10000L);
+		this.config.setAcquireRetryDelayInMs(100L);
 		this.config.setAcquireRetryAttempts(2);
 //		config.setConnectionHook(new CoverageHook());
 		BoneCP pool = new BoneCP(this.config);

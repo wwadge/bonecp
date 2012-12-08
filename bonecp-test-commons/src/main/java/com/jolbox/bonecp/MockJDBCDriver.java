@@ -28,7 +28,6 @@ import java.util.Properties;
 // #ifdef JDK7
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
-// #endif JDK7
 
 /** A Fake jdbc driver for mocking purposes.
  * @author Wallace
