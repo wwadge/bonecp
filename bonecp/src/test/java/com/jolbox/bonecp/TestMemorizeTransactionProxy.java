@@ -41,7 +41,6 @@ import java.sql.Statement;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jolbox.bonecp.hooks.CoverageHook;
@@ -313,14 +312,13 @@ public class TestMemorizeTransactionProxy {
 		pool.close();
 
 
-	}
+	} 
 
 	/** Fail, then fail again on replay to see that it recovers.
 	 * @throws IllegalArgumentException
 	 * @throws Throwable
 	 */
 	@Test
-	@Ignore
 	public void testReplayTransactionWithFailuresOnReplay() throws IllegalArgumentException, Throwable{
 
 		count = 1;
@@ -391,6 +389,7 @@ public class TestMemorizeTransactionProxy {
 
 		verify(mockConnection, mockPreparedStatement,mockConnection2, mockPreparedStatement2, mockPreparedStatement3);
 
+		mockDriver.unregister();
 		mockDriver.disable();
 		pool.close();
 

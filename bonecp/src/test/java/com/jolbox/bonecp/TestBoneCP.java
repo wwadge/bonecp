@@ -44,6 +44,7 @@ import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -82,6 +83,7 @@ import com.jolbox.bonecp.hooks.CustomHook;
  * @author wwadge
  *
  */
+@SuppressWarnings("resource")
 public class TestBoneCP {
 	/** Class under test. */
 	private BoneCP testClass;
@@ -975,6 +977,58 @@ public class TestBoneCP {
 		verify(mockPartition, mockConnection);
 	}
 
+	/**
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(ConnectionHandle)}.
+	 * @throws InterruptedException 
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testInternalReleaseConnectionWhereConnectionIsMarkedBrokenButConnectionTestSucceeds() throws InterruptedException, SQLException {
+		// Test case where connection is broken
+		mockConnection.logicallyClosed = new AtomicBoolean(false);
+		reset(mockConnection,mockPartition, mockConnectionHandles);
+		expect(mockConnection.isPossiblyBroken()).andReturn(true).once();
+		expect(mockConfig.getConnectionTestStatement()).andReturn(null).once();
+		expect(mockConnection.getMetaData()).andReturn(EasyMock.createNiceMock(DatabaseMetaData.class)).once();
+
+		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
+		expect(mockPartition.getAvailableConnections()).andReturn(1).anyTimes();
+
+
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+
+				Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
+		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+
+		replay(mockPartition, mockConnection);
+		testClass.internalReleaseConnection(mockConnection);
+		verify(mockPartition, mockConnection);
+	}
+
+	/**
+	 * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(ConnectionHandle)}.
+	 * @throws InterruptedException 
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testInternalReleaseConnectionWherePoolisShuttingDown() throws InterruptedException, SQLException {
+		mockConnection.logicallyClosed = new AtomicBoolean(false);
+		reset(mockConnection,mockPartition, mockConnectionHandles);
+
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition).anyTimes();
+
+		Connection mockRealConnection = EasyMock.createNiceMock(Connection.class);
+		expect(mockConnection.getInternalConnection()).andReturn(mockRealConnection).anyTimes();
+		mockConnection.internalClose();
+		expectLastCall().once();
+
+		replay(mockPartition, mockConnection);
+		testClass.poolShuttingDown = true;
+		testClass.internalReleaseConnection(mockConnection);
+		testClass.poolShuttingDown = false;
+		verify(mockPartition, mockConnection);
+	}
+
     /**
      * Test method for {@link com.jolbox.bonecp.BoneCP#internalReleaseConnection(ConnectionHandle)}.
      *
@@ -1245,7 +1299,10 @@ public class TestBoneCP {
 		expect(mockPartition.getFreeConnections()).andReturn(mockConnectionHandles).anyTimes();
 		expect(mockPartition.getAvailableConnections()).andReturn(3).anyTimes();
 		replay(mockPartition, mockConnectionHandles);
+		ConnectionPartition cp = testClass.partitions[1]; 
 		assertEquals(4, testClass.getTotalLeased());
+		testClass.partitions[1] = null; // test safety
+		assertEquals(2, testClass.getTotalLeased());
 		verify(mockPartition, mockConnectionHandles);
 
 	}
@@ -1260,7 +1317,10 @@ public class TestBoneCP {
 
 		// expect(mockConnectionHandles.size()).andReturn(3).anyTimes();
 		replay(mockPartition, mockConnectionHandles);
+		
 		assertEquals(6, testClass.getTotalFree());
+		testClass.partitions[1] = null; // test safety
+		assertEquals(3, testClass.getTotalFree());
 		verify(mockPartition, mockConnectionHandles);
 
 	}
@@ -1273,6 +1333,9 @@ public class TestBoneCP {
 		expect(mockPartition.getCreatedConnections()).andReturn(5).anyTimes();
 		replay(mockPartition);
 		assertEquals(10, testClass.getTotalCreatedConnections());
+		testClass.partitions[1] = null; // test safety
+		assertEquals(5, testClass.getTotalCreatedConnections());
+		
 		verify(mockPartition);
 
 	}
@@ -1295,24 +1358,85 @@ public class TestBoneCP {
 	@Test
 	public void testCoverage() throws SQLException, CloneNotSupportedException, ClassNotFoundException{
 		BoneCPConfig config = EasyMock.createNiceMock(BoneCPConfig.class);
+		expect(config.isLazyInit()).andReturn(true).anyTimes();
+		expect(config.isDisableJMX()).andReturn(true).anyTimes();
+
 		expect(config.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
 		expect(config.getMinConnectionsPerPartition()).andReturn(2).anyTimes();
 		expect(config.getMaxConnectionsPerPartition()).andReturn(20).anyTimes();
 		expect(config.getPartitionCount()).andReturn(1).anyTimes();
 		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
 		expect(config.getMaxConnectionAgeInSeconds()).andReturn(100000L).anyTimes();
-		expect(config.clone()).andThrow(new CloneNotSupportedException()).anyTimes();
+		expect(config.clone()).andThrow(new CloneNotSupportedException()).once().andReturn(config).once();
 		replay(config);
 		try{
 			new BoneCP(config);
-		} catch(Exception e){
+			fail("Should throw exception because clone throws a fake exception");
+		} catch(SQLException e){
 			// nothing
 		}
 		
-		
+
+		new BoneCP(config);
+
 
 	}
 
+	@Test
+	public void testIdleThreadsStartCoverage() throws SQLException, CloneNotSupportedException, ClassNotFoundException{
+		BoneCPConfig config = EasyMock.createNiceMock(BoneCPConfig.class);
+		expect(config.isLazyInit()).andReturn(true).anyTimes();
+		expect(config.isDisableJMX()).andReturn(true).anyTimes();
+
+		expect(config.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
+		expect(config.getMinConnectionsPerPartition()).andReturn(2).anyTimes();
+		expect(config.getMaxConnectionsPerPartition()).andReturn(20).anyTimes();
+		expect(config.getPartitionCount()).andReturn(1).anyTimes();
+		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
+		expect(config.getMaxConnectionAgeInSeconds()).andReturn(100000L).anyTimes();
+		expect(config.clone()).andReturn(config).anyTimes();
+		expect(config.getIdleConnectionTestPeriod((TimeUnit)anyObject())).andReturn(5L).times(2).andReturn(0L).times(2);
+		expect(config.getIdleMaxAge(TimeUnit.SECONDS)).andReturn(0L).times(2).andReturn(4L).times(2);
+		reset(mockKeepAliveScheduler);
+		replay(config, mockKeepAliveScheduler);
+		
+		BoneCP pool = new BoneCP(config); // test idleConnectionTestPeriod > 0. max age = 0
+//		assertEquals(1, pool.keepAliveScheduler.shutdownNow().size());
+	
+		pool = new BoneCP(config); // test idleConnectionTestPeriod = 0. max age > 0
+//		assertEquals(1, pool.keepAliveScheduler.shutdownNow().size());
+		
+		
+		verify(config, mockKeepAliveScheduler);
+	}
+
+
+	@Test
+	public void testIdleThreadsStart2Coverage() throws SQLException, CloneNotSupportedException, ClassNotFoundException{
+		BoneCPConfig config = EasyMock.createNiceMock(BoneCPConfig.class);
+		expect(config.isLazyInit()).andReturn(true).anyTimes();
+		expect(config.isDisableJMX()).andReturn(true).anyTimes();
+
+		expect(config.getJdbcUrl()).andReturn(CommonTestUtils.url).anyTimes();
+		expect(config.getMinConnectionsPerPartition()).andReturn(2).anyTimes();
+		expect(config.getMaxConnectionsPerPartition()).andReturn(20).anyTimes();
+		expect(config.getPartitionCount()).andReturn(1).anyTimes();
+		expect(config.getServiceOrder()).andReturn("LIFO").anyTimes();
+		expect(config.getMaxConnectionAgeInSeconds()).andReturn(100000L).anyTimes();
+		expect(config.clone()).andReturn(config).anyTimes();
+		expect(config.getIdleConnectionTestPeriod((TimeUnit)anyObject())).andReturn(5L).anyTimes();
+		expect(config.getIdleMaxAge(TimeUnit.SECONDS)).andReturn(4L).anyTimes();
+		reset(mockKeepAliveScheduler);
+		replay(config, mockKeepAliveScheduler);
+		
+		
+		BoneCP pool = new BoneCP(config); // test idleConnectionTestPeriod > 0. max age > 0
+		assertEquals(1, pool.keepAliveScheduler.shutdownNow().size());
+
+		verify(config, mockKeepAliveScheduler);
+	}
+
+	
 	@Test
 	public void testDetectJVMVersion() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, CloneNotSupportedException, SQLException{
 		AtomicInteger ai = new AtomicInteger();

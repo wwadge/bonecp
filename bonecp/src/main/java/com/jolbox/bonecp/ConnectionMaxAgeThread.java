@@ -101,17 +101,12 @@ public class ConnectionMaxAgeThread implements Runnable {
 
 					Thread.sleep(20L); // test slowly, this is not an operation that we're in a hurry to deal with (avoid CPU spikes)...
 				}
-			} catch (InterruptedException e){
-				logger.error("Connection max age thread received interrupt request. Shutting down thread", e);
-
-				this.scheduler.shutdownNow();
-				return;
-			} catch (Throwable e) {
+			}  catch (Throwable e) {
 				if (this.scheduler.isShutdown()){
 					logger.debug("Shutting down connection max age thread.");
-					break;
-				} 
-				logger.error("Connection max age thread exception.", e);
+				} else {
+					logger.error("Connection max age thread exception.", e);
+				}
 			}
 
 		} // throw it back on the queue

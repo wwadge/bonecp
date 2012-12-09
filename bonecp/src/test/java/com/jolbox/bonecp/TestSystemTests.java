@@ -284,7 +284,7 @@ public class TestSystemTests {
 		BoneCPDataSource dsb = new BoneCPDataSource(config);
 		dsb.setDriverClass("com.jolbox.bonecp.MockJDBCDriver");
 
-		CommonTestUtils.startThreadTest(15, 10, dsb, 50, false);
+		CommonTestUtils.startThreadTest(15, 10, dsb, 20, false);
 		assertEquals(0, dsb.getTotalLeased());
 		dsb.close();
 		CommonTestUtils.logPass();

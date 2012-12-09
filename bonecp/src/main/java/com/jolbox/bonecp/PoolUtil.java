@@ -34,15 +34,8 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public class PoolUtil {
 
-	private static Class<Throwable> sqlExceptionClass;
-
-	static{
-		try {
-			sqlExceptionClass = (Class<Throwable>) Class.forName("java.sql.SQLException");
-		} catch (Exception e) {
-			// do nothing
-		}
-	}	   
+	protected static Class<Throwable> sqlExceptionClass;
+	private static final String exceptionClass = "java.sql.SQLException";
 
 	/** Returns sql statement used in this prepared statement together with the parameters.
 	 * @param sql base sql statement
@@ -189,9 +182,13 @@ public class PoolUtil {
 	}	
 
 	public static SQLException generateSQLException(String reason, Throwable t) {
-		// slow, but this is for exceptional cases only
+		// slow, but this is for very exceptional cases only
 		try {
 			// try JDK6/7 style constructor
+			if (sqlExceptionClass == null){ // yes there's a chance this can race but nothing bad happens except for a performance hit...
+				sqlExceptionClass = (Class<Throwable>) Class.forName(exceptionClass);
+			}
+
 				return (SQLException)sqlExceptionClass.getConstructor(String.class, Throwable.class).newInstance(reason, t);
 		} catch (Exception e) {
 			// fallback to JDK5

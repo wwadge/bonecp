@@ -186,7 +186,7 @@ public class TestConnectionMaxAgeTester {
 		verify(mockExecutor, mockConnectionException);
 		
 	}
-	
+
 	/**
 	 * @throws SQLException
 	 */

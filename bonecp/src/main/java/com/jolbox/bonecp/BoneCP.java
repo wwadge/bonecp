@@ -48,9 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.FinalizableReferenceQueue;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Preconditions.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -92,7 +90,7 @@ public class BoneCP implements Serializable, Closeable {
 	/** Handle to factory that creates 1 thread per partition that periodically wakes up and performs some
 	 * activity on the connection.
 	 */
-	private ScheduledExecutorService keepAliveScheduler;
+	@VisibleForTesting protected ScheduledExecutorService keepAliveScheduler;
 	/** Handle to factory that creates 1 thread per partition that periodically wakes up and performs some
 	 * activity on the connection.
 	 */
@@ -469,7 +467,9 @@ public class BoneCP implements Serializable, Closeable {
 				if (delayInSeconds == 0L){
 					delayInSeconds = config.getIdleMaxAge(TimeUnit.SECONDS);
 				}
-				if (config.getIdleMaxAge(TimeUnit.SECONDS) != 0 && config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) != 0 && config.getIdleMaxAge(TimeUnit.SECONDS) < delayInSeconds){
+				if (config.getIdleMaxAge(TimeUnit.SECONDS) < delayInSeconds
+						&& config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) != 0 
+						&& config.getIdleMaxAge(TimeUnit.SECONDS) != 0){
 					delayInSeconds = config.getIdleMaxAge(TimeUnit.SECONDS);
 				}
 				this.keepAliveScheduler.schedule(connectionTester, delayInSeconds, TimeUnit.SECONDS);
@@ -591,7 +591,8 @@ public class BoneCP implements Serializable, Closeable {
 	 */
 	protected void maybeSignalForMoreConnections(ConnectionPartition connectionPartition) {
 
-		if (!connectionPartition.isUnableToCreateMoreTransactions() && !this.poolShuttingDown &&
+		if (!connectionPartition.isUnableToCreateMoreTransactions() 
+				&& !this.poolShuttingDown &&
 				connectionPartition.getAvailableConnections()*100/connectionPartition.getMaxConnections() <= this.poolAvailabilityThreshold){
 			connectionPartition.getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 		}
@@ -634,7 +635,9 @@ public class BoneCP implements Serializable, Closeable {
 			connectionHandle.recoveryResult.getReplaceTarget().clear();
 		}
 
-		if (connectionHandle.isExpired() || (!this.poolShuttingDown && connectionHandle.isPossiblyBroken()
+		if (connectionHandle.isExpired() || 
+				(!this.poolShuttingDown 
+						&& connectionHandle.isPossiblyBroken()
 				&& !isConnectionHandleAlive(connectionHandle))){
 
             if (connectionHandle.isExpired()) {

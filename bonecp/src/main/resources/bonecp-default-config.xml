@@ -170,7 +170,7 @@
 		<!-- <property name="configFile">(null or no default value)</property> -->
 
 		<!-- Sets the queue serviceOrder. Values currently understood are FIFO and LIFO. -->
-		<!-- <property name="serviceOrder">(null or no default value)</property> -->
+		<property name="serviceOrder">FIFO</property>
 
 		<!-- If set to true, keep track of some more statistics for exposure via 
 		     JMX. Will slow down the pool operation. -->
