@@ -41,8 +41,8 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
     ConnectionHandle result = null;
 
     int partition = (int) (Thread.currentThread().getId() % this.pool.partitionCount);
-    ConnectionPartition connectionPartition = this.pool.partitions[partition];
-
+    final ConnectionPartition connectionPartition = this.pool.partitions[partition];
+    
     result = connectionPartition.getFreeConnections().poll();
 
     if (result == null) {
@@ -52,7 +52,7 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
           continue; // we already determined it's not here
         }
         result = this.pool.partitions[i].getFreeConnections().poll(); // try our luck with this partition
-        connectionPartition = this.pool.partitions[i];
+       
         if (result != null) {
           break;  // we found a connection
         }
@@ -71,12 +71,12 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
 	protected Connection getConnectionInternal() throws SQLException {
 		
 		ConnectionHandle result = pollConnection();
-
-		int partition = (int) (Thread.currentThread().getId() % this.pool.partitionCount);
-		ConnectionPartition connectionPartition = this.pool.partitions[partition];
 		
 		// we still didn't find an empty one, wait forever (or as per config) until our partition is free
 		if (result == null) {
+			int partition = (int) (Thread.currentThread().getId() % this.pool.partitionCount);
+			ConnectionPartition connectionPartition = this.pool.partitions[partition];
+
 			try {
 				result = connectionPartition.getFreeConnections().poll(this.pool.connectionTimeoutInMs, TimeUnit.MILLISECONDS);
 				if (result == null){
