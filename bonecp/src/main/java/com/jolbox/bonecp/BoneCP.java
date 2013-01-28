@@ -17,6 +17,7 @@
 package com.jolbox.bonecp;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.ref.Reference;
@@ -181,6 +182,13 @@ public class BoneCP implements Serializable, Closeable {
 			this.connectionStrategy.terminateAllConnections();
 			unregisterDriver();
 			registerUnregisterJMX(false);
+			if (finalizableRefQueue instanceof Closeable) {
+			    try {
+					((Closeable) finalizableRefQueue).close();
+				} catch (IOException e) {
+					logger.error("Failed to close finalizable queue. Try disable connection tracking.");
+				}
+			  }
 			logger.info("Connection pool has been shutdown.");
 		}
 	}
@@ -289,7 +297,7 @@ public class BoneCP implements Serializable, Closeable {
 					try {
 						if (acquireRetryAttempts > 0){
 							Thread.sleep(acquireRetryDelayInMs);
-						}
+	 					}
 						tryAgain = (acquireRetryAttempts--) > 0;
 					} catch (InterruptedException e1) {
 						tryAgain=false;

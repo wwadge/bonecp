@@ -268,6 +268,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 		Throwable failedThrowable = null;
 
 		ConnectionHandle con = this.connectionHandle.get();
+		if (con == null){ // safety! 
+			throw PoolUtil.generateSQLException("ConnectionHandle is gone!", new IllegalStateException());
+		}
 		TransactionRecoveryResult recoveryResult = con.recoveryResult;
 		ConnectionHook connectionHook = con.getPool().getConfig().getConnectionHook();
 

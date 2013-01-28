@@ -255,7 +255,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * @return total leased connections
 	 */
 	public int getTotalLeased() {
-		return getPool().getTotalLeased();
+		return getPool() == null ? 0 : getPool().getTotalLeased();
 	}
 
 	/** Returns a configuration object built during initialization of the connection pool. 
@@ -295,7 +295,7 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	 * @return pool
 	 */
 	public BoneCP getPool() {
-		return this.pool.value;
+		return this.pool == null ? null : this.pool.value;
 	}
 
 	

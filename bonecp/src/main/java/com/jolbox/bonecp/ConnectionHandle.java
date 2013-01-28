@@ -15,6 +15,7 @@
  */
 package com.jolbox.bonecp;
 
+import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.reflect.Proxy;
 import java.sql.Array;
@@ -59,7 +60,9 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  * @author wwadge
  * 
  */
-public class ConnectionHandle implements Connection{
+public class ConnectionHandle implements Connection,Serializable{
+	/** uid */
+	private static final long serialVersionUID = 5969210523116801522L;
 	/** Warning message. */
 	//	private static final String DISABLED_AUTO_COMMIT_WARNING = "Auto-commit was disabled but no commit/rollback was issued by the time this connection was closed. Performing rollback! Enable config setting detectUnresolvedTransactions for more debugging info.";
 	/** Warning message. */
