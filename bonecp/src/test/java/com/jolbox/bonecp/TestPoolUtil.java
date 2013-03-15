@@ -17,9 +17,10 @@
 package com.jolbox.bonecp;
 
 import static junit.framework.Assert.assertEquals;
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.io.OutputStream;

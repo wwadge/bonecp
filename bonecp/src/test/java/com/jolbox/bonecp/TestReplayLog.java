@@ -37,7 +37,7 @@ public class TestReplayLog {
 		ReplayLog testClass = new ReplayLog(new Object(), this.getClass().getMethods()[0], new Object[]{String.class});
 		Object[] args = new Object[]{Integer.class};
 		testClass.setArgs(args);
-		assertTrue(args.equals(testClass.getArgs()));
+		assertTrue(args == testClass.getArgs());
 		
 		testClass.setMethod(this.getClass().getMethods()[0]);
 		assertEquals(this.getClass().getMethods()[0], testClass.getMethod());

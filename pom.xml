@@ -188,6 +188,18 @@
 				<artifactId>qdox</artifactId>
 				<version>1.12</version>
 			</dependency>
+ <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <version>${powermock.version}</version>
+      <scope>test</scope>
+   </dependency>
+   <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-easymock</artifactId>
+      <version>${powermock.version}</version>
+      <scope>test</scope>
+   </dependency>  
 		</dependencies>
 	</dependencyManagement>
 
@@ -211,6 +223,7 @@
 		<hibernate.version>4.1.7.Final</hibernate.version>
 		<spring.version>3.2.0.M2</spring.version>
 		  <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
+		<powermock.version>1.5</powermock.version>
 	</properties>
 
 	<prerequisites>
@@ -401,17 +414,6 @@
 
 		<profile>
 			<id>JDK6</id>
-		<!--	<activation>
-				<jdk>[1.6,1.7)</jdk>
-			</activation>
-		-->	<properties>
-				<project.specifier>-jdk6</project.specifier>
-
-				<!-- Override compiler target -->
-				<maven.compiler.target>1.6</maven.compiler.target>
-				<maven.compiler.source>1.6</maven.compiler.source>
-			</properties>
-
 			<modules>
 				<module>bonecp-hbnprovider</module>
 			</modules>
