@@ -362,7 +362,9 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @return SQLException for further processing
 	 */
 	protected SQLException markPossiblyBroken(SQLException e) {
-		String state = e.getSQLState();
+	    String state = e.getSQLState();
+	    boolean alreadyDestroyed = false;
+
 		ConnectionState connectionState = this.getConnectionHook() != null ? this.getConnectionHook().onMarkPossiblyBroken(this, state, e) : ConnectionState.NOP; 
 		if (state == null){ // safety;
 			state = "08999"; 
@@ -373,12 +375,25 @@ public class ConnectionHandle implements Connection,Serializable{
 			this.pool.connectionStrategy.terminateAllConnections();
 			this.pool.destroyConnection(this);
 			this.logicallyClosed.set(true);
+			alreadyDestroyed = true;
+
 			for (int i=0; i < this.pool.partitionCount; i++) {
 				// send a signal to try re-populating again.
 				this.pool.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 			}
 		}
 
+		//case where either the connection is closed or
+		//two concurrent connections loose connections with
+		//the 08S01 code but one one is killed in the code
+		//above give dbIsDown is set for the first connection
+		if (state.equals("08003") || sqlStateDBFailureCodes.contains(state)) {
+		    if (!alreadyDestroyed) {
+			this.pool.destroyConnection(this);
+			this.logicallyClosed.set(true);
+		    }
+		}
+		
 		// SQL-92 says:
 		//		 Class values that begin with one of the <digit>s '5', '6', '7',
 		//         '8', or '9' or one of the <simple Latin upper case letter>s 'I',
