@@ -391,6 +391,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		    if (!alreadyDestroyed) {
 			this.pool.destroyConnection(this);
 			this.logicallyClosed.set(true);
+			getOriginatingPartition().getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 		    }
 		}
 		
