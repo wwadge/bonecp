@@ -353,7 +353,7 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 						tryAgain = connectionHook.onAcquireFail(t, acquireConfig);
 					} else {
 
-						logger.error("Failed to replay transaction. Sleeping for "+acquireRetryDelay+"ms and trying again. Attempts left: "+acquireRetryAttempts+". Exception: "+t.getCause());
+						logger.error("Failed to replay transaction. Sleeping for "+acquireRetryDelay+"ms and trying again. Attempts left: "+acquireRetryAttempts+". Exception: "+t.getCause() + " Message:"+t.getMessage());
 
 						try {
 							Thread.sleep(acquireRetryDelay);
