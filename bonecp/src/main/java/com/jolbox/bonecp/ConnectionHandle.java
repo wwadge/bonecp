@@ -491,11 +491,23 @@ public class ConnectionHandle implements Connection,Serializable{
 					pool.getFinalizableRefs().remove(this.connection);
 				}
 
+				ConnectionHandle handle = null;
 
-				ConnectionHandle handle = this.recreateConnectionHandle();
-				this.pool.connectionStrategy.cleanupConnection(this, handle);
-				this.pool.releaseConnection(handle);
-
+				//recreate can throw a SQLException in constructor on recreation
+				try {
+				    handle = this.recreateConnectionHandle();
+				    this.pool.connectionStrategy.cleanupConnection(this, handle);
+				    this.pool.releaseConnection(handle);				    
+				} catch(SQLException e) {
+				    //check if the connection was already closed by the recreation
+				    if (!isClosed()) {
+					this.pool.connectionStrategy.cleanupConnection(this, handle);
+					this.pool.releaseConnection(this);
+				    }
+				    throw e;
+				}
+				
+				
 				if (this.doubleCloseCheck){
 					this.doubleCloseException = this.pool.captureStackTrace(CLOSED_TWICE_EXCEPTION_MESSAGE);
 				}
