@@ -197,7 +197,15 @@ public class ConnectionHandle implements Connection,Serializable{
 	 *             on error
 	 */
 	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating) throws SQLException {
+		this(connection, pool, recreating, null);
+	}
+	
+	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating, ConnectionPartition copyFromPartition) throws SQLException {
 		boolean newConnection = connection == null;
+
+		if (copyFromPartition!=null)
+			this.originatingPartition = copyFromPartition;
+		
 		this.pool = pool;
 		this.connectionHook = pool.getConfig().getConnectionHook();
 
@@ -273,7 +281,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @throws SQLException
 	 */
 	public ConnectionHandle recreateConnectionHandle() throws SQLException{
-		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true);
+		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true, this.originatingPartition);
 		handle.originatingPartition = this.originatingPartition;
 		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
 		handle.connectionLastResetInMs = this.connectionLastResetInMs;
