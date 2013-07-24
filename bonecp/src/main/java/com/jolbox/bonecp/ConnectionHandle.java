@@ -249,7 +249,9 @@ public class ConnectionHandle implements Connection,Serializable{
 			// this kick-starts recording everything
 			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
 		}
-
+		if(!newConnection && !connection.getAutoCommit() && !connection.isClosed()){
+			connection.rollback();
+		}
 		if (this.defaultAutoCommit != null){
 			setAutoCommit(this.defaultAutoCommit);
 		}
