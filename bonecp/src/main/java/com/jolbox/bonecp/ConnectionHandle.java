@@ -197,7 +197,15 @@ public class ConnectionHandle implements Connection,Serializable{
 	 *             on error
 	 */
 	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating) throws SQLException {
+		this(connection, pool, recreating, null);
+	}
+	
+	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating, ConnectionPartition copyFromPartition) throws SQLException {
 		boolean newConnection = connection == null;
+
+		if (copyFromPartition!=null)
+			this.originatingPartition = copyFromPartition;
+		
 		this.pool = pool;
 		this.connectionHook = pool.getConfig().getConnectionHook();
 
@@ -275,7 +283,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @throws SQLException
 	 */
 	public ConnectionHandle recreateConnectionHandle() throws SQLException{
-		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true);
+		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true, this.originatingPartition);
 		handle.originatingPartition = this.originatingPartition;
 		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
 		handle.connectionLastResetInMs = this.connectionLastResetInMs;
@@ -493,11 +501,23 @@ public class ConnectionHandle implements Connection,Serializable{
 					pool.getFinalizableRefs().remove(this.connection);
 				}
 
+				ConnectionHandle handle = null;
 
-				ConnectionHandle handle = this.recreateConnectionHandle();
-				this.pool.connectionStrategy.cleanupConnection(this, handle);
-				this.pool.releaseConnection(handle);
-
+				//recreate can throw a SQLException in constructor on recreation
+				try {
+				    handle = this.recreateConnectionHandle();
+				    this.pool.connectionStrategy.cleanupConnection(this, handle);
+				    this.pool.releaseConnection(handle);				    
+				} catch(SQLException e) {
+				    //check if the connection was already closed by the recreation
+				    if (!isClosed()) {
+					this.pool.connectionStrategy.cleanupConnection(this, handle);
+					this.pool.releaseConnection(this);
+				    }
+				    throw e;
+				}
+				
+				
 				if (this.doubleCloseCheck){
 					this.doubleCloseException = this.pool.captureStackTrace(CLOSED_TWICE_EXCEPTION_MESSAGE);
 				}
