@@ -18,6 +18,7 @@ package com.jolbox.bonecp;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.reflect.Proxy;
+import java.net.SocketException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -169,6 +170,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		08002	The connection already exists.
 		08003	The connection does not exist.
 		08004	The application server rejected establishment of the connection.
+		08006	Connection failure.
 		08007	Transaction resolution unknown.
 		08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
 		08504	An error was encountered while processing the specified path rename configuration file.
@@ -178,7 +180,7 @@ public class ConnectionHandle implements Connection,Serializable{
           57P01 means that postgresql was restarted. 
           HY000 is firebird specific triggered when a connection is broken
 	 */
-	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01", "57P01", "HY000"); 
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08006", "08007", "08S01", "57P01", "HY000"); 
 	/** Keep track of open statements. */
 	protected ConcurrentMap<Statement, String> trackedStatement;
 	/** Avoid creating a new string object each time. */
@@ -397,7 +399,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		//two concurrent connections loose connections with
 		//the 08S01 code but one one is killed in the code
 		//above give dbIsDown is set for the first connection
-		if (state.equals("08003") || sqlStateDBFailureCodes.contains(state)) {
+		if (state.equals("08003") || sqlStateDBFailureCodes.contains(state) || e.getCause() instanceof SocketException) {
 		    if (!alreadyDestroyed) {
 			this.pool.destroyConnection(this);
 			this.logicallyClosed.set(true);
