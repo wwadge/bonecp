@@ -228,6 +228,9 @@ public class MemorizeTransactionProxy implements InvocationHandler {
 
 			}
 
+		}else{
+			//prevent NPE that can occur on calls to hashCode and getAutoCommit when handle is null
+			result = method.invoke(this.target, args);
 		}
 		return result; // normal state
 	}

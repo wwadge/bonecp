@@ -256,8 +256,10 @@ public class ConnectionHandle implements Connection,Serializable{
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
 			this.replayLog = new ArrayList<ReplayLog>(30);
 			this.recoveryResult = new TransactionRecoveryResult();
-			// this kick-starts recording everything
-			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
+			if(!recreating){
+				// this kick-starts recording everything; which is not needed on recreation
+				this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
+			}
 		}
 		if(!newConnection && !connection.getAutoCommit() && !connection.isClosed()){
 			connection.rollback();
