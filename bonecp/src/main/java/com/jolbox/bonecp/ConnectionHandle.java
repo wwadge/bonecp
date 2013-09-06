@@ -18,6 +18,7 @@ package com.jolbox.bonecp;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.reflect.Proxy;
+import java.net.SocketException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -169,6 +170,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		08002	The connection already exists.
 		08003	The connection does not exist.
 		08004	The application server rejected establishment of the connection.
+		08006	Connection failure.
 		08007	Transaction resolution unknown.
 		08502	The CONNECT statement issued by an application process running with a SYNCPOINT of TWOPHASE has failed, because no transaction manager is available.
 		08504	An error was encountered while processing the specified path rename configuration file.
@@ -178,7 +180,7 @@ public class ConnectionHandle implements Connection,Serializable{
           57P01 means that postgresql was restarted. 
           HY000 is firebird specific triggered when a connection is broken
 	 */
-	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08007", "08S01", "57P01", "HY000"); 
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08006", "08007", "08S01", "57P01", "HY000"); 
 	/** Keep track of open statements. */
 	protected ConcurrentMap<Statement, String> trackedStatement;
 	/** Avoid creating a new string object each time. */
@@ -197,7 +199,15 @@ public class ConnectionHandle implements Connection,Serializable{
 	 *             on error
 	 */
 	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating) throws SQLException {
+		this(connection, pool, recreating, null);
+	}
+	
+	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating, ConnectionPartition copyFromPartition) throws SQLException {
 		boolean newConnection = connection == null;
+
+		if (copyFromPartition!=null)
+			this.originatingPartition = copyFromPartition;
+		
 		this.pool = pool;
 		this.connectionHook = pool.getConfig().getConnectionHook();
 
@@ -246,10 +256,14 @@ public class ConnectionHandle implements Connection,Serializable{
 		if (this.pool.getConfig().isTransactionRecoveryEnabled()){
 			this.replayLog = new ArrayList<ReplayLog>(30);
 			this.recoveryResult = new TransactionRecoveryResult();
-			// this kick-starts recording everything
-			this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
+			if(!recreating){
+				// this kick-starts recording everything; which is not needed on recreation
+				this.connection = MemorizeTransactionProxy.memorize(this.connection, this);
+			}
 		}
-
+		if(!newConnection && !connection.getAutoCommit() && !connection.isClosed()){
+			connection.rollback();
+		}
 		if (this.defaultAutoCommit != null){
 			setAutoCommit(this.defaultAutoCommit);
 		}
@@ -273,7 +287,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @throws SQLException
 	 */
 	public ConnectionHandle recreateConnectionHandle() throws SQLException{
-		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true);
+		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true, this.originatingPartition);
 		handle.originatingPartition = this.originatingPartition;
 		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
 		handle.connectionLastResetInMs = this.connectionLastResetInMs;
@@ -362,7 +376,9 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @return SQLException for further processing
 	 */
 	protected SQLException markPossiblyBroken(SQLException e) {
-		String state = e.getSQLState();
+	    String state = e.getSQLState();
+	    boolean alreadyDestroyed = false;
+
 		ConnectionState connectionState = this.getConnectionHook() != null ? this.getConnectionHook().onMarkPossiblyBroken(this, state, e) : ConnectionState.NOP; 
 		if (state == null){ // safety;
 			state = "08999"; 
@@ -373,12 +389,26 @@ public class ConnectionHandle implements Connection,Serializable{
 			this.pool.connectionStrategy.terminateAllConnections();
 			this.pool.destroyConnection(this);
 			this.logicallyClosed.set(true);
+			alreadyDestroyed = true;
+
 			for (int i=0; i < this.pool.partitionCount; i++) {
 				// send a signal to try re-populating again.
 				this.pool.partitions[i].getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 			}
 		}
 
+		//case where either the connection is closed or
+		//two concurrent connections loose connections with
+		//the 08S01 code but one one is killed in the code
+		//above give dbIsDown is set for the first connection
+		if (state.equals("08003") || sqlStateDBFailureCodes.contains(state) || e.getCause() instanceof SocketException) {
+		    if (!alreadyDestroyed) {
+			this.pool.destroyConnection(this);
+			this.logicallyClosed.set(true);
+			getOriginatingPartition().getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
+		    }
+		}
+		
 		// SQL-92 says:
 		//		 Class values that begin with one of the <digit>s '5', '6', '7',
 		//         '8', or '9' or one of the <simple Latin upper case letter>s 'I',
@@ -475,11 +505,23 @@ public class ConnectionHandle implements Connection,Serializable{
 					pool.getFinalizableRefs().remove(this.connection);
 				}
 
+				ConnectionHandle handle = null;
 
-				ConnectionHandle handle = this.recreateConnectionHandle();
-				this.pool.connectionStrategy.cleanupConnection(this, handle);
-				this.pool.releaseConnection(handle);
-
+				//recreate can throw a SQLException in constructor on recreation
+				try {
+				    handle = this.recreateConnectionHandle();
+				    this.pool.connectionStrategy.cleanupConnection(this, handle);
+				    this.pool.releaseConnection(handle);				    
+				} catch(SQLException e) {
+				    //check if the connection was already closed by the recreation
+				    if (!isClosed()) {
+					this.pool.connectionStrategy.cleanupConnection(this, handle);
+					this.pool.releaseConnection(this);
+				    }
+				    throw e;
+				}
+				
+				
 				if (this.doubleCloseCheck){
 					this.doubleCloseException = this.pool.captureStackTrace(CLOSED_TWICE_EXCEPTION_MESSAGE);
 				}

@@ -157,13 +157,15 @@ public class ConnectionTesterThread implements Runnable {
 	 * @param connection to close
 	 */
 	protected void closeConnection(ConnectionHandle connection) {
-		if (connection != null) {
+
+		if (connection != null && !connection.isClosed()) {
 			try {
 				connection.internalClose();
 			} catch (SQLException e) {
 				logger.error("Destroy connection exception", e);
 			} finally {
 				this.pool.postDestroyConnection(connection);
+				connection.getOriginatingPartition().getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 			}
 		}
 	}
