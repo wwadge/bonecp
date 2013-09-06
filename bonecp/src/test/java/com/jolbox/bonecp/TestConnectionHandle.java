@@ -223,14 +223,16 @@ public class TestConnectionHandle {
 	public void testClose() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException, InterruptedException{
 
 		this.testClass.doubleCloseCheck = true;
-		this.testClass.setInternalConnection(EasyMock.createNiceMock(Connection.class));
+		Connection mockInternalConnection = EasyMock.createNiceMock(Connection.class);
+		this.testClass.setInternalConnection(mockInternalConnection);
 
 		this.testClass.renewConnection();
 		this.mockPool.releaseConnection((Connection)anyObject());
 		expectLastCall().once().andThrow(new SQLException()).once();
 		expect(this.mockPool.getFinalizableRefs()).andReturn(new HashMap<Connection, Reference<ConnectionHandle>>()).anyTimes();
 		expect(this.mockPool.getConfig()).andReturn(this.config).anyTimes();
-		replay(this.mockPool);
+		expect(mockInternalConnection.isClosed()).andReturn(false).anyTimes();
+		replay(this.mockPool, mockInternalConnection);
 
 		// create a thread so that we can check that thread.interrupt was called during connection close.
 		//		final Thread thisThread = Thread.currentThread();

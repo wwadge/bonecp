@@ -20,7 +20,7 @@
 
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
-	<version>0.8.0-rc2-SNAPSHOT</version>
+	<version>0.8.0-rc3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>BoneCP</name>

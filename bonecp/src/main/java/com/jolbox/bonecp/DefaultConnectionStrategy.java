@@ -41,7 +41,7 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
     ConnectionHandle result = null;
 
     int partition = (int) (Thread.currentThread().getId() % this.pool.partitionCount);
-    final ConnectionPartition connectionPartition = this.pool.partitions[partition];
+    ConnectionPartition connectionPartition = this.pool.partitions[partition];
     
     result = connectionPartition.getFreeConnections().poll();
 
@@ -54,6 +54,7 @@ public class DefaultConnectionStrategy extends AbstractConnectionStrategy {
         result = this.pool.partitions[i].getFreeConnections().poll(); // try our luck with this partition
        
         if (result != null) {
+          connectionPartition = this.pool.partitions[i]; // we found it here
           break;  // we found a connection
         }
       }
