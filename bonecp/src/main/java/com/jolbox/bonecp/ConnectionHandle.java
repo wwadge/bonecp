@@ -297,6 +297,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		handle.connectionHook = this.connectionHook;
 		handle.possiblyBroken = this.possiblyBroken;
 		this.connection = null;
+		handle.debugHandle = this.debugHandle;
 		return handle;
 	}
 
