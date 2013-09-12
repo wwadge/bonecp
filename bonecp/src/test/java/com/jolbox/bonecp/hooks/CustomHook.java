@@ -19,6 +19,7 @@ package com.jolbox.bonecp.hooks;
 import java.sql.SQLException;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.jolbox.bonecp.ConnectionHandle;
 
 /** JUnit helper.
@@ -45,6 +46,7 @@ public class CustomHook extends AbstractConnectionHook{
 
 	@Override
 	public synchronized void onAcquire(ConnectionHandle connection) {
+		Preconditions.checkNotNull(connection.getInternalConnection());
 		this.acquire++;
 	}
 

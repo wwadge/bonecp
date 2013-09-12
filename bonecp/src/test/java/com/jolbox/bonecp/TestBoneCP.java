@@ -77,9 +77,6 @@ import com.jolbox.bonecp.hooks.CustomHook;
  *
  */
 @SuppressWarnings("resource")
-//@PowerMockIgnore("javax.management.*")
-//@RunWith(PowerMockRunner.class)
-//@PrepareForTest(BoneCP.class)
 public class TestBoneCP {
 	/** Class under test. */
 	private BoneCP testClass;
@@ -232,7 +229,9 @@ public class TestBoneCP {
 		// make it fail the first time and succeed the second time
 		expect(this.mockPool.getDbIsDown()).andReturn(new AtomicBoolean()).anyTimes();
 		expect(mockDataSourceBean.getConnection()).andThrow(new SQLException()).once().andReturn(null).once(); // a call in obtainRaw
-		replay(this.mockPool, mockConfig, mockDataSourceBean);
+		expect(mockConnection.getInternalConnection()).andReturn(new MockConnection()).anyTimes(); // a call in obtainRaw
+		 
+		replay(this.mockPool, mockConfig, mockDataSourceBean, mockConnection);
 		this.testClass.obtainInternalConnection(mockConnection);
 		// get counts on our hooks
 		

@@ -250,14 +250,13 @@ public class BoneCP implements Serializable, Closeable {
 	
 	/** Obtains a database connection, retrying if necessary.
 	 * @param connectionHandle 
-	 * @param pool pool handle
-	 * @param url url to obtain connection from
 	 * @return A DB connection.
 	 * @throws SQLException
 	 */
 	protected Connection obtainInternalConnection(ConnectionHandle connectionHandle) throws SQLException {
 		boolean tryAgain = false;
 		Connection result = null;
+		Connection oldRawConnection = connectionHandle.getInternalConnection();
 		String url = this.getConfig().getJdbcUrl();
 		
 		int acquireRetryAttempts = this.getConfig().getAcquireRetryAttempts();
@@ -279,6 +278,8 @@ public class BoneCP implements Serializable, Closeable {
 				}
 				
 				this.getDbIsDown().set(false);
+				
+				connectionHandle.setInternalConnection(result);
 				
 				// call the hook, if available.
 				if (connectionHook != null){
@@ -304,6 +305,13 @@ public class BoneCP implements Serializable, Closeable {
 					}
 				}
 				if (!tryAgain){
+					if (oldRawConnection != null) {
+						oldRawConnection.close();
+					}
+					if (result != null) {
+						result.close();
+					}
+					connectionHandle.setInternalConnection(oldRawConnection);
 					throw e;
 				}
 			}
