@@ -186,15 +186,22 @@ public class ConnectionHandle implements Connection,Serializable{
 	/** Avoid creating a new string object each time. */
 	private final String noStackTrace = "";
 
+	/**
+	 * Internal constructor.
+	 * @param pool
+	 * @throws SQLException
+	 */
 	protected ConnectionHandle(BoneCP pool) throws SQLException{
 		this(null, pool, false);
 	}
 
 	/**
 	 * Connection wrapper constructor
+	 * @param connection 
 	 * 
 	 * @param pool
 	 *            pool handle.
+	 * @param recreating 
 	 * @throws SQLException
 	 *             on error
 	 */
@@ -202,6 +209,14 @@ public class ConnectionHandle implements Connection,Serializable{
 		this(connection, pool, recreating, null);
 	}
 	
+	/**
+	 * Internal constructor
+	 * @param connection
+	 * @param pool
+	 * @param recreating
+	 * @param copyFromPartition
+	 * @throws SQLException
+	 */
 	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating, ConnectionPartition copyFromPartition) throws SQLException {
 		boolean newConnection = connection == null;
 
@@ -349,6 +364,12 @@ public class ConnectionHandle implements Connection,Serializable{
 	}
 
 
+	/**
+	 * Sends out the SQL as defined in the config upon first init of the connection.
+	 * @param connection
+	 * @param initSQL
+	 * @throws SQLException
+	 */
 	protected static void sendInitSQL(Connection connection, String initSQL) throws SQLException{
 		// fetch any configured setup sql.
 		if (initSQL != null){
@@ -515,8 +536,8 @@ public class ConnectionHandle implements Connection,Serializable{
 				} catch(SQLException e) {
 				    //check if the connection was already closed by the recreation
 				    if (!isClosed()) {
-					this.pool.connectionStrategy.cleanupConnection(this, handle);
-					this.pool.releaseConnection(this);
+				    	this.pool.connectionStrategy.cleanupConnection(this, handle);
+				    	this.pool.releaseConnection(this);
 				    }
 				    throw e;
 				}

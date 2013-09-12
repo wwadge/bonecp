@@ -318,7 +318,6 @@ public class ConnectionPartition implements Serializable{
 				.add("maxConnections", this.getMaxConnections())
 				.add("acquireIncrement", this.acquireIncrement)
 				.add("createdConnections", this.createdConnections)
-				.add("freeConnectionsSize", (this.getFreeConnections() != null ? this.getFreeConnections().remainingCapacity() : null))
 				.add("freeConnections", this.getFreeConnections())
 				.toString();
 	}

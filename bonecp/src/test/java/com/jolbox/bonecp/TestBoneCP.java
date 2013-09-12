@@ -41,6 +41,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -69,7 +70,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.jolbox.bonecp.hooks.AcquireFailConfig;
 import com.jolbox.bonecp.hooks.ConnectionHook;
+import com.jolbox.bonecp.hooks.ConnectionState;
 import com.jolbox.bonecp.hooks.CustomHook;
 
 /**
@@ -210,6 +213,8 @@ public class TestBoneCP {
 		testShutdownClose(true);
 	}
 	
+	
+	
 
 	/** Tests obtaining internal connection.
 	 * @throws SQLException
@@ -237,6 +242,7 @@ public class TestBoneCP {
 		
 		assertEquals(1, testHook.fail);
 		assertEquals(1, testHook.acquire);
+		
 	
 		// Test 2: Same thing but without the hooks
 		reset(this.mockPool, mockDataSourceBean);
@@ -248,6 +254,7 @@ public class TestBoneCP {
 		
 		replay(this.mockPool, mockDataSourceBean);
 		assertEquals(this.mockConnection, this.testClass.obtainInternalConnection(mockConnection));
+		
 		
 		// Test 3: Keep failing
 		reset(this.mockPool, mockDataSourceBean);
@@ -263,6 +270,7 @@ public class TestBoneCP {
 			// expected behaviour
 		}
 		 
+		
 		//	Test 4: Get signalled to interrupt fail delay
 		count=99;
 		mockConfig.setAcquireRetryAttempts(2);
@@ -289,6 +297,7 @@ public class TestBoneCP {
 		} catch (SQLException e){
 			// expected behaviour
 		}
+		
 		
 		// Test: No acquire delay
 				reset(this.mockPool, mockDataSourceBean, mockConfig);
@@ -326,9 +335,41 @@ public class TestBoneCP {
 					// expected behaviour
 				}
 				*/
+		
+		
 	}
 	
 
+	/**
+	 * @throws SQLException
+	 */
+	@Test
+	public void testObtainInternalConnectionWithFailingInitSQL() throws SQLException {
+		DataSource mockDataSourceBean = EasyMock.createNiceMock(DataSource.class);
+		
+		// Test: Fail in sending out init connection
+		reset(mockConfig, mockDataSourceBean);
+		reset(mockConnection);
+		expect(mockConnection.getInternalConnection()).andReturn(new MockConnection()).anyTimes(); // a call in obtainRaw
+		expect(this.mockConfig.getDatasourceBean()).andReturn(mockDataSourceBean).anyTimes();
+		expect(mockConfig.getJdbcUrl()).andReturn("jdbc:mock:driver").anyTimes();
+		expect(mockDataSourceBean.getConnection()).andReturn(mockConnection).once(); // a call in obtainRaw
+		expect(mockConfig.getInitSQL()).andReturn("Foo").anyTimes();
+		Statement mockStatement = EasyMock.createNiceMock(Statement.class);
+		expect(mockConnection.createStatement()).andReturn(mockStatement).anyTimes();
+		expect(mockStatement.execute((String)anyObject())).andThrow(new SQLException());
+		mockConnection.close();
+		expectLastCall().once(); // this is what we're testing
+		replay(mockConfig, mockDataSourceBean, mockConnection, mockStatement);
+		try {
+			this.testClass.obtainInternalConnection(mockConnection);
+			fail("Should have thrown an exception");
+		} catch (SQLException e) {
+			//normal case
+			verify(mockConnection);
+		}
+
+	}
 
 	/**
 	 * Tests shutdown/close method.

@@ -182,14 +182,10 @@ public class BoneCP implements Serializable, Closeable {
 			this.connectionStrategy.terminateAllConnections();
 			unregisterDriver();
 			registerUnregisterJMX(false);
-			if (finalizableRefQueue instanceof Closeable) {
-			    try {
-					((Closeable) finalizableRefQueue).close();
-				} catch (IOException e) {
-					logger.error("Failed to close finalizable queue. Try disable connection tracking.");
-				}
-			  }
-			logger.info("Connection pool has been shutdown.");
+			if (finalizableRefQueue != null) {
+				finalizableRefQueue.close();
+			}
+			    logger.info("Connection pool has been shutdown.");
 		}
 	}
 

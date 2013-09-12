@@ -184,6 +184,11 @@ public class TestSystemTests {
 		dsb.setClassLoader(getClass().getClassLoader());
 		dsb.loadClass("java.lang.String");
 		assertEquals(getClass().getClassLoader(), dsb.getClassLoader());
+		
+		BoneCPDataSource dsb3 = new BoneCPDataSource(); // empty constructor test
+		assertTrue(dsb3.getPool() == null);
+		assertEquals(0, dsb3.getTotalLeased());
+	
 	}
 	
 	@Test(expected=SQLException.class)

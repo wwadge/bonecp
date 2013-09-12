@@ -299,8 +299,16 @@ public class BoneCPDataSource extends BoneCPConfig implements DataSource, Object
 	}
 
 	
+	/**
+	 * @author wwadge
+	 *
+	 * @param <T>
+	 */
 	class FinalWrapper<T> {
-	    public final T value;
+		/** tmp. */
+	    private final T value;
+	    /** Helper constructor. 
+	     * @param value */
 	    public FinalWrapper(T value) { 
 	        this.value = value; 
 	    }

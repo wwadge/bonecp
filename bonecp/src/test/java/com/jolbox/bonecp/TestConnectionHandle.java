@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import junit.framework.Assert;
 
 import org.easymock.EasyMock;
+import org.easymock.IAnswer;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -238,15 +239,12 @@ public class TestConnectionHandle {
 		//		final Thread thisThread = Thread.currentThread();
 		Thread testThread = new Thread(new Runnable() {
 
-			//			@Override
 			public void run() {
 				try {
 					TestConnectionHandle.this.started = true;
 					while(true){
 						Thread.sleep(20);
 					}
-					//				} catch (InterruptedException e) {
-					//					TestConnectionHandle.this.interrupted = true;
 				} catch (Exception e) {
 					TestConnectionHandle.this.interrupted = true;
 
@@ -299,6 +297,33 @@ public class TestConnectionHandle {
 	}
 
 	
+	@Test
+	public void testCloseWithExceptionsOnRecreate() throws SQLException{
+		Connection mockConnection = EasyMock.createNiceMock(Connection.class);
+		this.testClass.logicallyClosed.set(false);
+		this.testClass.resetConnectionOnClose = false;
+		this.testClass.connectionTrackingDisabled = true;
+		this.testClass.setInternalConnection(mockConnection);
+		expect(mockConnection.getAutoCommit()).andReturn(false);
+		expect(this.mockPool.getConfig()).andReturn(new BoneCPConfig()).anyTimes();
+		this.mockPool.releaseConnection((Connection)anyObject());
+		expectLastCall().andAnswer(new IAnswer<Object>() {
+
+			public Object answer() throws Throwable {
+				testClass.logicallyClosed.set(false);
+
+				throw new SQLException();
+			}
+		});
+
+		replay(mockConnection, mockPool);
+		try{
+			this.testClass.close();
+		} catch(SQLException e){
+			// expected
+		}
+		verify(mockConnection);
+	}
 	@Test
 	public void testCloseWithRollbackThrowingException() throws SQLException{
 		//coverage test
