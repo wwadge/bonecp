@@ -137,7 +137,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If true, keep track of some statistics. */
 	private boolean statisticsEnabled;
 	/** The default auto-commit state of created connections. */
-	private boolean defaultAutoCommit;
+	private boolean defaultAutoCommit = true;
 	/** The default read-only state of created connections. */
 	private boolean defaultReadOnly;
 	/** The default transaction isolation state of created connections. */
