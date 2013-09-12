@@ -20,7 +20,7 @@
 
 	<groupId>com.jolbox</groupId>
 	<artifactId>bonecp-parent</artifactId>
-	<version>0.8.0-rc3-SNAPSHOT</version>
+	<version>0.8.0-rc3</version>
 	<packaging>pom</packaging>
 
 	<name>BoneCP</name>
@@ -33,7 +33,7 @@
 		<url>http://github.com/wwadge/bonecp</url>
 		<connection>scm:git:ssh://github.com/wwadge/bonecp.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/wwadge/bonecp.git</developerConnection>
-	  <tag>HEAD</tag>
+	  <tag>bonecp-parent-0.8.0-rc3</tag>
   </scm>
 
 	<organization>
