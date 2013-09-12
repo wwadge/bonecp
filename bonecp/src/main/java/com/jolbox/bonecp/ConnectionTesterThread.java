@@ -139,11 +139,7 @@ public class ConnectionTesterThread implements Runnable {
 //				logger.debug("Next check in "+nextCheckInMs);
 				
 				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
-		} catch(InterruptedException e){
-			logger.error("Connection tester thread interrupted exception received. Shutting down tester thread.", e);
-			return;
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			if (this.scheduler.isShutdown()){
 				logger.debug("Shutting down connection tester thread.");
 			} else {
