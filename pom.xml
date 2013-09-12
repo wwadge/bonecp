@@ -219,9 +219,9 @@
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
 		<implementation.build>${maven.build.timestamp}</implementation.build>
 
-		<guava.version>13.0.1</guava.version>
-		<hibernate.version>4.1.7.Final</hibernate.version>
-		<spring.version>3.2.0.M2</spring.version>
+		<guava.version>15.0</guava.version>
+		<hibernate.version>4.2.5.Final</hibernate.version>
+		<spring.version>3.2.4.RELEASE</spring.version>
 		  <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
 		<powermock.version>1.5</powermock.version>
 	</properties>
