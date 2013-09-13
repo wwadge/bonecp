@@ -309,9 +309,11 @@ public class ConnectionHandle implements Connection,Serializable{
 		handle.connectionLastUsedInMs = this.connectionLastUsedInMs;
 		handle.preparedStatementCache = this.preparedStatementCache;
 		handle.callableStatementCache = this.callableStatementCache;
+		handle.statementCachingEnabled = this.statementCachingEnabled;
 		handle.connectionHook = this.connectionHook;
 		handle.possiblyBroken = this.possiblyBroken;
 		this.connection = null;
+		
 		return handle;
 	}
 
