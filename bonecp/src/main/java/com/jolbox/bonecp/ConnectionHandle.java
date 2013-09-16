@@ -312,6 +312,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		handle.statementCachingEnabled = this.statementCachingEnabled;
 		handle.connectionHook = this.connectionHook;
 		handle.possiblyBroken = this.possiblyBroken;
+		handle.debugHandle = this.debugHandle;
 		this.connection = null;
 		
 		return handle;
