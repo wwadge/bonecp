@@ -466,7 +466,7 @@ public class BoneCP implements Serializable, Closeable {
 
 			if (!config.isLazyInit()){
 				for (int i=0; i < config.getMinConnectionsPerPartition(); i++){
-					this.partitions[p].addFreeConnection(new ConnectionHandle(this));
+					this.partitions[p].addFreeConnection(new ConnectionHandle(null, this.partitions[p], this, false));
 				}
 
 			}

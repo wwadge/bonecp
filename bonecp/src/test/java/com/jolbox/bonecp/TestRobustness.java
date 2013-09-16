@@ -160,10 +160,9 @@ public class TestRobustness {
 	public void testConnectionDies() throws SQLException{
 		final Connection mockConnection = createNiceMock(Connection.class);
 		driver = new MockJDBCDriver(new MockJDBCAnswer() {
-
-
 			public Connection answer() throws SQLException {
 				return mockConnection;
+				
 			}
 		});
 
@@ -202,6 +201,32 @@ public class TestRobustness {
 		pool.close();
 	}
 	
+	
+	/** Pretend we have a connection that triggers a fatal DB/network exception. 
+	 * @throws SQLException */
+	@Test
+	public void testConnectionDiesAndDBDoesntRecover() throws SQLException{
+		final Connection mockConnection = createNiceMock(Connection.class);
+		final AtomicInteger count = new AtomicInteger();
+				
+		driver = new MockJDBCDriver(new MockJDBCAnswer() {
+
+
+			public Connection answer() throws SQLException {
+				if (count.incrementAndGet() > 6) {
+					throw new SQLException("foo", "08S01");
+				}
+				return mockConnection;
+			}
+		});
+
+		try {
+		BoneCP pool = new BoneCP(config);
+		fail("Should have blown up");
+		} catch (SQLException e) {
+			// nothing
+		}
+	}
 	/** Pretend we have multiple connections that triggers a fatal DB/network exception. 
 	 * @throws SQLException 
 	 * @throws InterruptedException */

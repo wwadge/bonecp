@@ -187,42 +187,18 @@ public class ConnectionHandle implements Connection,Serializable{
 	private final String noStackTrace = "";
 
 	/**
-	 * Internal constructor.
-	 * @param pool
-	 * @throws SQLException
-	 */
-	protected ConnectionHandle(BoneCP pool) throws SQLException{
-		this(null, pool, false);
-	}
-
-	/**
-	 * Connection wrapper constructor
-	 * @param connection 
-	 * 
-	 * @param pool
-	 *            pool handle.
-	 * @param recreating 
-	 * @throws SQLException
-	 *             on error
-	 */
-	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating) throws SQLException {
-		this(connection, pool, recreating, null);
-	}
-	
-	/**
 	 * Internal constructor
 	 * @param connection
+	 * @param partition 
 	 * @param pool
 	 * @param recreating
-	 * @param copyFromPartition
 	 * @throws SQLException
 	 */
-	protected ConnectionHandle(Connection connection, BoneCP pool, boolean recreating, ConnectionPartition copyFromPartition) throws SQLException {
+	protected ConnectionHandle(Connection connection, ConnectionPartition partition, BoneCP pool, boolean recreating) throws SQLException {
 		boolean newConnection = connection == null;
 
-		if (copyFromPartition!=null)
-			this.originatingPartition = copyFromPartition;
 		
+		this.originatingPartition = partition;
 		this.pool = pool;
 		this.connectionHook = pool.getConfig().getConnectionHook();
 
@@ -302,7 +278,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @throws SQLException
 	 */
 	public ConnectionHandle recreateConnectionHandle() throws SQLException{
-		ConnectionHandle handle = new ConnectionHandle(this.connection, this.pool, true, this.originatingPartition);
+		ConnectionHandle handle = new ConnectionHandle(this.connection, this.originatingPartition, this.pool, true);
 		handle.originatingPartition = this.originatingPartition;
 		handle.connectionCreationTimeInMs = this.connectionCreationTimeInMs;
 		handle.connectionLastResetInMs = this.connectionLastResetInMs;

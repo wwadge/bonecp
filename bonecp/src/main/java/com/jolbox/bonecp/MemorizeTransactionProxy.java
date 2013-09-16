@@ -51,7 +51,7 @@ import com.jolbox.bonecp.proxy.TransactionRecoveryResult;
  * or statement with proxies and log all method calls. When a failure occurs, thrash the inner connection, obtain a new one and play back
  * the previously recorded methods. 
  * 
- * @author Wallace
+ * @author wwadge
  *
  */
 public class MemorizeTransactionProxy implements InvocationHandler {
