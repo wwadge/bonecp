@@ -54,7 +54,7 @@ public class TestCustomThreadFactory {
 		
 		for (int i=0; i < 5; i++) {
 				signalled = true;
-			Thread.sleep(200);
+			Thread.sleep(400);
 		}
 		verify(mockLogger);
 

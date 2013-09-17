@@ -141,6 +141,35 @@ public class TestPoolWatchThread {
 
 	}
 
+	
+	/** Tests the case where we are in lazyInit mode
+	 * @throws InterruptedException
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testRunLazyInit() throws InterruptedException{
+		BlockingQueue<Object> bq = new ArrayBlockingQueue<Object>(1);
+		bq.add(new Object());
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(bq);
+		expect(mockPartition.getMaxConnections()).andReturn(5).once();
+		expect(mockPartition.getCreatedConnections()).andReturn(5).once();
+
+		mockPartition.setUnableToCreateMoreTransactions(true);
+		expectLastCall().once();
+
+		// just to break out of the loop
+		BlockingQueue<?> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn((BlockingQueue) mockQueue);
+		expect(mockQueue.take()).andThrow(new InterruptedException());
+
+		replay(mockPartition, mockPool, mockLogger, mockQueue);
+		testClass.lazyInit = true;
+		testClass.run();
+		EasyMock.verify(mockPartition);
+
+
+	}
+
 
 	/** Tests the normal state.
 	 * @throws InterruptedException

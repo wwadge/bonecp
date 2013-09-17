@@ -34,7 +34,7 @@ public class PoolWatchThread implements Runnable {
 	/** How long to wait before retrying to add a connection upon failure. */
 	private long acquireRetryDelayInMs = 1000L;
 	/** Start off lazily. */
-	private boolean lazyInit;
+	protected boolean lazyInit;
 	/** Occupancy% threshold. */
 	private int poolAvailabilityThreshold;
 	/** Logger handle. */
@@ -77,7 +77,8 @@ public class PoolWatchThread implements Runnable {
 					
 				}
 
-				if (maxNewConnections > 0 && !this.pool.poolShuttingDown){
+				if (maxNewConnections > 0 
+						&& !this.pool.poolShuttingDown){
 					fillConnections(Math.min(maxNewConnections, this.partition.getAcquireIncrement()));
 					// for the case where we have killed off all our connections due to network/db error
 					if (this.partition.getCreatedConnections() < this.partition.getMinConnections()){

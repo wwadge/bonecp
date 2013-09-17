@@ -30,6 +30,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -374,10 +375,91 @@ public class TestConnectionThreadTester {
 		verify(mockPool, mockConnectionPartition, mockExecutor, mockConnection, mockLogger);
 	}
 	
+	/**
+	 * Should close off the connection by returning the connection to pool.
+	 */
+	@Test
+	public void testCloseConnection() {
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
+		expect(mockConnection.isClosed()).andReturn(false);
+		ConnectionPartition mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
+		BlockingQueue<Object> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition);
+		
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(mockQueue);
+		expect(mockQueue.offer(anyObject())).andReturn(true).anyTimes();
+		mockPool.postDestroyConnection(mockConnection);
+		replay(mockConnection, mockPool, mockQueue, mockPartition);
+		this.testClass.closeConnection(mockConnection);
+		verify(mockPool, mockConnection, mockQueue);
+	}
+	
+	
+	/**
+	 * Should close off the connection by returning the connection to pool.
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testCloseConnectionWithException() throws SQLException {
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
+		expect(mockConnection.isClosed()).andReturn(false);
+		mockConnection.internalClose();
+		expectLastCall().andThrow(new SQLException());
+			ConnectionPartition mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
+		BlockingQueue<Object> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition);
+		
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(mockQueue);
+		expect(mockQueue.offer(anyObject())).andReturn(true).anyTimes();
+		mockPool.postDestroyConnection(mockConnection);
+		replay(mockConnection, mockPool, mockQueue, mockPartition);
+		this.testClass.closeConnection(mockConnection);
+		verify(mockPool, mockConnection, mockQueue);
+	}
+
+	/**
+	 * Mostly for coverage.
+	 * @throws SQLException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 */
+	@Test
+	public void testCloseConnectionWithExceptionInLogger() throws SQLException, NoSuchFieldException, SecurityException, IllegalAccessException {
+		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
+		expect(mockConnection.isClosed()).andReturn(false);
+		ConnectionPartition mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
+		BlockingQueue<Object> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
+		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition);
+		
+		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(mockQueue);
+		expect(mockQueue.offer(anyObject())).andReturn(true).anyTimes();
+		mockPool.postDestroyConnection(mockConnection);
+		Field loggerField = this.testClass.getClass().getDeclaredField("logger");
+	    TestUtils.setFinalStatic(loggerField, null);
+	    
+
+	    mockConnection.internalClose();
+	    expectLastCall().andThrow(new SQLException());
+	    
+		replay(mockConnection, mockPool, mockQueue, mockPartition);
+		try {
+			this.testClass.closeConnection(mockConnection);
+		}catch(NullPointerException e) {
+			//normal
+		}
+		verify(mockPool, mockConnection, mockQueue);
+	
+	}
 	@Test
 	public void testCoverage(){
 		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
 		this.testClass.closeConnection(null);
-			
+	
+		expect(mockConnection.isClosed()).andReturn(true);
+		replay(mockConnection);
+		this.testClass.closeConnection(mockConnection);
+		
+		
 	}
 }
