@@ -178,7 +178,7 @@
 
 		<!-- Sets the defaultAutoCommit setting for newly created connections. If not set, use driver 
 		     default. -->
-		<property name="defaultAutoCommit">false</property>
+		<property name="defaultAutoCommit">true</property>
 
 		<!-- Sets the defaultReadOnly setting for newly created connections. If not set, use driver 
 		     default. -->
