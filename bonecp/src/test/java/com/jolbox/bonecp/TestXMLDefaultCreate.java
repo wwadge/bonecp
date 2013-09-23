@@ -22,6 +22,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 
 import org.junit.Test;
 
@@ -49,6 +50,12 @@ public class TestXMLDefaultCreate {
 	 */
 	@Test
 	public void testCreateXMLFile() throws SecurityException, IllegalArgumentException, IllegalAccessException, IOException, InvocationTargetException, NoSuchMethodException {
+		new File("bonecp/src/main/resources/bonecp-default-config.xml").delete(); // delete old state
+		URL url =  Thread.currentThread().getContextClassLoader().getResource("bonecp-default-config.xml");
+		String oldState = url.getFile();
+		if (oldState != null) {
+			new File(oldState).delete();
+		}
 		BoneCPConfig config = new BoneCPConfig();
 		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
