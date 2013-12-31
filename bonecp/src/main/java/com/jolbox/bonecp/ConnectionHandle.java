@@ -178,9 +178,8 @@ public class ConnectionHandle implements Connection,Serializable{
 	/** SQL Failure codes indicating the database is broken/died (and thus kill off remaining connections). 
 	  Anything else will be taken as the *connection* (not the db) being broken. Note: 08S01 is considered as connection failure in MySQL. 
           57P01 means that postgresql was restarted. 
-          HY000 is firebird specific triggered when a connection is broken
 	 */
-	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08006", "08007", "08S01", "57P01", "HY000"); 
+	private static final ImmutableSet<String> sqlStateDBFailureCodes = ImmutableSet.of("08001", "08006", "08007", "08S01", "57P01"); 
 	/** Keep track of open statements. */
 	protected ConcurrentMap<Statement, String> trackedStatement;
 	/** Avoid creating a new string object each time. */
@@ -422,8 +421,10 @@ public class ConnectionHandle implements Connection,Serializable{
 		//		char firstChar = state.charAt(0);
 		// if it's a communication exception, a mysql deadlock or an implementation-specific error code, flag this connection as being potentially broken.
 		// state == 40001 is mysql specific triggered when a deadlock is detected
+		// state == HY000 is firebird specific triggered when a connection is broken
 		char firstChar = state.charAt(0);
 		if (connectionState.equals(ConnectionState.CONNECTION_POSSIBLY_BROKEN) || state.equals("40001") || 
+				state.equals("HY000") ||
 				state.startsWith("08") ||  (firstChar >= '5' && firstChar <='9') /*|| (firstChar >='I' && firstChar <= 'Z')*/){
 			this.possiblyBroken = true;
 		}
