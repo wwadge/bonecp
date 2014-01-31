@@ -19,7 +19,7 @@
     <parent>
         <groupId>com.jolbox</groupId>
         <artifactId>bonecp-parent</artifactId>
-        <version>0.8.0.RELEASE-SNAPSHOT</version>
+        <version>0.8.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -28,7 +28,7 @@
     <packaging>bundle</packaging>
 
     <name>BoneCP :: Hibernate provider</name>
-    <description>Helper class for easier Hibernate intergration</description>
+    <description>Helper class for easier Hibernate integration</description>
 
     <build>
         <plugins>
@@ -76,7 +76,7 @@
             <artifactId>bonecp-test-commons</artifactId>
             <scope>test</scope>
         </dependency>
- 
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
