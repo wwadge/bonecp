@@ -17,8 +17,6 @@
 package com.jolbox.bonecp;
 
 import java.sql.SQLException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +35,6 @@ public class ConnectionTesterThread implements Runnable {
 	private long idleMaxAgeInMs;
 	/** Partition being handled. */
 	private ConnectionPartition partition;
-	/** Scheduler handle. **/
-	private ScheduledExecutorService scheduler;
 	/** Handle to connection pool. */
 	private BoneCP pool;
 	/** If true, we're operating in a LIFO fashion. */ 
@@ -48,16 +44,14 @@ public class ConnectionTesterThread implements Runnable {
 
 	/** Constructor
 	 * @param connectionPartition partition to work on
-	 * @param scheduler Scheduler handler.
 	 * @param pool pool handle
 	 * @param idleMaxAgeInMs Threads older than this are killed off 
 	 * @param idleConnectionTestPeriodInMs Threads that are idle for more than this time are sent a keep-alive.
 	 * @param lifoMode if true, we're running under a lifo fashion.
 	 */
-	protected ConnectionTesterThread(ConnectionPartition connectionPartition, ScheduledExecutorService scheduler, 
+	protected ConnectionTesterThread(ConnectionPartition connectionPartition,
 			BoneCP pool, long idleMaxAgeInMs, long idleConnectionTestPeriodInMs, boolean lifoMode){
 		this.partition = connectionPartition;
-		this.scheduler = scheduler;
 		this.idleMaxAgeInMs = idleMaxAgeInMs;
 		this.idleConnectionTestPeriodInMs = idleConnectionTestPeriodInMs;
 		this.pool = pool;
@@ -138,13 +132,8 @@ public class ConnectionTesterThread implements Runnable {
 				// offset by a bit to avoid firing a lot for slightly offset connections
 //				logger.debug("Next check in "+nextCheckInMs);
 				
-				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 		} catch (Throwable e) {
-			if (this.scheduler.isShutdown()){
-				logger.debug("Shutting down connection tester thread.");
-			} else {
 				logger.error("Connection tester thread interrupted", e);
-			}
 		}
 	}
 
