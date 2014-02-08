@@ -26,7 +26,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 import org.slf4j.Logger;
@@ -70,21 +70,21 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 	/** Autocommit option. */
 	private boolean autocommit;
 	/** Classloader to use to load the jdbc driver. */
-	private ClassLoader classLoader; 
+	private ClassLoader classLoader;
 	/** Configuration handle. */
 	private BoneCPConfig config;
 	/** Class logger. */
 	private static final Logger logger = LoggerFactory.getLogger(BoneCPConnectionProvider.class);
 
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#closeConnection(java.sql.Connection)
+	 * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#closeConnection(java.sql.Connection)
 	 */
 	public void closeConnection(Connection conn) throws SQLException {
 		conn.close();
-	} 
+	}
 
 	/**
 	 * Pool configuration.
@@ -163,7 +163,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 	 * @return BoneCP connection pool handle.
 	 */
 	protected BoneCP createPool(BoneCPConfig config) {
-		try{ 
+		try{
 			return new BoneCP(config);
 		}  catch (SQLException e) {
 			throw new HibernateException(e);
@@ -173,7 +173,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#getConnection()
+	 * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection()
 	 */
 	public Connection getConnection() throws SQLException {
 		Connection connection = this.pool.getConnection();
@@ -197,15 +197,15 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 			} catch (Exception e2) {
 				logger.warn("Setting connection properties failed and closing this connection failed again", e);
 			}
-			
+
 			throw e;
-		} 
+		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
+	 * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
 	 */
 	public boolean supportsAggressiveRelease() {
 		return false;
@@ -247,11 +247,11 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 				BoneCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
-			
+
 		throw new UnknownUnwrapTypeException( unwrapType );
 	}
 
-	
+
 	/**
 	 * Legacy conversion.
 	 * @param map
@@ -264,7 +264,7 @@ public class BoneCPConnectionProvider implements ConnectionProvider,Configurable
 		   }
 		   return p;
 		 }
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void configure(Map configurationValues) {

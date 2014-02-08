@@ -93,6 +93,7 @@
 		<module>bonecp-spring</module>
 		<module>bonecp-test-commons</module>
 		<!-- <module>bonecp-benchmark</module> -->
+    <module>bonecp-hbnprovider</module>
 	</modules>
 
 	<dependencyManagement>
@@ -115,7 +116,7 @@
 				<artifactId>spring-jdbc</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>com.jolbox</groupId>
 				<artifactId>bonecp-jdk-compat</artifactId>
@@ -199,7 +200,7 @@
       <artifactId>powermock-api-easymock</artifactId>
       <version>${powermock.version}</version>
       <scope>test</scope>
-   </dependency>  
+   </dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -219,8 +220,8 @@
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
 		<implementation.build>${maven.build.timestamp}</implementation.build>
 
-		<guava.version>15.0</guava.version>
-		<hibernate.version>4.2.5.Final</hibernate.version>
+		<guava.version>16.0</guava.version>
+		<hibernate.version>4.3.1.Final</hibernate.version>
 		<spring.version>3.2.4.RELEASE</spring.version>
 		  <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
 		<powermock.version>1.5</powermock.version>
@@ -385,7 +386,7 @@
 		<profile>
 			<id>JDK5</id>
 	<!--		<activation>
-				<jdk>[1.5,1.6)</jdk> 
+				<jdk>[1.5,1.6)</jdk>
 			</activation>
 	-->		<properties>
 
@@ -395,7 +396,7 @@
 
 				<!-- Under jdk5, we fall back to v11 since that's the last one supported -->
 				<guava.version>11.0.2</guava.version>
-				
+
 				<hibernate.version>3.6.9.Final</hibernate.version>
 			</properties>
 
