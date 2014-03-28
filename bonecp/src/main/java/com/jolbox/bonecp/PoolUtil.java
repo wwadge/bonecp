@@ -23,6 +23,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Ref;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -102,7 +103,7 @@ public class PoolUtil {
 			sb.append(formatLogParam((Ref)obj));
 		} else if (obj instanceof Array){
 			sb.append(formatLogParam((Array)obj));
-		} else if (obj instanceof String){
+		} else if (obj instanceof String || obj instanceof Date){
 			sb.append("'" + obj.toString()+"'");
 		} else {
 			sb.append(obj.toString());
