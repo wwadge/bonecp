@@ -457,7 +457,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 */
 	private void checkClosed() throws SQLException {
 		if (this.logicallyClosed.get()) {
-			throw new SQLException("Connection is closed!");
+			throw new SQLException("Connection is closed!", "08003");
 		}
 	}
 
