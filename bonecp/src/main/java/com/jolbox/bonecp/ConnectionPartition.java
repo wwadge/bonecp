@@ -91,8 +91,15 @@ public class ConnectionPartition implements Serializable{
 
 		try{
 			this.statsLock.writeLock().lock();
-			this.createdConnections+=increment;
-	//		assert this.createdConnections >= 0 : "Created connections < 0!";
+			if (this.createdConnections == 0 && increment < 0)
+			{
+			    logger.error("The createdConnections can not be negative value");
+			}
+			else
+			{
+			    this.createdConnections+=increment;
+			}
+			
 			
 		} finally { 
 			this.statsLock.writeLock().unlock();

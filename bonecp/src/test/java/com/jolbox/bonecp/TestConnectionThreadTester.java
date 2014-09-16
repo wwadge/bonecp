@@ -383,15 +383,11 @@ public class TestConnectionThreadTester {
 		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
 		expect(mockConnection.isClosed()).andReturn(false);
 		ConnectionPartition mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
-		BlockingQueue<Object> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition);
-		
-		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(mockQueue);
-		expect(mockQueue.offer(anyObject())).andReturn(true).anyTimes();
 		mockPool.postDestroyConnection(mockConnection);
-		replay(mockConnection, mockPool, mockQueue, mockPartition);
+		replay(mockConnection, mockPool, mockPartition);
 		this.testClass.closeConnection(mockConnection);
-		verify(mockPool, mockConnection, mockQueue);
+		verify(mockPool, mockConnection);
+		
 	}
 	
 	
@@ -406,15 +402,11 @@ public class TestConnectionThreadTester {
 		mockConnection.internalClose();
 		expectLastCall().andThrow(new SQLException());
 			ConnectionPartition mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
-		BlockingQueue<Object> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition);
 		
-		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(mockQueue);
-		expect(mockQueue.offer(anyObject())).andReturn(true).anyTimes();
 		mockPool.postDestroyConnection(mockConnection);
-		replay(mockConnection, mockPool, mockQueue, mockPartition);
+		replay(mockConnection, mockPool, mockPartition);
 		this.testClass.closeConnection(mockConnection);
-		verify(mockPool, mockConnection, mockQueue);
+		verify(mockPool, mockConnection);
 	}
 
 	/**
@@ -429,11 +421,6 @@ public class TestConnectionThreadTester {
 		this.testClass = new ConnectionTesterThread(mockConnectionPartition, mockExecutor, mockPool, 123, 123, false);
 		expect(mockConnection.isClosed()).andReturn(false);
 		ConnectionPartition mockPartition = EasyMock.createNiceMock(ConnectionPartition.class);
-		BlockingQueue<Object> mockQueue = EasyMock.createNiceMock(BlockingQueue.class);
-		expect(mockConnection.getOriginatingPartition()).andReturn(mockPartition);
-		
-		expect(mockPartition.getPoolWatchThreadSignalQueue()).andReturn(mockQueue);
-		expect(mockQueue.offer(anyObject())).andReturn(true).anyTimes();
 		mockPool.postDestroyConnection(mockConnection);
 		Field loggerField = this.testClass.getClass().getDeclaredField("logger");
 	    TestUtils.setFinalStatic(loggerField, null);
@@ -442,13 +429,13 @@ public class TestConnectionThreadTester {
 	    mockConnection.internalClose();
 	    expectLastCall().andThrow(new SQLException());
 	    
-		replay(mockConnection, mockPool, mockQueue, mockPartition);
+		replay(mockConnection, mockPool, mockPartition);
 		try {
 			this.testClass.closeConnection(mockConnection);
 		}catch(NullPointerException e) {
 			//normal
 		}
-		verify(mockPool, mockConnection, mockQueue);
+		verify(mockPool, mockConnection);
 	
 	}
 	@Test

@@ -89,9 +89,15 @@ public class ConnectionTesterThread implements Runnable {
 						connection.setOriginatingPartition(this.partition);
 						
 						// check if connection has been idle for too long (or is marked as broken)
-						if (connection.isPossiblyBroken() || 
-								((this.idleMaxAgeInMs > 0) && ( System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
-							// kill off this connection - it's broken or it has been idle for too long
+						if (connection.isPossiblyBroken())
+						{
+						    // kill off this connection - it's broken, create a new one
+						    closeConnection(connection);
+						    createNew(connection);
+                            continue;
+						}
+						else if (((this.idleMaxAgeInMs > 0) && ( System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
+							 // it has been idle for too long, kill it but don't recreate
 							closeConnection(connection);
 							continue;
 						}
@@ -102,6 +108,7 @@ public class ConnectionTesterThread implements Runnable {
 							// send a keep-alive, close off connection if we fail.
 							if (!this.pool.isConnectionHandleAlive(connection)){
 								closeConnection(connection);
+								createNew(connection);
 								continue; 
 							}
 							// calculate the next time to wake up
@@ -148,7 +155,6 @@ public class ConnectionTesterThread implements Runnable {
 		}
 	}
 
-
 	/** Closes off this connection
 	 * @param connection to close
 	 */
@@ -161,11 +167,13 @@ public class ConnectionTesterThread implements Runnable {
 				logger.error("Destroy connection exception", e);
 			} finally {
 				this.pool.postDestroyConnection(connection);
-				connection.getOriginatingPartition().getPoolWatchThreadSignalQueue().offer(new Object()); // item being pushed is not important.
 			}
 		}
 	}
-
-
+	
+    private void createNew(ConnectionHandle connection)
+    {
+        connection.getOriginatingPartition().getPoolWatchThreadSignalQueue().offer(new Object());
+    }
 
 }
