@@ -62,16 +62,7 @@ public class ConnectionTesterThread implements Runnable {
 	/** Invoked periodically. */
 	public void run() {
 		ConnectionHandle connection = null;
-		long tmp;
 		try {
-				long nextCheckInMs = this.idleConnectionTestPeriodInMs;
-				if (this.idleMaxAgeInMs > 0){
-					if (this.idleConnectionTestPeriodInMs == 0){
-						nextCheckInMs = this.idleMaxAgeInMs;
-					} else {
-						nextCheckInMs = Math.min(nextCheckInMs, this.idleMaxAgeInMs);
-					}
-				}
 				
 				int partitionSize= this.partition.getAvailableConnections();
 				long currentTimeInMs = System.currentTimeMillis();
@@ -98,22 +89,6 @@ public class ConnectionTesterThread implements Runnable {
 								closeConnection(connection);
 								continue; 
 							}
-							// calculate the next time to wake up
-							tmp = this.idleConnectionTestPeriodInMs;
-							if (this.idleMaxAgeInMs > 0){ // wake up earlier for the idleMaxAge test?
-								tmp = Math.min(tmp, this.idleMaxAgeInMs);
-							}
-						} else {
-							// determine the next time to wake up (connection test time or idle Max age?) 
-							tmp = Math.abs(this.idleConnectionTestPeriodInMs-(currentTimeInMs - connection.getConnectionLastResetInMs()));
-							long tmp2 = Math.abs(this.idleMaxAgeInMs - (currentTimeInMs-connection.getConnectionLastUsedInMs()));
-							if (this.idleMaxAgeInMs > 0){
-								tmp = Math.min(tmp, tmp2);
-							}
-							
-						}
-						if (tmp < nextCheckInMs){
-							nextCheckInMs = tmp; 
 						}
 						
 						if (this.lifoMode){

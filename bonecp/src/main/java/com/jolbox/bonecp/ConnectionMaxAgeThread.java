@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ConnectionMaxAgeThread implements Runnable {
 
-	/** Max no of ms to wait before a connection that isn't used is killed off. */
-	private long maxAgeInMs;
 	/** Partition being handled. */
 	private ConnectionPartition partition;
 	/** Handle to connection pool. */
@@ -47,9 +45,8 @@ public class ConnectionMaxAgeThread implements Runnable {
 	 * @param lifoMode if true, we're running under a lifo fashion.
 	 */
 	protected ConnectionMaxAgeThread(ConnectionPartition connectionPartition,  
-			BoneCP pool, long maxAgeInMs, boolean lifoMode){
+			BoneCP pool, boolean lifoMode){
 		this.partition = connectionPartition;
-		this.maxAgeInMs = maxAgeInMs;
 		this.pool = pool;
 		this.lifoMode = lifoMode;
 	}
@@ -58,8 +55,6 @@ public class ConnectionMaxAgeThread implements Runnable {
 	/** Invoked periodically. */
 	public void run() {
 		ConnectionHandle connection = null;
-		long tmp;
-		long nextCheckInMs = this.maxAgeInMs;
 
 		int partitionSize= this.partition.getAvailableConnections();
 		long currentTime = System.currentTimeMillis();
@@ -69,12 +64,6 @@ public class ConnectionMaxAgeThread implements Runnable {
 
 				if (connection != null){
 					connection.setOriginatingPartition(this.partition);
-
-					tmp = this.maxAgeInMs - (currentTime - connection.getConnectionCreationTimeInMs()); 
-
-					if (tmp < nextCheckInMs){
-						nextCheckInMs = tmp; 
-					}
 
 					if (connection.isExpired(currentTime)){
 						// kill off this connection
