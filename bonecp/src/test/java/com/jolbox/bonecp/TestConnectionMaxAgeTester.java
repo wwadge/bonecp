@@ -70,7 +70,7 @@ public class TestConnectionMaxAgeTester {
 		config = new BoneCPConfig();
 		config.setMaxConnectionAgeInSeconds(1);
 		
-		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, false);
+		testClass = new ConnectionMaxAgeThread(mockConnectionPartition, mockPool, 5000, false);
 		TestUtils.mockLogger(testClass.getClass());
 	}
 	
@@ -131,7 +131,7 @@ public class TestConnectionMaxAgeTester {
 		mockConnection.internalClose();
 		
 		replay(mockQueue, mockExecutor, mockConnectionPartition, mockConnection, mockPool);
-		ConnectionMaxAgeThread testClass2 = new ConnectionMaxAgeThread(mockConnectionPartition, mockExecutor, mockPool, 5000, true);
+		ConnectionMaxAgeThread testClass2 = new ConnectionMaxAgeThread(mockConnectionPartition, mockPool, 5000, true);
 		testClass2.run();
 
 		verify(mockConnection, mockPool);
