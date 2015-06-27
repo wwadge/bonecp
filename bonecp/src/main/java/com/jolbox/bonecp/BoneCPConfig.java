@@ -704,7 +704,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	/** If enabled, log SQL statements being executed. This will also "fill in" the parameters 
 	 * for prepared statements so that you can see exactly what values where bound at the time 
 	 * you executed the statement.
-	 * You will also need to set your log4j settings ("com.jolbox.bonecp") to DEBUG 
+	 * You will also need to set your logging settings ("com.jolbox.bonecp") to DEBUG 
 	 * @param logStatementsEnabled the logStatementsEnabled to set
 	 */
 	public void setLogStatementsEnabled(boolean logStatementsEnabled) {
@@ -1704,7 +1704,7 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 		}
 		
 		if (this.logStatementsEnabled && !logger.isDebugEnabled()){
-			logger.warn("LogStatementsEnabled is set to true, but log4j level is not set at DEBUG. Disabling statement logging.");
+			logger.warn("LogStatementsEnabled is set to true, but logging level is not set at DEBUG. Disabling statement logging.");
 			logStatementsEnabled = false;
 			
 		}
