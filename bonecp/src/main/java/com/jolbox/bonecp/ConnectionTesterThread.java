@@ -69,16 +69,17 @@ public class ConnectionTesterThread implements Runnable {
 	public void run() {
 		ConnectionHandle connection = null;
 		long tmp;
+
+		long nextCheckInMs = this.idleConnectionTestPeriodInMs;
+		if (this.idleMaxAgeInMs > 0){
+			if (this.idleConnectionTestPeriodInMs == 0){
+				nextCheckInMs = this.idleMaxAgeInMs;
+			} else {
+				nextCheckInMs = Math.min(nextCheckInMs, this.idleMaxAgeInMs);
+			}
+		}
+
 		try {
-				long nextCheckInMs = this.idleConnectionTestPeriodInMs;
-				if (this.idleMaxAgeInMs > 0){
-					if (this.idleConnectionTestPeriodInMs == 0){
-						nextCheckInMs = this.idleMaxAgeInMs;
-					} else {
-						nextCheckInMs = Math.min(nextCheckInMs, this.idleMaxAgeInMs);
-					}
-				}
-				
 				int partitionSize= this.partition.getAvailableConnections();
 				long currentTimeInMs = System.currentTimeMillis();
 				// go thru all partitions
@@ -137,14 +138,21 @@ public class ConnectionTesterThread implements Runnable {
 				} // throw it back on the queue
 //				System.out.println("Scheduling for " + nextCheckInMs);
 				// offset by a bit to avoid firing a lot for slightly offset connections
-				this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
+				//the schedule call here may be skipped by the exception
+				//this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			if (this.scheduler.isShutdown()){
 				logger.debug("Shutting down connection tester thread.");
+				//shutdown, so just return
+				return;
 			} else {
 				logger.error("Connection tester thread interrupted", e);
 			}
 		}
+
+		//FIX
+		//just simple move here
+		this.scheduler.schedule(this, nextCheckInMs, TimeUnit.MILLISECONDS);
 	}
 
 
