@@ -170,6 +170,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 
 	/** If set, pool will call this for every new connection that's created. */
 	private Properties clientInfo;
+	
+	private int idleThreshold = 10;
 
 	/** Returns the name of the pool for JMX and thread names.
 	 * @return a pool name.
@@ -490,7 +492,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	public void setIdleMaxAge(long idleMaxAge, TimeUnit timeUnit) {
 		this.idleMaxAgeInSeconds = TimeUnit.SECONDS.convert(idleMaxAge, checkNotNull(timeUnit)); 
 	}
-
+	
+	public void setIdleThreshold(int idleThreshold) {
+		this.idleThreshold = idleThreshold;
+	}
+	
+	public int getIdleThreshold() {
+		return this.idleThreshold;
+	}
 
 
 	/** {@inheritDoc}

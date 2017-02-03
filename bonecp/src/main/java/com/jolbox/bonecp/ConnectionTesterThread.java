@@ -39,6 +39,8 @@ public class ConnectionTesterThread implements Runnable {
 	private BoneCP pool;
 	/** If true, we're operating in a LIFO fashion. */ 
 	private boolean lifoMode;
+	
+	private int idleThreshold;
 	/** Logger handle. */
 	private static final Logger logger = LoggerFactory.getLogger(ConnectionTesterThread.class);
 
@@ -57,7 +59,16 @@ public class ConnectionTesterThread implements Runnable {
 		this.pool = pool;
 		this.lifoMode = lifoMode;
 	}
-
+	
+	protected ConnectionTesterThread(ConnectionPartition connectionPartition,
+			BoneCP pool, long idleMaxAgeInMs, long idleConnectionTestPeriodInMs, boolean lifoMode, int idleThreshold){
+		this.partition = connectionPartition;
+		this.idleMaxAgeInMs = idleMaxAgeInMs;
+		this.idleConnectionTestPeriodInMs = idleConnectionTestPeriodInMs;
+		this.pool = pool;
+		this.lifoMode = lifoMode;
+		this.idleThreshold = idleThreshold;
+	}
 
 	/** Invoked periodically. */
 	public void run() {
@@ -83,7 +94,7 @@ public class ConnectionTesterThread implements Runnable {
 						connection.setOriginatingPartition(this.partition);
 						
 						//每个检测间隔内，如果连接被使用次数小于10次，则认为系统很空闲，检查连接是否可用，并重置时间
-						if (connection.getConnectionUsedCounts() <= 10) {
+						if (connection.getConnectionUsedCounts() <= this.idleThreshold) {
 							if (!this.pool.isConnectionHandleAliveAndReuse(connection)) {
 								closeConnection(connection);
 								continue;

@@ -471,7 +471,7 @@ public class BoneCP implements Serializable, Closeable {
 
 			if (this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) > 0 || this.config.getIdleMaxAge(TimeUnit.SECONDS) > 0){
 
-				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this, this.config.getIdleMaxAge(TimeUnit.MILLISECONDS), this.config.getIdleConnectionTestPeriod(TimeUnit.MILLISECONDS), queueLIFO);
+				final Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this, this.config.getIdleMaxAge(TimeUnit.MILLISECONDS), this.config.getIdleConnectionTestPeriod(TimeUnit.MILLISECONDS), queueLIFO, this.config.getIdleThreshold());
 				long delayInSeconds = this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS);
 				if (delayInSeconds == 0L){
 					delayInSeconds = this.config.getIdleMaxAge(TimeUnit.SECONDS);
