@@ -663,6 +663,7 @@ public class BoneCP implements Serializable, Closeable {
 
 
 		connectionHandle.setConnectionLastUsedInMs(System.currentTimeMillis());
+		connectionHandle.setConnectionUsedCounts(1);
 		if (!this.poolShuttingDown){
 			putConnectionBackInPartition(connectionHandle);
 		} else {
@@ -692,6 +693,41 @@ public class BoneCP implements Serializable, Closeable {
 	}
 
 
+	public boolean isConnectionHandleAliveAndReuse(ConnectionHandle connection) {
+		Statement stmt = null;
+		boolean result = false;
+		boolean logicallyClosed = connection.logicallyClosed.get();
+		try {
+			connection.logicallyClosed.compareAndSet(true, false); // avoid checks later on if it's marked as closed.
+			String testStatement = this.config.getConnectionTestStatement();
+			ResultSet rs = null;
+
+			if (testStatement == null) {
+				// Make a call to fetch the metadata instead of a dummy query.
+				rs = connection.getMetaData().getTables( null, null, KEEPALIVEMETADATA, METADATATABLE );
+			} else {
+				stmt = connection.createStatement();
+				stmt.execute(testStatement);
+			}
+
+
+			if (rs != null) {
+				rs.close();
+			}
+
+			result = true;
+		} catch (SQLException e) {
+			// connection must be broken!
+			result = false;
+		} finally {
+			connection.logicallyClosed.set(logicallyClosed);
+			connection.setConnectionLastUsedInMs(System.currentTimeMillis());
+			connection.setConnectionUsedCounts(0);
+			result = closeStatement(stmt, result);
+		}
+		return result;
+	}
+	
 	/** Sends a dummy statement to the server to keep the connection alive
 	 * @param connection Connection handle to perform activity on
 	 * @return true if test query worked, false otherwise

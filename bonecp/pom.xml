@@ -105,11 +105,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp-test-commons</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency> 
             <groupId>com.jolbox</groupId>

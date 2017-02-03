@@ -84,6 +84,8 @@ public class ConnectionHandle implements Connection,Serializable{
 	private long connectionLastUsedInMs;
 	/** Last time we sent a reset to this connection. */
 	private long connectionLastResetInMs;
+	/** Record how many times this connection been used. */
+	private int connectionUsedCounts;
 	/** Time when this connection was created. */
 	protected long connectionCreationTimeInMs;
 	/** Pool handle. */
@@ -205,6 +207,7 @@ public class ConnectionHandle implements Connection,Serializable{
 			connectionLastUsedInMs = System.currentTimeMillis();
 			connectionLastResetInMs = System.currentTimeMillis();
 			connectionCreationTimeInMs = System.currentTimeMillis();
+			connectionUsedCounts = 0;
 		}
 
 		this.url = pool.getConfig().getJdbcUrl();
@@ -288,6 +291,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		handle.connectionHook = this.connectionHook;
 		handle.possiblyBroken = this.possiblyBroken;
 		handle.debugHandle = this.debugHandle;
+		handle.connectionUsedCounts = this.connectionUsedCounts;
 		this.connection = null;
 		
 		return handle;
@@ -1741,6 +1745,19 @@ public class ConnectionHandle implements Connection,Serializable{
 				.add("lastUsedAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionLastUsedInMs))
 				.add("creationTimeAgoInSec", TimeUnit.MILLISECONDS.toSeconds(timeMillis-this.connectionCreationTimeInMs))
 				.toString();
+	}
+
+	public int getConnectionUsedCounts() {
+		return connectionUsedCounts;
+	}
+
+	protected void setConnectionUsedCounts(int connectionUsedCounts) {
+		if (connectionUsedCounts == 1) {
+			this.connectionUsedCounts += connectionUsedCounts;
+		}
+		else {
+			this.connectionUsedCounts = 0;
+		}
 	}
 
 

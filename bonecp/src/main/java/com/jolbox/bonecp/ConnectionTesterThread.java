@@ -82,6 +82,14 @@ public class ConnectionTesterThread implements Runnable {
 					if (connection != null){
 						connection.setOriginatingPartition(this.partition);
 						
+						//每个检测间隔内，如果连接被使用次数小于10次，则认为系统很空闲，检查连接是否可用，并重置时间
+						if (connection.getConnectionUsedCounts() <= 10) {
+							if (!this.pool.isConnectionHandleAliveAndReuse(connection)) {
+								closeConnection(connection);
+								continue;
+							}
+						}
+						
 						// check if connection has been idle for too long (or is marked as broken)
 						if (connection.isPossiblyBroken() || 
 								((this.idleMaxAgeInMs > 0) && ( System.currentTimeMillis()-connection.getConnectionLastUsedInMs() > this.idleMaxAgeInMs))){
