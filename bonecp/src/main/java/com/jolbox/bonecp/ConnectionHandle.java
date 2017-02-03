@@ -352,6 +352,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @param initSQL
 	 * @throws SQLException
 	 */
+
 	protected static void sendInitSQL(Connection connection, String initSQL) throws SQLException{
 		// fetch any configured setup sql.
 		if (initSQL != null){
@@ -360,10 +361,15 @@ public class ConnectionHandle implements Connection,Serializable{
 				stmt = connection.createStatement();
 				stmt.execute(initSQL);
 				if (testSupport){ // only to aid code coverage, normally set to false
+					//stmt should not set to null before close it.
+					//changed by zq
+					if (stmt != null) {
+						stmt.close();
+					}
 					stmt = null;
 				}
-			} finally{
-				if (stmt != null){
+			} finally {
+				if (stmt != null) {
 					stmt.close();
 				}
 			}
