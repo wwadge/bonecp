@@ -78,6 +78,8 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	private long idleConnectionTestPeriodInSeconds = 240*60; 
 	/** Maximum age of an unused connection before it is closed off. */ 
 	private long idleMaxAgeInSeconds =  60*60; 
+	/** 空闲连接清理间隔*/
+	private long connectionCleanTimeInSeconds = 30;
 	/** SQL statement to use for keep-alive/test of connection. */
 	private String connectionTestStatement;
 	/** Min no of prepared statements to cache. */
@@ -2013,6 +2015,14 @@ public class BoneCPConfig implements BoneCPConfigMBean, Cloneable, Serializable 
 	 */
 	public Properties getClientInfo() {
 		return this.clientInfo;
+	}
+
+	public long getConnectionCleanTimeInSeconds() {
+		return connectionCleanTimeInSeconds;
+	}
+
+	public void setConnectionCleanTimeInSeconds(long connectionCleanTimeInSeconds) {
+		this.connectionCleanTimeInSeconds = connectionCleanTimeInSeconds;
 	}
 
 

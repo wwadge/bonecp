@@ -98,6 +98,12 @@ public class BoneCP implements Serializable, Closeable {
 	/** Executor for threads watching each partition to dynamically create new threads/kill off excess ones.
 	 */
 	private ExecutorService connectionsScheduler;
+	
+	/**
+	 * 空闲连接清理任务
+	 */
+	private ScheduledExecutorService connectionCleanScheduler;
+	
 	/** Configuration object used in constructor. */
 	@VisibleForTesting protected BoneCPConfig config;
 	/** Executor service for obtaining a connection in an asynchronous fashion. */
@@ -161,6 +167,7 @@ public class BoneCP implements Serializable, Closeable {
 			this.keepAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.maxAliveScheduler.shutdownNow(); // stop threads from firing.
 			this.connectionsScheduler.shutdownNow(); // stop threads from firing.
+			this.connectionCleanScheduler.shutdown();
 			this.asyncExecutor.shutdownNow();
 
 			try {
@@ -169,6 +176,7 @@ public class BoneCP implements Serializable, Closeable {
 				this.maxAliveScheduler.awaitTermination(5, TimeUnit.SECONDS);
 				this.keepAliveScheduler.awaitTermination(5, TimeUnit.SECONDS);
 				this.asyncExecutor.awaitTermination(5, TimeUnit.SECONDS);
+				this.connectionCleanScheduler.awaitTermination(5,  TimeUnit.SECONDS);
 				
 				if (this.closeConnectionExecutor != null){
 					this.closeConnectionExecutor.shutdownNow();
@@ -438,7 +446,8 @@ public class BoneCP implements Serializable, Closeable {
 		this.keepAliveScheduler =  Executors.newScheduledThreadPool(this.config.getPartitionCount(), new CustomThreadFactory("BoneCP-keep-alive-scheduler"+suffix, true));
 		this.maxAliveScheduler =  Executors.newScheduledThreadPool(this.config.getPartitionCount(), new CustomThreadFactory("BoneCP-max-alive-scheduler"+suffix, true));
 		this.connectionsScheduler =  Executors.newFixedThreadPool(this.config.getPartitionCount(), new CustomThreadFactory("BoneCP-pool-watch-thread"+suffix, true));
-
+		this.connectionCleanScheduler = Executors.newScheduledThreadPool(this.config.getPartitionCount(), new CustomThreadFactory("BoneCP-connection-clean-thread"+suffix, true));
+		
 		this.partitionCount = this.config.getPartitionCount();
 		this.closeConnectionWatch = this.config.isCloseConnectionWatch();
 		this.cachedPoolStrategy = this.config.getPoolStrategy() != null && this.config.getPoolStrategy().equalsIgnoreCase("CACHED");
@@ -483,7 +492,11 @@ public class BoneCP implements Serializable, Closeable {
 				}
 				this.keepAliveScheduler.scheduleAtFixedRate(connectionTester,delayInSeconds, delayInSeconds, TimeUnit.SECONDS);
 			}
-
+			
+			//定期启动一个线程清理空闲连接
+			//add 2017-2-10
+			final Runnable connectionCleaner = new ConnectionCleanThread(connectionPartition, this);
+			this.connectionCleanScheduler.scheduleAtFixedRate(connectionCleaner, this.config.getConnectionCleanTimeInSeconds(), this.config.getConnectionCleanTimeInSeconds(), TimeUnit.SECONDS);
 
 			if (this.config.getMaxConnectionAgeInSeconds() > 0){
 				final Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition, this, this.config.getMaxConnectionAge(TimeUnit.MILLISECONDS), queueLIFO);

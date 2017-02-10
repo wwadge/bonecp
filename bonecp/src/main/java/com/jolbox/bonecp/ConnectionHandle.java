@@ -43,12 +43,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import com.jolbox.bonecp.hooks.ConnectionHook;
@@ -162,6 +163,8 @@ public class ConnectionHandle implements Connection,Serializable{
 	protected boolean detectUnclosedStatements;
 	/** Config setting. */
 	protected boolean closeOpenStatements;
+	
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(false);
 
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -1743,7 +1746,7 @@ public class ConnectionHandle implements Connection,Serializable{
 
 		long timeMillis = System.currentTimeMillis();
 
-		return Objects.toStringHelper(this)
+		return MoreObjects.toStringHelper(this)
 				.add("url", this.pool.getConfig().getJdbcUrl())
 				.add("user", this.pool.getConfig().getUsername())
 				.add("debugHandle", this.debugHandle)
@@ -1765,6 +1768,13 @@ public class ConnectionHandle implements Connection,Serializable{
 			this.connectionUsedCounts = 0;
 		}
 	}
-
+	
+	protected void lock() {
+		lock.writeLock().lock();
+	}
+	
+	protected void unlock() {
+		lock.writeLock().unlock();
+	}
 
 }
