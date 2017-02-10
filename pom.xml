@@ -220,7 +220,7 @@
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
 		<implementation.build>${maven.build.timestamp}</implementation.build>
 
-		<guava.version>16.0</guava.version>
+		<guava.version>21.0</guava.version>
 		<hibernate.version>4.3.1.Final</hibernate.version>
 		<spring.version>3.2.4.RELEASE</spring.version>
 		  <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
