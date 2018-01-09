@@ -31,8 +31,8 @@
 
 	<scm>
 		<url>http://github.com/wwadge/bonecp</url>
-		<connection>scm:git:ssh://github.com/wwadge/bonecp.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/wwadge/bonecp.git</developerConnection>
+		<connection>scm:git:ssh://git@github.com:wwadge/bonecp.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com:wwadge/bonecp.git</developerConnection>
 	  <tag>HEAD</tag>
   </scm>
 
