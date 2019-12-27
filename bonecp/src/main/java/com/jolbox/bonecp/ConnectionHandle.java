@@ -43,12 +43,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import com.jolbox.bonecp.hooks.ConnectionHook;
@@ -84,6 +85,8 @@ public class ConnectionHandle implements Connection,Serializable{
 	private long connectionLastUsedInMs;
 	/** Last time we sent a reset to this connection. */
 	private long connectionLastResetInMs;
+	/** Record how many times this connection been used. */
+	private int connectionUsedCounts;
 	/** Time when this connection was created. */
 	protected long connectionCreationTimeInMs;
 	/** Pool handle. */
@@ -160,6 +163,8 @@ public class ConnectionHandle implements Connection,Serializable{
 	protected boolean detectUnclosedStatements;
 	/** Config setting. */
 	protected boolean closeOpenStatements;
+	
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(false);
 
 	/*
 	 * From: http://publib.boulder.ibm.com/infocenter/db2luw/v8/index.jsp?topic=/com.ibm.db2.udb.doc/core/r0sttmsg.htm
@@ -205,6 +210,7 @@ public class ConnectionHandle implements Connection,Serializable{
 			connectionLastUsedInMs = System.currentTimeMillis();
 			connectionLastResetInMs = System.currentTimeMillis();
 			connectionCreationTimeInMs = System.currentTimeMillis();
+			connectionUsedCounts = 0;
 		}
 
 		this.url = pool.getConfig().getJdbcUrl();
@@ -288,6 +294,7 @@ public class ConnectionHandle implements Connection,Serializable{
 		handle.connectionHook = this.connectionHook;
 		handle.possiblyBroken = this.possiblyBroken;
 		handle.debugHandle = this.debugHandle;
+		handle.connectionUsedCounts = this.connectionUsedCounts;
 		this.connection = null;
 		
 		return handle;
@@ -348,6 +355,7 @@ public class ConnectionHandle implements Connection,Serializable{
 	 * @param initSQL
 	 * @throws SQLException
 	 */
+
 	protected static void sendInitSQL(Connection connection, String initSQL) throws SQLException{
 		// fetch any configured setup sql.
 		if (initSQL != null){
@@ -356,10 +364,15 @@ public class ConnectionHandle implements Connection,Serializable{
 				stmt = connection.createStatement();
 				stmt.execute(initSQL);
 				if (testSupport){ // only to aid code coverage, normally set to false
+					//stmt should not set to null before close it.
+					//changed by zq
+					if (stmt != null) {
+						stmt.close();
+					}
 					stmt = null;
 				}
-			} finally{
-				if (stmt != null){
+			} finally {
+				if (stmt != null) {
 					stmt.close();
 				}
 			}
@@ -1733,7 +1746,7 @@ public class ConnectionHandle implements Connection,Serializable{
 
 		long timeMillis = System.currentTimeMillis();
 
-		return Objects.toStringHelper(this)
+		return MoreObjects.toStringHelper(this)
 				.add("url", this.pool.getConfig().getJdbcUrl())
 				.add("user", this.pool.getConfig().getUsername())
 				.add("debugHandle", this.debugHandle)
@@ -1743,5 +1756,25 @@ public class ConnectionHandle implements Connection,Serializable{
 				.toString();
 	}
 
+	public int getConnectionUsedCounts() {
+		return connectionUsedCounts;
+	}
+
+	protected void setConnectionUsedCounts(int connectionUsedCounts) {
+		if (connectionUsedCounts == 1) {
+			this.connectionUsedCounts += connectionUsedCounts;
+		}
+		else {
+			this.connectionUsedCounts = 0;
+		}
+	}
+	
+	protected void lock() {
+		lock.writeLock().lock();
+	}
+	
+	protected void unlock() {
+		lock.writeLock().unlock();
+	}
 
 }

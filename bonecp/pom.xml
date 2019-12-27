@@ -29,36 +29,12 @@
     <name>BoneCP :: Core Library</name>
     <description>Lightweight connection pool.</description>
     <build>
+        <defaultGoal>compile</defaultGoal>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
             </plugin>
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-dependency-plugin</artifactId>
-    <version>2.1</version>
-    <executions>
-       <execution>
-            <phase>validate</phase>
-            <goals>
-                <goal>copy</goal>
-            </goals>
-            <configuration>
-                <outputDirectory>${endorsed.dir}</outputDirectory>
-                <silent>true</silent>
-                <artifactItems>
-                    <artifactItem>
-                        <groupId>com.jolbox</groupId>
-                        <artifactId>bonecp-jdk-compat</artifactId>
-                        <version>${project.build.version}</version>
-                        <type>jar</type>
-                    </artifactItem>
-                </artifactItems>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
 
 
             <plugin>
@@ -67,7 +43,7 @@
                 
                 <configuration>
                     <descriptors>
-                        <descriptor>${basedir}/../src/main/assembly/assembly.xml</descriptor>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>
@@ -76,45 +52,15 @@
     
     <dependencies>
     
-    <!-- 
-<dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <scope>test</scope>
-   </dependency>
-   <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-easymock</artifactId>
-      <scope>test</scope>
-   </dependency>  
- -->
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        
-        <dependency>
-			<groupId>postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>test</scope>
-			<version>9.1-901-1.jdbc4</version>
-		</dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+</dependency>
+
         
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp-test-commons</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency> 
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp-jdk-compat</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
